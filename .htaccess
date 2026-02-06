@@ -1,0 +1,52 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # API and special routes go to Laravel
+    RewriteCond %{REQUEST_URI} ^/(api|ipn|track|cron|clear|user/social-login|advertiser/social-login|admin) [NC]
+    RewriteRule ^ index.php [L]
+
+    # Serve Vue.js built assets from public/assets/ (priority)
+    RewriteCond %{REQUEST_URI} ^/assets/(.*)$
+    RewriteCond %{DOCUMENT_ROOT}/public/assets/%1 -f
+    RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+
+    # Serve other static files from root assets directory
+    RewriteCond %{REQUEST_URI} ^/assets/
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
+    RewriteRule ^ - [L]
+
+    # Static files that exist directly (not in assets)
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # For Vue.js SPA - serve index.html for all other routes
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ public/index.html [L]
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Prevent access to sensitive files
+<FilesMatch "^(\.env|\.git|composer\.(json|lock)|package\.json|package-lock\.json|yarn\.lock|\.htaccess)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

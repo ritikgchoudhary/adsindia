@@ -1,0 +1,412 @@
+{
+    "banner": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Banner Section",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "538x548"
+                },
+                "image_one": {
+                    "size": "39x40"
+                },
+                "image_two": {
+                    "size": "123x123"
+                },
+                "image_three": {
+                    "size": "32x18"
+                }
+            },
+            "title": "text",
+            "subtitle": "text",
+            "affiliate_text": "text",
+            "marketing_text": "text",
+            "description": "textarea",
+            "button_name": "text",
+            "button_url": "text"
+        },
+        "element": {
+            "feature_title": "text",
+            "modal": true
+        }
+    },
+    "category": {
+        "builder": true,
+        "name": "Category Section",
+        "content": {
+            "heading_base": "text",
+            "heading_text": "text"
+        }
+    },
+    "about": {
+        "builder": true,
+        "name": "About Section",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "625x545"
+                }
+            },
+            "badge": "text",
+            "heading": "text",
+            "subheading": "text",
+            "button_name": "text",
+            "button_url": "text",
+            "tag_text_one": "text",
+            "tag_text_two": "text",
+            "tag_text_three": "text",
+            "tag_text_four": "text",
+            "tag_text_five": "text"
+        },
+        "element": {
+            "feature": "text",
+            "modal": true
+        }
+    },
+    "policy_pages": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Policy Pages",
+        "hide_builder": true,
+        "element": {
+            "title": "text",
+            "slug": "title",
+            "details": "textarea-nic",
+            "modal": false,
+            "seo": true
+        }
+    },
+    "work_process": {
+        "builder": true,
+        "name": "Work Process",
+        "content": {
+            "subtitle": "text",
+            "heading": "text",
+            "description": "text"
+        },
+        "element": {
+            "icon": "icon",
+            "title": "text",
+            "description": "text",
+            "modal": true
+        }
+    },
+    "campaigns": {
+        "builder": true,
+        "name": "Campaigns",
+        "content": {
+            "subtitle": "text",
+            "heading": "text",
+            "description": "textarea"
+        }
+    },
+    "testimonials": {
+        "builder": true,
+        "name": "Testimonials Section",
+        "content": {
+            "heading": "text",
+            "subheading": "text"
+        },
+        "element": {
+            "name": "text",
+            "designation": "text",
+            "rating": "number",
+            "comment": "textarea",
+            "modal": true
+        }
+    },
+    "cta_section": {
+        "builder": true,
+        "name": "CTA Section",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "520x450"
+                }
+            },
+            "title": "text",
+            "subtitle": "text",
+            "description": "text",
+            "button_name": "text",
+            "button_url": "text"
+        }
+    },
+    "counter_section": {
+        "builder": true,
+        "name": "Counter Section",
+        "element": {
+            "counter_value": "text",
+            "counter_suffix": "text",
+            "counter_title": "text",
+            "modal": true
+        }
+    },
+    "why_choose_us": {
+        "builder": true,
+        "name": "Why Choose Us",
+        "content": {
+            "images": {
+                "thumb_one": {
+                    "size": "225x220"
+                },
+                "thumb_two": {
+                    "size": "225x220"
+                },
+                "thumb_three": {
+                    "size": "225x220"
+                },
+                "thumb_four": {
+                    "size": "123x123"
+                }
+            },
+            "heading": "text",
+            "subheading": "text",
+            "description": "text",
+            "video_url": "text"
+        },
+        "element": {
+            "title": "text",
+            "subtitle": "text",
+            "images": {
+                "image": {
+                    "size": "42x42"
+                }
+            },
+            "modal": true
+        }
+    },
+    "benefit_section": {
+        "builder": true,
+        "name": "Benefit Section",
+        "content": {
+            "images": {
+                "thumb": {
+                    "size": "500x320"
+                }
+            },
+            "heading": "text",
+            "subheading": "text",
+            "description": "text"
+        },
+        "element": {
+            "benefit": "text",
+            "modal": true
+        }
+    },
+    "partner_section": {
+        "builder": true,
+        "name": "Partner Section",
+        "content": {
+            "heading": "text",
+            "subheading": "text",
+            "description": "text"
+        },
+        "element": {
+            "images": {
+                "logo": {
+                    "size": "160x45"
+                }
+            },
+            "modal": true
+        }
+    },
+    "faq_section": {
+        "builder": true,
+        "name": "FAQ Section",
+        "content": {
+            "heading": "text",
+            "subheading": "text",
+            "description": "text",
+            "button_name": "text",
+            "button_url": "text"
+        },
+        "element": {
+            "question": "text",
+            "answer": "textarea",
+            "modal": true
+        }
+    },
+    "register_disable": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Registration Disable",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "280x280"
+                }
+            },
+            "heading": "text",
+            "subheading": "text",
+            "button_name": "text",
+            "button_url": "text"
+        }
+    },
+    "blog": {
+        "builder": true,
+        "name": "Blog Section",
+        "content": {
+            "heading": "text",
+            "subheading": "text",
+            "description": "text"
+        },
+        "element": {
+            "images": {
+                "image": {
+                    "size": "940x580",
+                    "thumb": "470x290"
+                }
+            },
+            "title": "text",
+            "slug": "title",
+            "badge": "text",
+            "description": "textarea-nic",
+            "modal": false,
+            "seo": true
+        }
+    },
+    "social_icon": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Social Icons",
+        "element": {
+            "title": "text",
+            "social_icon": "icon",
+            "url": "text",
+            "modal": true
+        }
+    },
+    "contact_us": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Contact Us",
+        "content": {
+            "title": "text",
+            "address": "text",
+            "email_address": "text",
+            "contact_details": "text",
+            "contact_number": "text",
+            "latitude": "text",
+            "longitude": "text"
+        }
+    },
+    "footer": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Footer",
+        "content": {
+            "description": "text"
+        }
+    },
+    "kyc": {
+        "builder": true,
+        "no_selection": true,
+        "name": "KYC Content",
+        "content": {
+            "required": "text",
+            "pending": "text",
+            "reject": "text"
+        }
+    },
+    "advertiser_kyc": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Advertiser KYC Content",
+        "content": {
+            "required": "text",
+            "pending": "text",
+            "reject": "text"
+        }
+    },
+    "subscribe_section": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Subscribe Section",
+        "content": {
+            "heading": "text",
+            "subheading": "text"
+        }
+    },
+    "login": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Login Section",
+        "content": {
+            "heading": "text",
+            "subheading": "text"
+        }
+    },
+    "register": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Register Section",
+        "content": {
+            "heading": "text",
+            "subheading": "text"
+        }
+    },
+    "advertiser_login": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Advertiser Login",
+        "content": {
+            "heading": "text",
+            "subheading": "text"
+        }
+    },
+    "advertiser_register": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Advertiser Register",
+        "content": {
+            "heading": "text",
+            "subheading": "text"
+        }
+    },
+    "advertiser_banned": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Advertiser Banned",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "700x400"
+                }
+            },
+            "heading": "text"
+        }
+    },
+    "user_banned": {
+        "builder": true,
+        "no_selection": true,
+        "name": "User Banned",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "700x400"
+                }
+            },
+            "heading": "text"
+        }
+    },
+    "account_modal": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Account Modal",
+        "content": {
+            "images": {
+                "affiliate_image": {
+                    "size": "64x64"
+                },
+                "advertiser_image": {
+                    "size": "64x64"
+                }
+            },
+            "affiliate_heading": "text",
+            "affiliate_description": "text",
+            "advertiser_heading": "text",
+            "advertiser_description": "text"
+        }
+    }
+}
