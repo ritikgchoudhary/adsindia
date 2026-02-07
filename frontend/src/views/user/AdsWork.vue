@@ -43,7 +43,9 @@
                 <div class="badge bg-white text-primary px-4 py-2" style="font-size: 16px; border-radius: 12px; font-weight: 600;">
                   <i class="fas fa-check-circle me-2"></i>Plan Active
                 </div>
-                <router-link to="/user/ad-plans" class="btn btn-light btn-sm px-4 py-2" style="border-radius: 10px; font-weight: 600; white-space: nowrap; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);" @mouseenter="$event.currentTarget.style.transform = 'translateY(-2px)'; $event.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)'">
+                <router-link to="/user/ad-plans" class="btn px-4 py-2 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; border-radius: 12px; font-weight: 700; font-size: 15px; white-space: nowrap; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4); text-decoration: none; display: inline-flex; align-items: center; justify-content: center;" 
+                   @mouseenter="$event.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'; $event.currentTarget.style.boxShadow = '0 6px 20px rgba(245, 87, 108, 0.6)'" 
+                   @mouseleave="$event.currentTarget.style.transform = 'translateY(0) scale(1)'; $event.currentTarget.style.boxShadow = '0 4px 15px rgba(245, 87, 108, 0.4)'">
                   <i class="fas fa-arrow-up me-2"></i>Upgrade Plan
                 </router-link>
               </div>
@@ -173,7 +175,9 @@
               <i class="fas fa-info-circle me-2"></i>
               <strong>How it works:</strong> Purchase an Ad Plan, then watch video ads to earn ₹5,000 - ₹6,000 per ad!
             </div>
-            <router-link v-if="!hasActivePackage" to="/user/ad-plans" class="btn btn--base btn-lg mt-4 px-5" style="border-radius: 10px; font-weight: 600;">
+            <router-link v-if="!hasActivePackage" to="/user/ad-plans" class="btn btn-lg mt-4 px-5 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 12px; font-weight: 700; font-size: 16px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); text-decoration: none; display: inline-flex; align-items: center; justify-content: center;" 
+               @mouseenter="$event.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'; $event.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)'" 
+               @mouseleave="$event.currentTarget.style.transform = 'translateY(0) scale(1)'; $event.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)'">
               <i class="fas fa-shopping-cart me-2"></i>Purchase Ad Plan
             </router-link>
           </div>
