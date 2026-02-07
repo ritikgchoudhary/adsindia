@@ -359,9 +359,20 @@ export default {
 
       // Start timer
       timerInterval.value = setInterval(() => {
+        // Track watch duration - use multiple methods for reliability
         if (isVideoPlaying.value && videoPlayer.value && !videoPlayer.value.paused) {
-          // Track watch duration only when video is playing
+          // Method 1: Increment when video is playing
           watchDuration.value++
+        } else if (videoPlayer.value && !videoPlayer.value.paused) {
+          // Method 2: Also track if video is playing (even if isVideoPlaying flag is wrong)
+          watchDuration.value++
+        }
+        
+        // Method 3: Use elapsed time from start as backup
+        if (watchStartTime.value) {
+          const elapsedSeconds = Math.floor((Date.now() - watchStartTime.value) / 1000)
+          // Use the maximum of both methods
+          watchDuration.value = Math.max(watchDuration.value, elapsedSeconds)
         }
         
         // Countdown timer - always countdown from 60 seconds
@@ -369,12 +380,24 @@ export default {
           adTimer.value--
         }
         
-        // Check completion conditions every second
-        const minWatchTime = 60 * 0.9 // 54 seconds
+        // Debug log every 10 seconds
+        if (watchDuration.value % 10 === 0) {
+          console.log('Timer tick:', {
+            watchDuration: watchDuration.value,
+            adTimer: adTimer.value,
+            isVideoPlaying: isVideoPlaying.value,
+            videoPaused: videoPlayer.value?.paused,
+            videoCurrentTime: videoPlayer.value?.currentTime
+          })
+        }
         
-        // CRITICAL: Force completion when timer reaches 0 and user watched enough
-        if (!videoCompleted.value) {
-          if (watchDuration.value >= minWatchTime && adTimer.value <= 0) {
+        // Check completion conditions every second
+        const minWatchTime = 54 // 90% of 60 seconds
+        
+        // CRITICAL: Force completion when timer reaches 0
+        if (!videoCompleted.value && adTimer.value <= 0) {
+          // Timer reached 0 - check if user watched enough
+          if (watchDuration.value >= minWatchTime) {
             // Timer reached 0 and user watched enough, complete immediately
             console.log('=== TIMER INTERVAL: FORCE COMPLETING AD ===')
             console.log('watchDuration:', watchDuration.value, 'adTimer:', adTimer.value, 'minWatchTime:', minWatchTime)
@@ -383,13 +406,14 @@ export default {
               clearInterval(timerInterval.value)
               timerInterval.value = null
             }
-            // Directly call completeAd - don't go through onVideoEnded
+            // Directly call completeAd
             if (currentAd.value && currentAd.value.id) {
+              console.log('Timer interval: Calling completeAd with ad:', currentAd.value.id)
               completeAd(currentAd.value)
             } else {
-              console.error('currentAd is missing!', currentAd.value)
+              console.error('Timer interval: currentAd is missing!', currentAd.value)
             }
-          } else if (adTimer.value <= 0 && watchDuration.value < minWatchTime) {
+          } else {
             // Timer reached 0 but user didn't watch enough
             console.log('Timer reached 0 but watch duration insufficient:', watchDuration.value, 'need:', minWatchTime)
             if (window.notify) {
