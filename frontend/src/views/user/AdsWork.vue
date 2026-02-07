@@ -744,19 +744,25 @@ export default {
             
             // Find the highest watched ad index
             let highestWatchedIndex = -1
-            console.log('Processing ads - allAds:', allAds.value.map(a => ({ id: a.id, is_watched: a.is_watched })))
+            console.log('=== PROCESSING ADS ===')
+            console.log('All ads is_watched status:', allAds.value.map(a => ({ id: a.id, is_watched: a.is_watched, index: allAds.value.indexOf(a) })))
+            
             for (let i = 0; i < allAds.value.length; i++) {
-              if (allAds.value[i].is_watched) {
+              if (allAds.value[i].is_watched === true) {
                 watchedAds.value.push(allAds.value[i].id)
                 highestWatchedIndex = i
-                console.log('Found watched ad - index:', i, 'id:', allAds.value[i].id)
+                console.log('✓ Found watched ad - index:', i, 'id:', allAds.value[i].id)
               }
             }
-            console.log('Watched ads found:', watchedAds.value, 'highestWatchedIndex:', highestWatchedIndex)
+            
+            console.log('Watched ads array:', watchedAds.value)
+            console.log('Highest watched index:', highestWatchedIndex)
             
             // Unlock next ad after highest watched ad (or first ad if none watched)
             // If 1 ad is watched (index 0), unlock index 1 (2nd ad)
             const newUnlockedIndex = highestWatchedIndex + 1
+            
+            console.log('Calculated newUnlockedIndex:', newUnlockedIndex, '(highestWatchedIndex:', highestWatchedIndex, '+ 1)')
             
             // Always update to match backend state (don't preserve manual unlocks)
             // This ensures UI matches backend after refresh
@@ -765,14 +771,21 @@ export default {
             // Ensure at least first ad is unlocked
             if (currentUnlockedIndex.value < 0) {
               currentUnlockedIndex.value = 0
+              console.log('Adjusted currentUnlockedIndex to 0 (minimum)')
             }
             
             // Don't unlock beyond available ads
             if (currentUnlockedIndex.value >= allAds.value.length) {
               currentUnlockedIndex.value = allAds.value.length - 1
+              console.log('Adjusted currentUnlockedIndex to max:', currentUnlockedIndex.value)
             }
             
-            console.log('Ads loaded - watchedAds:', watchedAds.value, 'watchedCount:', watchedAds.value.length, 'highestWatchedIndex:', highestWatchedIndex, 'currentUnlockedIndex:', currentUnlockedIndex.value, 'allAds.length:', allAds.value.length)
+            console.log('=== FINAL STATE ===')
+            console.log('currentUnlockedIndex:', currentUnlockedIndex.value)
+            console.log('watchedAds:', watchedAds.value)
+            console.log('watchedCount:', watchedAds.value.length)
+            console.log('allAds.length:', allAds.value.length)
+            console.log('===================')
             
             currentAd.value = null
           } else {
