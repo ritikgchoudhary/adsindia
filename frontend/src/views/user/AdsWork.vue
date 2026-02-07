@@ -417,8 +417,10 @@ export default {
         const requiredWatchTime = 60 // 1 minute = 60 seconds
         const minWatchTime = requiredWatchTime * 0.9 // 90% = 54 seconds
         
-        if (watchDuration.value >= minWatchTime && adTimer.value <= 0) {
-          // User has watched for at least 54 seconds and timer reached 0
+        // Complete if watched enough and timer is done (or very close)
+        if (!videoCompleted.value && watchDuration.value >= minWatchTime && adTimer.value <= 5) {
+          // User has watched enough (54+ seconds) and timer is done or almost done
+          console.log('TimeUpdate: Completing ad - watchDuration:', watchDuration.value, 'adTimer:', adTimer.value)
           onVideoEnded()
         }
       }
