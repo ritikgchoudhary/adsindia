@@ -727,12 +727,15 @@ export default {
             
             // Find the highest watched ad index
             let highestWatchedIndex = -1
+            console.log('Processing ads - allAds:', allAds.value.map(a => ({ id: a.id, is_watched: a.is_watched })))
             for (let i = 0; i < allAds.value.length; i++) {
               if (allAds.value[i].is_watched) {
                 watchedAds.value.push(allAds.value[i].id)
                 highestWatchedIndex = i
+                console.log('Found watched ad - index:', i, 'id:', allAds.value[i].id)
               }
             }
+            console.log('Watched ads found:', watchedAds.value, 'highestWatchedIndex:', highestWatchedIndex)
             
             // Unlock next ad after highest watched ad (or first ad if none watched)
             // If 1 ad is watched (index 0), unlock index 1 (2nd ad)
