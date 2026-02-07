@@ -688,6 +688,34 @@ export default {
 
     onMounted(() => {
       fetchAds()
+      
+      // Ensure page can scroll - Fix scrolling issue
+      setTimeout(() => {
+        document.body.style.overflow = 'auto'
+        document.body.style.height = 'auto'
+        document.documentElement.style.overflow = 'auto'
+        document.documentElement.style.height = 'auto'
+        
+        // Remove any scroll locks from dashboard elements
+        const dashboardBody = document.querySelector('.dashboard-body')
+        if (dashboardBody) {
+          dashboardBody.style.overflow = 'visible'
+          dashboardBody.style.height = 'auto'
+          dashboardBody.style.maxHeight = 'none'
+        }
+        
+        const dashboardRight = document.querySelector('.dashboard__right')
+        if (dashboardRight) {
+          dashboardRight.style.overflow = 'visible'
+          dashboardRight.style.height = 'auto'
+        }
+        
+        const dashboard = document.querySelector('.dashboard')
+        if (dashboard) {
+          dashboard.style.overflow = 'visible'
+          dashboard.style.height = 'auto'
+        }
+      }, 100)
     })
 
     onUnmounted(() => {
@@ -785,32 +813,85 @@ export default {
   overflow: hidden;
 }
 
-/* Ensure page scrolling works */
-.dashboard-body {
+/* Ensure page scrolling works - Global fixes */
+:deep(.dashboard-body) {
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  position: relative !important;
+}
+
+:deep(.dashboard__right) {
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  position: relative !important;
+}
+
+:deep(.dashboard) {
+  overflow: visible !important;
+  height: auto !important;
+  position: relative !important;
+}
+
+:deep(.dashboard__inner) {
+  overflow: visible !important;
+  height: auto !important;
+  position: relative !important;
+}
+
+:deep(.container-fluid) {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+/* Ensure body and html can scroll */
+:deep(html) {
   overflow-y: auto !important;
   overflow-x: hidden !important;
   height: auto !important;
-  min-height: 100vh;
 }
 
-.dashboard__right {
+:deep(body) {
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  height: auto !important;
+  position: relative !important;
 }
 
 /* Prevent body scroll lock when modal is open */
 body.modal-open {
   overflow: auto !important;
   padding-right: 0 !important;
+  position: relative !important;
 }
 
 /* Ensure modal doesn't block page scroll */
 .modal.show {
   overflow-y: auto !important;
+  position: fixed !important;
 }
 
 .modal-content {
   max-height: 90vh;
   overflow-y: auto;
+}
+
+/* Only show backdrop when modal is actually open */
+.modal-backdrop.show {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+/* Hide backdrop when modal is closed */
+.modal-backdrop:not(.show) {
+  display: none !important;
 }
 </style>
