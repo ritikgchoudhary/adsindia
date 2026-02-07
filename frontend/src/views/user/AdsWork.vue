@@ -740,6 +740,12 @@ export default {
           activePackage.value = responseData.active_package || null
           
           console.log('Loaded ads:', allAds.value)
+          console.log('First 3 ads details:', allAds.value.slice(0, 3).map(a => ({ 
+            id: a.id, 
+            is_watched: a.is_watched, 
+            is_active: a.is_active,
+            title: a.title?.substring(0, 30)
+          })))
           console.log('Active package:', activePackage.value)
           console.log('Currency symbol:', currencySymbol.value)
           
