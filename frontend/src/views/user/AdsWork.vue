@@ -285,7 +285,6 @@
                   v-if="currentAd && currentAd.video_url"
                   ref="videoPlayer"
                   :src="currentAd.video_url" 
-                  controls 
                   autoplay
                   class="img-fluid"
                   style="width: 100%; max-height: 500px; background: #000; display: block;"
@@ -293,6 +292,9 @@
                   @ended="onVideoEnded"
                   @play="onVideoPlay"
                   @pause="onVideoPause"
+                  @seeked="onVideoSeeked"
+                  @seeking="onVideoSeeking"
+                  @loadedmetadata="onVideoLoaded"
                 >
                   Your browser does not support the video tag.
                 </video>
@@ -302,12 +304,31 @@
                     <p class="mb-0">Loading video...</p>
                   </div>
                 </div>
-                <div v-if="!isVideoPlaying && currentAd && currentAd.video_url" class="video-overlay d-flex align-items-center justify-content-center" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 15px; cursor: pointer; transition: all 0.3s;" @click="videoPlayer?.play()">
+                
+                <!-- Custom Controls Overlay -->
+                <div v-if="currentAd && currentAd.video_url" class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%); z-index: 10;">
+                  <div class="d-flex justify-content-center align-items-center gap-3">
+                    <!-- Play/Pause Button -->
+                    <button 
+                      class="btn btn-light btn-lg rounded-circle" 
+                      style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"
+                      @click="togglePlayPause"
+                    >
+                      <i v-if="isVideoPlaying" class="fas fa-pause"></i>
+                      <i v-else class="fas fa-play" style="margin-left: 2px;"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Play Overlay (when paused) -->
+                <div v-if="!isVideoPlaying && currentAd && currentAd.video_url" class="video-overlay d-flex align-items-center justify-content-center" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); border-radius: 15px; cursor: pointer; transition: all 0.3s; z-index: 5;" @click="togglePlayPause">
                   <div class="text-white text-center">
-                    <div class="mb-3" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <div class="mb-3" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 0 auto; transition: all 0.3s;" 
+                         @mouseenter="$event.currentTarget.style.transform = 'scale(1.1)'; $event.currentTarget.style.background = 'rgba(255,255,255,0.3)'"
+                         @mouseleave="$event.currentTarget.style.transform = 'scale(1)'; $event.currentTarget.style.background = 'rgba(255,255,255,0.2)'">
                       <i class="fas fa-play" style="font-size: 40px; margin-left: 5px;"></i>
                     </div>
-                    <p class="mb-0" style="font-size: 16px; font-weight: 600;">Click to start watching</p>
+                    <p class="mb-0" style="font-size: 16px; font-weight: 600;">Click to play</p>
                   </div>
                 </div>
               </div>
@@ -431,8 +452,20 @@ export default {
         const currentTime = videoPlayer.value.currentTime
         const duration = videoPlayer.value.duration
         
-        // Update watch duration based on video current time
-        watchDuration.value = Math.floor(currentTime)
+        // Prevent seeking forward - if user tries to skip, reset to last valid position
+        if (watchDuration.value > 0 && currentTime > watchDuration.value + 2) {
+          // User tried to skip forward, reset to last valid position
+          videoPlayer.value.currentTime = watchDuration.value
+          if (window.notify) {
+            window.notify('warning', 'Skipping forward is not allowed. Please watch the complete video.')
+          }
+          return
+        }
+        
+        // Update watch duration based on video current time (only if playing forward)
+        if (isVideoPlaying.value && currentTime >= watchDuration.value) {
+          watchDuration.value = Math.floor(currentTime)
+        }
         
         // Check if video is near completion (90% watched)
         if (duration > 0 && currentTime >= duration * 0.9) {
@@ -441,6 +474,53 @@ export default {
             adTimer.value = 0
             onVideoEnded()
           }
+        }
+      }
+    }
+
+    const onVideoSeeked = (event) => {
+      // Prevent seeking - reset to last valid position
+      if (videoPlayer.value && watchDuration.value > 0) {
+        const currentTime = videoPlayer.value.currentTime
+        if (currentTime > watchDuration.value + 1) {
+          videoPlayer.value.currentTime = watchDuration.value
+          if (window.notify) {
+            window.notify('warning', 'Skipping is not allowed. Please watch the complete video.')
+          }
+        }
+      }
+    }
+
+    const onVideoSeeking = (event) => {
+      // Prevent seeking while user is dragging
+      if (videoPlayer.value && watchDuration.value > 0) {
+        const currentTime = videoPlayer.value.currentTime
+        if (currentTime > watchDuration.value + 1) {
+          videoPlayer.value.currentTime = watchDuration.value
+        }
+      }
+    }
+
+    const onVideoLoaded = () => {
+      // Disable right-click context menu and keyboard shortcuts
+      if (videoPlayer.value) {
+        videoPlayer.value.addEventListener('contextmenu', (e) => e.preventDefault())
+        // Prevent keyboard shortcuts for seeking
+        videoPlayer.value.addEventListener('keydown', (e) => {
+          // Prevent arrow keys, space (except for play/pause), etc.
+          if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+            e.preventDefault()
+          }
+        })
+      }
+    }
+
+    const togglePlayPause = () => {
+      if (videoPlayer.value) {
+        if (videoPlayer.value.paused) {
+          videoPlayer.value.play()
+        } else {
+          videoPlayer.value.pause()
         }
       }
     }
@@ -631,6 +711,10 @@ export default {
       onVideoPause,
       onVideoTimeUpdate,
       onVideoEnded,
+      onVideoSeeked,
+      onVideoSeeking,
+      onVideoLoaded,
+      togglePlayPause,
       loading,
       hasActivePackage,
       currentAdIndex,
