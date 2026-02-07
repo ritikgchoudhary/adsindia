@@ -131,6 +131,7 @@ export default {
     }
 
     const formatRemark = (remark) => {
+      if (!remark || typeof remark !== 'string') return remark || ''
       return remark.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
     }
 

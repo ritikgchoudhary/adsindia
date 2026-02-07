@@ -199,7 +199,9 @@
                 <video 
                   v-if="currentAd && currentAd.video_url"
                   ref="videoPlayer"
-                  :src="currentAd.video_url" 
+                  :src="currentAd.video_url"
+                  @error="handleVideoError"
+                  @loadeddata="handleVideoLoaded" 
                   autoplay
                   class="img-fluid"
                   style="width: 100%; max-height: 500px; background: #000; display: block;"
