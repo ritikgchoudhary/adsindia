@@ -65,46 +65,63 @@ class AdPlanController extends Controller
         // Get or create AdPackage records for each plan
         $adPlans = [];
         foreach ($plansData as $index => $planData) {
-            $adPackage = AdPackage::firstOrCreate(
-                ['slug' => $planData['slug']],
-                [
-                    'name' => $planData['name'],
-                    'description' => $planData['name'] . ' - ' . $planData['ads_count'] . ' ads, valid for ' . $planData['validity_days'] . ' days',
-                    'price' => $planData['price'],
-                    'daily_ad_limit' => $planData['daily_ad_limit'],
-                    'reward_per_ad' => $planData['reward_per_ad'],
-                    'duration_seconds' => $planData['duration_minutes'] * 60, // Convert to seconds
-                    'is_recommended' => $planData['is_recommended'],
-                    'status' => 1,
-                    'sort_order' => $index + 1,
-                ]
-            );
+            try {
+                $adPackage = AdPackage::firstOrCreate(
+                    ['slug' => $planData['slug']],
+                    [
+                        'name' => $planData['name'],
+                        'description' => $planData['name'] . ' - ' . $planData['ads_count'] . ' ads, valid for ' . $planData['validity_days'] . ' days',
+                        'price' => $planData['price'],
+                        'daily_ad_limit' => $planData['daily_ad_limit'],
+                        'reward_per_ad' => $planData['reward_per_ad'],
+                        'duration_seconds' => $planData['duration_minutes'] * 60, // Convert to seconds
+                        'is_recommended' => $planData['is_recommended'],
+                        'status' => 1,
+                        'sort_order' => $index + 1,
+                    ]
+                );
 
-            // Update if exists
-            if ($adPackage->wasRecentlyCreated === false) {
-                $adPackage->update([
+                // Update if exists
+                if ($adPackage->wasRecentlyCreated === false) {
+                    $adPackage->update([
+                        'name' => $planData['name'],
+                        'price' => $planData['price'],
+                        'daily_ad_limit' => $planData['daily_ad_limit'],
+                        'reward_per_ad' => $planData['reward_per_ad'],
+                        'duration_seconds' => $planData['duration_minutes'] * 60,
+                        'is_recommended' => $planData['is_recommended'],
+                        'status' => 1,
+                    ]);
+                }
+
+                $adPlans[] = [
+                    'id' => $adPackage->id,
+                    'name' => $adPackage->name,
+                    'price' => (float)$adPackage->price,
+                    'ads_count' => $planData['ads_count'],
+                    'validity_days' => $planData['validity_days'],
+                    'total_earning' => $planData['ads_count'] * $planData['reward_per_ad'],
+                    'daily_ad_limit' => $adPackage->daily_ad_limit,
+                    'reward_per_ad' => (float)$adPackage->reward_per_ad,
+                    'duration_minutes' => $planData['duration_minutes'],
+                    'is_recommended' => $adPackage->is_recommended,
+                ];
+            } catch (\Exception $e) {
+                // If database operation fails, return plan data directly
+                \Log::error('Error creating AdPackage: ' . $e->getMessage());
+                $adPlans[] = [
+                    'id' => $index + 1, // Use index as ID if database fails
                     'name' => $planData['name'],
-                    'price' => $planData['price'],
+                    'price' => (float)$planData['price'],
+                    'ads_count' => $planData['ads_count'],
+                    'validity_days' => $planData['validity_days'],
+                    'total_earning' => $planData['ads_count'] * $planData['reward_per_ad'],
                     'daily_ad_limit' => $planData['daily_ad_limit'],
-                    'reward_per_ad' => $planData['reward_per_ad'],
-                    'duration_seconds' => $planData['duration_minutes'] * 60,
+                    'reward_per_ad' => (float)$planData['reward_per_ad'],
+                    'duration_minutes' => $planData['duration_minutes'],
                     'is_recommended' => $planData['is_recommended'],
-                    'status' => 1,
-                ]);
+                ];
             }
-
-            $adPlans[] = [
-                'id' => $adPackage->id,
-                'name' => $adPackage->name,
-                'price' => (float)$adPackage->price,
-                'ads_count' => $planData['ads_count'],
-                'validity_days' => $planData['validity_days'],
-                'total_earning' => $planData['ads_count'] * $planData['reward_per_ad'],
-                'daily_ad_limit' => $adPackage->daily_ad_limit,
-                'reward_per_ad' => (float)$adPackage->reward_per_ad,
-                'duration_minutes' => $planData['duration_minutes'],
-                'is_recommended' => $adPackage->is_recommended,
-            ];
         }
 
         return responseSuccess('ad_plans', ['Ad plans retrieved successfully'], [

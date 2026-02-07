@@ -84,12 +84,39 @@ export default {
     const fetchAdPlans = async () => {
       try {
         const response = await api.get('/ad-plans')
+        console.log('Ad Plans API Response:', response.data)
+        
         if (response.data.status === 'success') {
-          adPlans.value = response.data.data || []
-          currencySymbol.value = response.data.currency_symbol || '₹'
+          // Response structure: { status: 'success', data: { data: [...], currency_symbol: '₹' } }
+          const responseData = response.data.data || {}
+          const plans = responseData.data || []
+          
+          adPlans.value = Array.isArray(plans) ? plans : []
+          currencySymbol.value = responseData.currency_symbol || '₹'
+          
+          console.log('Loaded ad plans:', adPlans.value)
+          console.log('Currency symbol:', currencySymbol.value)
+          
+          if (adPlans.value.length === 0) {
+            console.warn('No ad plans found in response')
+            if (window.notify) {
+              window.notify('warning', 'No ad plans available at the moment')
+            }
+          }
+        } else {
+          console.error('API returned error:', response.data)
+          const errorMsg = response.data.message?.error?.[0] || response.data.message?.success?.[0] || 'Failed to load ad plans'
+          if (window.notify) {
+            window.notify('error', errorMsg)
+          }
         }
       } catch (error) {
         console.error('Error loading ad plans:', error)
+        console.error('Error response:', error.response?.data)
+        const errorMsg = error.response?.data?.message?.error?.[0] || error.response?.data?.message || 'Failed to load ad plans. Please try again.'
+        if (window.notify) {
+          window.notify('error', errorMsg)
+        }
       }
     }
 
