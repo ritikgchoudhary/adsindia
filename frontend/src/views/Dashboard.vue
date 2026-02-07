@@ -585,5 +585,53 @@ export default {
     font-size: 20px !important;
   }
 }
+
+/* Fix scrolling issues - Ensure page can scroll */
+:deep(.dashboard-body) {
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  position: relative !important;
+}
+
+:deep(.dashboard__right) {
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  position: relative !important;
+}
+
+:deep(.dashboard) {
+  overflow: visible !important;
+  height: auto !important;
+  position: relative !important;
+}
+
+:deep(.dashboard__inner) {
+  overflow: visible !important;
+  height: auto !important;
+  position: relative !important;
+}
+
+:deep(.container-fluid) {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+/* Ensure body and html can scroll */
+:deep(html) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+}
+
+:deep(body) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  position: relative !important;
+}
 </style>
 
