@@ -56,27 +56,60 @@ export default {
     }
 
     const purchasePlan = async (plan) => {
-      if (!plan || !plan.id) return
+      if (!plan || !plan.id) {
+        console.error('Invalid plan:', plan)
+        return
+      }
       
-      if (!confirm(`Are you sure you want to purchase ${plan.name} for ${currencySymbol.value}${formatAmount(plan.price)}?\n\nAfter purchase, you can watch ads and earn ${currencySymbol.value}${formatAmount(plan.reward_per_ad)} per ad!`)) {
+      const confirmMessage = `Are you sure you want to purchase ${plan.name} for ${currencySymbol.value}${formatAmount(plan.price)}?\n\nAfter purchase, you can watch ads and earn ${currencySymbol.value}${formatAmount(plan.reward_per_ad)} per ad!`
+      
+      if (!confirm(confirmMessage)) {
         return
       }
 
+      console.log('Purchasing plan:', plan)
+      
       try {
         const response = await api.post('/ad-plans/purchase', { plan_id: plan.id })
+        console.log('Purchase response:', response.data)
+        
         if (response.data.status === 'success') {
+          const successMsg = `Ad plan purchased successfully! You can now watch ads and earn ${currencySymbol.value}${formatAmount(plan.reward_per_ad)} per ad.`
+          
           if (window.notify) {
-            window.notify('success', `Ad plan purchased successfully! You can now watch ads and earn ${currencySymbol.value}${formatAmount(plan.reward_per_ad)} per ad.`)
+            window.notify('success', successMsg)
           }
+          
+          console.log('Purchase successful, redirecting to ads-work...')
+          
           // Redirect to ads work page
           setTimeout(() => {
             window.location.href = '/user/ads-work'
           }, 1500)
+        } else {
+          console.error('Purchase failed:', response.data)
+          const errorMsg = response.data.message?.error?.[0] || response.data.message?.success?.[0] || 'Failed to purchase ad plan'
+          if (window.notify) {
+            window.notify('error', errorMsg)
+          }
         }
       } catch (error) {
         console.error('Error purchasing ad plan:', error)
+        console.error('Error response:', error.response?.data)
+        
+        let errorMsg = 'Failed to purchase ad plan'
+        if (error.response?.data) {
+          if (error.response.data.message?.error) {
+            errorMsg = Array.isArray(error.response.data.message.error) 
+              ? error.response.data.message.error[0] 
+              : error.response.data.message.error
+          } else if (error.response.data.message) {
+            errorMsg = error.response.data.message
+          }
+        }
+        
         if (window.notify) {
-          window.notify('error', error.response?.data?.message?.error?.[0] || error.response?.data?.message || 'Failed to purchase ad plan')
+          window.notify('error', errorMsg)
         }
       }
     }
