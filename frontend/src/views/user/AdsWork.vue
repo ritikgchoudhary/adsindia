@@ -26,50 +26,105 @@
       </div>
     </div>
 
-    <!-- Ads List -->
-    <div v-else class="row gy-4">
-      <template v-for="ad in ads" :key="ad?.id || Math.random()">
-        <div v-if="ad && ad.id" class="col-lg-4 col-md-6">
-          <div class="card custom--card">
-            <div class="card-body">
-            <div class="ad-item">
-              <div class="ad-thumb mb-3">
-                <img :src="ad.image || '/assets/images/default-ad.jpg'" :alt="ad.title" class="img-fluid rounded">
+    <!-- Current Ad (Step by Step) -->
+    <div v-else-if="!loading && currentAd" class="row justify-content-center">
+      <div class="col-lg-8 col-md-10">
+        <!-- Progress Indicator -->
+        <div class="card custom--card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h5 class="mb-1" style="color: #2d3748; font-weight: 600;">
+                  <i class="fas fa-layer-group me-2 text-primary"></i>Ad Level {{ currentAdIndex + 1 }} of {{ allAds.length }}
+                </h5>
+                <p class="mb-0 text-muted">Complete this ad to unlock the next one</p>
               </div>
-              <h5 class="ad-title">{{ ad.title }}</h5>
-              <p class="text-muted mb-3">{{ ad.description }}</p>
-              
-              <div class="ad-info mb-3">
-                <div class="d-flex justify-content-between mb-2">
-                  <span><i class="fas fa-clock me-1"></i>Duration:</span>
-                  <strong>{{ ad.duration || 30 }} minutes</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                  <span><i class="fas fa-coins me-1"></i>Earning:</span>
-                  <strong class="text-success">{{ currencySymbol }}{{ formatAmount(ad.earning) }}</strong>
-                </div>
-                <div v-if="ad.timer" class="d-flex justify-content-between">
-                  <span><i class="fas fa-hourglass-half me-1"></i>Time Left:</span>
-                  <strong class="text-warning">{{ formatTime(ad.timer) }}</strong>
+              <div class="text-end">
+                <div class="badge bg-primary" style="font-size: 18px; padding: 10px 20px; border-radius: 10px;">
+                  Level {{ currentAdIndex + 1 }}
                 </div>
               </div>
-
-              <div v-if="ad.is_watched" class="alert alert-success">
-                <i class="fas fa-check-circle me-2"></i>Ad watched! Earning added to your account.
-              </div>
-              <button v-else-if="!ad.is_active" class="btn btn--base w-100" disabled>
-                <i class="fas fa-lock me-2"></i>Ad Not Available
-              </button>
-              <button v-else class="btn btn--base w-100" @click="watchAd(ad)">
-                <i class="fas fa-play me-2"></i>Watch Ad Now
-              </button>
             </div>
+            <div class="progress" style="height: 10px; border-radius: 10px;">
+              <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" 
+                   role="progressbar" 
+                   :style="`width: ${((currentAdIndex + 1) / allAds.length) * 100}%`">
+              </div>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+              <small class="text-muted">{{ currentAdIndex + 1 }} / {{ allAds.length }} Ads</small>
+              <small class="text-muted">{{ watchedAds.length }} Completed</small>
             </div>
           </div>
         </div>
-      </template>
 
-      <div v-if="!loading && ads.length === 0" class="col-12">
+        <!-- Current Ad Card -->
+        <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px; transition: all 0.3s ease;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'">
+          <div class="card-body p-4">
+            <div class="ad-item text-center">
+              <div class="ad-thumb mb-4 position-relative">
+                <img :src="currentAd.image || '/assets/images/default-ad.jpg'" :alt="currentAd.title" class="img-fluid rounded" style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px;">
+                <div class="position-absolute top-50 start-50 translate-middle" style="background: rgba(0,0,0,0.6); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; cursor: pointer;" @click="watchAd(currentAd)">
+                  <i class="fas fa-play text-white" style="font-size: 32px; margin-left: 5px;"></i>
+                </div>
+              </div>
+              <h4 class="ad-title mb-3" style="color: #2d3748; font-weight: 600;">{{ currentAd.title }}</h4>
+              <p class="text-muted mb-4" style="font-size: 16px;">{{ currentAd.description }}</p>
+              
+              <div class="ad-info mb-4 p-3" style="background: #f7fafc; border-radius: 12px;">
+                <div class="row text-center">
+                  <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="d-flex flex-column align-items-center">
+                      <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                      <span class="text-muted small">Duration</span>
+                      <strong style="color: #2d3748;">{{ currentAd.duration || 30 }} minutes</strong>
+                    </div>
+                  </div>
+                  <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="d-flex flex-column align-items-center">
+                      <i class="fas fa-coins fa-2x text-success mb-2"></i>
+                      <span class="text-muted small">Earning</span>
+                      <strong class="text-success" style="font-size: 18px;">{{ currencySymbol }}{{ formatAmount(currentAd.earning) }}</strong>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="d-flex flex-column align-items-center">
+                      <i class="fas fa-trophy fa-2x text-warning mb-2"></i>
+                      <span class="text-muted small">Level</span>
+                      <strong style="color: #2d3748;">{{ currentAdIndex + 1 }} / {{ allAds.length }}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="watchedAds.includes(currentAd.id)" class="alert alert-success mb-4" style="border-radius: 12px;">
+                <i class="fas fa-check-circle me-2"></i>Ad watched! Earning added to your account.
+              </div>
+              <button v-else-if="!currentAd.is_active" class="btn btn--base w-100 btn-lg" disabled style="border-radius: 12px; font-weight: 600;">
+                <i class="fas fa-lock me-2"></i>Ad Not Available
+              </button>
+              <button v-else class="btn btn--base w-100 btn-lg" @click="watchAd(currentAd)" style="border-radius: 12px; font-weight: 600; padding: 15px;">
+                <i class="fas fa-play me-2"></i>Watch Ad Now - Level {{ currentAdIndex + 1 }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Next Ad Preview (if available) -->
+        <div v-if="currentAdIndex < allAds.length - 1" class="card custom--card border-0 shadow-sm mt-4" style="border-radius: 15px; opacity: 0.6;">
+          <div class="card-body p-3 text-center">
+            <i class="fas fa-lock fa-2x text-muted mb-2"></i>
+            <p class="mb-0 text-muted">
+              <strong>Next Level:</strong> Complete current ad to unlock "{{ allAds[currentAdIndex + 1]?.title }}"
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else-if="!loading && !currentAd && allAds.length === 0" class="row">
+      <div class="col-12">
         <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px;">
           <div class="card-body text-center p-5">
             <div class="mb-4">
@@ -185,6 +240,8 @@ export default {
   },
   setup() {
     const ads = ref([])
+    const allAds = ref([]) // Store all ads
+    const currentAdIndex = ref(0) // Current ad index (level)
     const showAdModal = ref(false)
     const currentAd = ref(null)
     const adTimer = ref(0)
@@ -198,6 +255,7 @@ export default {
     const watchDuration = ref(0)
     const loading = ref(true)
     const hasActivePackage = ref(true)
+    const watchedAds = ref([]) // Track watched ads
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
@@ -287,13 +345,29 @@ export default {
           ad_url: ad.video_url || ad.image
         })
         if (response.data.status === 'success') {
-          if (window.notify) {
-            window.notify('success', `You earned ${currencySymbol.value}${formatAmount(ad.earning)}!`)
+          // Mark ad as watched
+          if (!watchedAds.value.includes(ad.id)) {
+            watchedAds.value.push(ad.id)
           }
-          // Close modal after 2 seconds
+          
+          if (window.notify) {
+            window.notify('success', `Level ${currentAdIndex.value + 1} completed! You earned ${currencySymbol.value}${formatAmount(ad.earning)}!`)
+          }
+          
+          // Close modal after 2 seconds and show next ad
           setTimeout(() => {
             closeAdModal()
-            fetchAds()
+            
+            // Show next ad if available
+            if (currentAdIndex.value < allAds.value.length - 1) {
+              showNextAd()
+              if (window.notify) {
+                window.notify('info', `Level ${currentAdIndex.value + 1} unlocked! Watch the next ad to earn more.`)
+              }
+            } else {
+              // All ads completed
+              fetchAds() // Refresh to check if more ads available
+            }
           }, 2000)
         }
       } catch (error) {
@@ -337,18 +411,27 @@ export default {
           const responseData = response.data.data || {}
           const adsList = responseData.data || []
           
-          ads.value = Array.isArray(adsList) ? adsList : []
+          allAds.value = Array.isArray(adsList) ? adsList : []
           currencySymbol.value = responseData.currency_symbol || response.data.currency_symbol || '₹'
           
-          console.log('Loaded ads:', ads.value)
+          console.log('Loaded ads:', allAds.value)
           console.log('Currency symbol:', currencySymbol.value)
           
-          if (ads.value.length === 0) {
+          // Initialize: Show first ad only
+          if (allAds.value.length > 0) {
+            currentAdIndex.value = 0
+            currentAd.value = allAds.value[0]
+            ads.value = [allAds.value[0]] // Show only current ad
+          } else {
+            currentAd.value = null
+            ads.value = []
             console.warn('No ads found in response')
           }
         } else {
           console.error('API returned error:', response.data)
           hasActivePackage.value = false
+          allAds.value = []
+          currentAd.value = null
           ads.value = []
         }
       } catch (error) {
@@ -358,6 +441,8 @@ export default {
         // Check if no active package
         if (error.response?.data?.remark === 'no_active_package') {
           hasActivePackage.value = false
+          allAds.value = []
+          currentAd.value = null
           ads.value = []
         } else {
           hasActivePackage.value = true
@@ -368,6 +453,19 @@ export default {
         }
       } finally {
         loading.value = false
+      }
+    }
+
+    const showNextAd = () => {
+      if (currentAdIndex.value < allAds.value.length - 1) {
+        currentAdIndex.value++
+        currentAd.value = allAds.value[currentAdIndex.value]
+        ads.value = [currentAd.value]
+        console.log('Showing next ad:', currentAd.value)
+      } else {
+        // All ads completed
+        currentAd.value = null
+        console.log('All ads completed!')
       }
     }
 
@@ -400,7 +498,11 @@ export default {
       onVideoTimeUpdate,
       onVideoEnded,
       loading,
-      hasActivePackage
+      hasActivePackage,
+      currentAdIndex,
+      allAds,
+      watchedAds,
+      showNextAd
     }
   }
 }
