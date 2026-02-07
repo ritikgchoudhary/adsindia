@@ -1,186 +1,193 @@
 <template>
   <DashboardLayout page-title="Account & KYC">
     <div class="row">
-      <div class="col-lg-8">
-        <div class="card custom--card mb-4">
-          <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-user-shield me-2"></i>Personal Details</h5>
-          </div>
-          <div class="card-body">
-            <form @submit.prevent="updatePersonalDetails">
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">First Name</label>
-                    <input type="text" v-model="personalDetails.firstname" class="form--control" required>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">Last Name</label>
-                    <input type="text" v-model="personalDetails.lastname" class="form--control" required>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">Email</label>
-                    <input type="email" v-model="personalDetails.email" class="form--control" disabled>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">Mobile</label>
-                    <input type="text" v-model="personalDetails.mobile" class="form--control" disabled>
-                  </div>
-                </div>
-                <div class="col-md-12">
-                  <div class="form-group">
-                    <label class="form--label">Address</label>
-                    <input type="text" v-model="personalDetails.address" class="form--control">
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="form-group">
-                    <label class="form--label">City</label>
-                    <input type="text" v-model="personalDetails.city" class="form--control">
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="form-group">
-                    <label class="form--label">State</label>
-                    <input type="text" v-model="personalDetails.state" class="form--control">
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="form-group">
-                    <label class="form--label">Zip Code</label>
-                    <input type="text" v-model="personalDetails.zip" class="form--control">
-                  </div>
+      <div class="col-lg-12">
+        <!-- Step Progress Indicator -->
+        <div class="card custom--card mb-4 border-0 shadow-sm" style="border-radius: 15px;">
+          <div class="card-body p-4">
+            <div class="row align-items-center">
+              <div class="col-md-4 text-center">
+                <div class="step-indicator" :class="{ 'active': currentStep >= 1, 'completed': currentStep > 1 }">
+                  <div class="step-number">{{ currentStep > 1 ? '✓' : '1' }}</div>
+                  <div class="step-label mt-2">Bank Details</div>
                 </div>
               </div>
-              <button type="submit" class="btn btn--base">Update Personal Details</button>
+              <div class="col-md-4 text-center">
+                <div class="step-indicator" :class="{ 'active': currentStep >= 2, 'completed': currentStep > 2 }">
+                  <div class="step-number">{{ currentStep > 2 ? '✓' : '2' }}</div>
+                  <div class="step-label mt-2">KYC Documents</div>
+                </div>
+              </div>
+              <div class="col-md-4 text-center">
+                <div class="step-indicator" :class="{ 'active': currentStep >= 3, 'completed': kycStatus === 1 }">
+                  <div class="step-number">{{ kycStatus === 1 ? '✓' : '3' }}</div>
+                  <div class="step-label mt-2">Verification</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 1: Bank Details -->
+        <div v-if="currentStep === 1" class="card custom--card mb-4 border-0 shadow-sm" style="border-radius: 15px;">
+          <div class="card-header bg-transparent border-0 pb-0" style="border-radius: 15px 15px 0 0;">
+            <h5 class="mb-0" style="font-weight: 700; color: #2d3748;">
+              <i class="fas fa-university me-2 text-primary"></i>Step 1: Bank Details
+            </h5>
+          </div>
+          <div class="card-body pt-3">
+            <form @submit.prevent="submitBankDetails">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Account Holder Name <span class="text-danger">*</span></label>
+                  <input type="text" v-model="bankDetails.account_holder_name" class="form-control" style="border-radius: 10px; padding: 12px;" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Bank Name <span class="text-danger">*</span></label>
+                  <input type="text" v-model="bankDetails.bank_name" class="form-control" style="border-radius: 10px; padding: 12px;" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Account Number <span class="text-danger">*</span></label>
+                  <input type="text" v-model="bankDetails.account_number" class="form-control" style="border-radius: 10px; padding: 12px;" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label" style="font-weight: 600; color: #4a5568;">IFSC Code <span class="text-danger">*</span></label>
+                  <input type="text" v-model="bankDetails.ifsc_code" class="form-control" style="border-radius: 10px; padding: 12px; text-transform: uppercase;" maxlength="11" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Bank Registered No. <span class="text-danger">*</span></label>
+                  <input type="text" v-model="bankDetails.bank_registered_no" class="form-control" style="border-radius: 10px; padding: 12px;" required>
+                </div>
+              </div>
+              <div class="d-flex justify-content-end mt-4">
+                <button type="submit" class="btn btn-lg px-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 600;">
+                  <i class="fas fa-arrow-right me-2"></i>Next Step
+                </button>
+              </div>
             </form>
           </div>
         </div>
 
-        <div class="card custom--card mb-4">
-          <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-university me-2"></i>Bank Details</h5>
+        <!-- Step 2: KYC Documents -->
+        <div v-if="currentStep === 2" class="card custom--card mb-4 border-0 shadow-sm" style="border-radius: 15px;">
+          <div class="card-header bg-transparent border-0 pb-0" style="border-radius: 15px 15px 0 0;">
+            <h5 class="mb-0" style="font-weight: 700; color: #2d3748;">
+              <i class="fas fa-id-card me-2 text-primary"></i>Step 2: KYC Documents
+            </h5>
           </div>
-          <div class="card-body">
-            <form @submit.prevent="updateBankDetails">
+          <div class="card-body pt-3">
+            <form @submit.prevent="submitKYC">
               <div class="row">
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">Account Holder Name</label>
-                    <input type="text" v-model="bankDetails.account_holder_name" class="form--control" required>
-                  </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Aadhaar Number <span class="text-danger">*</span></label>
+                  <input type="text" v-model="kycData.aadhaar_number" class="form-control" style="border-radius: 10px; padding: 12px;" maxlength="12" pattern="[0-9]{12}" required>
+                  <small class="text-muted">Enter 12-digit Aadhaar number</small>
                 </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">Account Number</label>
-                    <input type="text" v-model="bankDetails.account_number" class="form--control" required>
-                  </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Aadhaar Document <span class="text-danger">*</span></label>
+                  <input type="file" @change="handleFileChange('aadhaar', $event)" class="form-control" style="border-radius: 10px; padding: 12px;" accept="image/*,.pdf" required>
+                  <small class="text-muted">Upload Aadhaar card (Image or PDF)</small>
                 </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">IFSC Code</label>
-                    <input type="text" v-model="bankDetails.ifsc_code" class="form--control" required>
-                  </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label" style="font-weight: 600; color: #4a5568;">PAN Card Number <span class="text-danger">*</span></label>
+                  <input type="text" v-model="kycData.pan_number" class="form-control" style="border-radius: 10px; padding: 12px; text-transform: uppercase;" maxlength="10" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" required>
+                  <small class="text-muted">Enter 10-character PAN number</small>
                 </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">Bank Name</label>
-                    <input type="text" v-model="bankDetails.bank_name" class="form--control" required>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">Bank Registered No.</label>
-                    <input type="text" v-model="bankDetails.bank_registered_no" class="form--control">
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">Branch Name</label>
-                    <input type="text" v-model="bankDetails.branch_name" class="form--control">
-                  </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label" style="font-weight: 600; color: #4a5568;">PAN Card Document <span class="text-danger">*</span></label>
+                  <input type="file" @change="handleFileChange('pan', $event)" class="form-control" style="border-radius: 10px; padding: 12px;" accept="image/*,.pdf" required>
+                  <small class="text-muted">Upload PAN card (Image or PDF)</small>
                 </div>
               </div>
-              <button type="submit" class="btn btn--base">Update Bank Details</button>
+              <div class="d-flex justify-content-between mt-4">
+                <button type="button" @click="currentStep = 1" class="btn btn-lg px-5" style="background: #e2e8f0; color: #4a5568; border: none; border-radius: 12px; font-weight: 600;">
+                  <i class="fas fa-arrow-left me-2"></i>Previous
+                </button>
+                <button type="submit" class="btn btn-lg px-5" :disabled="!canSubmitKYC || processing" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 600;">
+                  <i class="fas fa-paper-plane me-2"></i>{{ processing ? 'Processing...' : 'Submit KYC' }}
+                </button>
+              </div>
             </form>
           </div>
         </div>
 
-        <div class="card custom--card mb-4">
-          <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-id-card me-2"></i>KYC Documents</h5>
-          </div>
-          <div class="card-body">
-            <form @submit.prevent="submitKYC" enctype="multipart/form-data">
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">Aadhaar Number</label>
-                    <input type="text" v-model="kycData.aadhaar_number" class="form--control" maxlength="12" required>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">Aadhaar Document</label>
-                    <input type="file" @change="handleFileChange('aadhaar', $event)" class="form--control" accept="image/*,.pdf" required>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">PAN Number</label>
-                    <input type="text" v-model="kycData.pan_number" class="form--control" maxlength="10" required>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label class="form--label">PAN Document</label>
-                    <input type="file" @change="handleFileChange('pan', $event)" class="form--control" accept="image/*,.pdf" required>
-                  </div>
-                </div>
+        <!-- Step 3: Verification Status -->
+        <div v-if="currentStep === 3" class="card custom--card mb-4 border-0 shadow-sm" style="border-radius: 15px;">
+          <div class="card-body text-center p-5">
+            <div v-if="kycStatus === 2" class="mb-4">
+              <div class="d-inline-block p-4 rounded-circle mb-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <i class="fas fa-clock fa-4x text-white"></i>
               </div>
-              
-              <div class="alert alert-info mb-3">
+              <h3 class="mb-3" style="color: #2d3748; font-weight: 700;">KYC Under Review</h3>
+              <p class="text-muted mb-4">Your KYC application has been submitted successfully and is pending admin review.</p>
+              <div class="alert alert-info" style="border-radius: 12px;">
                 <i class="fas fa-info-circle me-2"></i>
-                <strong>KYC Fee:</strong> {{ currencySymbol }}{{ formatAmount(kycFee) }} will be deducted from your balance.
+                <strong>Payment Status:</strong> ₹{{ formatAmount(kycFee) }} has been deducted from your balance.
               </div>
-
-              <button type="submit" class="btn btn--base" :disabled="!canSubmitKYC">
-                <i class="fas fa-paper-plane me-2"></i>Submit KYC Application
+            </div>
+            <div v-else-if="kycStatus === 1" class="mb-4">
+              <div class="d-inline-block p-4 rounded-circle mb-3" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <i class="fas fa-check-circle fa-4x text-white"></i>
+              </div>
+              <h3 class="mb-3" style="color: #2d3748; font-weight: 700;">KYC Verified!</h3>
+              <p class="text-muted mb-4">Congratulations! Your KYC has been verified by admin.</p>
+            </div>
+            <div v-else-if="kycStatus === 3" class="mb-4">
+              <div class="d-inline-block p-4 rounded-circle mb-3" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);">
+                <i class="fas fa-times-circle fa-4x text-white"></i>
+              </div>
+              <h3 class="mb-3" style="color: #2d3748; font-weight: 700;">KYC Rejected</h3>
+              <p class="text-muted mb-4" v-if="kycRejectionReason">{{ kycRejectionReason }}</p>
+              <button @click="currentStep = 1" class="btn btn-lg px-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 600;">
+                <i class="fas fa-redo me-2"></i>Re-submit KYC
               </button>
-            </form>
+            </div>
           </div>
         </div>
       </div>
-      <div class="col-lg-4">
-        <div class="card custom--card">
-          <div class="card-header">
-            <h5 class="mb-0">KYC Status</h5>
+    </div>
+
+    <!-- Payment Modal -->
+    <div v-if="showPaymentModal" class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 15px; border: none;">
+          <div class="modal-header border-0 pb-0" style="border-radius: 15px 15px 0 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <h5 class="modal-title text-white" style="font-weight: 700;">
+              <i class="fas fa-credit-card me-2"></i>KYC Payment Required
+            </h5>
+            <button type="button" class="btn-close btn-close-white" @click="showPaymentModal = false"></button>
           </div>
-          <div class="card-body">
-            <div v-if="kycStatus === 0" class="alert alert-warning">
+          <div class="modal-body p-4">
+            <div class="text-center mb-4">
+              <div class="d-inline-block p-3 rounded-circle mb-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <i class="fas fa-rupee-sign fa-3x text-white"></i>
+              </div>
+              <h4 class="mb-2" style="font-weight: 700; color: #2d3748;">Pay KYC Fee</h4>
+              <p class="text-muted mb-3">Complete your KYC verification by paying the required fee</p>
+              <div class="alert alert-info" style="border-radius: 12px;">
+                <h3 class="mb-0" style="font-weight: 700; color: #667eea;">
+                  {{ currencySymbol }}{{ formatAmount(kycFee) }}
+                </h3>
+                <small class="text-muted">This amount will be deducted from your balance</small>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-weight: 600;">Current Balance</label>
+              <div class="input-group">
+                <span class="input-group-text" style="background: #f7fafc; border-radius: 10px 0 0 10px;">{{ currencySymbol }}</span>
+                <input type="text" :value="formatAmount(userBalance)" class="form-control" style="border-radius: 0 10px 10px 0;" readonly>
+              </div>
+            </div>
+            <div v-if="userBalance < kycFee" class="alert alert-warning mb-3" style="border-radius: 12px;">
               <i class="fas fa-exclamation-triangle me-2"></i>
-              <strong>Status:</strong> Not Verified
-              <p class="mb-0 mt-2">Please submit your KYC documents to verify your account.</p>
+              <strong>Insufficient Balance!</strong> Please add funds to your account.
             </div>
-            <div v-else-if="kycStatus === 1" class="alert alert-success">
-              <i class="fas fa-check-circle me-2"></i>
-              <strong>Status:</strong> Verified
-            </div>
-            <div v-else-if="kycStatus === 2" class="alert alert-info">
-              <i class="fas fa-clock me-2"></i>
-              <strong>Status:</strong> Pending Review
-            </div>
-            <div v-else-if="kycStatus === 3" class="alert alert-danger">
-              <i class="fas fa-times-circle me-2"></i>
-              <strong>Status:</strong> Rejected
-              <p class="mb-0 mt-2" v-if="kycRejectionReason">{{ kycRejectionReason }}</p>
-            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-secondary" @click="showPaymentModal = false" style="border-radius: 10px; font-weight: 600;">Cancel</button>
+            <button type="button" class="btn btn-lg px-5" @click="processPayment" :disabled="userBalance < kycFee || processingPayment" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-weight: 600;">
+              <i class="fas fa-check me-2"></i>{{ processingPayment ? 'Processing...' : 'Pay & Continue' }}
+            </button>
           </div>
         </div>
       </div>
@@ -199,23 +206,13 @@ export default {
     DashboardLayout
   },
   setup() {
-    const personalDetails = ref({
-      firstname: '',
-      lastname: '',
-      email: '',
-      mobile: '',
-      address: '',
-      city: '',
-      state: '',
-      zip: ''
-    })
+    const currentStep = ref(1)
     const bankDetails = ref({
       account_holder_name: '',
+      bank_name: '',
       account_number: '',
       ifsc_code: '',
-      bank_name: '',
-      bank_registered_no: '',
-      branch_name: ''
+      bank_registered_no: ''
     })
     const kycData = ref({
       aadhaar_number: '',
@@ -224,8 +221,12 @@ export default {
     const kycFiles = ref({})
     const kycStatus = ref(0)
     const kycRejectionReason = ref('')
-    const kycFee = ref(0)
+    const kycFee = ref(990) // Fixed ₹990 fee
     const currencySymbol = ref('₹')
+    const userBalance = ref(0)
+    const showPaymentModal = ref(false)
+    const processing = ref(false)
+    const processingPayment = ref(false)
 
     const canSubmitKYC = computed(() => {
       return kycData.value.aadhaar_number && 
@@ -243,51 +244,76 @@ export default {
       kycFiles.value[type] = event.target.files[0]
     }
 
-    const updatePersonalDetails = async () => {
+    const submitBankDetails = async () => {
+      // Validate bank details
+      if (!bankDetails.value.account_holder_name || 
+          !bankDetails.value.bank_name || 
+          !bankDetails.value.account_number || 
+          !bankDetails.value.ifsc_code || 
+          !bankDetails.value.bank_registered_no) {
+        if (window.notify) {
+          window.notify('error', 'Please fill all required bank details')
+        }
+        return
+      }
+
+      // Save bank details first
       try {
-        const response = await api.post('/profile-setting', personalDetails.value)
+        const response = await api.post('/bank-details', bankDetails.value)
         if (response.data.status === 'success') {
-          if (window.notify) {
-            window.notify('success', 'Personal details updated successfully!')
-          }
+          // Show payment modal
+          showPaymentModal.value = true
         }
       } catch (error) {
-        console.error('Error updating personal details:', error)
+        console.error('Error saving bank details:', error)
         if (window.notify) {
-          window.notify('error', error.response?.data?.message || 'Failed to update personal details')
+          window.notify('error', error.response?.data?.message || 'Failed to save bank details')
         }
       }
     }
 
-    const updateBankDetails = async () => {
+    const processPayment = async () => {
+      if (userBalance.value < kycFee.value) {
+        if (window.notify) {
+          window.notify('error', 'Insufficient balance. Please add funds to your account.')
+        }
+        return
+      }
+
+      processingPayment.value = true
       try {
-        const response = await api.post('/bank-details', bankDetails.value)
+        // Deduct KYC fee from balance
+        const response = await api.post('/kyc-payment', {
+          amount: kycFee.value
+        })
+
         if (response.data.status === 'success') {
+          showPaymentModal.value = false
+          currentStep.value = 2 // Move to next step
+          userBalance.value = response.data.data.balance || userBalance.value
           if (window.notify) {
-            window.notify('success', 'Bank details updated successfully!')
+            window.notify('success', `₹${formatAmount(kycFee.value)} deducted successfully. Please proceed with KYC documents.`)
           }
         }
       } catch (error) {
-        console.error('Error updating bank details:', error)
+        console.error('Error processing payment:', error)
         if (window.notify) {
-          window.notify('error', error.response?.data?.message || 'Failed to update bank details')
+          window.notify('error', error.response?.data?.message || 'Payment failed. Please try again.')
         }
+      } finally {
+        processingPayment.value = false
       }
     }
 
     const submitKYC = async () => {
-      if (!canSubmitKYC.value) return
-
-      // Show 990 fee confirmation popup
-      if (kycFee.value > 0) {
-        const confirmed = confirm(
-          `KYC Application Fee: ${currencySymbol.value}${formatAmount(kycFee.value)}\n\n` +
-          `This amount will be deducted from your balance.\n\n` +
-          `Do you want to proceed?`
-        )
-        if (!confirmed) return
+      if (!canSubmitKYC.value) {
+        if (window.notify) {
+          window.notify('error', 'Please fill all required fields and upload documents')
+        }
+        return
       }
 
+      processing.value = true
       try {
         const formData = new FormData()
         formData.append('aadhaar_number', kycData.value.aadhaar_number)
@@ -302,25 +328,21 @@ export default {
         })
 
         if (response.data.status === 'success') {
-          if (window.iziToast) {
-            window.iziToast.success({
-              title: 'Success',
-              message: 'KYC application submitted successfully!',
-              position: 'topRight'
-            })
+          currentStep.value = 3
+          kycStatus.value = 2 // Pending review
+          if (window.notify) {
+            window.notify('success', 'KYC application submitted successfully! Waiting for admin approval.')
           }
           fetchAccountData()
         }
       } catch (error) {
         console.error('Error submitting KYC:', error)
         const errorMsg = error.response?.data?.message?.[0] || error.response?.data?.message || 'Failed to submit KYC'
-        if (window.iziToast) {
-          window.iziToast.error({
-            title: 'Error',
-            message: errorMsg,
-            position: 'topRight'
-          })
+        if (window.notify) {
+          window.notify('error', errorMsg)
         }
+      } finally {
+        processing.value = false
       }
     }
 
@@ -329,12 +351,20 @@ export default {
         const response = await api.get('/account-kyc')
         if (response.data.status === 'success' && response.data.data) {
           const data = response.data.data
-          personalDetails.value = data.personal_details || personalDetails.value
           bankDetails.value = data.bank_details || bankDetails.value
           kycStatus.value = data.kyc_status || 0
           kycRejectionReason.value = data.kyc_rejection_reason || ''
-          kycFee.value = data.kyc_fee || 0
+          userBalance.value = data.balance || 0
           currencySymbol.value = response.data.currency_symbol || '₹'
+          
+          // Set current step based on status
+          if (kycStatus.value === 0) {
+            currentStep.value = 1
+          } else if (kycStatus.value === 2 || kycStatus.value === 1 || kycStatus.value === 3) {
+            currentStep.value = 3
+          } else {
+            currentStep.value = 2
+          }
         }
       } catch (error) {
         console.error('Error loading account data:', error)
@@ -346,20 +376,73 @@ export default {
     })
 
     return {
-      personalDetails,
+      currentStep,
       bankDetails,
       kycData,
       kycStatus,
       kycRejectionReason,
       kycFee,
       currencySymbol,
+      userBalance,
+      showPaymentModal,
+      processing,
+      processingPayment,
       canSubmitKYC,
       formatAmount,
       handleFileChange,
-      updatePersonalDetails,
-      updateBankDetails,
+      submitBankDetails,
+      processPayment,
       submitKYC
     }
   }
 }
 </script>
+
+<style scoped>
+.step-indicator {
+  position: relative;
+  display: inline-block;
+}
+
+.step-indicator .step-number {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+.step-indicator.active .step-number {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.step-indicator.completed .step-number {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: white;
+}
+
+.step-label {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 14px;
+}
+
+.step-indicator.active .step-label {
+  color: #667eea;
+  font-weight: 700;
+}
+
+.modal.show {
+  display: block !important;
+}
+</style>

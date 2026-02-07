@@ -211,7 +211,9 @@ class AppController extends Controller
 
             // Try direct match - if it ends with .element, get all
             if (str_ends_with($key, '.element')) {
-                $sections = Frontend::where('data_keys', $key)->orderBy('id', 'desc')->get();
+                $sections = Frontend::where('data_keys', $key)->orderBy('id', 'desc')->get()->map(function($item) {
+                    return array_merge(['id' => $item->id], (array)$item->data_values);
+                });
                 return responseSuccess('sections', ['Sections retrieved successfully'], $sections);
             }
 
@@ -224,7 +226,9 @@ class AppController extends Controller
             $section = Frontend::where('data_keys', 'like', $key . '.%')->first();
             if ($section) {
                 if (str_contains($section->data_keys, '.element')) {
-                    $sections = Frontend::where('data_keys', $section->data_keys)->orderBy('id', 'desc')->get();
+                    $sections = Frontend::where('data_keys', $section->data_keys)->orderBy('id', 'desc')->get()->map(function($item) {
+                        return array_merge(['id' => $item->id], (array)$item->data_values);
+                    });
                     return responseSuccess('sections', ['Sections retrieved successfully'], $sections);
                 }
                 return responseSuccess('section', ['Section retrieved successfully'], $section);

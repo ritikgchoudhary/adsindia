@@ -193,10 +193,10 @@ class UserController extends Controller
                 'bank_registered_no' => $user->bank_registered_no ?? '',
                 'branch_name' => $user->branch_name ?? '',
             ],
-            'kyc_fee' => 990, // Fixed 990 fee for Account KYC
+            'kyc_fee' => 990, // Fixed ₹990 fee for Account KYC
             'kyc_status' => $user->kv ?? 0,
             'kyc_rejection_reason' => $user->kyc_rejection_reason ?? '',
-            'kyc_fee' => $general->kyc_fee ?? 0,
+            'balance' => $user->balance ?? 0,
             'currency_symbol' => $general->cur_sym ?? '₹',
         ]);
     }
@@ -217,6 +217,50 @@ class UserController extends Controller
         $user->update($validated);
 
         return responseSuccess('bank_details_updated', ['Bank details updated successfully']);
+    }
+
+    public function kycPayment(Request $request)
+    {
+        $user = auth()->user();
+        $kycFee = 990; // Fixed ₹990 fee for Account KYC
+        
+        // Check balance
+        if ($user->balance < $kycFee) {
+            return responseError('insufficient_balance', ['Insufficient balance. Please add funds to your account.']);
+        }
+
+        // Check if payment already made (check for existing kyc_fee transaction)
+        $existingPayment = Transaction::where('user_id', $user->id)
+            ->where('remark', 'kyc_fee')
+            ->where('trx_type', '-')
+            ->where('amount', $kycFee)
+            ->first();
+
+        if ($existingPayment) {
+            return responseError('payment_already_made', ['KYC payment has already been made. Please proceed with KYC submission.']);
+        }
+
+        // Deduct KYC fee
+        $user->balance -= $kycFee;
+        $user->save();
+        
+        // Create transaction for KYC fee
+        $trx = getTrx();
+        $transaction = new Transaction();
+        $transaction->user_id = $user->id;
+        $transaction->amount = $kycFee;
+        $transaction->post_balance = $user->balance;
+        $transaction->charge = 0;
+        $transaction->trx_type = '-';
+        $transaction->details = 'Account KYC Application Fee';
+        $transaction->trx = $trx;
+        $transaction->remark = 'kyc_fee';
+        $transaction->save();
+
+        return responseSuccess('kyc_payment_success', ['KYC payment processed successfully'], [
+            'balance' => $user->balance,
+            'amount_paid' => $kycFee,
+        ]);
     }
 
     public function userInfo()
@@ -388,30 +432,17 @@ class UserController extends Controller
         $request->validate($validationRule);
 
         $user = auth()->user();
-        $general = gs();
-        $kycFee = $general->kyc_fee ?? 0;
+        $kycFee = 990; // Fixed ₹990 fee for Account KYC
 
-        // Check if KYC fee needs to be paid
-        if ($kycFee > 0 && $user->balance < $kycFee) {
-            return responseError('insufficient_balance', ['Insufficient balance to pay KYC fee']);
-        }
+        // Check if KYC payment has been made
+        $kycPayment = Transaction::where('user_id', $user->id)
+            ->where('remark', 'kyc_fee')
+            ->where('trx_type', '-')
+            ->where('amount', $kycFee)
+            ->first();
 
-        // Deduct KYC fee if applicable
-        if ($kycFee > 0) {
-            $user->balance -= $kycFee;
-            
-            // Create transaction for KYC fee
-            $trx = getTrx();
-            $transaction = new Transaction();
-            $transaction->user_id = $user->id;
-            $transaction->amount = $kycFee;
-            $transaction->post_balance = $user->balance;
-            $transaction->charge = 0;
-            $transaction->trx_type = '-';
-            $transaction->details = 'KYC Application Fee';
-            $transaction->trx = $trx;
-            $transaction->remark = 'kyc_fee';
-            $transaction->save();
+        if (!$kycPayment) {
+            return responseError('payment_required', ['Please pay the KYC fee (₹990) first before submitting KYC documents.']);
         }
 
         // Remove old KYC files

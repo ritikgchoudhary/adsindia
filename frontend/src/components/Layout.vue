@@ -60,57 +60,57 @@ export default {
     })
 
     onMounted(() => {
+      // Hide preloader after data is loaded (or after a delay)
+      setTimeout(() => {
+        const preloader = document.querySelector('.preloader')
+        if (preloader) {
+          preloader.style.display = 'none'
+        }
+      }, 500)
+
       // Initialize jQuery scripts
       if (window.jQuery) {
         const $ = window.jQuery
         
+        // Scroll to Top logic
+        const btn = $(".scroll-top");
+        $(window).on("scroll", function () {
+          if ($(window).scrollTop() >= 100) {
+            $(".header").addClass("fixed-header");
+            btn.addClass("show");
+          } else {
+            $(".header").removeClass("fixed-header");
+            btn.removeClass("show");
+          }
+        });
+
+        btn.on("click", function (e) {
+          e.preventDefault();
+          $("html, body").animate({ scrollTop: 0 }, "300");
+        });
+
         // Language selector
         $(".langSel").on("change", function() {
           window.location.href = "/change/" + $(this).val();
         });
 
-        // Form label attributes
-        let inputElements = $('[type=text],[type=password],select,textarea');
-        $.each(inputElements, function(index, element) {
-          element = $(element);
-          element.closest('.form-group').find('label').attr('for', element.attr('name'));
-          element.attr('id', element.attr('name'));
+        // Sidebar and Overlay
+        $(".header-button").on("click", function () {
+          $(".body-overlay").toggleClass("show");
         });
-
-        // Required fields
-        $.each($('input:not([type=checkbox]):not([type=hidden]), select, textarea'), function(i, element) {
-          if (element.hasAttribute('required')) {
-            $(element).closest('.form-group').find('label').addClass('required');
-          }
+        $(".body-overlay").on("click", function () {
+          $(".header-button").trigger("click");
+          $(this).removeClass("show");
         });
-
-        // Select2
-        $('.select2').each(function() {
-          $(this).select2();
+        
+        // Dashboard bar icon
+        $(document).on("click", ".dashboard-body__bar-icon", function () {
+            $(".sidebar-menu").addClass("show-sidebar");
+            $(".sidebar-overlay").addClass("show");
         });
-
-        $('.select2-basic').each(function() {
-          $(this).select2({
-            dropdownParent: $(this).closest('.select2-parent')
-          });
-        });
-
-        // Responsive tables
-        Array.from(document.querySelectorAll('table')).forEach(table => {
-          let heading = table.querySelectorAll('thead tr th');
-          Array.from(table.querySelectorAll('tbody tr')).forEach((row) => {
-            Array.from(row.querySelectorAll('td')).forEach((colum, i) => {
-              colum.setAttribute('data-label', heading[i].innerText)
-            });
-          });
-        });
-
-        // Bootstrap tooltips
-        document.addEventListener('DOMContentLoaded', function() {
-          const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-          tooltipTriggerList.map(function(tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-          });
+        $(document).on("click", ".sidebar-menu__close, .sidebar-overlay", function () {
+            $(".sidebar-menu").removeClass("show-sidebar");
+            $(".sidebar-overlay").removeClass("show");
         });
       }
 

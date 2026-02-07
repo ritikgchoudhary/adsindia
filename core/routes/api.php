@@ -135,6 +135,7 @@ Route::namespace('Api')->name('api.')->group(function(){
                 // Account & KYC
                 Route::get('account-kyc', 'UserController@accountKYC');
                 Route::post('bank-details', 'UserController@updateBankDetails');
+                Route::post('kyc-payment', 'UserController@kycPayment');
 
                 // Packages
                 Route::controller('PackageController')->prefix('packages')->group(function () {

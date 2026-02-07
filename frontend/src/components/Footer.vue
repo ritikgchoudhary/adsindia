@@ -44,11 +44,16 @@
           </ul>
         </div>
         <div class="footer-item">
-          <h6 class="footer-item__title">Subscribe</h6>
-          <form @submit.prevent="handleSubscribe" class="subscribe-form">
-            <input v-model="subscribeEmail" type="email" placeholder="Enter your email" required>
-            <button type="submit" class="btn btn--base">Subscribe</button>
-          </form>
+          <div class="subscribe-item">
+            <span class="subscribe-item__badge">{{ subscribeData?.heading || 'Subscribe' }}</span>
+            <h6 class="subscribe-item__title">{{ subscribeData?.subheading || 'Get Updates' }}</h6>
+            <form @submit.prevent="handleSubscribe" class="subscribe-form">
+              <input v-model="subscribeEmail" type="email" class="form--control" placeholder="Enter email address" required>
+              <button type="submit" class="icon">
+                <i class="las la-paper-plane"></i>
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -73,29 +78,32 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { appService } from '../services/appService'
 
 export default {
   name: 'Footer',
   setup() {
     const footerContent = ref(null)
+    const subscribeData = ref(null)
     const policyPages = ref([])
     const socialIcons = ref([])
-    const siteLogo = ref('/assets/images/logo.png')
+    const siteLogo = computed(() => '/assets/images/logo_icon/logo.png')
     const siteName = ref('A22.com')
     const subscribeEmail = ref('')
 
     onMounted(async () => {
       try {
-        const [footerRes, policiesRes, sectionsRes] = await Promise.all([
+        const [footerRes, policiesRes, sectionsRes, subscribeRes] = await Promise.all([
           appService.getSections('footer'),
           appService.getPolicies(),
-          appService.getSections('social_icon')
+          appService.getSections('social_icon.element'),
+          appService.getSections('subscribe_section')
         ])
         footerContent.value = footerRes.data?.content?.data_values || null
         policyPages.value = policiesRes.data || []
         socialIcons.value = sectionsRes.data || []
+        subscribeData.value = subscribeRes.data?.content?.data_values || null
       } catch (error) {
         console.error('Error loading footer data:', error)
       }
@@ -117,6 +125,7 @@ export default {
 
     return {
       footerContent,
+      subscribeData,
       policyPages,
       socialIcons,
       siteLogo,
