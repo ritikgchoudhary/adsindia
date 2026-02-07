@@ -366,30 +366,37 @@ export default {
           adTimer.value--
         }
         
-        // Check completion conditions every second (not just when timer is 0)
+        // Check completion conditions every second
         const minWatchTime = 60 * 0.9 // 54 seconds
         
-        // Force completion when timer reaches 0 and user watched enough
-        if (!videoCompleted.value && watchDuration.value >= minWatchTime && adTimer.value <= 0) {
-          // Timer reached 0 and user watched enough, complete the ad immediately
-          console.log('Timer interval: FORCE Completing ad - watchDuration:', watchDuration.value, 'adTimer:', adTimer.value)
-          videoCompleted.value = true
-          if (timerInterval.value) {
-            clearInterval(timerInterval.value)
-            timerInterval.value = null
-          }
-          // Directly call completeAd instead of onVideoEnded to avoid any issues
-          completeAd(currentAd.value)
-        } else if (adTimer.value <= 0 && watchDuration.value < minWatchTime && !videoCompleted.value) {
-          // Timer reached 0 but user didn't watch enough
-          console.log('Timer reached 0 but watch duration insufficient:', watchDuration.value, 'need:', minWatchTime)
-          if (window.notify) {
-            window.notify('error', 'Please watch the complete video to earn reward. You watched ' + watchDuration.value + ' seconds, need at least 54 seconds.')
-          }
-          videoCompleted.value = true // Prevent multiple error messages
-          if (timerInterval.value) {
-            clearInterval(timerInterval.value)
-            timerInterval.value = null
+        // CRITICAL: Force completion when timer reaches 0 and user watched enough
+        if (!videoCompleted.value) {
+          if (watchDuration.value >= minWatchTime && adTimer.value <= 0) {
+            // Timer reached 0 and user watched enough, complete immediately
+            console.log('=== TIMER INTERVAL: FORCE COMPLETING AD ===')
+            console.log('watchDuration:', watchDuration.value, 'adTimer:', adTimer.value, 'minWatchTime:', minWatchTime)
+            videoCompleted.value = true
+            if (timerInterval.value) {
+              clearInterval(timerInterval.value)
+              timerInterval.value = null
+            }
+            // Directly call completeAd - don't go through onVideoEnded
+            if (currentAd.value && currentAd.value.id) {
+              completeAd(currentAd.value)
+            } else {
+              console.error('currentAd is missing!', currentAd.value)
+            }
+          } else if (adTimer.value <= 0 && watchDuration.value < minWatchTime) {
+            // Timer reached 0 but user didn't watch enough
+            console.log('Timer reached 0 but watch duration insufficient:', watchDuration.value, 'need:', minWatchTime)
+            if (window.notify) {
+              window.notify('error', 'Please watch the complete video to earn reward. You watched ' + watchDuration.value + ' seconds, need at least 54 seconds.')
+            }
+            videoCompleted.value = true // Prevent multiple error messages
+            if (timerInterval.value) {
+              clearInterval(timerInterval.value)
+              timerInterval.value = null
+            }
           }
         }
       }, 1000)
