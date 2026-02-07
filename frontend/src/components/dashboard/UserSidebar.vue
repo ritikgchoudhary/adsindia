@@ -21,35 +21,11 @@
             <span class="text">Ads Work</span>
           </router-link>
         </li>
-        <li class="sidebar-menu-list__item has-dropdown" role="presentation">
-          <a href="javascript:void(0)" class="sidebar-menu-list__link">
+        <li class="sidebar-menu-list__item" role="presentation">
+          <router-link to="/user/account-kyc" class="sidebar-menu-list__link">
             <span class="icon"><i class="fas fa-user-shield"></i></span>
             <span class="text">Account & KYC</span>
-          </a>
-          <div class="sidebar-submenu">
-            <ul class="sidebar-submenu-list">
-              <li class="sidebar-submenu-list__item">
-                <router-link to="/user/profile-setting" class="sidebar-submenu-list__link">
-                  <span class="text">Profile Setting</span>
-                </router-link>
-              </li>
-              <li class="sidebar-submenu-list__item">
-                <router-link to="/user/account-kyc" class="sidebar-submenu-list__link">
-                  <span class="text">KYC & Bank Details</span>
-                </router-link>
-              </li>
-              <li class="sidebar-submenu-list__item">
-                <router-link to="/user/kyc-form" class="sidebar-submenu-list__link">
-                  <span class="text">KYC Form</span>
-                </router-link>
-              </li>
-              <li class="sidebar-submenu-list__item">
-                <router-link to="/user/kyc-data" class="sidebar-submenu-list__link">
-                  <span class="text">KYC Data</span>
-                </router-link>
-              </li>
-            </ul>
-          </div>
+          </router-link>
         </li>
         <li class="sidebar-menu-list__item has-dropdown" role="presentation">
           <a href="javascript:void(0)" class="sidebar-menu-list__link">

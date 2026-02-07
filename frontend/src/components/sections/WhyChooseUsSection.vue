@@ -9,21 +9,21 @@
               <div class="col-6">
                 <div class="choose-item">
                   <div class="choose-item__thumb">
-                    <img :src="chooseUsContent.thumb_one" alt="thumb one">
+                    <img :src="$getImage('why_choose_us', chooseUsContent.thumb_one)" alt="thumb one">
                   </div>
                 </div>
               </div>
               <div class="col-6">
                 <div class="choose-item">
                   <div class="choose-item__thumb">
-                    <img :src="chooseUsContent.thumb_two" alt="thumb two">
+                    <img :src="$getImage('why_choose_us', chooseUsContent.thumb_two)" alt="thumb two">
                   </div>
                 </div>
               </div>
               <div class="col-6">
                 <div class="item-shape">
                   <div class="shape-one">
-                    <img :src="chooseUsContent.thumb_four" alt="shape one">
+                    <img :src="$getImage('why_choose_us', chooseUsContent.thumb_four)" alt="shape one">
                   </div>
                   <div class="shape-two">
                     <img :src="'/assets/templates/basic/images/shapes/shape-1.png'" alt="shape two">
@@ -39,7 +39,7 @@
               <div class="col-6">
                 <div class="choose-item">
                   <div class="choose-item__thumb">
-                    <img :src="chooseUsContent.thumb_three" alt="thumb four">
+                    <img :src="$getImage('why_choose_us', chooseUsContent.thumb_three)" alt="thumb four">
                   </div>
                 </div>
               </div>
@@ -61,7 +61,7 @@
               :class="getCardClass(index)"
             >
               <div class="choose-card__icon">
-                <img :src="item.image" alt="">
+                <img :src="$getImage('why_choose_us', item.image)" alt="">
               </div>
               <div class="choose-card__content">
                 <h5 class="choose-card__title">{{ item.title }}</h5>

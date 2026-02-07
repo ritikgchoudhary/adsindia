@@ -11,7 +11,7 @@
           <div class="blog-item" :class="getBlogClass(index)">
             <div class="blog-item__thumb">
               <router-link :to="`/blog/${blog.slug}`" class="blog-item__thumb-link">
-                <img :src="blog.image" class="fit-image" alt="img">
+                <img :src="$getImage('blog', blog.image)" class="fit-image" alt="img">
               </router-link>
               <div class="blog-item__date">
                 <h4 class="date-time">{{ formatDate(blog.created_at, 'DD') }}</h4>

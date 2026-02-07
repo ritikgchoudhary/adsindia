@@ -10,7 +10,7 @@
       <img :src="'/assets/templates/basic/images/shapes/bs-3.png'" alt="img" />
     </div>
     <div class="banner-thumb" v-if="bannerData?.image">
-      <img :src="bannerData.image" alt="img" />
+      <img :src="$getImage('banner', bannerData.image)" alt="img" />
     </div>
     <div class="container">
       <div class="row justify-content-center">
@@ -22,7 +22,7 @@
             <h1 class="banner-content__title">
               {{ bannerData?.title || '' }}
               <span class="icon" v-if="bannerData?.image_three">
-                <img :src="bannerData.image_three" alt="img" />
+                <img :src="$getImage('banner', bannerData.image_three)" alt="img" />
                 {{ bannerData?.affiliate_text || '' }}
               </span>
               <span class="text--base text">
@@ -46,10 +46,10 @@
               </router-link>
             </div>
             <div class="banner-content__shape" v-if="bannerData?.image_two">
-                <img :src="bannerData.image_two" alt="img" />
+                <img :src="$getImage('banner', bannerData.image_two)" alt="img" />
             </div>
             <div class="banner-content__shape-two" v-if="bannerData?.image_one">
-                <img :src="bannerData.image_one" alt="img" />
+                <img :src="$getImage('banner', bannerData.image_one)" alt="img" />
             </div>
           </div>
         </div>

@@ -17,7 +17,7 @@
 
         <div class="cta-thumb-wrapper" v-if="ctaData.image">
           <div class="thumb">
-            <img :src="ctaData.image" alt="CTA Image">
+            <img :src="$getImage('cta_section', ctaData.image)" alt="CTA Image">
           </div>
         </div>
 

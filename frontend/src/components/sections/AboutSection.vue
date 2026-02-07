@@ -9,7 +9,7 @@
               <div class="border-shape"></div>
             </div>
             <div class="about-thumb-wrapper__thumb" v-if="aboutData.image">
-              <img :src="aboutData.image" alt="Affiliate Image" />
+              <img :src="$getImage('about', aboutData.image)" alt="Affiliate Image" />
             </div>
             <div class="thumb-text-wrapper">
               <span class="text base--outline" v-if="aboutData.tag_text_one">{{ aboutData.tag_text_one }}</span>

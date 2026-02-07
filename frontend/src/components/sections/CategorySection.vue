@@ -19,7 +19,7 @@
         >
           <router-link :to="`/campaigns?category=${category.id}`" class="category-item">
             <div class="category-item__thumb">
-              <img :src="category.image" alt="img">
+              <img :src="$getImage('category', category.image)" alt="img">
             </div>
             <div class="category-item__content">
               <h5 class="category-item__title">

@@ -11,7 +11,7 @@
         <div class="company-list">
           <div v-for="(partner, index) in partners" :key="index" class="company-name">
             <div class="thumb">
-              <img :src="partner.logo" alt="Partner Logo">
+              <img :src="$getImage('partner_section', partner.logo)" alt="Partner Logo">
             </div>
           </div>
         </div>

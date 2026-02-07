@@ -88,7 +88,7 @@
                 <div class="account-modal-form">
                   <div class="account-modal-form-top">
                     <div class="image">
-                      <img :src="accountModalData?.affiliate_image || '/assets/images/default.png'" alt="logo">
+                      <img :src="$getImage('account_modal', accountModalData?.affiliate_image) || '/assets/images/default.png'" alt="logo">
                     </div>
                     <p class="title">
                       {{ accountModalData?.affiliate_heading || 'Join As Affiliate' }}
@@ -109,7 +109,7 @@
                 <div class="account-modal-form advertiser-form">
                   <div class="account-modal-form-top">
                     <div class="image">
-                      <img :src="accountModalData?.advertiser_image || '/assets/images/default.png'" alt="logo">
+                      <img :src="$getImage('account_modal', accountModalData?.advertiser_image) || '/assets/images/default.png'" alt="logo">
                     </div>
                     <p class="title">
                       {{ accountModalData?.advertiser_heading || 'Join As Advertiser' }}
@@ -147,7 +147,9 @@ export default {
   setup() {
     const pages = ref([])
     const accountModalData = ref(null)
-    const siteLogo = ref('/assets/images/logo.png')
+    const siteLogo = computed(() => {
+      return `/assets/images/logo_icon/logo.png`
+    })
     const siteName = ref('A22.com')
     const isAuthenticated = computed(() => !!localStorage.getItem('token'))
     const isSticky = ref(false)

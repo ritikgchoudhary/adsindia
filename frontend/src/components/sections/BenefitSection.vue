@@ -26,7 +26,7 @@
             <div class="benefit-wrapper__shape"></div>
             <div class="benefit-thumb-item">
               <div class="thumb">
-                <img :src="benefitContent.thumb" alt="Benefit Image" class="fit-image">
+                <img :src="$getImage('benefit_section', benefitContent.thumb)" alt="Benefit Image" class="fit-image">
               </div>
             </div>
           </div>
