@@ -16,8 +16,20 @@
       </div>
     </div>
 
-    <div class="row gy-4">
-      <div v-for="ad in ads" :key="ad?.id || Math.random()" class="col-lg-4 col-md-6" v-if="ad && ad.id">
+    <!-- Loading State -->
+    <div v-if="loading" class="row">
+      <div class="col-12 text-center py-5">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-muted">Loading ads...</p>
+      </div>
+    </div>
+
+    <!-- Ads List -->
+    <div v-else class="row gy-4">
+      <template v-for="ad in ads" :key="ad?.id || Math.random()">
+        <div v-if="ad && ad.id" class="col-lg-4 col-md-6">
         <div class="card custom--card">
           <div class="card-body">
             <div class="ad-item">
@@ -54,16 +66,32 @@
             </div>
           </div>
         </div>
-      </div>
+      </template>
 
-      <div v-if="ads.length === 0" class="col-12">
-        <div class="card custom--card">
-          <div class="card-body text-center">
-            <i class="fas fa-video fa-3x text-muted mb-3"></i>
-            <h5 class="text-muted">No ads available at the moment</h5>
-            <p class="text-muted">Please check back later or purchase an Ad Plan to unlock more ads.</p>
-            <router-link to="/user/ad-plans" class="btn btn--base mt-3">
-              <i class="fas fa-shopping-cart me-2"></i>View Ad Plans
+      <div v-if="!loading && ads.length === 0" class="col-12">
+        <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px;">
+          <div class="card-body text-center p-5">
+            <div class="mb-4">
+              <i class="fas fa-video fa-4x text-muted mb-3" style="opacity: 0.5;"></i>
+            </div>
+            <h4 class="mb-3" style="color: #2d3748; font-weight: 600;">
+              <span v-if="!hasActivePackage">No Active Ad Plan</span>
+              <span v-else>No Ads Available</span>
+            </h4>
+            <p class="text-muted mb-4" style="font-size: 16px;">
+              <span v-if="!hasActivePackage">
+                You need to purchase an Ad Plan to watch ads and earn money.
+              </span>
+              <span v-else>
+                All ads have been watched today. Come back tomorrow for more ads!
+              </span>
+            </p>
+            <div v-if="!hasActivePackage" class="alert alert-info" style="border-radius: 10px; background: #e0f2fe; border-color: #0ea5e9; color: #0c4a6e;">
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>How it works:</strong> Purchase an Ad Plan, then watch video ads to earn ₹5,000 - ₹6,000 per ad!
+            </div>
+            <router-link v-if="!hasActivePackage" to="/user/ad-plans" class="btn btn--base btn-lg mt-4 px-5" style="border-radius: 10px; font-weight: 600;">
+              <i class="fas fa-shopping-cart me-2"></i>Purchase Ad Plan
             </router-link>
           </div>
         </div>
@@ -163,6 +191,8 @@ export default {
     const videoCompleted = ref(false)
     const watchStartTime = ref(null)
     const watchDuration = ref(0)
+    const loading = ref(true)
+    const hasActivePackage = ref(true)
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
@@ -291,14 +321,48 @@ export default {
     }
 
     const fetchAds = async () => {
+      loading.value = true
       try {
         const response = await api.get('/ads/work')
+        console.log('Ads API Response:', response.data)
+        
         if (response.data.status === 'success') {
-          ads.value = response.data.data || []
-          currencySymbol.value = response.data.currency_symbol || '₹'
+          hasActivePackage.value = true
+          // Response structure: { status: 'success', data: { data: [...], currency_symbol: '₹' } }
+          const responseData = response.data.data || {}
+          const adsList = responseData.data || []
+          
+          ads.value = Array.isArray(adsList) ? adsList : []
+          currencySymbol.value = responseData.currency_symbol || response.data.currency_symbol || '₹'
+          
+          console.log('Loaded ads:', ads.value)
+          console.log('Currency symbol:', currencySymbol.value)
+          
+          if (ads.value.length === 0) {
+            console.warn('No ads found in response')
+          }
+        } else {
+          console.error('API returned error:', response.data)
+          hasActivePackage.value = false
+          ads.value = []
         }
       } catch (error) {
         console.error('Error loading ads:', error)
+        console.error('Error response:', error.response?.data)
+        
+        // Check if no active package
+        if (error.response?.data?.remark === 'no_active_package') {
+          hasActivePackage.value = false
+          ads.value = []
+        } else {
+          hasActivePackage.value = true
+          const errorMsg = error.response?.data?.message?.error?.[0] || error.response?.data?.message || 'Failed to load ads. Please try again.'
+          if (window.notify) {
+            window.notify('error', errorMsg)
+          }
+        }
+      } finally {
+        loading.value = false
       }
     }
 
@@ -329,7 +393,9 @@ export default {
       onVideoPlay,
       onVideoPause,
       onVideoTimeUpdate,
-      onVideoEnded
+      onVideoEnded,
+      loading,
+      hasActivePackage
     }
   }
 }
