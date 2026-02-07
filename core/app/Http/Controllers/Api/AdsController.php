@@ -35,8 +35,7 @@ class AdsController extends Controller
             ->count();
 
         // Get watched ad IDs for today (to mark as completed)
-        // We'll extract ad_id from ad_url or use a pattern
-        // Since ad_url might vary, we'll track by the order of completion
+        // Extract ad_id from ad_url field (format: "ad_id:1|url:...")
         $watchedAdViews = AdView::where('user_id', $user->id)
             ->where('user_package_id', $activeOrder->id)
             ->whereDate('viewed_at', today())
@@ -44,10 +43,16 @@ class AdsController extends Controller
             ->orderBy('viewed_at', 'asc')
             ->get();
         
-        // Map watched ads by their completion order (1st watched = ad 1, 2nd = ad 2, etc.)
+        // Extract ad_id from ad_url field
         $watchedAdIds = [];
-        foreach ($watchedAdViews as $index => $view) {
-            $watchedAdIds[] = $index + 1; // 1-based ad IDs
+        foreach ($watchedAdViews as $view) {
+            // Try to extract ad_id from ad_url (format: "ad_id:1|url:...")
+            if (preg_match('/ad_id:(\d+)/', $view->ad_url, $matches)) {
+                $watchedAdIds[] = (int)$matches[1];
+            } else {
+                // Fallback: use completion order if ad_id not found
+                $watchedAdIds[] = count($watchedAdIds) + 1;
+            }
         }
 
         // Check if daily limit reached
@@ -126,16 +131,19 @@ class AdsController extends Controller
         }
 
         // Check if this specific ad (by ID) was already watched today (prevent duplicate)
-        // Count how many ads have been watched today - if ad_id is <= that count, it's already watched
-        $todayViewsCount = AdView::where('user_id', $user->id)
+        $watchedAdViews = AdView::where('user_id', $user->id)
             ->where('user_package_id', $activeOrder->id)
             ->whereDate('viewed_at', today())
             ->where('is_completed', true)
-            ->count();
+            ->get();
         
-        // If ad_id is less than or equal to today's view count, it means this ad was already watched
-        if ($request->ad_id <= $todayViewsCount) {
-            return responseError('already_watched', ['This ad has already been watched today']);
+        // Check if this ad_id was already watched
+        foreach ($watchedAdViews as $view) {
+            if (preg_match('/ad_id:(\d+)/', $view->ad_url, $matches)) {
+                if ((int)$matches[1] === (int)$request->ad_id) {
+                    return responseError('already_watched', ['This ad has already been watched today']);
+                }
+            }
         }
 
         // Check daily limit
@@ -153,11 +161,15 @@ class AdsController extends Controller
         $earnings = [5000, 5500, 6000];
         $earning = $earnings[array_rand($earnings)];
 
+        // Store ad_id in ad_url field as JSON or prefix for tracking
+        // Format: "ad_id:1|url:https://..."
+        $adUrlWithId = 'ad_id:' . $request->ad_id . '|url:' . ($request->ad_url ?? 'https://example.com/ad');
+        
         // Create ad view record
         $adView = AdView::create([
             'user_id' => $user->id,
             'user_package_id' => $activeOrder->id,
-            'ad_url' => $request->ad_url ?? 'https://example.com/ad',
+            'ad_url' => $adUrlWithId,
             'reward_amount' => $earning,
             'watch_duration' => $request->watch_duration,
             'is_completed' => true,
