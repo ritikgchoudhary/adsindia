@@ -100,7 +100,7 @@
                    :class="{ 'opacity-50': index > currentUnlockedIndex }"
                    style="border-radius: 15px; overflow: hidden; transition: all 0.3s ease; cursor: pointer;"
                    :style="index <= currentUnlockedIndex ? 'cursor: pointer;' : 'cursor: not-allowed;'"
-                   @click="index <= currentUnlockedIndex && !watchedAds.includes(ad.id) ? watchAd(ad) : null"
+                   @click="index <= currentUnlockedIndex && !isAdWatched(ad) ? watchAd(ad) : null"
                    @mouseenter="index <= currentUnlockedIndex ? $event.currentTarget.style.transform = 'scale(1.05)' : null" 
                    @mouseleave="index <= currentUnlockedIndex ? $event.currentTarget.style.transform = 'scale(1)' : null">
                 
@@ -113,7 +113,7 @@
                 </div>
 
                 <!-- Watched Badge -->
-                <div v-if="watchedAds.includes(ad.id)" class="position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                <div v-if="isAdWatched(ad)" class="position-absolute top-0 end-0 m-2" style="z-index: 10;">
                   <div class="badge bg-success" style="padding: 6px 12px; border-radius: 10px; font-weight: 600; font-size: 12px;">
                     <i class="fas fa-check-circle me-1"></i>Done
                   </div>
@@ -124,7 +124,7 @@
                   <img :src="ad.image || '/assets/images/default-ad.jpg'" :alt="ad.title" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(index > currentUnlockedIndex ? 0.4 : 1);" @error="$event.target.src = '/assets/images/default-ad.jpg'">
                   
                   <!-- Play Button Overlay -->
-                  <div v-if="index <= currentUnlockedIndex && !watchedAds.includes(ad.id)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+                  <div v-if="index <= currentUnlockedIndex && !isAdWatched(ad)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
                        style="background: rgba(0,0,0,0.3); transition: all 0.3s; cursor: pointer;" 
                        @mouseenter="$event.currentTarget.style.background = 'rgba(0,0,0,0.5)'"
                        @mouseleave="$event.currentTarget.style.background = 'rgba(0,0,0,0.3)'">
@@ -138,7 +138,7 @@
                   </div>
                   
                   <!-- Completed Overlay -->
-                  <div v-if="watchedAds.includes(ad.id)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(67, 233, 123, 0.2); border-radius: 15px;">
+                  <div v-if="isAdWatched(ad)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(67, 233, 123, 0.2); border-radius: 15px;">
                     <div class="text-center text-white">
                       <i class="fas fa-check-circle fa-3x mb-2" style="color: #43e97b;"></i>
                     </div>
@@ -324,6 +324,14 @@ export default {
       const mins = Math.floor(seconds / 60)
       const secs = seconds % 60
       return `${mins}:${secs.toString().padStart(2, '0')}`
+    }
+
+    // Helper function to check if an ad is watched
+    // Checks both watchedAds array AND backend is_watched status
+    const isAdWatched = (ad) => {
+      if (!ad || !ad.id) return false
+      // Check both sources: local watchedAds array and backend is_watched status
+      return watchedAds.value.includes(ad.id) || ad.is_watched === true
     }
 
     const watchAd = (ad) => {
@@ -889,6 +897,7 @@ export default {
       videoCompleted,
       formatAmount,
       formatTime,
+      isAdWatched,
       watchAd,
       closeAdModal,
       onVideoPlay,
