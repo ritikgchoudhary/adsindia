@@ -28,7 +28,7 @@
               <span class="text--base text">
                 <span class="text-container">
                   <span v-for="(char, index) in marketingChars" :key="index" class="letter">
-                    <img v-if="index === 2" src="/assets/templates/basic/images/thumbs/st.png" alt="img" />
+                    <img v-if="index === 2" :src="'/assets/templates/basic/images/thumbs/st.png'" alt="img" />
                     {{ char }}
                   </span>
                 </span>

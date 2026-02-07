@@ -37,7 +37,7 @@
                 </p>
               </div>
               <div class="how-work-item__shape">
-                <img src="/assets/templates/basic/images/shapes/hw-2.png" alt="shape">
+                <img :src="'/assets/templates/basic/images/shapes/hw-2.png'" alt="shape">
               </div>
             </div>
           </div>
