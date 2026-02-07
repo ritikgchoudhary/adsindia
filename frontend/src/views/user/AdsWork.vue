@@ -30,8 +30,8 @@
     <div v-else class="row gy-4">
       <template v-for="ad in ads" :key="ad?.id || Math.random()">
         <div v-if="ad && ad.id" class="col-lg-4 col-md-6">
-        <div class="card custom--card">
-          <div class="card-body">
+          <div class="card custom--card">
+            <div class="card-body">
             <div class="ad-item">
               <div class="ad-thumb mb-3">
                 <img :src="ad.image || '/assets/images/default-ad.jpg'" :alt="ad.title" class="img-fluid rounded">
@@ -63,6 +63,7 @@
               <button v-else class="btn btn--base w-100" @click="watchAd(ad)">
                 <i class="fas fa-play me-2"></i>Watch Ad Now
               </button>
+            </div>
             </div>
           </div>
         </div>
