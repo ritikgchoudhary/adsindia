@@ -712,6 +712,9 @@ export default {
           if (allAds.value.length > 0) {
             ads.value = allAds.value // Store all ads
             
+            // Reset watched ads array first
+            watchedAds.value = []
+            
             // Find the highest watched ad index
             let highestWatchedIndex = -1
             for (let i = 0; i < allAds.value.length; i++) {
@@ -722,7 +725,12 @@ export default {
             }
             
             // Unlock next ad after highest watched ad (or first ad if none watched)
-            currentUnlockedIndex.value = highestWatchedIndex + 1
+            const newUnlockedIndex = highestWatchedIndex + 1
+            
+            // Only update if new index is higher (preserve manual unlocks during same session)
+            if (newUnlockedIndex > currentUnlockedIndex.value) {
+              currentUnlockedIndex.value = newUnlockedIndex
+            }
             
             // Ensure at least first ad is unlocked
             if (currentUnlockedIndex.value < 0) {
@@ -733,6 +741,8 @@ export default {
             if (currentUnlockedIndex.value >= allAds.value.length) {
               currentUnlockedIndex.value = allAds.value.length - 1
             }
+            
+            console.log('Ads loaded - watchedAds:', watchedAds.value, 'currentUnlockedIndex:', currentUnlockedIndex.value, 'highestWatchedIndex:', highestWatchedIndex)
             
             currentAd.value = null
           } else {
