@@ -117,100 +117,53 @@
         <div class="row g-4">
           <template v-for="(ad, index) in allAds" :key="ad?.id || Math.random()">
             <div v-if="ad && ad.id" class="ad-slot-col col-lg-2 col-md-4 col-sm-6 col-12">
-              <div class="card custom--card border-0 shadow-lg" 
+              <div class="position-relative" 
                    :class="{ 'opacity-50': index > currentUnlockedIndex }"
-                   style="border-radius: 20px; transition: all 0.3s ease; background: #fff; overflow: hidden; position: relative;"
+                   style="border-radius: 15px; overflow: hidden; transition: all 0.3s ease; cursor: pointer;"
                    :style="index <= currentUnlockedIndex ? 'cursor: pointer;' : 'cursor: not-allowed;'"
                    @click="index <= currentUnlockedIndex && !watchedAds.includes(ad.id) ? watchAd(ad) : null"
-                   @mouseenter="index <= currentUnlockedIndex ? $event.currentTarget.style.transform = 'translateY(-5px)' : null" 
-                   @mouseleave="index <= currentUnlockedIndex ? $event.currentTarget.style.transform = 'translateY(0)' : null">
+                   @mouseenter="index <= currentUnlockedIndex ? $event.currentTarget.style.transform = 'scale(1.05)' : null" 
+                   @mouseleave="index <= currentUnlockedIndex ? $event.currentTarget.style.transform = 'scale(1)' : null">
                 
                 <!-- Lock Overlay for locked ads -->
-                <div v-if="index > currentUnlockedIndex" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.7); z-index: 100; border-radius: 20px;">
+                <div v-if="index > currentUnlockedIndex" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.8); z-index: 100; border-radius: 15px;">
                   <div class="text-center text-white">
-                    <i class="fas fa-lock fa-4x mb-3"></i>
-                    <h5 class="mb-2">Ad Locked</h5>
-                    <p class="mb-0">Complete previous ads to unlock</p>
-                  </div>
-                </div>
-
-                <!-- Slot Number Badge -->
-                <div class="position-absolute top-0 start-0 m-2" style="z-index: 10;">
-                  <div class="badge" 
-                       :style="index <= currentUnlockedIndex ? 'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);' : 'background: #718096;'"
-                       style="color: white; padding: 6px 12px; border-radius: 15px; font-weight: 600; font-size: 12px;">
-                    <i v-if="index < currentUnlockedIndex" class="fas fa-check-circle me-1"></i>
-                    <i v-else-if="index === currentUnlockedIndex" class="fas fa-play-circle me-1"></i>
-                    <i v-else class="fas fa-lock me-1"></i>
-                    Slot {{ index + 1 }}
+                    <i class="fas fa-lock fa-3x mb-2"></i>
+                    <p class="mb-0" style="font-size: 14px; font-weight: 600;">Locked</p>
                   </div>
                 </div>
 
                 <!-- Watched Badge -->
                 <div v-if="watchedAds.includes(ad.id)" class="position-absolute top-0 end-0 m-2" style="z-index: 10;">
-                  <div class="badge bg-success" style="padding: 6px 12px; border-radius: 15px; font-weight: 600; font-size: 11px;">
+                  <div class="badge bg-success" style="padding: 6px 12px; border-radius: 10px; font-weight: 600; font-size: 12px;">
                     <i class="fas fa-check-circle me-1"></i>Done
                   </div>
                 </div>
 
-                <!-- Video Thumbnail -->
-                <div class="position-relative" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px;">
-                  <div class="position-relative" style="border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.3); aspect-ratio: 16/9;">
-                    <img :src="ad.image || '/assets/images/default-ad.jpg'" :alt="ad.title" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(index > currentUnlockedIndex ? 0.5 : 1);" @error="$event.target.src = '/assets/images/default-ad.jpg'">
-                    <div v-if="index <= currentUnlockedIndex && !watchedAds.includes(ad.id)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
-                         style="background: rgba(0,0,0,0.4); transition: all 0.3s; cursor: pointer;" 
-                         @mouseenter="$event.currentTarget.style.background = 'rgba(0,0,0,0.6)'"
-                         @mouseleave="$event.currentTarget.style.background = 'rgba(0,0,0,0.4)'">
-                      <div class="text-center text-white">
-                        <div class="mb-2" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto; transition: all 0.3s;" 
-                             @mouseenter="$event.currentTarget.style.transform = 'scale(1.1)'; $event.currentTarget.style.background = 'rgba(255,255,255,0.3)'"
-                             @mouseleave="$event.currentTarget.style.transform = 'scale(1)'; $event.currentTarget.style.background = 'rgba(255,255,255,0.2)'">
-                          <i class="fas fa-play" style="font-size: 24px; margin-left: 3px;"></i>
-                        </div>
-                        <p class="mb-0" style="font-size: 12px; font-weight: 600;">Click</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Ad Details -->
-                <div class="card-body p-3">
-                  <h6 class="ad-title mb-2" style="color: #2d3748; font-weight: 700; font-size: 14px; line-height: 1.3; min-height: 40px;">{{ ad.title }}</h6>
-                  <p class="text-muted mb-3" style="font-size: 11px; line-height: 1.4; min-height: 30px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ ad.description }}</p>
+                <!-- Video Thumbnail with Play Button -->
+                <div class="position-relative" style="aspect-ratio: 16/9; overflow: hidden; border-radius: 15px; background: #000;">
+                  <img :src="ad.image || '/assets/images/default-ad.jpg'" :alt="ad.title" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(index > currentUnlockedIndex ? 0.4 : 1);" @error="$event.target.src = '/assets/images/default-ad.jpg'">
                   
-                  <!-- Info Row -->
-                  <div class="row g-2 mb-3">
-                    <div class="col-6">
-                      <div class="p-2 border-0 rounded text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px !important;">
-                        <div class="text-white">
-                          <i class="fas fa-clock mb-1" style="font-size: 12px;"></i>
-                          <div style="font-size: 10px; font-weight: 600;">{{ ad.duration || 1 }}m</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-6">
-                      <div class="p-2 border-0 rounded text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 8px !important;">
-                        <div class="text-white">
-                          <i class="fas fa-coins mb-1" style="font-size: 12px;"></i>
-                          <div style="font-size: 10px; font-weight: 600;">{{ currencySymbol }}{{ formatAmount(ad.earning) }}</div>
-                        </div>
+                  <!-- Play Button Overlay -->
+                  <div v-if="index <= currentUnlockedIndex && !watchedAds.includes(ad.id)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+                       style="background: rgba(0,0,0,0.3); transition: all 0.3s; cursor: pointer;" 
+                       @mouseenter="$event.currentTarget.style.background = 'rgba(0,0,0,0.5)'"
+                       @mouseleave="$event.currentTarget.style.background = 'rgba(0,0,0,0.3)'">
+                    <div class="text-center text-white">
+                      <div style="background: rgba(255,255,255,0.9); border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; margin: 0 auto; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);" 
+                           @mouseenter="$event.currentTarget.style.transform = 'scale(1.15)'; $event.currentTarget.style.background = 'rgba(255,255,255,1)'"
+                           @mouseleave="$event.currentTarget.style.transform = 'scale(1)'; $event.currentTarget.style.background = 'rgba(255,255,255,0.9)'">
+                        <i class="fas fa-play" style="font-size: 28px; margin-left: 4px; color: #667eea;"></i>
                       </div>
                     </div>
                   </div>
-
-                  <!-- Status -->
-                  <div v-if="watchedAds.includes(ad.id)" class="alert alert-success mb-2 border-0" style="border-radius: 8px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 8px; font-size: 11px;">
-                    <i class="fas fa-check-circle me-1"></i><strong>Done!</strong>
+                  
+                  <!-- Completed Overlay -->
+                  <div v-if="watchedAds.includes(ad.id)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(67, 233, 123, 0.2); border-radius: 15px;">
+                    <div class="text-center text-white">
+                      <i class="fas fa-check-circle fa-3x mb-2" style="color: #43e97b;"></i>
+                    </div>
                   </div>
-                  <button v-else-if="index > currentUnlockedIndex" class="btn w-100 btn-sm" disabled style="border-radius: 8px; font-weight: 600; padding: 8px; background: #e2e8f0; color: #718096; font-size: 11px;">
-                    <i class="fas fa-lock me-1"></i>Locked
-                  </button>
-                  <button v-else-if="!ad.is_active" class="btn w-100 btn-sm" disabled style="border-radius: 8px; font-weight: 600; padding: 8px; background: #e2e8f0; color: #718096; font-size: 11px;">
-                    <i class="fas fa-lock me-1"></i>N/A
-                  </button>
-                  <button v-else class="btn w-100 btn-sm text-white" style="border-radius: 8px; font-weight: 600; padding: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; font-size: 11px; transition: all 0.3s;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-2px)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'">
-                    <i class="fas fa-play-circle me-1"></i>Watch
-                  </button>
                 </div>
               </div>
             </div>
