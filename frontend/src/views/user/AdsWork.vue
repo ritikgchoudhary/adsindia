@@ -38,6 +38,40 @@
 
     <!-- Ads Grid -->
     <div v-else-if="!loading && allAds.length > 0" class="row">
+      <!-- Active Plan Info -->
+      <div v-if="activePackage" class="col-12 mb-4">
+        <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <div class="card-body p-4 text-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+              <div>
+                <h5 class="mb-2" style="font-weight: 700; font-size: 22px;">
+                  <i class="fas fa-box me-2"></i>Your Active Plan: {{ activePackage.name }}
+                </h5>
+                <div class="d-flex flex-wrap gap-3 mt-2">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    <span style="font-size: 14px;">Daily Limit: <strong>{{ activePackage.daily_limit }}</strong> ads</span>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-eye me-2"></i>
+                    <span style="font-size: 14px;">Today Watched: <strong>{{ activePackage.today_views || 0 }}</strong></span>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-clock me-2"></i>
+                    <span style="font-size: 14px;">Remaining: <strong>{{ activePackage.remaining_ads || 0 }}</strong> ads</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-3 mt-md-0 text-end">
+                <div class="badge bg-white text-primary px-4 py-2" style="font-size: 16px; border-radius: 12px; font-weight: 600;">
+                  <i class="fas fa-check-circle me-2"></i>Plan Active
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Progress Summary -->
       <div class="col-12 mb-4">
         <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
@@ -68,7 +102,7 @@
               <div class="progress-bar progress-bar-striped progress-bar-animated" 
                    role="progressbar" 
                    style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); border-radius: 15px;"
-                   :style="`width: ${(watchedAds.length / allAds.length) * 100}%`">
+                   :style="`width: ${allAds.length > 0 ? (watchedAds.length / allAds.length) * 100 : 0}%`">
               </div>
             </div>
           </div>
@@ -311,6 +345,7 @@ export default {
     const loading = ref(true)
     const hasActivePackage = ref(true)
     const watchedAds = ref([]) // Track watched ads
+    const activePackage = ref(null) // Store active package info
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
@@ -453,14 +488,16 @@ export default {
         
         if (response.data.status === 'success') {
           hasActivePackage.value = true
-          // Response structure: { status: 'success', data: { data: [...], currency_symbol: '₹' } }
+          // Response structure: { status: 'success', data: { data: [...], currency_symbol: '₹', active_package: {...} } }
           const responseData = response.data.data || {}
           const adsList = responseData.data || []
           
           allAds.value = Array.isArray(adsList) ? adsList : []
           currencySymbol.value = responseData.currency_symbol || response.data.currency_symbol || '₹'
+          activePackage.value = responseData.active_package || null
           
           console.log('Loaded ads:', allAds.value)
+          console.log('Active package:', activePackage.value)
           console.log('Currency symbol:', currencySymbol.value)
           
           // Initialize: Show all ads in grid
@@ -478,6 +515,7 @@ export default {
           allAds.value = []
           currentAd.value = null
           ads.value = []
+          activePackage.value = null
         }
       } catch (error) {
         console.error('Error loading ads:', error)
@@ -489,6 +527,7 @@ export default {
           allAds.value = []
           currentAd.value = null
           ads.value = []
+          activePackage.value = null
         } else {
           hasActivePackage.value = true
           const errorMsg = error.response?.data?.message?.error?.[0] || error.response?.data?.message || 'Failed to load ads. Please try again.'
@@ -547,7 +586,8 @@ export default {
       currentAdIndex,
       allAds,
       watchedAds,
-      showNextAd
+      showNextAd,
+      activePackage
     }
   }
 }
