@@ -343,13 +343,16 @@ export default {
         if (videoPlayer.value) {
           videoPlayer.value.addEventListener('loadedmetadata', () => {
             const videoDuration = videoPlayer.value.duration
+            console.log('Video metadata loaded - duration:', videoDuration)
             // If video is shorter than 60 seconds, enable loop to ensure full 1 minute watch
             if (videoDuration > 0 && videoDuration < 60) {
               videoPlayer.value.loop = true
+              console.log('Video is shorter than 60s, enabling loop')
             }
             // Timer is always 60 seconds from package
             totalDuration.value = 60
             adTimer.value = 60
+            console.log('Timer initialized to 60 seconds')
           })
         }
       })
