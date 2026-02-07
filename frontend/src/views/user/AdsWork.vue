@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout page-title="Ads Work">
+  <DashboardLayout page-title="">
     <!-- Loading State -->
     <div v-if="loading" class="row">
       <div class="col-12 text-center py-5">
