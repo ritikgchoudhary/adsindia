@@ -209,55 +209,55 @@ class AdsController extends Controller
      */
     private function getRealLookingAds($count = 2)
     {
-        // Videos around 50-55 seconds (under 1 minute but longer than 30 seconds)
-        // Using videos that are approximately 50-55 seconds long
+        // Videos under 1 minute (60 seconds) for testing
+        // Using short test videos that are definitely under 1 minute
         $realAdVideos = [
             [
                 'title' => 'Test Ad Video 1',
-                'description' => 'Watch this test video (around 50 seconds) to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                'description' => 'Watch this short test video (under 1 minute) to earn rewards.',
+                'video_url' => 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
                 'image' => 'https://picsum.photos/640/360?random=1',
             ],
             [
                 'title' => 'Test Ad Video 2',
-                'description' => 'Watch this test video (around 50 seconds) to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+                'description' => 'Watch this short test video (under 1 minute) to earn rewards.',
+                'video_url' => 'https://sample-videos.com/video123/mp4/480/big_buck_bunny_480p_1mb.mp4',
                 'image' => 'https://picsum.photos/640/360?random=2',
             ],
             [
                 'title' => 'Test Ad Video 3',
-                'description' => 'Watch this test video (around 50 seconds) to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+                'description' => 'Watch this short test video (under 1 minute) to earn rewards.',
+                'video_url' => 'https://sample-videos.com/video123/mp4/360/big_buck_bunny_360p_1mb.mp4',
                 'image' => 'https://picsum.photos/640/360?random=3',
             ],
             [
                 'title' => 'Test Ad Video 4',
-                'description' => 'Watch this test video (around 50 seconds) to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+                'description' => 'Watch this short test video (under 1 minute) to earn rewards.',
+                'video_url' => 'https://sample-videos.com/video123/mp4/240/big_buck_bunny_240p_1mb.mp4',
                 'image' => 'https://picsum.photos/640/360?random=4',
             ],
             [
                 'title' => 'Test Ad Video 5',
-                'description' => 'Watch this test video (around 50 seconds) to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+                'description' => 'Watch this short test video (under 1 minute) to earn rewards.',
+                'video_url' => 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_2mb.mp4',
                 'image' => 'https://picsum.photos/640/360?random=5',
             ],
             [
                 'title' => 'Test Ad Video 6',
-                'description' => 'Watch this test video (around 50 seconds) to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreet.mp4',
+                'description' => 'Watch this short test video (under 1 minute) to earn rewards.',
+                'video_url' => 'https://sample-videos.com/video123/mp4/480/big_buck_bunny_480p_2mb.mp4',
                 'image' => 'https://picsum.photos/640/360?random=6',
             ],
             [
                 'title' => 'Test Ad Video 7',
-                'description' => 'Watch this test video (around 50 seconds) to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4',
+                'description' => 'Watch this short test video (under 1 minute) to earn rewards.',
+                'video_url' => 'https://sample-videos.com/video123/mp4/360/big_buck_bunny_360p_2mb.mp4',
                 'image' => 'https://picsum.photos/640/360?random=7',
             ],
             [
                 'title' => 'Test Ad Video 8',
-                'description' => 'Watch this test video (around 50 seconds) to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4',
+                'description' => 'Watch this short test video (under 1 minute) to earn rewards.',
+                'video_url' => 'https://sample-videos.com/video123/mp4/240/big_buck_bunny_240p_2mb.mp4',
                 'image' => 'https://picsum.photos/640/360?random=8',
             ],
         ];
@@ -272,20 +272,20 @@ class AdsController extends Controller
      */
     private function getFallbackAd($index)
     {
-        // Test video around 50 seconds (under 1 minute) for fallback
+        // Short test video under 1 minute for fallback
         $fallbackAds = [
             [
                 'title' => 'Test Ad Video',
-                'description' => 'Watch this test video (around 50 seconds) to earn rewards',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                'description' => 'Watch this short test video (under 1 minute) to earn rewards',
+                'video_url' => 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
                 'image' => '/assets/images/default-ad.jpg',
             ],
         ];
         
         return $fallbackAds[0] ?? [
             'title' => 'Test Ad Video #' . $index,
-            'description' => 'Watch this test video (around 50 seconds) to earn rewards',
-            'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+            'description' => 'Watch this short test video (under 1 minute) to earn rewards',
+            'video_url' => 'https://sample-videos.com/video123/mp4/480/big_buck_bunny_480p_1mb.mp4',
             'image' => '/assets/images/default-ad.jpg',
         ];
     }
