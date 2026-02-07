@@ -367,9 +367,16 @@ export default {
         } else {
           // Timer reached 0, check if user watched enough (54 seconds = 90% of 60)
           const minWatchTime = 60 * 0.9 // 54 seconds
-          if (watchDuration.value >= minWatchTime) {
+          if (watchDuration.value >= minWatchTime && !videoCompleted.value) {
             // User watched enough, complete the ad
+            console.log('Timer reached 0, completing ad...')
             onVideoEnded()
+          } else if (watchDuration.value < minWatchTime) {
+            // User didn't watch enough, show error
+            console.log('Timer reached 0 but watch duration insufficient:', watchDuration.value)
+            if (window.notify) {
+              window.notify('error', 'Please watch the complete video to earn reward. You watched ' + watchDuration.value + ' seconds, need at least 54 seconds.')
+            }
           }
         }
       }, 1000)
@@ -489,25 +496,36 @@ export default {
     }
 
     const onVideoEnded = () => {
+      // Prevent multiple calls
+      if (videoCompleted.value) {
+        return
+      }
+
       // Ensure user has watched for at least 54 seconds (90% of 60 seconds)
       const requiredWatchTime = 60 // 1 minute = 60 seconds
       const minWatchTime = requiredWatchTime * 0.9 // 90% = 54 seconds
       
-      // If video ended but user hasn't watched enough, don't complete yet
-      // Timer will handle completion when 60 seconds are watched
-      if (watchDuration.value < minWatchTime && adTimer.value > 0) {
+      console.log('Video ended - watchDuration:', watchDuration.value, 'adTimer:', adTimer.value, 'minWatchTime:', minWatchTime)
+      
+      // If video ended but user hasn't watched enough and timer still running, wait for timer
+      if (watchDuration.value < minWatchTime && adTimer.value > 5) {
+        console.log('Video ended early, waiting for timer...')
         // Video ended but timer still running - video will loop or wait for timer
+        // Don't return, let timer handle it
         return
       }
       
-      // User has watched enough (54+ seconds) and timer is done
-      videoCompleted.value = true
-      if (timerInterval.value) {
-        clearInterval(timerInterval.value)
-        timerInterval.value = null
+      // User has watched enough (54+ seconds) OR timer is done
+      if (watchDuration.value >= minWatchTime || adTimer.value <= 0) {
+        console.log('Completing ad...')
+        videoCompleted.value = true
+        if (timerInterval.value) {
+          clearInterval(timerInterval.value)
+          timerInterval.value = null
+        }
+        // Complete the ad
+        completeAd(currentAd.value)
       }
-      // Complete the ad
-      completeAd(currentAd.value)
     }
 
     const completeAd = async (ad) => {
