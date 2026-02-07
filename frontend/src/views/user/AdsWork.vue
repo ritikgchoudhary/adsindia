@@ -440,17 +440,29 @@ export default {
         const minWatchTime = 54 // 90% of 60 seconds
         const videoWatchedTime = Math.floor(currentTime || 0)
         
-        // Complete if video has been watched for 54+ seconds AND timer is done
-        if (!videoCompleted.value && videoWatchedTime >= minWatchTime && adTimer.value <= 0) {
-          console.log('=== TIMEUPDATE: FORCE COMPLETION ===')
-          console.log('videoWatchedTime:', videoWatchedTime, 'watchDuration:', watchDuration.value, 'adTimer:', adTimer.value)
-          videoCompleted.value = true
-          if (timerInterval.value) {
-            clearInterval(timerInterval.value)
-            timerInterval.value = null
-          }
-          if (currentAd.value && currentAd.value.id) {
-            completeAd(currentAd.value)
+        // CRITICAL: Complete if timer reached 0 AND we've watched enough (multiple checks)
+        if (!videoCompleted.value && adTimer.value <= 0) {
+          // Check both watchDuration and video currentTime
+          if (watchDuration.value >= minWatchTime || videoWatchedTime >= minWatchTime) {
+            console.log('=== TIMEUPDATE: FORCE COMPLETION ===')
+            console.log('videoWatchedTime:', videoWatchedTime, 'watchDuration:', watchDuration.value, 'adTimer:', adTimer.value, 'minWatchTime:', minWatchTime)
+            videoCompleted.value = true
+            if (timerInterval.value) {
+              clearInterval(timerInterval.value)
+              timerInterval.value = null
+            }
+            if (currentAd.value && currentAd.value.id) {
+              console.log('Calling completeAd with ad:', currentAd.value.id)
+              completeAd(currentAd.value)
+            } else {
+              console.error('Cannot complete: currentAd missing or no id', currentAd.value)
+            }
+          } else {
+            console.log('Timer is 0 but watch time insufficient:', {
+              watchDuration: watchDuration.value,
+              videoWatchedTime: videoWatchedTime,
+              minWatchTime: minWatchTime
+            })
           }
         }
       }
