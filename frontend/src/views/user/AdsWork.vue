@@ -744,6 +744,8 @@ export default {
       onVideoSeeking,
       onVideoLoaded,
       togglePlayPause,
+      handleVideoError,
+      handleVideoLoaded,
       loading,
       hasActivePackage,
       currentAdIndex,
