@@ -1,28 +1,5 @@
 <template>
   <DashboardLayout page-title="Ads Work">
-    <!-- Header Banner -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="card custom--card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px !important;">
-          <div class="card-body p-4 text-white">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-              <div>
-                <h3 class="mb-2" style="font-weight: 600;">
-                  <i class="fas fa-video me-2"></i>Watch Ads & Earn Money
-                </h3>
-                <p class="mb-0 opacity-90">Complete video ads step by step to unlock more levels and earn rewards</p>
-              </div>
-              <div class="mt-3 mt-md-0">
-                <div class="badge bg-white text-primary px-4 py-2" style="font-size: 16px; border-radius: 10px;">
-                  <i class="fas fa-coins me-2"></i>Earn ₹5,000 - ₹6,000 per ad
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Loading State -->
     <div v-if="loading" class="row">
       <div class="col-12 text-center py-5">
