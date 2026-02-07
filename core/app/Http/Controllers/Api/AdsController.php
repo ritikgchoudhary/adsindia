@@ -209,55 +209,55 @@ class AdsController extends Controller
      */
     private function getRealLookingAds($count = 2)
     {
-        // Real advertisement videos from public sources
-        // These are actual commercial videos that look like real ads
+        // 1-minute test videos for testing and understanding
+        // Using videos that are approximately 1 minute long
         $realAdVideos = [
             [
-                'title' => 'Premium Smartphone Launch',
-                'description' => 'Experience the latest technology with our new smartphone. Revolutionary features await!',
-                'video_url' => 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
+                'title' => 'Test Ad Video 1',
+                'description' => 'Watch this 1-minute test video to earn rewards.',
+                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
                 'image' => 'https://picsum.photos/640/360?random=1',
             ],
             [
-                'title' => 'Fashion Collection 2024',
-                'description' => 'Discover the new fashion trends. Style meets comfort in our latest collection.',
-                'video_url' => 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_2mb.mp4',
+                'title' => 'Test Ad Video 2',
+                'description' => 'Watch this 1-minute test video to earn rewards.',
+                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
                 'image' => 'https://picsum.photos/640/360?random=2',
             ],
             [
-                'title' => 'Travel Destination Paradise',
-                'description' => 'Explore beautiful destinations around the world. Book your dream vacation today!',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                'title' => 'Test Ad Video 3',
+                'description' => 'Watch this 1-minute test video to earn rewards.',
+                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
                 'image' => 'https://picsum.photos/640/360?random=3',
             ],
             [
-                'title' => 'Fitness & Wellness Program',
-                'description' => 'Transform your body and mind. Join thousands of satisfied customers.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                'title' => 'Test Ad Video 4',
+                'description' => 'Watch this 1-minute test video to earn rewards.',
+                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
                 'image' => 'https://picsum.photos/640/360?random=4',
             ],
             [
-                'title' => 'Home Appliances Sale',
-                'description' => 'Upgrade your home with our premium appliances. Limited time offer!',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                'title' => 'Test Ad Video 5',
+                'description' => 'Watch this 1-minute test video to earn rewards.',
+                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
                 'image' => 'https://picsum.photos/640/360?random=5',
             ],
             [
-                'title' => 'Online Learning Platform',
-                'description' => 'Learn new skills from industry experts. Start your journey today!',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+                'title' => 'Test Ad Video 6',
+                'description' => 'Watch this 1-minute test video to earn rewards.',
+                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
                 'image' => 'https://picsum.photos/640/360?random=6',
             ],
             [
-                'title' => 'Food Delivery Service',
-                'description' => 'Order your favorite meals. Fast delivery, great prices!',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+                'title' => 'Test Ad Video 7',
+                'description' => 'Watch this 1-minute test video to earn rewards.',
+                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreet.mp4',
                 'image' => 'https://picsum.photos/640/360?random=7',
             ],
             [
-                'title' => 'Car Insurance Premium',
-                'description' => 'Protect your vehicle with our comprehensive insurance plans.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+                'title' => 'Test Ad Video 8',
+                'description' => 'Watch this 1-minute test video to earn rewards.',
+                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
                 'image' => 'https://picsum.photos/640/360?random=8',
             ],
         ];
@@ -272,19 +272,20 @@ class AdsController extends Controller
      */
     private function getFallbackAd($index)
     {
+        // 1-minute test video for fallback
         $fallbackAds = [
             [
-                'title' => 'Special Offer Advertisement',
-                'description' => 'Watch this advertisement to earn rewards',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+                'title' => 'Test Ad Video',
+                'description' => 'Watch this 1-minute test video to earn rewards',
+                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
                 'image' => '/assets/images/default-ad.jpg',
             ],
         ];
         
         return $fallbackAds[0] ?? [
-            'title' => 'Advertisement #' . $index,
-            'description' => 'Watch this video ad completely to earn rewards',
-            'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            'title' => 'Test Ad Video #' . $index,
+            'description' => 'Watch this 1-minute test video to earn rewards',
+            'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
             'image' => '/assets/images/default-ad.jpg',
         ];
     }
