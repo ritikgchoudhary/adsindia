@@ -22,16 +22,16 @@
         </div>
 
         <div class="shape">
-          <img src="/assets/templates/basic/images/shapes/cta-2.png" alt="img" />
+          <img :src="'/assets/templates/basic/images/shapes/cta-2.png'" alt="img" />
         </div>
         <div class="shape-two">
-          <img src="/assets/templates/basic/images/shapes/cta-3.png" alt="img" />
+          <img :src="'/assets/templates/basic/images/shapes/cta-3.png'" alt="img" />
         </div>
         <div class="shape-three">
-          <img src="/assets/templates/basic/images/shapes/cta-4.png" alt="img" />
+          <img :src="'/assets/templates/basic/images/shapes/cta-4.png'" alt="img" />
         </div>
         <div class="shape-four">
-          <img src="/assets/templates/basic/images/shapes/cta-4.png" alt="img" />
+          <img :src="'/assets/templates/basic/images/shapes/cta-4.png'" alt="img" />
         </div>
       </div>
     </div>

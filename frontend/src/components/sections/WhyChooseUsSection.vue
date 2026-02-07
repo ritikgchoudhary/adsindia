@@ -26,7 +26,7 @@
                     <img :src="chooseUsContent.thumb_four" alt="shape one">
                   </div>
                   <div class="shape-two">
-                    <img src="/assets/templates/basic/images/shapes/shape-1.png" alt="shape two">
+                    <img :src="'/assets/templates/basic/images/shapes/shape-1.png'" alt="shape two">
                   </div>
 
                   <div class="choose-btn">

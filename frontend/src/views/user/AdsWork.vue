@@ -331,7 +331,10 @@ export default {
     const isAdWatched = (ad) => {
       if (!ad || !ad.id) return false
       // Check both sources: local watchedAds array and backend is_watched status
-      return watchedAds.value.includes(ad.id) || ad.is_watched === true
+      // Handle both boolean true and string/number truthy values
+      const isWatchedInArray = watchedAds.value.includes(ad.id)
+      const isWatchedFromBackend = ad.is_watched === true || ad.is_watched === 1 || ad.is_watched === 'true' || ad.is_watched === '1'
+      return isWatchedInArray || isWatchedFromBackend
     }
 
     const watchAd = (ad) => {
@@ -762,10 +765,15 @@ export default {
             console.log('All ads is_watched status:', allAds.value.map(a => ({ id: a.id, is_watched: a.is_watched, index: allAds.value.indexOf(a) })))
             
             for (let i = 0; i < allAds.value.length; i++) {
-              if (allAds.value[i].is_watched === true) {
+              // Check is_watched with multiple formats (boolean, number, string)
+              const isWatched = allAds.value[i].is_watched === true || 
+                               allAds.value[i].is_watched === 1 || 
+                               allAds.value[i].is_watched === 'true' || 
+                               allAds.value[i].is_watched === '1'
+              if (isWatched) {
                 watchedAds.value.push(allAds.value[i].id)
                 highestWatchedIndex = i
-                console.log('✓ Found watched ad - index:', i, 'id:', allAds.value[i].id)
+                console.log('✓ Found watched ad - index:', i, 'id:', allAds.value[i].id, 'is_watched:', allAds.value[i].is_watched)
               }
             }
             

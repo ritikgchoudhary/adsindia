@@ -1,7 +1,7 @@
 <template>
   <section class="testimonials my-120" v-if="testimonialContent">
     <div class="testimonial-shape">
-      <img src="/assets/templates/basic/images/shapes/ts-2.png" alt="Shape">
+      <img :src="'/assets/templates/basic/images/shapes/ts-2.png'" alt="Shape">
     </div>
 
     <div class="container">
