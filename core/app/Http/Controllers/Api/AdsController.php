@@ -34,21 +34,54 @@ class AdsController extends Controller
         // Check if daily limit reached
         $canWatchMore = $todayViews < $activeOrder->package->daily_ad_limit;
 
-        // Generate ads list - Each ad gives 5-6k, total 10-12k in 1 hour (2 ads)
+        // Generate random video ads - Each ad gives 5-6k
         $ads = [];
         $remainingAds = $activeOrder->package->daily_ad_limit - $todayViews;
+        
+        // Random video URLs (sample videos - replace with actual ad videos)
+        $randomVideos = [
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+        ];
+        
+        // Random ad titles
+        $adTitles = [
+            'Amazing Product Showcase',
+            'Latest Technology Review',
+            'Product Demo Video',
+            'Brand Advertisement',
+            'Special Offer Video',
+            'Product Launch Video',
+            'Customer Testimonial',
+            'How It Works Video',
+            'Product Features',
+            'Limited Time Offer'
+        ];
         
         // Each ad earns 5000-6000 randomly
         $earnings = [5000, 5500, 6000];
         
         for ($i = 1; $i <= min($remainingAds, $activeOrder->package->daily_ad_limit); $i++) {
             $earning = $earnings[array_rand($earnings)]; // Random earning between 5k-6k
+            $randomVideo = $randomVideos[array_rand($randomVideos)]; // Random video
+            $randomTitle = $adTitles[array_rand($adTitles)]; // Random title
+            
             $ads[] = [
                 'id' => $i,
-                'title' => 'Ad #' . $i,
-                'description' => 'Watch this ad completely (30 minutes) to earn ' . showAmount($earning),
+                'title' => $randomTitle . ' #' . $i,
+                'description' => 'Watch this video ad completely to earn ' . showAmount($earning) . '. Video duration: ' . ($activeOrder->package->duration_seconds / 60) . ' minutes.',
+                'video_url' => $randomVideo,
                 'image' => '/assets/images/default-ad.jpg',
-                'duration' => 30, // 30 minutes as per requirements
+                'duration' => (int)($activeOrder->package->duration_seconds / 60), // Duration in minutes from package
+                'duration_seconds' => $activeOrder->package->duration_seconds, // Duration in seconds
                 'earning' => (float)$earning,
                 'is_active' => $canWatchMore,
                 'is_watched' => false,
