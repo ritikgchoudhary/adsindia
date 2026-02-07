@@ -208,12 +208,18 @@ const routes = [
     component: () => import('../views/user/UpgradePackage.vue'),
     meta: { requiresAuth: true }
   },
-  {
-    path: '/user/ad-plans',
-    name: 'AdPlans',
-    component: () => import('../views/user/AdPlans.vue'),
-    meta: { requiresAuth: true }
-  },
+        {
+          path: '/user/ad-plans',
+          name: 'AdPlans',
+          component: () => import('../views/user/AdPlans.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: '/user/ad-plans/payment',
+          name: 'AdPlanPayment',
+          component: () => import('../views/user/AdPlanPayment.vue'),
+          meta: { requiresAuth: true }
+        },
   {
     path: '/user/courses',
     name: 'Courses',

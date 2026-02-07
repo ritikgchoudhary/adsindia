@@ -135,7 +135,7 @@ class AdPlanController extends Controller
         $user = auth()->user();
         $request->validate([
             'plan_id' => 'required|integer',
-            'payment_method' => 'required|in:balance,gateway', // balance or gateway
+            'payment_method' => 'required|in:gateway', // Only gateway payment
         ]);
 
         // Get the AdPackage by ID
@@ -147,28 +147,8 @@ class AdPlanController extends Controller
             return responseError('plan_not_found', ['Ad plan not found']);
         }
 
-        $paymentMethod = $request->payment_method;
-
-        // If payment method is balance, check balance
-        if ($paymentMethod === 'balance') {
-            if ($user->balance < $adPackage->price) {
-                return responseError('insufficient_balance', ['Insufficient balance. Required: ' . showAmount($adPackage->price)]);
-            }
-
-            // Deduct balance
-            $user->balance -= $adPackage->price;
-            $user->save();
-
-            // Process purchase
-            return $this->processPurchase($user, $adPackage);
-        }
-
-        // If payment method is gateway, create pending order and return payment URL
-        if ($paymentMethod === 'gateway') {
-            return $this->initiateGatewayPayment($user, $adPackage);
-        }
-
-        return responseError('invalid_payment_method', ['Invalid payment method']);
+        // Only gateway payment is allowed
+        return $this->initiateGatewayPayment($user, $adPackage);
     }
 
     /**
