@@ -208,32 +208,13 @@
     <div v-if="showAdModal" class="modal fade custom--modal show" style="display: block;" tabindex="-1">
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">{{ currentAd && currentAd.title ? currentAd.title : 'Watch Ad' }}</h5>
-            <button type="button" class="btn-close" @click="closeAdModal" aria-label="Close"></button>
+          <div class="modal-header border-0 pb-0">
+            <button type="button" class="btn-close ms-auto" @click="closeAdModal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <div v-if="currentAd && adTimer > 0 && !videoCompleted" class="text-center">
-              <div class="mb-4">
-                <div class="progress" style="height: 30px; border-radius: 15px;">
-                  <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
-                       role="progressbar" 
-                       :style="`width: ${totalDuration > 0 ? ((totalDuration - adTimer) / totalDuration) * 100 : 0}%`">
-                    {{ formatTime(adTimer) }} ({{ adTimer }}s) remaining
-                  </div>
-                </div>
-                <p class="mt-2 mb-0" style="color: #4a5568;">
-                  <i class="fas fa-info-circle me-2"></i>
-                  Watch the complete video to earn {{ currencySymbol }}{{ formatAmount(currentAd.earning || 0) }}
-                </p>
-                <div class="mt-3 text-center">
-                  <div class="badge bg-primary px-4 py-2" style="font-size: 16px; font-weight: 600; border-radius: 10px;">
-                    <i class="fas fa-clock me-2"></i>Time Remaining: {{ formatTime(adTimer) }} ({{ adTimer }} seconds)
-                  </div>
-                </div>
-              </div>
+          <div class="modal-body p-0">
+            <div v-if="currentAd && adTimer > 0 && !videoCompleted">
               <!-- Video Player -->
-              <div class="ad-video-container mb-4" style="position: relative; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+              <div class="ad-video-container" style="position: relative; border-radius: 0; overflow: hidden;">
                 <video 
                   v-if="currentAd && currentAd.video_url"
                   ref="videoPlayer"
@@ -288,12 +269,6 @@
                     <p class="mb-0" style="font-size: 16px; font-weight: 600;">Click to play</p>
                   </div>
                 </div>
-              </div>
-              
-              <!-- Warning Alert -->
-              <div class="alert alert-warning border-0 shadow-sm" style="border-radius: 12px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 4px solid #f59e0b;">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Important:</strong> Please watch the complete video (90%+) to earn. Do not close this window or skip the video.
               </div>
             </div>
             <div v-else-if="currentAd && videoCompleted" class="text-center py-4">
