@@ -34,6 +34,55 @@ export default {
   },
   setup() {
     onMounted(() => {
+      // Fix scrolling issue - ensure page can scroll
+      setTimeout(() => {
+        // Fix body and html
+        document.body.style.overflow = 'auto'
+        document.body.style.height = 'auto'
+        document.body.style.position = 'relative'
+        document.documentElement.style.overflow = 'auto'
+        document.documentElement.style.height = 'auto'
+        
+        // Fix dashboard elements
+        const dashboardBody = document.querySelector('.dashboard-body')
+        if (dashboardBody) {
+          dashboardBody.style.overflow = 'visible'
+          dashboardBody.style.overflowY = 'visible'
+          dashboardBody.style.height = 'auto'
+          dashboardBody.style.minHeight = 'auto'
+          dashboardBody.style.maxHeight = 'none'
+          dashboardBody.style.position = 'relative'
+        }
+        
+        const dashboardRight = document.querySelector('.dashboard__right')
+        if (dashboardRight) {
+          dashboardRight.style.overflow = 'visible'
+          dashboardRight.style.overflowY = 'visible'
+          dashboardRight.style.overflowX = 'hidden'
+          dashboardRight.style.height = 'auto'
+          dashboardRight.style.position = 'relative'
+        }
+        
+        const dashboard = document.querySelector('.dashboard')
+        if (dashboard) {
+          dashboard.style.overflow = 'visible'
+          dashboard.style.height = 'auto'
+          dashboard.style.position = 'relative'
+        }
+        
+        const dashboardInner = document.querySelector('.dashboard__inner')
+        if (dashboardInner) {
+          dashboardInner.style.overflow = 'visible'
+          dashboardInner.style.height = 'auto'
+        }
+        
+        const containerFluid = document.querySelector('.container-fluid')
+        if (containerFluid) {
+          containerFluid.style.overflow = 'visible'
+          containerFluid.style.height = 'auto'
+        }
+      }, 200)
+      
       // Initialize dashboard scripts
       if (window.jQuery) {
         const $ = window.jQuery
@@ -99,3 +148,53 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* Force scrolling to work - Override any global CSS */
+:deep(.dashboard-body) {
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  position: relative !important;
+}
+
+:deep(.dashboard__right) {
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  position: relative !important;
+}
+
+:deep(.dashboard) {
+  overflow: visible !important;
+  height: auto !important;
+  position: relative !important;
+}
+
+:deep(.dashboard__inner) {
+  overflow: visible !important;
+  height: auto !important;
+  position: relative !important;
+}
+
+:deep(.container-fluid) {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+/* Ensure body and html can scroll */
+:deep(html) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+}
+
+:deep(body) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  position: relative !important;
+}
+</style>
