@@ -521,8 +521,14 @@ export default {
               }
             }
             
-            // Refresh ads to update watched status
-            fetchAds()
+            // Refresh ads to update watched status (but preserve currentUnlockedIndex)
+            const savedUnlockedIndex = currentUnlockedIndex.value
+            fetchAds().then(() => {
+              // Restore unlocked index if it was higher
+              if (savedUnlockedIndex > currentUnlockedIndex.value) {
+                currentUnlockedIndex.value = savedUnlockedIndex
+              }
+            })
           }, 2000)
         }
       } catch (error) {
@@ -574,15 +580,38 @@ export default {
           console.log('Active package:', activePackage.value)
           console.log('Currency symbol:', currencySymbol.value)
           
-          // Initialize: Step-by-step mode - only first ad unlocked
+          // Initialize: Step-by-step mode - unlock ads based on watched status
           if (allAds.value.length > 0) {
             ads.value = allAds.value // Store all ads
-            currentUnlockedIndex.value = 0 // First ad is unlocked
+            
+            // Find the highest watched ad index
+            let highestWatchedIndex = -1
+            for (let i = 0; i < allAds.value.length; i++) {
+              if (allAds.value[i].is_watched) {
+                watchedAds.value.push(allAds.value[i].id)
+                highestWatchedIndex = i
+              }
+            }
+            
+            // Unlock next ad after highest watched ad (or first ad if none watched)
+            currentUnlockedIndex.value = highestWatchedIndex + 1
+            
+            // Ensure at least first ad is unlocked
+            if (currentUnlockedIndex.value < 0) {
+              currentUnlockedIndex.value = 0
+            }
+            
+            // Don't unlock beyond available ads
+            if (currentUnlockedIndex.value >= allAds.value.length) {
+              currentUnlockedIndex.value = allAds.value.length - 1
+            }
+            
             currentAd.value = null
           } else {
             currentAd.value = null
             ads.value = []
             currentUnlockedIndex.value = 0
+            watchedAds.value = []
             console.warn('No ads found in response')
           }
         } else {

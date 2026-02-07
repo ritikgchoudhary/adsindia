@@ -27,11 +27,20 @@ class AdsController extends Controller
             return responseError('no_active_package', ['You need to purchase an ad package first']);
         }
 
-        // Get today's ad views count
+        // Get today's ad views count and watched ad IDs
         $todayViews = AdView::where('user_id', $user->id)
             ->where('user_package_id', $activeOrder->id)
             ->whereDate('viewed_at', today())
+            ->where('is_completed', true)
             ->count();
+
+        // Get watched ad URLs for today (to mark as completed)
+        $watchedAdUrls = AdView::where('user_id', $user->id)
+            ->where('user_package_id', $activeOrder->id)
+            ->whereDate('viewed_at', today())
+            ->where('is_completed', true)
+            ->pluck('ad_url')
+            ->toArray();
 
         // Check if daily limit reached
         $canWatchMore = $todayViews < $activeOrder->package->daily_ad_limit;
@@ -41,16 +50,19 @@ class AdsController extends Controller
         $remainingAds = $activeOrder->package->daily_ad_limit - $todayViews;
         
         // Fetch real ads from external API
-        $realAds = $this->fetchRealAdsFromAPI($remainingAds);
+        $realAds = $this->fetchRealAdsFromAPI($activeOrder->package->daily_ad_limit);
         
         // Each ad earns 5000-6000 randomly
         $earnings = [5000, 5500, 6000];
         
-        for ($i = 1; $i <= min($remainingAds, $activeOrder->package->daily_ad_limit); $i++) {
+        for ($i = 1; $i <= $activeOrder->package->daily_ad_limit; $i++) {
             $earning = $earnings[array_rand($earnings)]; // Random earning between 5k-6k
             
             // Get real ad data or use fallback
             $adData = isset($realAds[$i - 1]) ? $realAds[$i - 1] : $this->getFallbackAd($i);
+            
+            // Check if this ad has been watched today (by video URL)
+            $isWatched = in_array($adData['video_url'], $watchedAdUrls);
             
             $ads[] = [
                 'id' => $i,
@@ -61,8 +73,8 @@ class AdsController extends Controller
                 'duration' => (int)($activeOrder->package->duration_seconds / 60), // Duration in minutes from package
                 'duration_seconds' => $activeOrder->package->duration_seconds, // Duration in seconds
                 'earning' => (float)$earning,
-                'is_active' => $canWatchMore,
-                'is_watched' => false,
+                'is_active' => $canWatchMore && !$isWatched,
+                'is_watched' => $isWatched,
                 'timer' => null,
             ];
         }
@@ -105,10 +117,23 @@ class AdsController extends Controller
             return responseError('incomplete_watch', ['Please watch the complete video to earn reward']);
         }
 
+        // Check if this specific ad was already watched today (prevent duplicate)
+        $existingView = AdView::where('user_id', $user->id)
+            ->where('user_package_id', $activeOrder->id)
+            ->where('ad_url', $request->ad_url ?? '')
+            ->whereDate('viewed_at', today())
+            ->where('is_completed', true)
+            ->first();
+
+        if ($existingView) {
+            return responseError('already_watched', ['This ad has already been watched today']);
+        }
+
         // Check daily limit
         $todayViews = AdView::where('user_id', $user->id)
             ->where('user_package_id', $activeOrder->id)
             ->whereDate('viewed_at', today())
+            ->where('is_completed', true)
             ->count();
 
         if ($todayViews >= $activeOrder->package->daily_ad_limit) {
