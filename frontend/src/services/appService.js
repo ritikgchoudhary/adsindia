@@ -54,5 +54,10 @@ export const appService = {
   async getCustomPage(slug) {
     const response = await api.get(`/custom-page/${slug}`)
     return response.data
+  },
+
+  async getCategories() {
+    const response = await api.get('/categories')
+    return response.data
   }
 }

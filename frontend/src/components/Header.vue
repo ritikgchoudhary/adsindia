@@ -1,17 +1,15 @@
 <template>
-  <header class="header" id="header">
+  <header class="header" id="header" :class="{ 'fixed-header': isSticky }">
     <div class="container position-relative">
       <nav class="navbar navbar-expand-xl navbar-light">
         <router-link class="navbar-brand logo" to="/">
           <img :src="siteLogo" :alt="siteName">
         </router-link>
-        <button class="navbar-toggler header-button" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                aria-label="Toggle navigation">
+        <button class="navbar-toggler header-button" type="button" @click="toggleSidebar">
           <span id="hiddenNav"><i class="las la-bars"></i></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="collapse navbar-collapse" id="navbarSupportedContent" :class="{ show: isSidebarOpen }">
           <ul class="navbar-nav nav-menu w-100 align-items-xl-center justify-content-center">
             <li class="nav-item d-block d-xl-none">
               <div class="top-button d-flex flex-wrap justify-content-between align-items-center">
@@ -25,10 +23,11 @@
                     </router-link>
                   </li>
                 </ul>
+                <LanguageSelector class="my-2" />
               </div>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" :class="{ active: $route.name === 'Home' }" to="/">
+              <router-link class="nav-link" :class="{ active: $route.path === '/' }" to="/">
                 Home
               </router-link>
             </li>
@@ -38,17 +37,17 @@
               </router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" :class="{ active: $route.name === 'Campaigns' }" to="/campaigns">
+              <router-link class="nav-link" :class="{ active: $route.path === '/campaigns' }" to="/campaigns">
                 Campaigns
               </router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" :class="{ active: $route.name === 'Blogs' }" to="/blogs">
+              <router-link class="nav-link" :class="{ active: $route.path === '/blogs' }" to="/blogs">
                 Blog
               </router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" :class="{ active: $route.name === 'Contact' }" to="/contact">
+              <router-link class="nav-link" :class="{ active: $route.path === '/contact' }" to="/contact">
                 Contact
               </router-link>
             </li>
@@ -56,6 +55,8 @@
         </div>
         <div class="header-right">
           <div class="top-button d-flex flex-wrap justify-content-between align-items-center">
+            <LanguageSelector class="d-none d-xl-block me-3" />
+            
             <template v-if="!isAuthenticated">
               <a href="#accountModal" data-bs-toggle="modal" class="btn btn--base pill">
                 Account
@@ -98,8 +99,8 @@
                       {{ accountModalData?.affiliate_description || 'Join as an affiliate and start earning' }}
                     </p>
                     <div class="flex-center gap-2">
-                      <router-link to="/login" class="btn btn--base">Login</router-link>
-                      <router-link to="/register" class="btn btn-outline--white">Register</router-link>
+                      <router-link to="/login" class="btn btn--base" @click="closeModal">Login</router-link>
+                      <router-link to="/register" class="btn btn-outline--white" @click="closeModal">Register</router-link>
                     </div>
                   </div>
                 </div>
@@ -119,8 +120,8 @@
                       {{ accountModalData?.advertiser_description || 'Join as an advertiser and promote your products' }}
                     </p>
                     <div class="flex-center gap-2">
-                      <router-link to="/advertiser/login" class="btn btn--base">Login</router-link>
-                      <router-link to="/advertiser/register" class="btn btn-outline--white">Register</router-link>
+                      <router-link to="/advertiser/login" class="btn btn--base" @click="closeModal">Login</router-link>
+                      <router-link to="/advertiser/register" class="btn btn-outline--white" @click="closeModal">Register</router-link>
                     </div>
                   </div>
                 </div>
@@ -134,21 +135,46 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { appService } from '../services/appService'
+import LanguageSelector from './LanguageSelector.vue'
 
 export default {
   name: 'Header',
+  components: {
+    LanguageSelector
+  },
   setup() {
     const pages = ref([])
     const accountModalData = ref(null)
     const siteLogo = ref('/assets/images/logo.png')
     const siteName = ref('A22.com')
     const isAuthenticated = computed(() => !!localStorage.getItem('token'))
+    const isSticky = ref(false)
+    const isSidebarOpen = ref(false)
+
+    const toggleSidebar = () => {
+      isSidebarOpen.value = !isSidebarOpen.value
+      document.body.classList.toggle('scroll-hide-sm')
+      document.querySelector('.body-overlay')?.classList.toggle('show')
+    }
+
+    const closeModal = () => {
+      const modal = document.getElementById('accountModal')
+      if (modal) {
+        const modalInstance = bootstrap.Modal.getInstance(modal)
+        if (modalInstance) modalInstance.hide()
+      }
+    }
+
+    const handleScroll = () => {
+      isSticky.value = window.scrollY >= 100
+    }
 
     onMounted(async () => {
+      window.addEventListener('scroll', handleScroll)
+      
       try {
-        // Fetch pages and account modal data
         const [pagesRes, sectionsRes] = await Promise.all([
           appService.getCustomPages(),
           appService.getSections('account_modal')
@@ -158,6 +184,17 @@ export default {
       } catch (error) {
         console.error('Error loading header data:', error)
       }
+      
+      // Close sidebar when overlay is clicked
+      document.querySelector('.body-overlay')?.addEventListener('click', () => {
+        isSidebarOpen.value = false
+        document.body.classList.remove('scroll-hide-sm')
+        document.querySelector('.body-overlay')?.classList.remove('show')
+      })
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('scroll', handleScroll)
     })
 
     return {
@@ -165,7 +202,11 @@ export default {
       accountModalData,
       siteLogo,
       siteName,
-      isAuthenticated
+      isAuthenticated,
+      isSticky,
+      isSidebarOpen,
+      toggleSidebar,
+      closeModal
     }
   }
 }
