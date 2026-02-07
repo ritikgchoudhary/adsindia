@@ -635,32 +635,27 @@ export default {
             window.notify('success', `Level ${currentAdIndex.value + 1} completed! You earned ${currencySymbol.value}${formatAmount(ad.earning)}!`)
           }
           
-          // Close modal after 2 seconds and unlock next ad
+          // Unlock next ad immediately (before closing modal)
+          const currentIndex = allAds.value.findIndex(a => a.id === ad.id)
+          if (currentIndex !== -1 && currentIndex < allAds.value.length - 1) {
+            // Unlock next ad immediately
+            currentUnlockedIndex.value = currentIndex + 1
+            console.log('Next ad unlocked immediately:', currentIndex + 1, 'currentUnlockedIndex:', currentUnlockedIndex.value)
+          }
+          
+          // Close modal after 2 seconds and refresh
           setTimeout(() => {
             closeAdModal()
             
-            // Unlock next ad if available
-            const currentIndex = allAds.value.findIndex(a => a.id === ad.id)
-            if (currentIndex !== -1 && currentIndex < allAds.value.length - 1) {
-              // Unlock next ad
-              currentUnlockedIndex.value = currentIndex + 1
-              if (window.notify) {
-                window.notify('success', `Next ad unlocked! You can now watch ad ${currentIndex + 2}.`)
-              }
-            } else {
-              // All ads completed
-              if (window.notify) {
-                window.notify('success', 'Congratulations! You have completed all ads for today.')
-              }
-            }
-            
-            // Refresh ads to update watched status (but preserve currentUnlockedIndex)
-            const savedUnlockedIndex = currentUnlockedIndex.value
+            // Refresh ads to update watched status from backend
+            // This will preserve the unlocked index based on watched ads
             fetchAds().then(() => {
-              // Restore unlocked index if it was higher
-              if (savedUnlockedIndex > currentUnlockedIndex.value) {
-                currentUnlockedIndex.value = savedUnlockedIndex
+              // After refresh, ensure next ad is still unlocked
+              const maxWatchedIndex = watchedAds.value.length > 0 ? watchedAds.value.length - 1 : -1
+              if (maxWatchedIndex >= 0) {
+                currentUnlockedIndex.value = Math.max(currentUnlockedIndex.value, maxWatchedIndex + 1)
               }
+              console.log('After refresh - currentUnlockedIndex:', currentUnlockedIndex.value, 'watchedAds:', watchedAds.value)
             })
           }, 2000)
         }
