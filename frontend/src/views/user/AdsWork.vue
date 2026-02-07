@@ -457,11 +457,35 @@ export default {
     const togglePlayPause = () => {
       if (videoPlayer.value) {
         if (videoPlayer.value.paused) {
-          videoPlayer.value.play()
+          videoPlayer.value.play().catch(err => {
+            console.error('Error playing video:', err)
+            if (window.notify) {
+              window.notify('error', 'Failed to play video. Please try again.')
+            }
+          })
         } else {
           videoPlayer.value.pause()
         }
       }
+    }
+
+    const handleVideoError = (event) => {
+      console.error('Video error:', event)
+      if (window.notify) {
+        window.notify('error', 'Video failed to load. Please try again or contact support.')
+      }
+      // Try to reload video after a delay
+      if (videoPlayer.value && currentAd.value && currentAd.value.video_url) {
+        setTimeout(() => {
+          if (videoPlayer.value) {
+            videoPlayer.value.load()
+          }
+        }, 2000)
+      }
+    }
+
+    const handleVideoLoaded = () => {
+      console.log('Video loaded successfully')
     }
 
     const onVideoEnded = () => {
