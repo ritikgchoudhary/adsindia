@@ -77,6 +77,11 @@ class AdsController extends Controller
             // Check if this ad has been watched today (by ad ID - position in sequence)
             $isWatched = in_array($i, $watchedAdIds);
             
+            // Debug logging (remove in production)
+            if ($i <= 3) {
+                \Log::info("Ad $i - isWatched: " . ($isWatched ? 'true' : 'false') . ", watchedAdIds: " . json_encode($watchedAdIds));
+            }
+            
             $ads[] = [
                 'id' => $i,
                 'title' => $adData['title'],
@@ -87,7 +92,7 @@ class AdsController extends Controller
                 'duration_seconds' => $activeOrder->package->duration_seconds, // Duration in seconds
                 'earning' => (float)$earning,
                 'is_active' => $canWatchMore && !$isWatched,
-                'is_watched' => $isWatched,
+                'is_watched' => $isWatched, // Explicitly set watched status
                 'timer' => null,
             ];
         }

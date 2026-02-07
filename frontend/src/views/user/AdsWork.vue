@@ -637,16 +637,22 @@ export default {
           
           // Unlock next ad immediately (before closing modal)
           const currentIndex = allAds.value.findIndex(a => a.id === ad.id)
+          console.log('Ad completed - currentIndex:', currentIndex, 'ad.id:', ad.id, 'allAds.length:', allAds.value.length)
+          
           if (currentIndex !== -1) {
             // Mark current ad as watched in local state
             if (!watchedAds.value.includes(ad.id)) {
               watchedAds.value.push(ad.id)
+              console.log('Added to watchedAds:', watchedAds.value)
             }
             
             // Unlock next ad immediately if available
-            if (currentIndex < allAds.value.length - 1) {
-              currentUnlockedIndex.value = currentIndex + 1
-              console.log('Next ad unlocked immediately:', currentIndex + 1, 'currentUnlockedIndex:', currentUnlockedIndex.value)
+            const nextIndex = currentIndex + 1
+            if (nextIndex < allAds.value.length) {
+              currentUnlockedIndex.value = nextIndex
+              console.log('Next ad unlocked immediately - nextIndex:', nextIndex, 'currentUnlockedIndex:', currentUnlockedIndex.value)
+            } else {
+              console.log('All ads completed!')
             }
           }
           
@@ -656,16 +662,27 @@ export default {
             
             // Refresh ads to update watched status from backend
             fetchAds().then(() => {
-              // Force update unlocked index based on watched ads count
+              // Force update unlocked index based on watched ads
               const watchedCount = watchedAds.value.length
+              console.log('After fetchAds - watchedAds:', watchedAds.value, 'watchedCount:', watchedCount)
+              
               if (watchedCount > 0) {
                 // Next ad after last watched should be unlocked
-                const newUnlockedIndex = watchedCount // 0-indexed, so if 1 watched, unlock index 1 (2nd ad)
+                // If 1 ad watched (index 0), unlock index 1 (2nd ad)
+                const newUnlockedIndex = watchedCount
                 if (newUnlockedIndex < allAds.value.length) {
                   currentUnlockedIndex.value = newUnlockedIndex
+                  console.log('Updated currentUnlockedIndex to:', currentUnlockedIndex.value)
+                } else {
+                  console.log('All ads watched!')
+                  currentUnlockedIndex.value = allAds.value.length - 1
                 }
+              } else {
+                // No ads watched, unlock first ad
+                currentUnlockedIndex.value = 0
               }
-              console.log('After refresh - watchedAds:', watchedAds.value, 'watchedCount:', watchedCount, 'currentUnlockedIndex:', currentUnlockedIndex.value)
+              
+              console.log('Final state - currentUnlockedIndex:', currentUnlockedIndex.value, 'watchedAds:', watchedAds.value)
             })
           }, 2000)
         }
