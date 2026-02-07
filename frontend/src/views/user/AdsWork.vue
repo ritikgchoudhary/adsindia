@@ -364,19 +364,20 @@ export default {
         // Countdown timer - always countdown from 60 seconds
         if (adTimer.value > 0) {
           adTimer.value--
-        } else {
-          // Timer reached 0, check if user watched enough (54 seconds = 90% of 60)
-          const minWatchTime = 60 * 0.9 // 54 seconds
-          if (watchDuration.value >= minWatchTime && !videoCompleted.value) {
-            // User watched enough, complete the ad
-            console.log('Timer reached 0, completing ad...')
-            onVideoEnded()
-          } else if (watchDuration.value < minWatchTime) {
-            // User didn't watch enough, show error
-            console.log('Timer reached 0 but watch duration insufficient:', watchDuration.value)
-            if (window.notify) {
-              window.notify('error', 'Please watch the complete video to earn reward. You watched ' + watchDuration.value + ' seconds, need at least 54 seconds.')
-            }
+        }
+        
+        // Check completion conditions every second (not just when timer is 0)
+        const minWatchTime = 60 * 0.9 // 54 seconds
+        if (!videoCompleted.value && watchDuration.value >= minWatchTime && adTimer.value <= 0) {
+          // Timer reached 0 and user watched enough, complete the ad
+          console.log('Timer interval: Completing ad - watchDuration:', watchDuration.value, 'adTimer:', adTimer.value)
+          onVideoEnded()
+        } else if (adTimer.value <= 0 && watchDuration.value < minWatchTime && !videoCompleted.value) {
+          // Timer reached 0 but user didn't watch enough
+          console.log('Timer reached 0 but watch duration insufficient:', watchDuration.value, 'need:', minWatchTime)
+          if (window.notify && !videoCompleted.value) {
+            window.notify('error', 'Please watch the complete video to earn reward. You watched ' + watchDuration.value + ' seconds, need at least 54 seconds.')
+            videoCompleted.value = true // Prevent multiple error messages
           }
         }
       }, 1000)
