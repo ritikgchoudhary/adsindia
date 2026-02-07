@@ -265,8 +265,16 @@ export default {
 
       try {
         // Close payment method modal
-        const paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'))
-        if (paymentModal) paymentModal.hide()
+        if (window.bootstrap) {
+          const paymentModal = window.bootstrap.Modal.getInstance(document.getElementById('paymentModal'))
+          if (paymentModal) paymentModal.hide()
+        } else {
+          const modalEl = document.getElementById('paymentModal')
+          if (modalEl) {
+            modalEl.style.display = 'none'
+            modalEl.classList.remove('show')
+          }
+        }
 
         // Show dummy gateway modal
         if (window.bootstrap) {
