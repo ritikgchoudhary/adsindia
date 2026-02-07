@@ -2,30 +2,30 @@
   <DashboardLayout page-title="Ad Plans">
     <div class="row mb-4">
       <div class="col-12">
-        <div class="alert alert-info" role="alert">
-          <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>How Ad Plans Work</h5>
-          <p class="mb-0">Purchase an ad plan to unlock the ability to watch ads and earn money. After purchase, you can watch {{ currencySymbol }}5,000 - {{ currencySymbol }}6,000 per ad. Each ad takes 30 minutes to watch completely.</p>
+        <div class="alert alert-info" role="alert" style="background: #e0f2fe; border-color: #0ea5e9; color: #0c4a6e;">
+          <h5 class="alert-heading" style="color: #075985; font-weight: 600;"><i class="fas fa-info-circle me-2"></i>How Ad Plans Work</h5>
+          <p class="mb-0" style="color: #0c4a6e;">Purchase an ad plan to unlock the ability to watch ads and earn money. After purchase, you can watch {{ currencySymbol }}5,000 - {{ currencySymbol }}6,000 per ad. Each ad takes 30 minutes to watch completely.</p>
         </div>
       </div>
     </div>
     <div class="row">
       <template v-for="plan in adPlans" :key="plan?.id || Math.random()">
         <div v-if="plan && plan.id" class="col-lg-3 col-md-6 mb-4">
-          <div class="card custom--card h-100" :class="{ 'border-warning': plan.is_recommended }" style="border-radius: 15px; transition: all 0.3s ease;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'">
+          <div class="card custom--card h-100" :class="{ 'border-warning': plan.is_recommended }" style="border-radius: 15px; transition: all 0.3s ease; background: #fff; border: 1px solid #e2e8f0;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)'">
             <div v-if="plan.is_recommended" class="card-header bg-warning text-dark text-center" style="border-radius: 15px 15px 0 0;">
               <strong><i class="fas fa-star me-2"></i>Recommended</strong>
             </div>
-            <div class="card-body text-center">
-              <h4 class="mb-3" style="font-weight: 600;">{{ plan.name }}</h4>
-              <h2 class="text-primary mb-3" style="font-weight: 700;">{{ currencySymbol }}{{ formatAmount(plan.price) }}</h2>
-              <ul class="list-unstyled mb-4 text-start">
-                <li class="mb-2"><i class="fas fa-check text-success me-2"></i><strong>{{ plan.ads_count }}</strong> Ads Available</li>
-                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Valid for <strong>{{ plan.validity_days }} days</strong></li>
-                <li class="mb-2"><i class="fas fa-check text-success me-2"></i><strong>{{ plan.daily_ad_limit }}</strong> ads per day</li>
-                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Earning per ad: <strong>{{ currencySymbol }}{{ formatAmount(plan.reward_per_ad) }}</strong></li>
-                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Total Potential: <strong>{{ currencySymbol }}{{ formatAmount(plan.total_earning) }}</strong></li>
+            <div class="card-body text-center" style="background: #fff; color: #2d3748;">
+              <h4 class="mb-3" style="font-weight: 600; color: #2d3748;">{{ plan.name }}</h4>
+              <h2 class="mb-3" style="font-weight: 700; color: #667eea;">{{ currencySymbol }}{{ formatAmount(plan.price) }}</h2>
+              <ul class="list-unstyled mb-4 text-start" style="color: #4a5568;">
+                <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i><strong style="color: #2d3748;">{{ plan.ads_count }}</strong> <span style="color: #4a5568;">Ads Available</span></li>
+                <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i>Valid for <strong style="color: #2d3748;">{{ plan.validity_days }} days</strong></li>
+                <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i><strong style="color: #2d3748;">{{ plan.daily_ad_limit }}</strong> <span style="color: #4a5568;">ads per day</span></li>
+                <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i>Earning per ad: <strong style="color: #2d3748;">{{ currencySymbol }}{{ formatAmount(plan.reward_per_ad) }}</strong></li>
+                <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i>Total Potential: <strong style="color: #2d3748;">{{ currencySymbol }}{{ formatAmount(plan.total_earning) }}</strong></li>
               </ul>
-              <button class="btn btn--base w-100 btn-lg" @click="purchasePlan(plan)" style="border-radius: 10px; font-weight: 600;">
+              <button class="btn btn--base w-100 btn-lg" @click="purchasePlan(plan)" style="border-radius: 10px; font-weight: 600; color: #fff;">
                 <i class="fas fa-shopping-cart me-2"></i>Buy Now
               </button>
             </div>
