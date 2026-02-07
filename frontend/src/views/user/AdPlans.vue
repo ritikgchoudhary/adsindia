@@ -11,8 +11,11 @@
     <div class="row">
       <template v-for="plan in adPlans" :key="plan?.id || Math.random()">
         <div v-if="plan && plan.id" class="col-lg-3 col-md-6 mb-4">
-          <div class="card custom--card h-100" :class="{ 'border-warning': plan.is_recommended }" style="border-radius: 15px; transition: all 0.3s ease; background: #fff; border: 1px solid #e2e8f0;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)'">
-            <div v-if="plan.is_recommended" class="card-header bg-warning text-dark text-center" style="border-radius: 15px 15px 0 0;">
+          <div class="card custom--card h-100" :class="{ 'border-warning': plan.is_recommended, 'border-success': activePlanId === plan.id }" style="border-radius: 15px; transition: all 0.3s ease; background: #fff; border: 1px solid #e2e8f0;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)'">
+            <div v-if="activePlanId === plan.id" class="card-header bg-success text-white text-center" style="border-radius: 15px 15px 0 0;">
+              <strong><i class="fas fa-check-circle me-2"></i>Activated</strong>
+            </div>
+            <div v-else-if="plan.is_recommended" class="card-header bg-warning text-dark text-center" style="border-radius: 15px 15px 0 0;">
               <strong><i class="fas fa-star me-2"></i>Recommended</strong>
             </div>
             <div class="card-body text-center" style="background: #fff; color: #2d3748;">
@@ -25,7 +28,10 @@
                 <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i>Earning per ad: <strong style="color: #2d3748;">{{ currencySymbol }}{{ formatAmount(plan.reward_per_ad) }}</strong></li>
                 <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i>Total Potential: <strong style="color: #2d3748;">{{ currencySymbol }}{{ formatAmount(plan.total_earning) }}</strong></li>
               </ul>
-              <button class="btn btn--base w-100 btn-lg" @click="initiatePayment(plan)" style="border-radius: 10px; font-weight: 600; color: #fff;">
+              <button v-if="activePlanId === plan.id" class="btn btn-success w-100 btn-lg" disabled style="border-radius: 10px; font-weight: 600; color: #fff; cursor: not-allowed;">
+                <i class="fas fa-check-circle me-2"></i>Activated
+              </button>
+              <button v-else class="btn btn--base w-100 btn-lg" @click="initiatePayment(plan)" style="border-radius: 10px; font-weight: 600; color: #fff;">
                 <i class="fas fa-shopping-cart me-2"></i>Buy Now
               </button>
             </div>
@@ -49,6 +55,7 @@ export default {
   setup() {
     const adPlans = ref([])
     const currencySymbol = ref('₹')
+    const activePlanId = ref(null) // Store active plan ID
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
@@ -105,15 +112,36 @@ export default {
       }
     }
 
+    const fetchActivePlan = async () => {
+      try {
+        const response = await api.get('/packages/current')
+        console.log('Current package API response:', response.data)
+        if (response.data.status === 'success' && response.data.data?.data) {
+          const currentPackage = response.data.data.data
+          // Match by package ID
+          activePlanId.value = currentPackage.id || null
+          console.log('Active plan ID:', activePlanId.value)
+        } else {
+          activePlanId.value = null
+        }
+      } catch (error) {
+        console.error('Error fetching active plan:', error)
+        // If no active plan, that's okay
+        activePlanId.value = null
+      }
+    }
+
     onMounted(() => {
       fetchAdPlans()
+      fetchActivePlan()
     })
 
     return {
       adPlans,
       currencySymbol,
       formatAmount,
-      initiatePayment
+      initiatePayment,
+      activePlanId
     }
   }
 }
