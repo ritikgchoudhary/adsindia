@@ -3,59 +3,99 @@
     <div class="notice"></div>
     
     <!-- KYC Alerts -->
-    <div v-if="user.kv === 0 && user.kyc_rejection_reason" class="alert alert--danger mb-4 shadow-sm" role="alert" style="border-left: 4px solid #dc3545; border-radius: 8px;">
-      <div class="alert__icon">
-        <i class="fa-solid fa-circle-exclamation"></i>
-      </div>
-      <div class="alert__content">
-        <h4 class="alert__title">KYC Documents Rejected</h4>
-        <p class="alert__desc">
-          <a class="alert__link" data-bs-toggle="modal" href="#kycRejectionReason">Show Reason</a>
-          {{ kycContent?.reject || '' }}
-          <router-link class="alert__link" to="/user/kyc-form">Click Here to Re-submit Documents</router-link>.
-          <router-link class="alert__link" to="/user/kyc-data">See KYC Data</router-link>
-        </p>
+    <div v-if="user.kv === 0 && user.kyc_rejection_reason" class="mb-4">
+      <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border-radius: 15px !important;">
+        <div class="card-body p-4 text-white">
+          <div class="d-flex align-items-start gap-3">
+            <div class="flex-shrink-0">
+              <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-circle-exclamation fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1">
+              <h4 class="mb-2" style="font-weight: 700; font-size: 20px;">KYC Documents Rejected</h4>
+              <p class="mb-3 opacity-90" style="font-size: 15px;">
+                {{ kycContent?.reject || 'Your KYC documents have been rejected. Please review the reason and resubmit.' }}
+              </p>
+              <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-light btn-sm px-3" data-bs-toggle="modal" href="#kycRejectionReason" style="border-radius: 8px; font-weight: 600;">
+                  <i class="fas fa-info-circle me-1"></i>Show Reason
+                </a>
+                <router-link class="btn btn-light btn-sm px-3" to="/user/kyc-form" style="border-radius: 8px; font-weight: 600;">
+                  <i class="fas fa-redo me-1"></i>Re-submit Documents
+                </router-link>
+                <router-link class="btn btn-light btn-sm px-3" to="/user/kyc-data" style="border-radius: 8px; font-weight: 600;">
+                  <i class="fas fa-eye me-1"></i>See KYC Data
+                </router-link>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div v-else-if="user.kv === 0" class="alert alert--info mb-4 shadow-sm" role="alert" style="border-left: 4px solid #0dcaf0; border-radius: 8px;">
-      <div class="alert__icon">
-        <i class="fas fa-user-check"></i>
-      </div>
-      <div class="alert__content">
-        <h4 class="alert__title">KYC Verification required</h4>
-        <p class="alert__desc">
-          {{ kycContent?.required || '' }}
-          <router-link class="alert__link" to="/user/kyc-form">Click Here to Submit Documents</router-link>
-        </p>
+    <div v-else-if="user.kv === 0" class="mb-4">
+      <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px !important;">
+        <div class="card-body p-4 text-white">
+          <div class="d-flex align-items-start gap-3">
+            <div class="flex-shrink-0">
+              <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-user-check fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1">
+              <h4 class="mb-2" style="font-weight: 700; font-size: 20px;">KYC Verification Required</h4>
+              <p class="mb-3 opacity-90" style="font-size: 15px;">
+                {{ kycContent?.required || 'Complete KYC to unlock the full potential of our platform! KYC helps us verify your identity and keep things secure. It is quick and easy just follow the on-screen instructions. Get started with KYC verification now!' }}
+              </p>
+              <router-link class="btn btn-light btn-lg px-4" to="/user/kyc-form" style="border-radius: 10px; font-weight: 600;">
+                <i class="fas fa-file-upload me-2"></i>Click Here to Submit Documents
+              </router-link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div v-else-if="user.kv === 2" class="alert alert--warning mb-4 shadow-sm" role="alert" style="border-left: 4px solid #ffc107; border-radius: 8px;">
-      <div class="alert__icon">
-        <i class="fa-solid fa-spinner"></i>
-      </div>
-      <div class="alert__content">
-        <h4 class="alert__title">KYC Verification pending</h4>
-        <p class="alert__desc">
-          {{ kycContent?.pending || '' }}
-          <router-link class="alert__link" to="/user/kyc-data">See KYC Data</router-link>
-        </p>
+    <div v-else-if="user.kv === 2" class="mb-4">
+      <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 15px !important;">
+        <div class="card-body p-4 text-white">
+          <div class="d-flex align-items-start gap-3">
+            <div class="flex-shrink-0">
+              <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1">
+              <h4 class="mb-2" style="font-weight: 700; font-size: 20px;">KYC Verification Pending</h4>
+              <p class="mb-3 opacity-90" style="font-size: 15px;">
+                {{ kycContent?.pending || 'Your KYC documents are under review. We will notify you once the verification is complete.' }}
+              </p>
+              <router-link class="btn btn-light btn-sm px-3" to="/user/kyc-data" style="border-radius: 8px; font-weight: 600;">
+                <i class="fas fa-eye me-1"></i>See KYC Data
+              </router-link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Welcome Section -->
     <div class="row mb-4">
       <div class="col-12">
-        <div class="card custom--card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px !important;">
-          <div class="card-body p-4 text-white">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-              <div>
-                <h3 class="mb-2" style="font-weight: 600;">
+        <div class="card custom--card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px !important; overflow: hidden; position: relative;">
+          <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+          <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+          <div class="card-body p-4 text-white" style="position: relative; z-index: 1;">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <div class="flex-grow-1">
+                <h3 class="mb-2" style="font-weight: 700; font-size: 28px;">
                   <i class="fas fa-hand-sparkles me-2"></i>Welcome to AdsSkill India!
                 </h3>
-                <p class="mb-0 opacity-90">Start earning by watching ads and completing tasks</p>
+                <p class="mb-0 opacity-90" style="font-size: 16px;">Start earning by watching ads and completing tasks</p>
               </div>
-              <div class="mt-3 mt-md-0">
-                <router-link to="/user/ads-work" class="btn btn-light btn-lg px-4" style="border-radius: 10px; font-weight: 600;">
+              <div class="flex-shrink-0">
+                <router-link to="/user/ads-work" class="btn btn-light btn-lg px-5 py-3" style="border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease;" 
+                   @mouseenter="$event.currentTarget.style.transform = 'translateY(-2px)'; $event.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)'"
+                   @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)'">
                   <i class="fas fa-play-circle me-2"></i>Start Earning Now
                 </router-link>
               </div>
