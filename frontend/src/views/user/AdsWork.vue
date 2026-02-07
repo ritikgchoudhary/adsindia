@@ -637,10 +637,17 @@ export default {
           
           // Unlock next ad immediately (before closing modal)
           const currentIndex = allAds.value.findIndex(a => a.id === ad.id)
-          if (currentIndex !== -1 && currentIndex < allAds.value.length - 1) {
-            // Unlock next ad immediately
-            currentUnlockedIndex.value = currentIndex + 1
-            console.log('Next ad unlocked immediately:', currentIndex + 1, 'currentUnlockedIndex:', currentUnlockedIndex.value)
+          if (currentIndex !== -1) {
+            // Mark current ad as watched in local state
+            if (!watchedAds.value.includes(ad.id)) {
+              watchedAds.value.push(ad.id)
+            }
+            
+            // Unlock next ad immediately if available
+            if (currentIndex < allAds.value.length - 1) {
+              currentUnlockedIndex.value = currentIndex + 1
+              console.log('Next ad unlocked immediately:', currentIndex + 1, 'currentUnlockedIndex:', currentUnlockedIndex.value)
+            }
           }
           
           // Close modal after 2 seconds and refresh
@@ -648,14 +655,17 @@ export default {
             closeAdModal()
             
             // Refresh ads to update watched status from backend
-            // This will preserve the unlocked index based on watched ads
             fetchAds().then(() => {
-              // After refresh, ensure next ad is still unlocked
-              const maxWatchedIndex = watchedAds.value.length > 0 ? watchedAds.value.length - 1 : -1
-              if (maxWatchedIndex >= 0) {
-                currentUnlockedIndex.value = Math.max(currentUnlockedIndex.value, maxWatchedIndex + 1)
+              // Force update unlocked index based on watched ads count
+              const watchedCount = watchedAds.value.length
+              if (watchedCount > 0) {
+                // Next ad after last watched should be unlocked
+                const newUnlockedIndex = watchedCount // 0-indexed, so if 1 watched, unlock index 1 (2nd ad)
+                if (newUnlockedIndex < allAds.value.length) {
+                  currentUnlockedIndex.value = newUnlockedIndex
+                }
               }
-              console.log('After refresh - currentUnlockedIndex:', currentUnlockedIndex.value, 'watchedAds:', watchedAds.value)
+              console.log('After refresh - watchedAds:', watchedAds.value, 'watchedCount:', watchedCount, 'currentUnlockedIndex:', currentUnlockedIndex.value)
             })
           }, 2000)
         }
@@ -725,12 +735,12 @@ export default {
             }
             
             // Unlock next ad after highest watched ad (or first ad if none watched)
+            // If 1 ad is watched (index 0), unlock index 1 (2nd ad)
             const newUnlockedIndex = highestWatchedIndex + 1
             
-            // Only update if new index is higher (preserve manual unlocks during same session)
-            if (newUnlockedIndex > currentUnlockedIndex.value) {
-              currentUnlockedIndex.value = newUnlockedIndex
-            }
+            // Always update to match backend state (don't preserve manual unlocks)
+            // This ensures UI matches backend after refresh
+            currentUnlockedIndex.value = newUnlockedIndex
             
             // Ensure at least first ad is unlocked
             if (currentUnlockedIndex.value < 0) {
@@ -742,7 +752,7 @@ export default {
               currentUnlockedIndex.value = allAds.value.length - 1
             }
             
-            console.log('Ads loaded - watchedAds:', watchedAds.value, 'currentUnlockedIndex:', currentUnlockedIndex.value, 'highestWatchedIndex:', highestWatchedIndex)
+            console.log('Ads loaded - watchedAds:', watchedAds.value, 'watchedCount:', watchedAds.value.length, 'highestWatchedIndex:', highestWatchedIndex, 'currentUnlockedIndex:', currentUnlockedIndex.value, 'allAds.length:', allAds.value.length)
             
             currentAd.value = null
           } else {
