@@ -104,28 +104,29 @@
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">{{ currentAd?.title }}</h5>
+            <h5 class="modal-title">{{ currentAd && currentAd.title ? currentAd.title : 'Watch Ad' }}</h5>
             <button type="button" class="btn-close" @click="closeAdModal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div v-if="adTimer > 0 && !videoCompleted" class="text-center">
+            <div v-if="currentAd && adTimer > 0 && !videoCompleted" class="text-center">
               <div class="mb-4">
                 <div class="progress" style="height: 30px; border-radius: 15px;">
                   <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
                        role="progressbar" 
-                       :style="`width: ${((totalDuration - adTimer) / totalDuration) * 100}%`">
+                       :style="`width: ${totalDuration > 0 ? ((totalDuration - adTimer) / totalDuration) * 100 : 0}%`">
                     {{ formatTime(adTimer) }} remaining
                   </div>
                 </div>
                 <p class="mt-2 mb-0" style="color: #4a5568;">
                   <i class="fas fa-info-circle me-2"></i>
-                  Watch the complete video to earn {{ currencySymbol }}{{ formatAmount(currentAd?.earning) }}
+                  Watch the complete video to earn {{ currencySymbol }}{{ formatAmount(currentAd.earning || 0) }}
                 </p>
               </div>
               <div class="ad-video-container mb-3" style="position: relative;">
                 <video 
+                  v-if="currentAd && currentAd.video_url"
                   ref="videoPlayer"
-                  :src="currentAd?.video_url" 
+                  :src="currentAd.video_url" 
                   controls 
                   autoplay
                   class="img-fluid rounded"
@@ -137,6 +138,9 @@
                 >
                   Your browser does not support the video tag.
                 </video>
+                <div v-else class="d-flex align-items-center justify-content-center" style="height: 300px; background: #000; border-radius: 8px;">
+                  <p class="text-white">Loading video...</p>
+                </div>
                 <div v-if="!isVideoPlaying" class="video-overlay d-flex align-items-center justify-content-center" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px;">
                   <div class="text-white text-center">
                     <i class="fas fa-play-circle fa-3x mb-3"></i>
@@ -149,12 +153,12 @@
                 <strong>Important:</strong> Please watch the complete video. Do not close this window or skip the video.
               </div>
             </div>
-            <div v-else-if="videoCompleted" class="text-center">
+            <div v-else-if="currentAd && videoCompleted" class="text-center">
               <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
               <h4 style="color: #2d3748;">Ad Watched Successfully!</h4>
               <p class="text-success mb-3" style="font-size: 18px; font-weight: 600;">
                 <i class="fas fa-coins me-2"></i>
-                You earned {{ currencySymbol }}{{ formatAmount(currentAd?.earning) }}
+                You earned {{ currencySymbol }}{{ formatAmount(currentAd.earning || 0) }}
               </p>
               <p class="text-muted mb-4">Earning has been added to your account balance.</p>
               <button class="btn btn--base btn-lg px-5" @click="closeAdModal" style="border-radius: 10px; font-weight: 600;">
