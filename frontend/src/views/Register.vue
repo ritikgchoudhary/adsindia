@@ -72,6 +72,21 @@
                     </div>
                   </div>
 
+                  <div class="col-sm-12">
+                    <div class="form-group">
+                      <label class="form--label">Username</label>
+                      <input 
+                        v-model="form.username" 
+                        type="text" 
+                        name="username" 
+                        class="form--control" 
+                        pattern="[a-z0-9_]+"
+                        required
+                      >
+                      <small class="text-muted">Only lowercase letters, numbers, and underscore allowed</small>
+                    </div>
+                  </div>
+
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label class="form--label">Password</label>
@@ -117,7 +132,7 @@
                         I agree with
                         <a 
                           v-for="(policy, index) in policyPages" 
-                          :key="policy.id"
+                          :key="policy?.id || index"
                           :href="`/policy/${policy.slug}`" 
                           target="_blank"
                         >
@@ -201,9 +216,12 @@ export default {
       firstname: '',
       lastname: '',
       email: '',
+      username: '',
       password: '',
       password_confirmation: '',
-      agree: false
+      agree: false,
+      ref: '',
+      pkg: null
     })
     const loading = ref(false)
     const error = ref('')
@@ -262,6 +280,32 @@ export default {
     }
 
     onMounted(async () => {
+      // Get referral and package from URL
+      const urlParams = new URLSearchParams(window.location.search)
+      form.value.ref = urlParams.get('ref') || ''
+      form.value.pkg = urlParams.get('pkg') ? parseInt(urlParams.get('pkg')) : null
+
+      // Show package discount info if package is selected
+      if (form.value.pkg) {
+        const packages = {
+          1: { name: 'AdsLite', price: 1499, discount: 0 },
+          2: { name: 'AdsPro', price: 2999, discount: 499 },
+          3: { name: 'AdsSupreme', price: 5999, discount: 0 },
+          4: { name: 'AdsPremium', price: 9999, discount: 0 },
+          5: { name: 'AdsPremium+', price: 15999, discount: 0 },
+        }
+        const pkg = packages[form.value.pkg]
+        if (pkg && pkg.discount > 0) {
+          if (window.iziToast) {
+            window.iziToast.info({
+              title: 'Special Offer!',
+              message: `You'll get ₹${pkg.discount} discount on ${pkg.name} package!`,
+              position: 'topRight'
+            })
+          }
+        }
+      }
+
       try {
         const [registerRes, aboutRes, settingsRes, policiesRes] = await Promise.all([
           appService.getSections('register'),

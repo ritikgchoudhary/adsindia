@@ -16,19 +16,20 @@ class AdvertiserRegistrationStep
      */
     public function handle(Request $request, Closure $next)
     {
-        $advertiser = auth()->guard('advertiser')->user();
-        if (!$advertiser->profile_complete) {
-            if ($request->is('api/*')) {
-                $notify[] = 'Please complete your profile to go next';
-                return response()->json([
-                    'remark' => 'profile_incomplete',
-                    'status' => 'error',
-                    'message' => ['error' => $notify],
-                ]);
-            } else {
-                return to_route('advertiser.data');
-            }
-        }
+        // Profile incomplete check disabled
+        // $advertiser = auth()->guard('advertiser')->user();
+        // if (!$advertiser->profile_complete) {
+        //     if ($request->is('api/*')) {
+        //         $notify[] = 'Please complete your profile to go next';
+        //         return response()->json([
+        //             'remark' => 'profile_incomplete',
+        //             'status' => 'error',
+        //             'message' => ['error' => $notify],
+        //         ]);
+        //     } else {
+        //         return to_route('advertiser.data');
+        //     }
+        // }
         return $next($request);
     }
 }

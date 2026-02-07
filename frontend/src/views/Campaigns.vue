@@ -7,14 +7,16 @@
             <div class="loader"></div>
           </div>
           <div class="row gy-4 justify-content-center" id="campaigns">
-            <div class="col-lg-6 col-md-6" v-for="campaign in campaigns" :key="campaign.id">
+            <template v-for="campaign in campaigns" :key="campaign?.id || Math.random()">
+              <div v-if="campaign && campaign.id" class="col-lg-6 col-md-6">
               <div class="campaign-card">
                 <router-link :to="`/campaign/${campaign.slug}`">
                   <h4>{{ campaign.title }}</h4>
                   <p>{{ campaign.description }}</p>
                 </router-link>
               </div>
-            </div>
+              </div>
+            </template>
           </div>
         </div>
         <div class="col-xl-3 col-lg-4">

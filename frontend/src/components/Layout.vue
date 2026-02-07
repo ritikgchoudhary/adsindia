@@ -17,24 +17,25 @@
     <div class="sidebar-overlay"></div>
     <a class="scroll-top"><i class="fas fa-angle-double-up"></i></a>
 
-    <!-- Header -->
-    <Header />
+    <!-- Header - Hide on dashboard routes -->
+    <Header v-if="!isDashboardRoute" />
 
     <!-- Main Content -->
     <main>
       <slot />
     </main>
 
-    <!-- Footer -->
-    <Footer />
+    <!-- Footer - Hide on dashboard routes -->
+    <Footer v-if="!isDashboardRoute" />
 
     <!-- Cookie Notice -->
-    <CookieNotice v-if="showCookieNotice" />
+    <CookieNotice v-if="showCookieNotice && !isDashboardRoute" />
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import Header from './Header.vue'
 import Footer from './Footer.vue'
 import CookieNotice from './CookieNotice.vue'
@@ -49,7 +50,14 @@ export default {
     DynamicColorCSS
   },
   setup() {
+    const route = useRoute()
     const showCookieNotice = ref(false)
+
+    // Check if current route is a dashboard route
+    const isDashboardRoute = computed(() => {
+      const path = route.path
+      return path.startsWith('/dashboard') || path.startsWith('/user/')
+    })
 
     onMounted(() => {
       // Initialize jQuery scripts
@@ -121,7 +129,8 @@ export default {
     }
 
     return {
-      showCookieNotice
+      showCookieNotice,
+      isDashboardRoute
     }
   }
 }

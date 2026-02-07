@@ -110,7 +110,152 @@ const routes = [
       }
       next({ name: 'Home' })
     }
-  }
+  },
+  // User Dashboard Pages
+  {
+    path: '/user/conversion-log',
+    name: 'ConversionLog',
+    component: () => import('../views/user/ConversionLog.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/transactions',
+    name: 'Transactions',
+    component: () => import('../views/user/Transactions.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/profile-setting',
+    name: 'ProfileSetting',
+    component: () => import('../views/user/ProfileSetting.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/change-password',
+    name: 'ChangePassword',
+    component: () => import('../views/user/ChangePassword.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/twofactor',
+    name: 'TwoFactor',
+    component: () => import('../views/user/TwoFactor.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/withdraw',
+    name: 'Withdraw',
+    component: () => import('../views/user/Withdraw.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/withdraw/history',
+    name: 'WithdrawHistory',
+    component: () => import('../views/user/WithdrawHistory.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/ticket',
+    name: 'SupportTickets',
+    component: () => import('../views/user/SupportTickets.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/ticket/open',
+    name: 'OpenTicket',
+    component: () => import('../views/user/OpenTicket.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/ticket/:ticket',
+    name: 'ViewTicket',
+    component: () => import('../views/user/ViewTicket.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/kyc-form',
+    name: 'KYCForm',
+    component: () => import('../views/user/KYCForm.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/kyc-data',
+    name: 'KYCData',
+    component: () => import('../views/user/KYCData.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/ads-work',
+    name: 'AdsWork',
+    component: () => import('../views/user/AdsWork.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/account-kyc',
+    name: 'AccountKYC',
+    component: () => import('../views/user/AccountKYC.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/packages',
+    name: 'Packages',
+    component: () => import('../views/user/Packages.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/upgrade-package',
+    name: 'UpgradePackage',
+    component: () => import('../views/user/UpgradePackage.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/ad-plans',
+    name: 'AdPlans',
+    component: () => import('../views/user/AdPlans.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/courses',
+    name: 'Courses',
+    component: () => import('../views/user/Courses.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/referral',
+    name: 'Referral',
+    component: () => import('../views/user/Referral.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/affiliate-income',
+    name: 'AffiliateIncome',
+    component: () => import('../views/user/AffiliateIncome.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/partner-program',
+    name: 'PartnerProgram',
+    component: () => import('../views/user/PartnerProgram.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/certificates',
+    name: 'Certificates',
+    component: () => import('../views/user/Certificates.vue'),
+    meta: { requiresAuth: true }
+  },
+        {
+          path: '/user/customer-support',
+          name: 'CustomerSupport',
+          component: () => import('../views/user/CustomerSupport.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: '/user/leaderboard',
+          name: 'Leaderboard',
+          component: () => import('../views/user/Leaderboard.vue'),
+          meta: { requiresAuth: true }
+        }
 ]
 
 const router = createRouter({

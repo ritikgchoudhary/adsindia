@@ -65,9 +65,7 @@ Route::namespace('Api')->name('api.')->group(function(){
         Route::middleware(['check.status'])->group(function () {
 
             Route::middleware('registration.complete')->group(function(){
-                Route::get('dashboard',function(){
-                    return auth()->user();
-                });
+                Route::get('dashboard', 'UserController@dashboard');
 
 
                 Route::controller('UserController')->group(function(){
@@ -124,6 +122,60 @@ Route::namespace('Api')->name('api.')->group(function(){
                     Route::post('close/{id}', 'closeTicket');
                     Route::get('download/{attachment_id}', 'ticketDownload');
                 });
+
+                // Ads Work
+                Route::controller('AdsController')->prefix('ads')->group(function () {
+                    Route::get('work', 'getAds');
+                    Route::post('complete', 'completeAd');
+                });
+
+                // Account & KYC
+                Route::get('account-kyc', 'UserController@accountKYC');
+                Route::post('bank-details', 'UserController@updateBankDetails');
+
+                // Packages
+                Route::controller('PackageController')->prefix('packages')->group(function () {
+                    Route::get('/', 'getPackages');
+                    Route::get('current', 'getCurrentPackage');
+                    Route::post('purchase', 'purchasePackage');
+                });
+
+                // Ad Plans
+                Route::controller('AdPlanController')->prefix('ad-plans')->group(function () {
+                    Route::get('/', 'getAdPlans');
+                    Route::post('purchase', 'purchaseAdPlan');
+                });
+
+                // Leaderboard
+                Route::get('leaderboard', 'LeaderboardController@getLeaderboard');
+
+                // Courses
+                Route::get('courses', 'CourseController@getCourses');
+
+                // Referral
+                Route::get('referral', 'ReferralController@getReferralData');
+
+                // Affiliate Income
+                Route::get('affiliate-income', 'AffiliateController@getAffiliateIncome');
+
+                // Partner Program
+                Route::controller('PartnerController')->prefix('partner-program')->group(function () {
+                    Route::get('plans', 'getPartnerPlans');
+                    Route::get('current', 'getCurrentPlan');
+                    Route::post('join', 'joinPartnerProgram');
+                });
+
+                // Certificates
+                Route::controller('CertificateController')->prefix('certificates')->group(function () {
+                    Route::get('/', 'getCertificates');
+                    Route::post('apply', 'applyCertificate');
+                });
+
+                // Customer Support
+                Route::get('customer-support/links', 'SupportController@getSupportLinks');
+
+                // Conversion Log
+                Route::get('conversion/log', 'UserController@conversionLog');
 
             });
         });

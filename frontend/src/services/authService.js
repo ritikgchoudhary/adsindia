@@ -9,13 +9,17 @@ export const authService = {
     return response.data
   },
 
-  async register(userData) {
-    const response = await api.post('/register', userData)
-    if (response.data.status === 'success') {
-      localStorage.setItem('token', response.data.data.token)
-    }
-    return response.data
-  },
+    async register(userData) {
+      const response = await api.post('/register', userData)
+      if (response.data.status === 'success') {
+        localStorage.setItem('token', response.data.data.token)
+        // Store package info if available
+        if (response.data.data.package_info) {
+          localStorage.setItem('pending_package', JSON.stringify(response.data.data.package_info))
+        }
+      }
+      return response.data
+    },
 
   async logout() {
     await api.post('/logout')
