@@ -433,24 +433,22 @@ export default {
           watchDuration.value = Math.floor(currentTime)
         }
         
-        // Also track from timer interval (backup method)
-        // This ensures we have accurate watch duration even if video time is wrong
+        // ALSO use video currentTime as backup - if video has played 54+ seconds, complete
+        const minWatchTime = 54 // 90% of 60 seconds
+        const videoWatchedTime = Math.floor(currentTime || 0)
         
-        // Check if user has watched for 90% of required duration (54 seconds out of 60)
-        const requiredWatchTime = 60 // 1 minute = 60 seconds
-        const minWatchTime = requiredWatchTime * 0.9 // 54 seconds
-        
-        // Complete if watched enough and timer is done (or very close)
-        if (!videoCompleted.value && watchDuration.value >= minWatchTime && adTimer.value <= 5) {
-          // User has watched enough (54+ seconds) and timer is done or almost done
-          console.log('TimeUpdate: Completing ad - watchDuration:', watchDuration.value, 'adTimer:', adTimer.value)
-          // Force completion
+        // Complete if video has been watched for 54+ seconds AND timer is done
+        if (!videoCompleted.value && videoWatchedTime >= minWatchTime && adTimer.value <= 0) {
+          console.log('=== TIMEUPDATE: FORCE COMPLETION ===')
+          console.log('videoWatchedTime:', videoWatchedTime, 'watchDuration:', watchDuration.value, 'adTimer:', adTimer.value)
           videoCompleted.value = true
           if (timerInterval.value) {
             clearInterval(timerInterval.value)
             timerInterval.value = null
           }
-          completeAd(currentAd.value)
+          if (currentAd.value && currentAd.value.id) {
+            completeAd(currentAd.value)
+          }
         }
       }
     }
