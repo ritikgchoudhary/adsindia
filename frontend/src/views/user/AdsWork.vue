@@ -82,10 +82,10 @@
             <div class="d-flex justify-content-between align-items-center flex-wrap">
               <div>
                 <h5 class="mb-1" style="color: #2d3748; font-weight: 700; font-size: 20px;">
-                  <i class="fas fa-layer-group me-2" style="color: #667eea;"></i>Step-by-Step Ads
+                  <i class="fas fa-th me-2" style="color: #667eea;"></i>Ads Grid (5 per row)
                 </h5>
                 <p class="mb-0 text-muted" style="font-size: 14px;">
-                  Complete each ad to unlock the next one
+                  Complete each ad to unlock the next one. Click on any unlocked ad to watch.
                 </p>
               </div>
               <div class="d-flex align-items-center gap-3 mt-2 mt-md-0">
@@ -112,11 +112,11 @@
         </div>
       </div>
 
-      <!-- Step-by-Step Ads List -->
+      <!-- Ads Grid - 5 per row -->
       <div class="col-12">
         <div class="row g-4">
           <template v-for="(ad, index) in allAds" :key="ad?.id || Math.random()">
-            <div v-if="ad && ad.id" class="col-12">
+            <div v-if="ad && ad.id" class="ad-slot-col col-lg-2 col-md-4 col-sm-6 col-12">
               <div class="card custom--card border-0 shadow-lg" 
                    :class="{ 'opacity-50': index > currentUnlockedIndex }"
                    style="border-radius: 20px; transition: all 0.3s ease; background: #fff; overflow: hidden; position: relative;"
@@ -134,90 +134,82 @@
                   </div>
                 </div>
 
-                <!-- Step Number Badge -->
-                <div class="position-absolute top-0 start-0 m-3" style="z-index: 10;">
+                <!-- Slot Number Badge -->
+                <div class="position-absolute top-0 start-0 m-2" style="z-index: 10;">
                   <div class="badge" 
                        :style="index <= currentUnlockedIndex ? 'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);' : 'background: #718096;'"
-                       style="color: white; padding: 10px 20px; border-radius: 20px; font-weight: 600; font-size: 16px;">
-                    <i v-if="index < currentUnlockedIndex" class="fas fa-check-circle me-2"></i>
-                    <i v-else-if="index === currentUnlockedIndex" class="fas fa-play-circle me-2"></i>
-                    <i v-else class="fas fa-lock me-2"></i>
-                    Step {{ index + 1 }} {{ index === currentUnlockedIndex ? '(Current)' : index < currentUnlockedIndex ? '(Completed)' : '(Locked)' }}
+                       style="color: white; padding: 6px 12px; border-radius: 15px; font-weight: 600; font-size: 12px;">
+                    <i v-if="index < currentUnlockedIndex" class="fas fa-check-circle me-1"></i>
+                    <i v-else-if="index === currentUnlockedIndex" class="fas fa-play-circle me-1"></i>
+                    <i v-else class="fas fa-lock me-1"></i>
+                    Slot {{ index + 1 }}
                   </div>
                 </div>
 
                 <!-- Watched Badge -->
-                <div v-if="watchedAds.includes(ad.id)" class="position-absolute top-0 end-0 m-3" style="z-index: 10;">
-                  <div class="badge bg-success" style="padding: 10px 20px; border-radius: 20px; font-weight: 600; font-size: 14px;">
-                    <i class="fas fa-check-circle me-1"></i>Completed
+                <div v-if="watchedAds.includes(ad.id)" class="position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                  <div class="badge bg-success" style="padding: 6px 12px; border-radius: 15px; font-weight: 600; font-size: 11px;">
+                    <i class="fas fa-check-circle me-1"></i>Done
                   </div>
                 </div>
 
                 <!-- Video Thumbnail -->
-                <div class="position-relative" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px;">
-                  <div class="position-relative" style="border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); aspect-ratio: 16/9;">
+                <div class="position-relative" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px;">
+                  <div class="position-relative" style="border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.3); aspect-ratio: 16/9;">
                     <img :src="ad.image || '/assets/images/default-ad.jpg'" :alt="ad.title" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(index > currentUnlockedIndex ? 0.5 : 1);">
                     <div v-if="index <= currentUnlockedIndex && !watchedAds.includes(ad.id)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
                          style="background: rgba(0,0,0,0.4); transition: all 0.3s; cursor: pointer;" 
                          @mouseenter="$event.currentTarget.style.background = 'rgba(0,0,0,0.6)'"
                          @mouseleave="$event.currentTarget.style.background = 'rgba(0,0,0,0.4)'">
                       <div class="text-center text-white">
-                        <div class="mb-3" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 0 auto; transition: all 0.3s;" 
+                        <div class="mb-2" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto; transition: all 0.3s;" 
                              @mouseenter="$event.currentTarget.style.transform = 'scale(1.1)'; $event.currentTarget.style.background = 'rgba(255,255,255,0.3)'"
                              @mouseleave="$event.currentTarget.style.transform = 'scale(1)'; $event.currentTarget.style.background = 'rgba(255,255,255,0.2)'">
-                          <i class="fas fa-play" style="font-size: 40px; margin-left: 5px;"></i>
+                          <i class="fas fa-play" style="font-size: 24px; margin-left: 3px;"></i>
                         </div>
-                        <p class="mb-0" style="font-size: 16px; font-weight: 600;">Click to Watch</p>
+                        <p class="mb-0" style="font-size: 12px; font-weight: 600;">Click</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Ad Details -->
-                <div class="card-body p-4">
-                  <h4 class="ad-title mb-2" style="color: #2d3748; font-weight: 700; font-size: 22px;">{{ ad.title }}</h4>
-                  <p class="text-muted mb-4" style="font-size: 15px; line-height: 1.6;">{{ ad.description }}</p>
+                <div class="card-body p-3">
+                  <h6 class="ad-title mb-2" style="color: #2d3748; font-weight: 700; font-size: 14px; line-height: 1.3; min-height: 40px;">{{ ad.title }}</h6>
+                  <p class="text-muted mb-3" style="font-size: 11px; line-height: 1.4; min-height: 30px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ ad.description }}</p>
                   
-                  <!-- Info Cards -->
-                  <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                      <div class="p-3 border-0 shadow-sm rounded text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px !important;">
+                  <!-- Info Row -->
+                  <div class="row g-2 mb-3">
+                    <div class="col-6">
+                      <div class="p-2 border-0 rounded text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px !important;">
                         <div class="text-white">
-                          <i class="fas fa-clock fa-2x mb-2"></i>
-                          <div style="font-size: 14px; font-weight: 600;">{{ ad.duration || 30 }} minutes</div>
+                          <i class="fas fa-clock mb-1" style="font-size: 12px;"></i>
+                          <div style="font-size: 10px; font-weight: 600;">{{ ad.duration || 30 }}m</div>
                         </div>
                       </div>
                     </div>
-                    <div class="col-md-4">
-                      <div class="p-3 border-0 shadow-sm rounded text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px !important;">
+                    <div class="col-6">
+                      <div class="p-2 border-0 rounded text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 8px !important;">
                         <div class="text-white">
-                          <i class="fas fa-coins fa-2x mb-2"></i>
-                          <div style="font-size: 14px; font-weight: 600;">{{ currencySymbol }}{{ formatAmount(ad.earning) }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="p-3 border-0 shadow-sm rounded text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 12px !important;">
-                        <div class="text-white">
-                          <i class="fas fa-list-ol fa-2x mb-2"></i>
-                          <div style="font-size: 14px; font-weight: 600;">Step {{ index + 1 }}/{{ allAds.length }}</div>
+                          <i class="fas fa-coins mb-1" style="font-size: 12px;"></i>
+                          <div style="font-size: 10px; font-weight: 600;">{{ currencySymbol }}{{ formatAmount(ad.earning) }}</div>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <!-- Status -->
-                  <div v-if="watchedAds.includes(ad.id)" class="alert alert-success mb-0 border-0" style="border-radius: 12px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 15px;">
-                    <i class="fas fa-check-circle me-2"></i><strong>Completed!</strong> Earning added to your account.
+                  <div v-if="watchedAds.includes(ad.id)" class="alert alert-success mb-2 border-0" style="border-radius: 8px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 8px; font-size: 11px;">
+                    <i class="fas fa-check-circle me-1"></i><strong>Done!</strong>
                   </div>
-                  <button v-else-if="index > currentUnlockedIndex" class="btn w-100 btn-lg" disabled style="border-radius: 12px; font-weight: 600; padding: 15px; background: #e2e8f0; color: #718096;">
-                    <i class="fas fa-lock me-2"></i>Locked - Complete Previous Ads First
+                  <button v-else-if="index > currentUnlockedIndex" class="btn w-100 btn-sm" disabled style="border-radius: 8px; font-weight: 600; padding: 8px; background: #e2e8f0; color: #718096; font-size: 11px;">
+                    <i class="fas fa-lock me-1"></i>Locked
                   </button>
-                  <button v-else-if="!ad.is_active" class="btn w-100 btn-lg" disabled style="border-radius: 12px; font-weight: 600; padding: 15px; background: #e2e8f0; color: #718096;">
-                    <i class="fas fa-lock me-2"></i>Not Available
+                  <button v-else-if="!ad.is_active" class="btn w-100 btn-sm" disabled style="border-radius: 8px; font-weight: 600; padding: 8px; background: #e2e8f0; color: #718096; font-size: 11px;">
+                    <i class="fas fa-lock me-1"></i>N/A
                   </button>
-                  <button v-else class="btn w-100 btn-lg text-white" style="border-radius: 12px; font-weight: 600; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);" @mouseenter="$event.currentTarget.style.transform = 'translateY(-2px)'; $event.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)'">
-                    <i class="fas fa-play-circle me-2" style="font-size: 20px;"></i>Watch Ad Now - Step {{ index + 1 }}
+                  <button v-else class="btn w-100 btn-sm text-white" style="border-radius: 8px; font-weight: 600; padding: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; font-size: 11px; transition: all 0.3s;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-2px)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'">
+                    <i class="fas fa-play-circle me-1"></i>Watch
                   </button>
                 </div>
               </div>
@@ -877,6 +869,19 @@ body.modal-open {
 .modal-content {
   max-height: 90vh;
   overflow-y: auto;
+}
+
+/* 5 ads per row on large screens */
+@media (min-width: 1200px) {
+  .ad-slot-col {
+    flex: 0 0 20%;
+    max-width: 20%;
+  }
+}
+
+/* Ensure proper spacing */
+.row.g-4 > .ad-slot-col {
+  margin-bottom: 1.5rem;
 }
 
 /* Only show backdrop when modal is actually open */
