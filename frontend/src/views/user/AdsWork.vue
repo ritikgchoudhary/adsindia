@@ -184,7 +184,7 @@
                       <div class="p-2 border-0 rounded text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px !important;">
                         <div class="text-white">
                           <i class="fas fa-clock mb-1" style="font-size: 12px;"></i>
-                          <div style="font-size: 10px; font-weight: 600;">{{ ad.duration || 30 }}m</div>
+                          <div style="font-size: 10px; font-weight: 600;">{{ ad.duration || 1 }}m</div>
                         </div>
                       </div>
                     </div>
@@ -409,7 +409,7 @@ export default {
     const watchAd = (ad) => {
       if (!ad || !ad.id) return
       currentAd.value = ad
-      totalDuration.value = ad.duration_seconds || (ad.duration || 30) * 60
+      totalDuration.value = ad.duration_seconds || (ad.duration || 1) * 60
       adTimer.value = totalDuration.value
       videoCompleted.value = false
       watchDuration.value = 0
