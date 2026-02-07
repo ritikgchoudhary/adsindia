@@ -302,7 +302,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import DashboardLayout from '../../components/DashboardLayout.vue'
 import api from '../../services/api'
 
@@ -346,13 +346,30 @@ export default {
     const watchAd = (ad) => {
       if (!ad || !ad.id) return
       currentAd.value = ad
-      totalDuration.value = ad.duration_seconds || (ad.duration || 1) * 60
+      // Always use package duration (60 seconds) - video must be watched for full 1 minute
+      totalDuration.value = ad.duration_seconds || 60 // Package duration is 60 seconds
       adTimer.value = totalDuration.value
       videoCompleted.value = false
       watchDuration.value = 0
       watchStartTime.value = Date.now()
       showAdModal.value = true
       isVideoPlaying.value = false
+
+      // Wait for video to load and set loop if video is shorter than 60 seconds
+      nextTick(() => {
+        if (videoPlayer.value) {
+          videoPlayer.value.addEventListener('loadedmetadata', () => {
+            const videoDuration = videoPlayer.value.duration
+            // If video is shorter than 60 seconds, enable loop to ensure full 1 minute watch
+            if (videoDuration > 0 && videoDuration < 60) {
+              videoPlayer.value.loop = true
+            }
+            // Timer is always 60 seconds from package
+            totalDuration.value = 60
+            adTimer.value = 60
+          })
+        }
+      })
 
       // Start timer
       timerInterval.value = setInterval(() => {
@@ -361,9 +378,16 @@ export default {
           watchDuration.value++
         }
         
-        // Countdown timer
+        // Countdown timer - always countdown from 60 seconds
         if (adTimer.value > 0) {
           adTimer.value--
+        } else {
+          // Timer reached 0, check if user watched enough (54 seconds = 90% of 60)
+          const minWatchTime = 60 * 0.9 // 54 seconds
+          if (watchDuration.value >= minWatchTime) {
+            // User watched enough, complete the ad
+            onVideoEnded()
+          }
         }
       }, 1000)
     }
@@ -399,13 +423,13 @@ export default {
           watchDuration.value = Math.floor(currentTime)
         }
         
-        // Check if video is near completion (90% watched)
-        if (duration > 0 && currentTime >= duration * 0.9) {
-          // Video is 90% complete, allow completion
-          if (adTimer.value <= 10) { // Last 10 seconds
-            adTimer.value = 0
-            onVideoEnded()
-          }
+        // Check if user has watched for 90% of required duration (54 seconds out of 60)
+        const requiredWatchTime = 60 // 1 minute = 60 seconds
+        const minWatchTime = requiredWatchTime * 0.9 // 90% = 54 seconds
+        
+        if (watchDuration.value >= minWatchTime && adTimer.value <= 0) {
+          // User has watched for at least 54 seconds and timer reached 0
+          onVideoEnded()
         }
       }
     }
@@ -458,9 +482,18 @@ export default {
     }
 
     const onVideoEnded = () => {
-      if (videoPlayer.value) {
-        watchDuration.value = Math.floor(videoPlayer.value.duration)
+      // Ensure user has watched for at least 54 seconds (90% of 60 seconds)
+      const requiredWatchTime = 60 // 1 minute = 60 seconds
+      const minWatchTime = requiredWatchTime * 0.9 // 90% = 54 seconds
+      
+      // If video ended but user hasn't watched enough, don't complete yet
+      // Timer will handle completion when 60 seconds are watched
+      if (watchDuration.value < minWatchTime && adTimer.value > 0) {
+        // Video ended but timer still running - video will loop or wait for timer
+        return
       }
+      
+      // User has watched enough (54+ seconds) and timer is done
       videoCompleted.value = true
       if (timerInterval.value) {
         clearInterval(timerInterval.value)
