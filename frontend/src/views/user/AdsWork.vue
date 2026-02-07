@@ -156,7 +156,7 @@
                 <!-- Video Thumbnail -->
                 <div class="position-relative" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px;">
                   <div class="position-relative" style="border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.3); aspect-ratio: 16/9;">
-                    <img :src="ad.image || '/assets/images/default-ad.jpg'" :alt="ad.title" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(index > currentUnlockedIndex ? 0.5 : 1);">
+                    <img :src="ad.image || '/assets/images/default-ad.jpg'" :alt="ad.title" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(index > currentUnlockedIndex ? 0.5 : 1);" @error="$event.target.src = '/assets/images/default-ad.jpg'">
                     <div v-if="index <= currentUnlockedIndex && !watchedAds.includes(ad.id)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
                          style="background: rgba(0,0,0,0.4); transition: all 0.3s; cursor: pointer;" 
                          @mouseenter="$event.currentTarget.style.background = 'rgba(0,0,0,0.6)'"
@@ -266,13 +266,18 @@
                   <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
                        role="progressbar" 
                        :style="`width: ${totalDuration > 0 ? ((totalDuration - adTimer) / totalDuration) * 100 : 0}%`">
-                    {{ formatTime(adTimer) }} remaining
+                    {{ formatTime(adTimer) }} ({{ adTimer }}s) remaining
                   </div>
                 </div>
                 <p class="mt-2 mb-0" style="color: #4a5568;">
                   <i class="fas fa-info-circle me-2"></i>
                   Watch the complete video to earn {{ currencySymbol }}{{ formatAmount(currentAd.earning || 0) }}
                 </p>
+                <div class="mt-3 text-center">
+                  <div class="badge bg-primary px-4 py-2" style="font-size: 16px; font-weight: 600; border-radius: 10px;">
+                    <i class="fas fa-clock me-2"></i>Time Remaining: {{ formatTime(adTimer) }} ({{ adTimer }} seconds)
+                  </div>
+                </div>
               </div>
               <!-- Video Player -->
               <div class="ad-video-container mb-4" style="position: relative; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
@@ -302,7 +307,11 @@
                 
                 <!-- Custom Controls Overlay -->
                 <div v-if="currentAd && currentAd.video_url" class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%); z-index: 10;">
-                  <div class="d-flex justify-content-center align-items-center gap-3">
+                  <div class="d-flex justify-content-between align-items-center gap-3">
+                    <!-- Time Remaining Display -->
+                    <div class="text-white" style="font-size: 16px; font-weight: 600;">
+                      <i class="fas fa-clock me-2"></i>{{ formatTime(adTimer) }} ({{ adTimer }}s)
+                    </div>
                     <!-- Play/Pause Button -->
                     <button 
                       class="btn btn-light btn-lg rounded-circle" 
