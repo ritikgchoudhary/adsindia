@@ -784,4 +784,33 @@ export default {
   border-radius: 15px;
   overflow: hidden;
 }
+
+/* Ensure page scrolling works */
+.dashboard-body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100vh;
+}
+
+.dashboard__right {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Prevent body scroll lock when modal is open */
+body.modal-open {
+  overflow: auto !important;
+  padding-right: 0 !important;
+}
+
+/* Ensure modal doesn't block page scroll */
+.modal.show {
+  overflow-y: auto !important;
+}
+
+.modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
 </style>
