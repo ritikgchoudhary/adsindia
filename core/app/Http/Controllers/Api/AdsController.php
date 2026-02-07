@@ -50,10 +50,13 @@ class AdsController extends Controller
             if (preg_match('/ad_id:(\d+)/', $view->ad_url, $matches)) {
                 $watchedAdIds[] = (int)$matches[1];
             } else {
-                // Fallback: use completion order if ad_id not found
+                // Fallback: use completion order if ad_id not found (for old records)
                 $watchedAdIds[] = count($watchedAdIds) + 1;
             }
         }
+        
+        // Debug logging
+        \Log::info("Watched ad IDs extracted: " . json_encode($watchedAdIds) . " from " . $watchedAdViews->count() . " views");
 
         // Check if daily limit reached
         $canWatchMore = $todayViews < $activeOrder->package->daily_ad_limit;
