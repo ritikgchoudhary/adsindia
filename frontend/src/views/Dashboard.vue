@@ -423,6 +423,34 @@ export default {
 
     onMounted(() => {
       fetchDashboardData()
+      
+      // Fix scrolling issue - ensure page can scroll
+      setTimeout(() => {
+        document.body.style.overflow = 'auto'
+        document.body.style.height = 'auto'
+        document.documentElement.style.overflow = 'auto'
+        document.documentElement.style.height = 'auto'
+        
+        // Remove any scroll locks from dashboard elements
+        const dashboardBody = document.querySelector('.dashboard-body')
+        if (dashboardBody) {
+          dashboardBody.style.overflow = 'visible'
+          dashboardBody.style.height = 'auto'
+          dashboardBody.style.maxHeight = 'none'
+        }
+        
+        const dashboardRight = document.querySelector('.dashboard__right')
+        if (dashboardRight) {
+          dashboardRight.style.overflow = 'visible'
+          dashboardRight.style.height = 'auto'
+        }
+        
+        const dashboard = document.querySelector('.dashboard')
+        if (dashboard) {
+          dashboard.style.overflow = 'visible'
+          dashboard.style.height = 'auto'
+        }
+      }, 100)
     })
 
     return {
