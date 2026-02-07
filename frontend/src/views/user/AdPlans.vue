@@ -25,13 +25,95 @@
                 <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i>Earning per ad: <strong style="color: #2d3748;">{{ currencySymbol }}{{ formatAmount(plan.reward_per_ad) }}</strong></li>
                 <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i>Total Potential: <strong style="color: #2d3748;">{{ currencySymbol }}{{ formatAmount(plan.total_earning) }}</strong></li>
               </ul>
-              <button class="btn btn--base w-100 btn-lg" @click="purchasePlan(plan)" style="border-radius: 10px; font-weight: 600; color: #fff;">
+              <button class="btn btn--base w-100 btn-lg" @click="showPaymentModal(plan)" style="border-radius: 10px; font-weight: 600; color: #fff;">
                 <i class="fas fa-shopping-cart me-2"></i>Buy Now
               </button>
             </div>
           </div>
         </div>
       </template>
+    </div>
+
+    <!-- Payment Method Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 15px;">
+          <div class="modal-header" style="border-bottom: 1px solid #e2e8f0;">
+            <h5 class="modal-title" id="paymentModalLabel" style="color: #2d3748; font-weight: 600;">
+              <i class="fas fa-credit-card me-2"></i>Select Payment Method
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="color: #4a5568;">
+            <div v-if="selectedPlan" class="mb-4">
+              <h6 style="color: #2d3748;">{{ selectedPlan.name }}</h6>
+              <p class="mb-0">Amount: <strong style="color: #667eea;">{{ currencySymbol }}{{ formatAmount(selectedPlan.price) }}</strong></p>
+            </div>
+            <div class="payment-methods">
+              <div class="form-check mb-3 p-3 border rounded" style="border-radius: 10px; cursor: pointer; transition: all 0.3s;" @click="selectedPaymentMethod = 'balance'" :style="{ backgroundColor: selectedPaymentMethod === 'balance' ? '#f0f4ff' : '#fff', borderColor: selectedPaymentMethod === 'balance' ? '#667eea' : '#e2e8f0' }">
+                <input class="form-check-input" type="radio" name="paymentMethod" id="balancePayment" value="balance" v-model="selectedPaymentMethod">
+                <label class="form-check-label w-100" for="balancePayment" style="cursor: pointer;">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-wallet me-3" style="font-size: 24px; color: #667eea;"></i>
+                    <div>
+                      <strong style="color: #2d3748;">Pay from Balance</strong>
+                      <p class="mb-0 small" style="color: #718096;">Use your account balance</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+              <div class="form-check mb-3 p-3 border rounded" style="border-radius: 10px; cursor: pointer; transition: all 0.3s;" @click="selectedPaymentMethod = 'gateway'" :style="{ backgroundColor: selectedPaymentMethod === 'gateway' ? '#f0f4ff' : '#fff', borderColor: selectedPaymentMethod === 'gateway' ? '#667eea' : '#e2e8f0' }">
+                <input class="form-check-input" type="radio" name="paymentMethod" id="gatewayPayment" value="gateway" v-model="selectedPaymentMethod">
+                <label class="form-check-label w-100" for="gatewayPayment" style="cursor: pointer;">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-credit-card me-3" style="font-size: 24px; color: #667eea;"></i>
+                    <div>
+                      <strong style="color: #2d3748;">Pay via Gateway</strong>
+                      <p class="mb-0 small" style="color: #718096;">Pay using payment gateway (Dummy Gateway)</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #e2e8f0;">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
+            <button type="button" class="btn btn--base" @click="proceedPayment" :disabled="!selectedPaymentMethod || processing" style="border-radius: 8px; font-weight: 600;">
+              <span v-if="processing">
+                <i class="fas fa-spinner fa-spin me-2"></i>Processing...
+              </span>
+              <span v-else>
+                <i class="fas fa-check me-2"></i>Proceed
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dummy Gateway Payment Modal -->
+    <div class="modal fade" id="dummyGatewayModal" tabindex="-1" aria-labelledby="dummyGatewayModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 15px;">
+          <div class="modal-header" style="border-bottom: 1px solid #e2e8f0;">
+            <h5 class="modal-title" id="dummyGatewayModalLabel" style="color: #2d3748; font-weight: 600;">
+              <i class="fas fa-credit-card me-2"></i>Dummy Payment Gateway
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center" style="color: #4a5568;">
+            <div class="mb-4">
+              <i class="fas fa-building fa-3x mb-3" style="color: #667eea;"></i>
+              <h6 style="color: #2d3748;">Processing Payment...</h6>
+              <p class="mb-0">Amount: <strong style="color: #667eea;">{{ currencySymbol }}{{ formatAmount(paymentAmount) }}</strong></p>
+            </div>
+            <div class="spinner-border text-primary mb-3" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="small text-muted">This is a dummy gateway for testing. In production, this will be replaced with real payment gateway.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </DashboardLayout>
 </template>
@@ -49,13 +131,62 @@ export default {
   setup() {
     const adPlans = ref([])
     const currencySymbol = ref('₹')
+    const selectedPlan = ref(null)
+    const selectedPaymentMethod = ref('balance')
+    const processing = ref(false)
+    const paymentAmount = ref(0)
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
       return parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
     }
 
-    const purchasePlan = async (plan) => {
+    const showPaymentModal = (plan) => {
+      if (!plan || !plan.id) {
+        console.error('Invalid plan:', plan)
+        return
+      }
+      selectedPlan.value = plan
+      selectedPaymentMethod.value = 'balance'
+      paymentAmount.value = plan.price
+      
+      // Show modal using Bootstrap
+      if (window.bootstrap) {
+        const modal = new window.bootstrap.Modal(document.getElementById('paymentModal'))
+        modal.show()
+      } else {
+        // Fallback if bootstrap not available
+        const modalEl = document.getElementById('paymentModal')
+        if (modalEl) {
+          modalEl.style.display = 'block'
+          modalEl.classList.add('show')
+        }
+      }
+    }
+
+    const proceedPayment = async () => {
+      if (!selectedPlan.value || !selectedPaymentMethod.value) {
+        return
+      }
+
+      processing.value = true
+
+      try {
+        if (selectedPaymentMethod.value === 'balance') {
+          // Direct purchase with balance
+          await purchasePlan(selectedPlan.value, 'balance')
+        } else if (selectedPaymentMethod.value === 'gateway') {
+          // Gateway payment
+          await purchaseWithGateway(selectedPlan.value)
+        }
+      } catch (error) {
+        console.error('Payment error:', error)
+      } finally {
+        processing.value = false
+      }
+    }
+
+    const purchasePlan = async (plan, paymentMethod = 'balance') => {
       if (!plan || !plan.id) {
         console.error('Invalid plan:', plan)
         return
@@ -70,7 +201,22 @@ export default {
       console.log('Purchasing plan:', plan)
       
       try {
-        const response = await api.post('/ad-plans/purchase', { plan_id: plan.id })
+        // Close payment modal
+        if (window.bootstrap) {
+          const paymentModal = window.bootstrap.Modal.getInstance(document.getElementById('paymentModal'))
+          if (paymentModal) paymentModal.hide()
+        } else {
+          const modalEl = document.getElementById('paymentModal')
+          if (modalEl) {
+            modalEl.style.display = 'none'
+            modalEl.classList.remove('show')
+          }
+        }
+
+        const response = await api.post('/ad-plans/purchase', { 
+          plan_id: plan.id,
+          payment_method: paymentMethod
+        })
         console.log('Purchase response:', response.data)
         
         if (response.data.status === 'success') {
@@ -110,6 +256,72 @@ export default {
         
         if (window.notify) {
           window.notify('error', errorMsg)
+        }
+      }
+    }
+
+    const purchaseWithGateway = async (plan) => {
+      if (!plan || !plan.id) return
+
+      try {
+        // Close payment method modal
+        const paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'))
+        if (paymentModal) paymentModal.hide()
+
+        // Show dummy gateway modal
+        if (window.bootstrap) {
+          const dummyModal = new window.bootstrap.Modal(document.getElementById('dummyGatewayModal'))
+          dummyModal.show()
+        } else {
+          const modalEl = document.getElementById('dummyGatewayModal')
+          if (modalEl) {
+            modalEl.style.display = 'block'
+            modalEl.classList.add('show')
+          }
+        }
+
+        // Initiate gateway payment
+        const response = await api.post('/ad-plans/purchase', {
+          plan_id: plan.id,
+          payment_method: 'gateway'
+        })
+
+        console.log('Gateway payment response:', response.data)
+
+        if (response.data.status === 'success' && response.data.data?.payment_url) {
+          // Simulate payment processing
+          setTimeout(async () => {
+            try {
+              // Call dummy gateway payment endpoint
+              const paymentResponse = await api.post('/ad-plans/payment/dummy', {
+                trx: response.data.data.trx,
+                plan_id: plan.id,
+                status: 'success' // For testing, always success. In production, this comes from gateway callback
+              })
+
+              dummyModal.hide()
+
+              if (paymentResponse.data.status === 'success') {
+                if (window.notify) {
+                  window.notify('success', `Ad plan purchased successfully! You can now watch ads and earn ${currencySymbol.value}${formatAmount(plan.reward_per_ad)} per ad.`)
+                }
+                setTimeout(() => {
+                  window.location.href = '/user/ads-work'
+                }, 1500)
+              }
+            } catch (error) {
+              dummyModal.hide()
+              console.error('Gateway payment error:', error)
+              if (window.notify) {
+                window.notify('error', error.response?.data?.message?.error?.[0] || 'Payment failed. Please try again.')
+              }
+            }
+          }, 2000) // Simulate 2 second payment processing
+        }
+      } catch (error) {
+        console.error('Error initiating gateway payment:', error)
+        if (window.notify) {
+          window.notify('error', error.response?.data?.message?.error?.[0] || 'Failed to initiate payment')
         }
       }
     }
@@ -161,7 +373,14 @@ export default {
       adPlans,
       currencySymbol,
       formatAmount,
-      purchasePlan
+      purchasePlan,
+      showPaymentModal,
+      proceedPayment,
+      purchaseWithGateway,
+      selectedPlan,
+      selectedPaymentMethod,
+      processing,
+      paymentAmount
     }
   }
 }

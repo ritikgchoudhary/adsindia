@@ -144,6 +144,7 @@ Route::namespace('Api')->name('api.')->group(function(){
                 Route::controller('AdPlanController')->prefix('ad-plans')->group(function () {
                     Route::get('/', 'getAdPlans');
                     Route::post('purchase', 'purchaseAdPlan');
+                    Route::post('payment/dummy', 'dummyGatewayPayment'); // Dummy gateway payment
                 });
 
                 // Leaderboard

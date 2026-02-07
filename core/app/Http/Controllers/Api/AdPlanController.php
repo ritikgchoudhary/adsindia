@@ -135,6 +135,7 @@ class AdPlanController extends Controller
         $user = auth()->user();
         $request->validate([
             'plan_id' => 'required|integer',
+            'payment_method' => 'required|in:balance,gateway', // balance or gateway
         ]);
 
         // Get the AdPackage by ID
@@ -146,11 +147,35 @@ class AdPlanController extends Controller
             return responseError('plan_not_found', ['Ad plan not found']);
         }
 
-        // Check balance
-        if ($user->balance < $adPackage->price) {
-            return responseError('insufficient_balance', ['Insufficient balance. Required: ' . showAmount($adPackage->price)]);
+        $paymentMethod = $request->payment_method;
+
+        // If payment method is balance, check balance
+        if ($paymentMethod === 'balance') {
+            if ($user->balance < $adPackage->price) {
+                return responseError('insufficient_balance', ['Insufficient balance. Required: ' . showAmount($adPackage->price)]);
+            }
+
+            // Deduct balance
+            $user->balance -= $adPackage->price;
+            $user->save();
+
+            // Process purchase
+            return $this->processPurchase($user, $adPackage);
         }
 
+        // If payment method is gateway, create pending order and return payment URL
+        if ($paymentMethod === 'gateway') {
+            return $this->initiateGatewayPayment($user, $adPackage);
+        }
+
+        return responseError('invalid_payment_method', ['Invalid payment method']);
+    }
+
+    /**
+     * Process the purchase after payment (balance or gateway success)
+     */
+    private function processPurchase($user, $adPackage)
+    {
         // Calculate validity days based on plan price
         $validityDays = 7; // Default
         if ($adPackage->price == 2999) $validityDays = 7;
@@ -158,16 +183,12 @@ class AdPlanController extends Controller
         elseif ($adPackage->price == 7499) $validityDays = 30;
         elseif ($adPackage->price == 9999) $validityDays = 60;
 
-        // Deduct balance
-        $user->balance -= $adPackage->price;
-        $user->save();
-
         // Create ad package order - this will allow user to watch ads and earn
         $order = AdPackageOrder::create([
             'user_id' => $user->id,
-            'package_id' => $adPackage->id, // Link to AdPackage
+            'package_id' => $adPackage->id,
             'amount' => $adPackage->price,
-            'status' => 1, // Auto-approve for balance payment
+            'status' => 1, // Active
             'expires_at' => now()->addDays($validityDays),
         ]);
 
@@ -191,5 +212,71 @@ class AdPlanController extends Controller
             'daily_ad_limit' => $adPackage->daily_ad_limit,
             'reward_per_ad' => $adPackage->reward_per_ad,
         ]);
+    }
+
+    /**
+     * Initiate dummy gateway payment
+     */
+    private function initiateGatewayPayment($user, $adPackage)
+    {
+        // Create a temporary payment session/order
+        $trx = getTrx();
+        
+        // Store payment data in session or create a temporary record
+        // For now, we'll return payment URL directly
+        $paymentData = [
+            'user_id' => $user->id,
+            'plan_id' => $adPackage->id,
+            'amount' => $adPackage->price,
+            'trx' => $trx,
+            'created_at' => now(),
+        ];
+
+        // In production, store this in database/cache
+        // For dummy gateway, we'll return a payment URL
+        $paymentUrl = url('/api/ad-plans/payment/dummy?trx=' . $trx . '&amount=' . $adPackage->price . '&plan_id=' . $adPackage->id);
+
+        return responseSuccess('payment_initiated', ['Payment gateway initialized'], [
+            'payment_url' => $paymentUrl,
+            'trx' => $trx,
+            'amount' => $adPackage->price,
+            'gateway_name' => 'Dummy Gateway',
+        ]);
+    }
+
+    /**
+     * Dummy Gateway Payment Handler
+     * This simulates payment processing
+     */
+    public function dummyGatewayPayment(Request $request)
+    {
+        $request->validate([
+            'trx' => 'required|string',
+            'plan_id' => 'required|integer',
+            'status' => 'required|in:success,failed', // For testing
+        ]);
+
+        $user = auth()->user();
+        $planId = $request->plan_id;
+        $status = $request->status;
+
+        // Get the AdPackage
+        $adPackage = AdPackage::where('id', $planId)
+            ->where('status', 1)
+            ->first();
+
+        if (!$adPackage) {
+            return responseError('plan_not_found', ['Ad plan not found']);
+        }
+
+        // Simulate payment processing delay
+        sleep(2);
+
+        if ($status === 'success') {
+            // Process purchase after successful payment
+            return $this->processPurchase($user, $adPackage);
+        } else {
+            return responseError('payment_failed', ['Payment failed. Please try again.']);
+        }
     }
 }
