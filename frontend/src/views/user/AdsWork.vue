@@ -43,7 +43,7 @@
         <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
           <div class="card-body p-4 text-white">
             <div class="d-flex justify-content-between align-items-center flex-wrap">
-              <div>
+              <div class="flex-grow-1">
                 <h5 class="mb-2" style="font-weight: 700; font-size: 22px;">
                   <i class="fas fa-box me-2"></i>Your Active Plan: {{ activePackage.name }}
                 </h5>
@@ -62,10 +62,13 @@
                   </div>
                 </div>
               </div>
-              <div class="mt-3 mt-md-0 text-end">
+              <div class="mt-3 mt-md-0 d-flex flex-column align-items-end gap-2">
                 <div class="badge bg-white text-primary px-4 py-2" style="font-size: 16px; border-radius: 12px; font-weight: 600;">
                   <i class="fas fa-check-circle me-2"></i>Plan Active
                 </div>
+                <router-link to="/user/ad-plans" class="btn btn-light btn-sm px-4 py-2" style="border-radius: 10px; font-weight: 600; white-space: nowrap; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);" @mouseenter="$event.currentTarget.style.transform = 'translateY(-2px)'; $event.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)'">
+                  <i class="fas fa-arrow-up me-2"></i>Upgrade Plan
+                </router-link>
               </div>
             </div>
           </div>
