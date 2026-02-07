@@ -10,6 +10,8 @@ use App\Models\Page;
 use App\Models\Subscriber;
 use App\Models\SupportMessage;
 use App\Models\SupportTicket;
+use App\Models\Category;
+use App\Models\Campaign;
 use App\Constants\Status;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
@@ -207,7 +209,12 @@ class AppController extends Controller
                 }
             }
 
-            // Try direct match
+            // Try direct match - if it ends with .element, get all
+            if (str_ends_with($key, '.element')) {
+                $sections = Frontend::where('data_keys', $key)->orderBy('id', 'desc')->get();
+                return responseSuccess('sections', ['Sections retrieved successfully'], $sections);
+            }
+
             $section = Frontend::where('data_keys', $key)->first();
             if ($section) {
                 return responseSuccess('section', ['Section retrieved successfully'], $section);
@@ -216,6 +223,10 @@ class AppController extends Controller
             // Try pattern match (key.content, key.element, key.data)
             $section = Frontend::where('data_keys', 'like', $key . '.%')->first();
             if ($section) {
+                if (str_contains($section->data_keys, '.element')) {
+                    $sections = Frontend::where('data_keys', $section->data_keys)->orderBy('id', 'desc')->get();
+                    return responseSuccess('sections', ['Sections retrieved successfully'], $sections);
+                }
                 return responseSuccess('section', ['Section retrieved successfully'], $section);
             }
 
@@ -280,5 +291,40 @@ class AppController extends Controller
         $ticket->save();
 
         return responseSuccess('reply_sent', ['Reply sent successfully']);
+    }
+    
+    public function getCategories()
+    {
+        $categories = Category::active()->withCount(['campaigns' => function ($query) {
+            $query->running();
+        }])->get();
+        return responseSuccess('categories', ['Categories retrieved successfully'], $categories);
+    }
+
+    public function getCampaigns(Request $request)
+    {
+        $campaigns = Campaign::running()->searchable(['title', 'description'])->whereHas('category', function ($query) {
+            $query->active();
+        });
+
+        if ($request->category_id) {
+            $campaigns = $campaigns->where('category_id', $request->category_id);
+        }
+
+        $campaigns = $campaigns->latest()->get();
+        return responseSuccess('campaigns', ['Campaigns retrieved successfully'], $campaigns);
+    }
+
+    public function getCampaignDetails($slug)
+    {
+        $campaign = Campaign::running()->where('slug', $slug)->withWhereHas('category', function ($query) {
+            $query->active();
+        })->with(['advertiser'])->first();
+
+        if (!$campaign) {
+            return responseError('campaign_not_found', ['Campaign not found']);
+        }
+
+        return responseSuccess('campaign', ['Campaign details retrieved successfully'], $campaign);
     }
 }

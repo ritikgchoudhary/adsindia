@@ -424,33 +424,28 @@ export default {
     onMounted(() => {
       fetchDashboardData()
       
-      // Fix scrolling issue - ensure page can scroll
-      setTimeout(() => {
-        document.body.style.overflow = 'auto'
-        document.body.style.height = 'auto'
-        document.documentElement.style.overflow = 'auto'
-        document.documentElement.style.height = 'auto'
+      // Fix scrolling issue - ensure page can scroll (multiple attempts)
+      const fixScrolling = () => {
+        document.body.style.setProperty('overflow', 'auto', 'important')
+        document.body.style.setProperty('height', 'auto', 'important')
+        document.documentElement.style.setProperty('overflow', 'auto', 'important')
+        document.documentElement.style.setProperty('height', 'auto', 'important')
         
-        // Remove any scroll locks from dashboard elements
-        const dashboardBody = document.querySelector('.dashboard-body')
-        if (dashboardBody) {
-          dashboardBody.style.overflow = 'visible'
-          dashboardBody.style.height = 'auto'
-          dashboardBody.style.maxHeight = 'none'
-        }
-        
-        const dashboardRight = document.querySelector('.dashboard__right')
-        if (dashboardRight) {
-          dashboardRight.style.overflow = 'visible'
-          dashboardRight.style.height = 'auto'
-        }
-        
-        const dashboard = document.querySelector('.dashboard')
-        if (dashboard) {
-          dashboard.style.overflow = 'visible'
-          dashboard.style.height = 'auto'
-        }
-      }, 100)
+        const elements = ['.dashboard-body', '.dashboard__right', '.dashboard', '.dashboard__inner', '.container-fluid']
+        elements.forEach(selector => {
+          document.querySelectorAll(selector).forEach(el => {
+            el.style.setProperty('overflow-y', 'visible', 'important')
+            el.style.setProperty('height', 'auto', 'important')
+            el.style.setProperty('max-height', 'none', 'important')
+          })
+        })
+      }
+      
+      // Fix multiple times
+      fixScrolling()
+      setTimeout(fixScrolling, 100)
+      setTimeout(fixScrolling, 500)
+      setTimeout(fixScrolling, 1000)
     })
 
     return {

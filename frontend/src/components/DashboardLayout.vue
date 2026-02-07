@@ -34,54 +34,74 @@ export default {
   },
   setup() {
     onMounted(() => {
-      // Fix scrolling issue - ensure page can scroll
-      setTimeout(() => {
+      // Inject global style to force scrolling
+      const styleId = 'dashboard-scroll-fix'
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style')
+        style.id = styleId
+        style.textContent = `
+          html, body {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            height: auto !important;
+            position: relative !important;
+          }
+          .dashboard, .dashboard__inner, .dashboard__right, .dashboard-body, .container-fluid {
+            overflow-y: visible !important;
+            overflow-x: hidden !important;
+            height: auto !important;
+            min-height: auto !important;
+            max-height: none !important;
+            position: relative !important;
+          }
+        `
+        document.head.appendChild(style)
+      }
+      
+      // Function to fix scrolling
+      const fixScrolling = () => {
         // Fix body and html
-        document.body.style.overflow = 'auto'
-        document.body.style.height = 'auto'
-        document.body.style.position = 'relative'
-        document.documentElement.style.overflow = 'auto'
-        document.documentElement.style.height = 'auto'
+        document.body.style.setProperty('overflow', 'auto', 'important')
+        document.body.style.setProperty('height', 'auto', 'important')
+        document.body.style.setProperty('position', 'relative', 'important')
+        document.documentElement.style.setProperty('overflow', 'auto', 'important')
+        document.documentElement.style.setProperty('height', 'auto', 'important')
         
-        // Fix dashboard elements
-        const dashboardBody = document.querySelector('.dashboard-body')
-        if (dashboardBody) {
-          dashboardBody.style.overflow = 'visible'
-          dashboardBody.style.overflowY = 'visible'
-          dashboardBody.style.height = 'auto'
-          dashboardBody.style.minHeight = 'auto'
-          dashboardBody.style.maxHeight = 'none'
-          dashboardBody.style.position = 'relative'
-        }
+        // Fix all dashboard elements
+        const elements = [
+          '.dashboard-body',
+          '.dashboard__right',
+          '.dashboard',
+          '.dashboard__inner',
+          '.container-fluid'
+        ]
         
-        const dashboardRight = document.querySelector('.dashboard__right')
-        if (dashboardRight) {
-          dashboardRight.style.overflow = 'visible'
-          dashboardRight.style.overflowY = 'visible'
-          dashboardRight.style.overflowX = 'hidden'
-          dashboardRight.style.height = 'auto'
-          dashboardRight.style.position = 'relative'
-        }
-        
-        const dashboard = document.querySelector('.dashboard')
-        if (dashboard) {
-          dashboard.style.overflow = 'visible'
-          dashboard.style.height = 'auto'
-          dashboard.style.position = 'relative'
-        }
-        
-        const dashboardInner = document.querySelector('.dashboard__inner')
-        if (dashboardInner) {
-          dashboardInner.style.overflow = 'visible'
-          dashboardInner.style.height = 'auto'
-        }
-        
-        const containerFluid = document.querySelector('.container-fluid')
-        if (containerFluid) {
-          containerFluid.style.overflow = 'visible'
-          containerFluid.style.height = 'auto'
-        }
-      }, 200)
+        elements.forEach(selector => {
+          const elements = document.querySelectorAll(selector)
+          elements.forEach(el => {
+            el.style.setProperty('overflow-y', 'visible', 'important')
+            el.style.setProperty('overflow-x', 'hidden', 'important')
+            el.style.setProperty('height', 'auto', 'important')
+            el.style.setProperty('min-height', 'auto', 'important')
+            el.style.setProperty('max-height', 'none', 'important')
+            el.style.setProperty('position', 'relative', 'important')
+          })
+        })
+      }
+      
+      // Fix immediately
+      fixScrolling()
+      
+      // Fix after delays to catch late-loading CSS
+      setTimeout(fixScrolling, 100)
+      setTimeout(fixScrolling, 500)
+      setTimeout(fixScrolling, 1000)
+      
+      // Keep fixing periodically to prevent any CSS from overriding
+      const fixInterval = setInterval(fixScrolling, 2000)
+      
+      // Stop after 10 seconds
+      setTimeout(() => clearInterval(fixInterval), 10000)
       
       // Initialize dashboard scripts
       if (window.jQuery) {

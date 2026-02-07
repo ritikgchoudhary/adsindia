@@ -30,6 +30,9 @@ Route::namespace('Api')->name('api.')->group(function(){
         Route::get('custom-pages', 'customPages');
         Route::get('custom-page/{slug}', 'customPageData');
         Route::get('sections/{key?}', 'allSections');
+        Route::get('categories', 'getCategories');
+        Route::get('campaigns', 'getCampaigns');
+        Route::get('campaign/details/{slug}', 'getCampaignDetails');
         Route::get('ticket/{ticket}', 'viewTicket');
         Route::post('ticket/ticket-reply/{id}', 'replyTicket');
     });

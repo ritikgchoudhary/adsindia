@@ -71,8 +71,12 @@ export default {
     onMounted(async () => {
       try {
         const response = await appService.getSections()
-        if (response.data?.secs) {
-          sections.value = JSON.parse(response.data.secs)
+        // The API returns data wrapped in a 'data' property
+        if (response.data?.data) {
+          sections.value = response.data.data
+        } else if (response.data && Array.isArray(response.data)) {
+          // Fallback if data is directly the array
+          sections.value = response.data.map(s => s.data_keys.split('.')[0])
         }
       } catch (error) {
         console.error('Error loading sections:', error)

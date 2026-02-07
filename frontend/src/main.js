@@ -8,13 +8,31 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
+app.config.globalProperties.$getImage = (path, filename) => {
+  if (!filename) return '/assets/images/default.png';
+  if (filename.startsWith('http')) return filename;
+
+  // Handle some common aliases or direct paths
+  if (path === 'campaign') return `/assets/images/campaign/${filename}`;
+  if (path === 'category') return `/assets/images/language/${filename}`;
+  if (path === 'logo') return `/assets/images/logo_icon/${filename}`;
+
+  // Default to frontend section path if path is just the section name
+  if (!path.includes('/')) {
+    return `/assets/images/frontend/${path}/${filename}`;
+  }
+
+  // Otherwise use the path as provided
+  return `/assets/${path}/${filename}`;
+}
+
 app.mount('#app')
 
 // Initialize notification system after DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   // Make sure jQuery and iziToast are loaded
   if (typeof window.jQuery !== 'undefined' && typeof window.iziToast !== 'undefined') {
-    window.notify = function(status, message) {
+    window.notify = function (status, message) {
       const colors = {
         success: '#28c76f',
         error: '#eb2222',
