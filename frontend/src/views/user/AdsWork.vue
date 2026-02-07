@@ -529,13 +529,32 @@ export default {
     }
 
     const completeAd = async (ad) => {
-      if (!ad || !ad.id) return
+      if (!ad || !ad.id) {
+        console.error('Cannot complete ad: ad or ad.id is missing', ad)
+        if (window.notify) {
+          window.notify('error', 'Error: Ad information is missing. Please try again.')
+        }
+        return
+      }
+      
+      // Ensure we have a valid watch duration (at least 54 seconds)
+      const finalWatchDuration = Math.max(watchDuration.value || 0, 54)
+      
+      console.log('Completing ad:', {
+        adId: ad.id,
+        watchDuration: finalWatchDuration,
+        adTimer: adTimer.value,
+        videoUrl: ad.video_url
+      })
+      
       try {
         const response = await api.post('/ads/complete', { 
           ad_id: ad.id,
-          watch_duration: watchDuration.value || totalDuration.value,
+          watch_duration: finalWatchDuration,
           ad_url: ad.video_url || ad.image
         })
+        
+        console.log('Complete ad API response:', response.data)
         if (response.data.status === 'success') {
           // Mark ad as watched
           if (!watchedAds.value.includes(ad.id)) {
