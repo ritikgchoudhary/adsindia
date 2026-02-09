@@ -21,9 +21,26 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller {
     public function dashboard() {
-        $pageTitle = 'Dashboard';
+        // Check if API request
+        if (request()->expectsJson() || request()->is('api/*')) {
+            $widget = [
+                'total_users' => User::count(),
+                'verified_users' => User::active()->count(),
+                'email_unverified_users' => User::emailUnverified()->count(),
+                'mobile_unverified_users' => User::mobileUnverified()->count(),
+                'total_campaigns' => Campaign::count(),
+                'pending_campaigns' => Campaign::pending()->count(),
+                'approved_campaigns' => Campaign::approved()->count(),
+                'rejected_campaigns' => Campaign::rejected()->count(),
+                'total_courses' => \App\Models\Course::count(),
+                'total_revenue' => Deposit::successful()->sum('amount') - Withdrawal::approved()->sum('amount'),
+            ];
 
-        // User Info
+            return responseSuccess('dashboard', ['Dashboard data retrieved successfully'], $widget);
+        }
+
+        // Original Blade view response
+        $pageTitle = 'Dashboard';
         $widget['total_users']             = User::count();
         $widget['verified_users']          = User::active()->count();
         $widget['email_unverified_users']  = User::emailUnverified()->count();
@@ -63,6 +80,32 @@ class AdminController extends Controller {
         $withdrawals['total_withdraw_charge']   = Withdrawal::approved()->sum('charge');
 
         return view('admin.dashboard', compact('pageTitle', 'widget', 'chart', 'deposit', 'withdrawals'));
+    }
+
+    public function user() {
+        // For API requests, use Sanctum auth
+        if (request()->expectsJson() || request()->is('api/*')) {
+            $user = auth('sanctum')->user();
+            if (!$user || !($user instanceof \App\Models\Admin)) {
+                return responseError('unauthorized', ['Unauthorized']);
+            }
+
+            return responseSuccess('admin_user', ['Admin user retrieved successfully'], [
+                'id' => $user->id,
+                'name' => $user->name,
+                'username' => $user->username,
+                'email' => $user->email,
+            ]);
+        }
+
+        // For Blade requests
+        $admin = auth('admin')->user();
+        return responseSuccess('admin_user', ['Admin user retrieved successfully'], [
+            'id' => $admin->id,
+            'name' => $admin->name,
+            'username' => $admin->username,
+            'email' => $admin->email,
+        ]);
     }
 
     public function depositAndWithdrawReport(Request $request) {

@@ -91,6 +91,11 @@ class FileInfo {
             'path' => 'assets/images/language',
             'size' => '55x55',
         ];
+        $data['course'] = [
+            'path' => 'assets/images/course',
+            'size' => '400x250',
+            'thumb' => '200x125',
+        ];
         return $data;
     }
 

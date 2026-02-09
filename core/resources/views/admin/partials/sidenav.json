@@ -68,6 +68,26 @@
         "route_name": "admin.traffic.index",
         "menu_active": "admin.traffic.index"
     },
+    "courses": {
+        "keyword": [
+            "Courses",
+            "Course",
+            "Course Management",
+            "Manage Courses",
+            "Video Courses",
+            "Online Courses",
+            "Course List",
+            "Course Panel",
+            "Course Control",
+            "Course Section",
+            "Course Hub",
+            "Course Settings"
+        ],
+        "title": "Courses",
+        "icon": "las la-graduation-cap",
+        "route_name": "admin.course.index",
+        "menu_active": "admin.course*"
+    },
     "campaigns": {
         "title": "Campaigns",
         "icon": "las la-briefcase",

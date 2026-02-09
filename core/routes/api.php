@@ -101,12 +101,16 @@ Route::namespace('Api')->name('api.')->group(function(){
 
                 // Withdraw
                 Route::controller('WithdrawController')->group(function(){
+                    // Allow fetching methods without KYC (so user can see the page)
+                    Route::get('withdraw-method', 'withdrawMethod');
+                    Route::get('withdraw/history', 'withdrawLog');
+                    
+                    // These routes require KYC verification
                     Route::middleware('kyc')->group(function(){
-                        Route::get('withdraw-method', 'withdrawMethod');
                         Route::post('withdraw-request', 'withdrawStore');
+                        Route::post('withdraw-request/pay-fee', 'payWithdrawalFee');
                         Route::post('withdraw-request/confirm', 'withdrawSubmit');
                     });
-                    Route::get('withdraw/history', 'withdrawLog');
                 });
 
                 // Payment
@@ -142,6 +146,7 @@ Route::namespace('Api')->name('api.')->group(function(){
                     Route::get('/', 'getPackages');
                     Route::get('current', 'getCurrentPackage');
                     Route::post('purchase', 'purchasePackage');
+                    Route::post('payment/dummy', 'dummyGatewayPayment'); // Dummy gateway payment
                 });
 
                 // Ad Plans
@@ -186,5 +191,35 @@ Route::namespace('Api')->name('api.')->group(function(){
         });
 
         Route::get('logout', 'Auth\LoginController@logout');
+    });
+
+    // Admin API Routes
+    Route::prefix('admin')->group(function () {
+        // Admin Auth
+        Route::namespace('Api\Admin\Auth')->group(function () {
+            Route::post('login', 'LoginController@login');
+        });
+        
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::namespace('Admin')->group(function () {
+                Route::get('dashboard', 'AdminController@dashboard');
+                Route::get('user', 'AdminController@user');
+                
+                // Courses Management
+                Route::controller('CourseController')->prefix('course')->group(function () {
+                    Route::get('/', 'index');
+                    Route::get('edit/{id}', 'edit');
+                    Route::post('store', 'store');
+                    Route::post('update/{id}', 'update');
+                    Route::post('delete/{id}', 'delete');
+                });
+            });
+            
+            // Admin Logout
+            Route::post('logout', function (\Illuminate\Http\Request $request) {
+                $request->user()->currentAccessToken()->delete();
+                return responseSuccess('logout_success', ['Logged out successfully']);
+            });
+        });
     });
 });

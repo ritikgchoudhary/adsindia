@@ -120,9 +120,33 @@
               </div>
               <h3 class="mb-3" style="color: #2d3748; font-weight: 700;">KYC Under Review</h3>
               <p class="text-muted mb-4">Your KYC application has been submitted successfully and is pending admin review.</p>
-              <div class="alert alert-info" style="border-radius: 12px;">
-                <i class="fas fa-info-circle me-2"></i>
-                <strong>Payment Status:</strong> ₹{{ formatAmount(kycFee) }} has been deducted from your balance.
+              
+              <!-- Payment Status Section -->
+              <div v-if="hasPaidKYCFee" class="alert alert-success mb-4" style="border-radius: 12px;">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Payment Status:</strong> ₹{{ formatAmount(kycFee) }} verification fee has been paid successfully. Waiting for admin approval.
+              </div>
+              
+              <!-- Payment Button Section -->
+              <div v-else class="alert alert-warning mb-4" style="border-radius: 12px;">
+                <div class="mb-3">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  <strong>Payment Required:</strong> Please pay ₹{{ formatAmount(kycFee) }} verification fee to proceed with KYC approval.
+                </div>
+                <div class="mb-3">
+                  <strong>Available Balance:</strong> {{ currencySymbol }}{{ formatAmount(userBalance) }}
+                </div>
+                <button 
+                  @click="handleKYCPayment" 
+                  :disabled="userBalance < kycFee || processingPayment" 
+                  class="btn btn-lg px-5" 
+                  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 600; width: 100%; max-width: 300px;">
+                  <i class="fas fa-credit-card me-2"></i>
+                  {{ processingPayment ? 'Processing...' : `Pay ₹${formatAmount(kycFee)}` }}
+                </button>
+                <div v-if="userBalance < kycFee" class="mt-2 text-danger">
+                  <small><i class="fas fa-exclamation-circle me-1"></i>Insufficient balance. Please add funds to your account.</small>
+                </div>
               </div>
             </div>
             <div v-else-if="kycStatus === 1" class="mb-4">
@@ -196,7 +220,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import DashboardLayout from '../../components/DashboardLayout.vue'
 import api from '../../services/api'
 
@@ -227,6 +251,7 @@ export default {
     const showPaymentModal = ref(false)
     const processing = ref(false)
     const processingPayment = ref(false)
+    const hasPaidKYCFee = ref(false)
 
     const canSubmitKYC = computed(() => {
       return kycData.value.aadhaar_number && 
@@ -261,8 +286,11 @@ export default {
       try {
         const response = await api.post('/bank-details', bankDetails.value)
         if (response.data.status === 'success') {
-          // Show payment modal
-          showPaymentModal.value = true
+          // Move directly to Step 2 (KYC Documents) - no payment here
+          currentStep.value = 2
+          if (window.notify) {
+            window.notify('success', 'Bank details saved successfully. Please proceed with KYC documents.')
+          }
         }
       } catch (error) {
         console.error('Error saving bank details:', error)
@@ -330,10 +358,13 @@ export default {
         if (response.data.status === 'success') {
           currentStep.value = 3
           kycStatus.value = 2 // Pending review
+          
           if (window.notify) {
-            window.notify('success', 'KYC application submitted successfully! Waiting for admin approval.')
+            window.notify('success', 'KYC application submitted successfully! Payment will be processed at verification step.')
           }
-          fetchAccountData()
+          
+          // Check payment status when reaching Step 3
+          await checkPaymentStatus()
         }
       } catch (error) {
         console.error('Error submitting KYC:', error)
@@ -343,6 +374,59 @@ export default {
         }
       } finally {
         processing.value = false
+      }
+    }
+
+    const checkPaymentStatus = async () => {
+      try {
+        const response = await api.get('/account-kyc')
+        if (response.data.status === 'success' && response.data.data) {
+          // Check if payment has been made by checking has_paid_kyc_fee flag
+          hasPaidKYCFee.value = response.data.data.has_paid_kyc_fee || false
+        }
+      } catch (error) {
+        console.error('Error checking payment status:', error)
+      }
+    }
+
+    const handleKYCPayment = async () => {
+      if (userBalance.value < kycFee.value) {
+        if (window.notify) {
+          window.notify('error', `Insufficient balance. You need ₹${formatAmount(kycFee.value)} for KYC verification. Please add funds.`)
+        }
+        return
+      }
+
+      processingPayment.value = true
+      try {
+        const response = await api.post('/kyc-payment', {
+          amount: kycFee.value
+        })
+
+        if (response.data.status === 'success') {
+          userBalance.value = response.data.data.balance || userBalance.value
+          hasPaidKYCFee.value = true
+          if (window.notify) {
+            window.notify('success', `₹${formatAmount(kycFee.value)} has been paid successfully! Your KYC is now pending admin approval.`)
+          }
+          // Refresh account data to update payment status
+          await fetchAccountData()
+          await checkPaymentStatus()
+        }
+      } catch (error) {
+        console.error('Error processing payment:', error)
+        const errorMsg = error.response?.data?.message?.[0] || error.response?.data?.message || 'Payment failed. Please try again.'
+        if (window.notify) {
+          window.notify('error', errorMsg)
+        }
+        
+        // If payment already made, update status
+        if (error.response?.data?.remark === 'payment_already_made') {
+          hasPaidKYCFee.value = true
+          await checkPaymentStatus()
+        }
+      } finally {
+        processingPayment.value = false
       }
     }
 
@@ -356,6 +440,7 @@ export default {
           kycRejectionReason.value = data.kyc_rejection_reason || ''
           userBalance.value = data.balance || 0
           currencySymbol.value = response.data.currency_symbol || '₹'
+          hasPaidKYCFee.value = data.has_paid_kyc_fee || false
           
           // Set current step based on status
           if (kycStatus.value === 0) {
@@ -371,8 +456,21 @@ export default {
       }
     }
 
+    // Watch for step changes to check payment status at Step 3
+    watch(currentStep, async (newStep) => {
+      if (newStep === 3 && kycStatus.value === 2) {
+        // User reached verification step, check payment status
+        await checkPaymentStatus()
+      }
+    })
+
     onMounted(() => {
       fetchAccountData()
+      
+      // If already on Step 3 and KYC is pending, check payment status
+      if (currentStep.value === 3 && kycStatus.value === 2) {
+        checkPaymentStatus()
+      }
     })
 
     return {
@@ -392,7 +490,10 @@ export default {
       handleFileChange,
       submitBankDetails,
       processPayment,
-      submitKYC
+      submitKYC,
+      handleKYCPayment,
+      hasPaidKYCFee,
+      checkPaymentStatus
     }
   }
 }

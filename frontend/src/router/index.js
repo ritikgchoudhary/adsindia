@@ -203,6 +203,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/user/package-payment',
+    name: 'PackagePayment',
+    component: () => import('../views/user/PackagePayment.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/user/upgrade-package',
     name: 'UpgradePackage',
     component: () => import('../views/user/UpgradePackage.vue'),
@@ -224,6 +230,12 @@ const routes = [
     path: '/user/courses',
     name: 'Courses',
     component: () => import('../views/user/Courses.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/courses/:id',
+    name: 'CourseDetail',
+    component: () => import('../views/user/CourseDetail.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -261,7 +273,38 @@ const routes = [
           name: 'Leaderboard',
           component: () => import('../views/user/Leaderboard.vue'),
           meta: { requiresAuth: true }
-        }
+        },
+  // Admin Routes
+  {
+    path: '/admin/login',
+    name: 'AdminLogin',
+    component: () => import('../views/admin/AdminLogin.vue'),
+    meta: { requiresAdminAuth: false }
+  },
+  {
+    path: '/admin/dashboard',
+    name: 'AdminDashboard',
+    component: () => import('../views/admin/Dashboard.vue'),
+    meta: { requiresAdminAuth: true }
+  },
+  {
+    path: '/admin/courses',
+    name: 'AdminCourses',
+    component: () => import('../views/admin/Courses.vue'),
+    meta: { requiresAdminAuth: true }
+  },
+  {
+    path: '/admin/courses/create',
+    name: 'AdminCourseCreate',
+    component: () => import('../views/admin/CourseCreate.vue'),
+    meta: { requiresAdminAuth: true }
+  },
+  {
+    path: '/admin/courses/edit/:id',
+    name: 'AdminCourseEdit',
+    component: () => import('../views/admin/CourseEdit.vue'),
+    meta: { requiresAdminAuth: true }
+  }
 ]
 
 const router = createRouter({
@@ -271,8 +314,22 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
+  const adminToken = localStorage.getItem('admin_token')
   
-  if (to.meta.requiresAuth && !token) {
+  // Admin routes
+  if (to.meta.requiresAdminAuth) {
+    if (!adminToken) {
+      next({ name: 'AdminLogin' })
+    } else {
+      next()
+    }
+  }
+  // If admin is logged in and tries to access login page, redirect to dashboard
+  else if (to.name === 'AdminLogin' && adminToken) {
+    next({ name: 'AdminDashboard' })
+  }
+  // User routes
+  else if (to.meta.requiresAuth && !token) {
     next({ name: 'Login' })
   } else {
     next()

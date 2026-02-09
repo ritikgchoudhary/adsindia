@@ -172,6 +172,14 @@ class UserController extends Controller
     {
         $user = auth()->user();
         $general = gs();
+        $kycFee = 990; // Fixed ₹990 fee for Account KYC
+
+        // Check if KYC payment has been made
+        $hasPaidKYCFee = Transaction::where('user_id', $user->id)
+            ->where('remark', 'kyc_fee')
+            ->where('trx_type', '-')
+            ->where('amount', $kycFee)
+            ->exists();
 
         return responseSuccess('account_kyc', ['Account KYC data retrieved successfully'], [
             'personal_details' => [
@@ -193,11 +201,12 @@ class UserController extends Controller
                 'bank_registered_no' => $user->bank_registered_no ?? '',
                 'branch_name' => $user->branch_name ?? '',
             ],
-            'kyc_fee' => 990, // Fixed ₹990 fee for Account KYC
+            'kyc_fee' => $kycFee,
             'kyc_status' => $user->kv ?? 0,
             'kyc_rejection_reason' => $user->kyc_rejection_reason ?? '',
             'balance' => $user->balance ?? 0,
             'currency_symbol' => $general->cur_sym ?? '₹',
+            'has_paid_kyc_fee' => $hasPaidKYCFee,
         ]);
     }
 
@@ -425,40 +434,120 @@ class UserController extends Controller
 
     public function kycSubmit(Request $request)
     {
-        $form = Form::where('act', 'kyc')->firstOrFail();
-        $formData = $form->form_data;
-        $formProcessor = new FormProcessor();
-        $validationRule = $formProcessor->valueValidation($formData);
-        $request->validate($validationRule);
-
         $user = auth()->user();
-        $kycFee = 990; // Fixed ₹990 fee for Account KYC
 
-        // Check if KYC payment has been made
-        $kycPayment = Transaction::where('user_id', $user->id)
-            ->where('remark', 'kyc_fee')
-            ->where('trx_type', '-')
-            ->where('amount', $kycFee)
-            ->first();
-
-        if (!$kycPayment) {
-            return responseError('payment_required', ['Please pay the KYC fee (₹990) first before submitting KYC documents.']);
-        }
+        // Validate KYC fields directly
+        $request->validate([
+            'aadhaar_number' => 'required|string|size:12|regex:/^[0-9]{12}$/',
+            'pan_number' => 'required|string|size:10|regex:/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/',
+            'aadhaar_document' => [
+                'required',
+                'file',
+                'max:2048',
+                function ($attribute, $value, $fail) {
+                    if ($value) {
+                        $extension = strtolower($value->getClientOriginalExtension());
+                        $allowed = ['jpg', 'jpeg', 'png', 'pdf'];
+                        if (!in_array($extension, $allowed)) {
+                            $fail('Aadhaar document must be an image (jpeg, jpg, png) or PDF.');
+                        }
+                    }
+                },
+            ],
+            'pan_document' => [
+                'required',
+                'file',
+                'max:2048',
+                function ($attribute, $value, $fail) {
+                    if ($value) {
+                        $extension = strtolower($value->getClientOriginalExtension());
+                        $allowed = ['jpg', 'jpeg', 'png', 'pdf'];
+                        if (!in_array($extension, $allowed)) {
+                            $fail('PAN document must be an image (jpeg, jpg, png) or PDF.');
+                        }
+                    }
+                },
+            ],
+        ], [
+            'aadhaar_number.required' => 'Aadhaar number is required',
+            'aadhaar_number.size' => 'Aadhaar number must be 12 digits',
+            'aadhaar_number.regex' => 'Aadhaar number must contain only digits',
+            'pan_number.required' => 'PAN number is required',
+            'pan_number.size' => 'PAN number must be 10 characters',
+            'pan_number.regex' => 'PAN number format is invalid',
+            'aadhaar_document.required' => 'Aadhaar document is required',
+            'aadhaar_document.max' => 'Aadhaar document size must not exceed 2MB',
+            'pan_document.required' => 'PAN document is required',
+            'pan_document.max' => 'PAN document size must not exceed 2MB',
+        ]);
 
         // Remove old KYC files
-        foreach (isset($user->kyc_data) ? $user->kyc_data : [] as $kycData) {
-            if ($kycData->type == 'file') {
-                fileManager()->removeFile(getFilePath('verify') . '/' . $kycData->value);
+        if (isset($user->kyc_data) && is_array($user->kyc_data)) {
+            foreach ($user->kyc_data as $kycData) {
+                if (isset($kycData->type) && $kycData->type == 'file' && isset($kycData->value)) {
+                    $oldPath = getFilePath('verify') . '/' . $kycData->value;
+                    if (file_exists($oldPath)) {
+                        @unlink($oldPath);
+                    }
+                }
             }
         }
 
-        $userData = $formProcessor->processFormData($request, $formData);
+        // Process and save KYC files using the same pattern as FormProcessor
+        $directory = date("Y") . "/" . date("m") . "/" . date("d");
+        $basePath = getFilePath('verify');
+        $path = $basePath . '/' . $directory;
+
+        // Ensure base directory exists with proper permissions
+        if (!file_exists($basePath)) {
+            if (!@mkdir($basePath, 0755, true)) {
+                return responseError('directory_creation_failed', ['Failed to create verify directory. Please contact administrator.']);
+            }
+        }
+        
+        // Ensure date-based directory exists with proper permissions
+        if (!file_exists($path)) {
+            if (!@mkdir($path, 0755, true)) {
+                return responseError('directory_creation_failed', ['Failed to create directory for file upload. Please contact administrator.']);
+            }
+        }
+
+        $aadhaarFile = $request->file('aadhaar_document');
+        $panFile = $request->file('pan_document');
+
+        $aadhaarFileName = $directory . '/' . fileUploader($aadhaarFile, $path);
+        $panFileName = $directory . '/' . fileUploader($panFile, $path);
+
+        // Prepare KYC data structure (same format as FormProcessor)
+        $userData = [
+            [
+                'name' => 'aadhaar_number',
+                'type' => 'text',
+                'value' => $request->input('aadhaar_number')
+            ],
+            [
+                'name' => 'pan_number',
+                'type' => 'text',
+                'value' => strtoupper($request->input('pan_number'))
+            ],
+            [
+                'name' => 'aadhaar_document',
+                'type' => 'file',
+                'value' => $aadhaarFileName
+            ],
+            [
+                'name' => 'pan_document',
+                'type' => 'file',
+                'value' => $panFileName
+            ]
+        ];
+
         $user->kyc_data = $userData;
         $user->kyc_rejection_reason = null;
         $user->kv = Status::KYC_PENDING;
         $user->save();
 
-        return responseSuccess('kyc_submitted', ['KYC data submitted successfully']);
+        return responseSuccess('kyc_submitted', ['KYC data submitted successfully. Payment will be processed at verification step.']);
     }
 
     public function transactions(Request $request)

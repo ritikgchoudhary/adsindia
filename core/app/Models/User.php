@@ -12,6 +12,20 @@ class User extends Authenticatable {
     use HasApiTokens, UserNotify;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'account_holder_name',
+        'account_number',
+        'ifsc_code',
+        'bank_name',
+        'bank_registered_no',
+        'branch_name',
+    ];
+
+    /**
      * The attributes that should be hidden for arrays.
      *
      * @var array

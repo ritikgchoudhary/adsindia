@@ -33,28 +33,6 @@
         </div>
       </div>
     </div>
-    <div v-else-if="user.kv === 0" class="mb-4">
-      <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px !important;">
-        <div class="card-body p-4 text-white">
-          <div class="d-flex align-items-start gap-3">
-            <div class="flex-shrink-0">
-              <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-user-check fa-2x"></i>
-              </div>
-            </div>
-            <div class="flex-grow-1">
-              <h4 class="mb-2" style="font-weight: 700; font-size: 20px;">KYC Verification Required</h4>
-              <p class="mb-3 opacity-90" style="font-size: 15px;">
-                {{ kycContent?.required || 'Complete KYC to unlock the full potential of our platform! KYC helps us verify your identity and keep things secure. It is quick and easy just follow the on-screen instructions. Get started with KYC verification now!' }}
-              </p>
-              <router-link class="btn btn-light btn-lg px-4" to="/user/kyc-form" style="border-radius: 10px; font-weight: 600;">
-                <i class="fas fa-file-upload me-2"></i>Click Here to Submit Documents
-              </router-link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
     <div v-else-if="user.kv === 2" class="mb-4">
       <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 15px !important;">
         <div class="card-body p-4 text-white">
@@ -72,33 +50,6 @@
               <router-link class="btn btn-light btn-sm px-3" to="/user/kyc-data" style="border-radius: 8px; font-weight: 600;">
                 <i class="fas fa-eye me-1"></i>See KYC Data
               </router-link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Welcome Section -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="card custom--card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px !important; overflow: hidden; position: relative;">
-          <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
-          <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
-          <div class="card-body p-4 text-white" style="position: relative; z-index: 1;">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-              <div class="flex-grow-1">
-                <h3 class="mb-2" style="font-weight: 700; font-size: 28px;">
-                  <i class="fas fa-hand-sparkles me-2"></i>Welcome to AdsSkill India!
-                </h3>
-                <p class="mb-0 opacity-90" style="font-size: 16px;">Start earning by watching ads and completing tasks</p>
-              </div>
-              <div class="flex-shrink-0">
-                <router-link to="/user/ads-work" class="btn btn-light btn-lg px-5 py-3" style="border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease;" 
-                   @mouseenter="$event.currentTarget.style.transform = 'translateY(-2px)'; $event.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)'"
-                   @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)'">
-                  <i class="fas fa-play-circle me-2"></i>Start Earning Now
-                </router-link>
-              </div>
             </div>
           </div>
         </div>
@@ -224,10 +175,12 @@
             <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px !important;">
               <div class="card-header bg-transparent border-0 pb-0" style="border-radius: 15px 15px 0 0 !important;">
                 <div class="d-flex justify-content-between align-items-center">
-                  <h5 class="mb-0" style="font-weight: 600; color: #2d3748;">
-                    <i class="fas fa-history me-2 text-primary"></i>Latest Transactions
+                  <h5 class="mb-0" style="font-weight: 700; color: #1a202c; font-size: 18px;">
+                    <i class="fas fa-history me-2" style="color: #667eea;"></i>Latest Transactions
                   </h5>
-                  <router-link to="/user/transactions" class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">
+                  <router-link to="/user/transactions" class="btn btn-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; padding: 8px 16px; transition: all 0.3s ease;"
+                    @mouseenter="$event.currentTarget.style.transform = 'translateX(3px)'; $event.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)'"
+                    @mouseleave="$event.currentTarget.style.transform = 'translateX(0)'; $event.currentTarget.style.boxShadow = 'none'">
                     View All <i class="fas fa-arrow-right ms-1"></i>
                   </router-link>
                 </div>
@@ -236,45 +189,45 @@
                 <div class="table-responsive">
                   <table class="table table--responsive--lg mb-0" style="border-collapse: separate; border-spacing: 0;">
                     <thead>
-                      <tr style="background: #f7fafc; border-radius: 10px;">
-                        <th style="padding: 15px; font-weight: 600; color: #4a5568; border: none;">Trx</th>
-                        <th style="padding: 15px; font-weight: 600; color: #4a5568; border: none;">Transacted</th>
-                        <th style="padding: 15px; font-weight: 600; color: #4a5568; border: none;">Amount</th>
-                        <th style="padding: 15px; font-weight: 600; color: #4a5568; border: none;">Post Balance</th>
-                        <th style="padding: 15px; font-weight: 600; color: #4a5568; border: none;">Detail</th>
+                      <tr style="background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); border-radius: 10px;">
+                        <th style="padding: 18px 15px; font-weight: 700; color: #ffffff; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Trx</th>
+                        <th style="padding: 18px 15px; font-weight: 700; color: #ffffff; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Transacted</th>
+                        <th style="padding: 18px 15px; font-weight: 700; color: #ffffff; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
+                        <th style="padding: 18px 15px; font-weight: 700; color: #ffffff; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Post Balance</th>
+                        <th style="padding: 18px 15px; font-weight: 700; color: #ffffff; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Detail</th>
                       </tr>
                     </thead>
                     <tbody>
                       <template v-for="trx in transactions" :key="trx?.id || Math.random()">
-                        <tr v-if="trx && trx.id" style="border-bottom: 1px solid #e2e8f0; transition: all 0.2s ease;" @mouseenter="$event.currentTarget.style.backgroundColor = '#f7fafc'" @mouseleave="$event.currentTarget.style.backgroundColor = 'transparent'">
-                          <td style="padding: 15px; border: none;">
-                            <div><strong style="color: #2d3748; font-family: 'Courier New', monospace;">{{ trx.trx }}</strong></div>
+                        <tr v-if="trx && trx.id" style="border-bottom: 1px solid #e2e8f0; transition: all 0.2s ease; background: #ffffff;" @mouseenter="$event.currentTarget.style.backgroundColor = '#f7fafc'; $event.currentTarget.style.transform = 'scale(1.01)'" @mouseleave="$event.currentTarget.style.backgroundColor = '#ffffff'; $event.currentTarget.style.transform = 'scale(1)'">
+                          <td style="padding: 18px 15px; border: none;">
+                            <div><strong style="color: #1a202c; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700;">{{ trx.trx }}</strong></div>
                           </td>
-                          <td style="padding: 15px; border: none;">
+                          <td style="padding: 18px 15px; border: none;">
                             <div>
-                              <span style="color: #2d3748; font-weight: 500;">{{ formatDateTime(trx.created_at) }}</span><br>
-                              <small class="text-muted" style="font-size: 12px;">{{ trx.created_at_human }}</small>
+                              <span style="color: #2d3748; font-weight: 600; font-size: 14px;">{{ formatDateTime(trx.created_at) }}</span><br>
+                              <small style="font-size: 12px; color: #718096;">{{ trx.created_at_human }}</small>
                             </div>
                           </td>
-                          <td style="padding: 15px; border: none;">
+                          <td style="padding: 18px 15px; border: none;">
                             <div>
-                              <span class="fw-bold" :class="trx.trx_type === '+' ? 'text-success' : 'text-danger'" style="font-size: 16px;">
+                              <span class="fw-bold" :class="trx.trx_type === '+' ? 'text-success' : 'text-danger'" style="font-size: 16px; font-weight: 700;">
                                 {{ trx.trx_type }} {{ currencySymbol }}{{ formatAmount(trx.amount) }}
                               </span>
                             </div>
                           </td>
-                          <td style="padding: 15px; border: none;">
-                            <div style="color: #4a5568; font-weight: 500;">{{ currencySymbol }}{{ formatAmount(trx.post_balance) }}</div>
+                          <td style="padding: 18px 15px; border: none;">
+                            <div style="color: #2d3748; font-weight: 600; font-size: 14px;">{{ currencySymbol }}{{ formatAmount(trx.post_balance) }}</div>
                           </td>
-                          <td style="padding: 15px; border: none;">
-                            <div style="color: #718096;">{{ trx.details }}</div>
+                          <td style="padding: 18px 15px; border: none;">
+                            <div style="color: #4a5568; font-size: 14px; font-weight: 500;">{{ trx.details }}</div>
                           </td>
                         </tr>
                       </template>
                       <tr v-if="transactions.length === 0">
-                        <td colspan="5" class="text-center text-muted py-5" style="border: none;">
-                          <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
-                          <p class="mb-0">No transactions found</p>
+                        <td colspan="5" class="text-center py-5" style="border: none; background: #f7fafc;">
+                          <i class="fas fa-inbox fa-3x mb-3" style="color: #cbd5e0;"></i>
+                          <p class="mb-0" style="color: #718096; font-weight: 500;">No transactions found</p>
                         </td>
                       </tr>
                     </tbody>
@@ -288,14 +241,37 @@
 
         <div class="col-xxl-3 col-lg-12 ps-xxl-4">
           <div class="dashboard-sidebar">
+            <!-- Quick Withdraw Card -->
+            <div class="dashboard-sidebar__item mb-4">
+              <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body p-4 text-white">
+                  <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                      <h6 class="mb-1" style="font-weight: 600; font-size: 14px; opacity: 0.9;">Available Balance</h6>
+                      <h4 class="mb-0" style="font-weight: 700; font-size: 28px;">{{ currencySymbol }}{{ formatAmount(widget.balance) }}</h4>
+                    </div>
+                    <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                      <i class="fas fa-wallet fa-2x"></i>
+                    </div>
+                  </div>
+                  <router-link to="/user/withdraw" class="btn w-100 btn-lg" style="background: #1a202c; color: white; border: none; border-radius: 12px; font-weight: 700; padding: 12px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.2);"
+                    @mouseenter="$event.currentTarget.style.background = '#2d3748'; $event.currentTarget.style.transform = 'translateY(-2px)'; $event.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.3)'"
+                    @mouseleave="$event.currentTarget.style.background = '#1a202c'; $event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'">
+                    <i class="fas fa-hand-holding-usd me-2"></i>Withdraw Money
+                  </router-link>
+                </div>
+              </div>
+            </div>
+
+            <!-- Suggest for you Card -->
             <div class="dashboard-sidebar__item">
-              <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px !important;">
-                <div class="card-header bg-transparent border-0 pb-0" style="border-radius: 15px 15px 0 0 !important;">
-                  <h5 class="mb-0" style="font-weight: 600; color: #2d3748;">
-                    <i class="fas fa-lightbulb me-2 text-warning"></i>Suggest for you
+              <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px !important; max-height: 600px; overflow-y: auto;">
+                <div class="card-header bg-transparent border-0 pb-0" style="border-radius: 15px 15px 0 0 !important; position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 15px;">
+                  <h5 class="mb-0" style="font-weight: 700; color: #1a202c; font-size: 16px;">
+                    <i class="fas fa-lightbulb me-2" style="color: #fbbf24;"></i>Suggest for you
                   </h5>
                 </div>
-                <div class="card-body pt-3">
+                <div class="card-body pt-3" style="padding-top: 0 !important;">
                   <template v-for="campaign in campaigns" :key="campaign?.id || Math.random()">
                     <div v-if="campaign && campaign.id" class="latest-item mb-3 p-3 border rounded" style="border-radius: 10px !important; transition: all 0.3s ease; border-color: #e2e8f0 !important;" @mouseenter="$event.currentTarget.style.backgroundColor = '#f7fafc'; $event.currentTarget.style.transform = 'translateX(5px)'" @mouseleave="$event.currentTarget.style.backgroundColor = 'transparent'; $event.currentTarget.style.transform = 'translateX(0)'">
                       <div class="latest-item__thumb mb-2">
@@ -304,7 +280,7 @@
                         </router-link>
                       </div>
                       <div class="latest-item__content">
-                        <h6 class="latest-item__title mb-2" style="font-weight: 600; color: #2d3748;">
+                        <h6 class="latest-item__title mb-2" style="font-weight: 600; color: #2d3748; font-size: 14px;">
                           <router-link :to="`/campaign/${campaign.slug}`" style="color: #2d3748; text-decoration: none;">
                             {{ campaign.title }}
                           </router-link>
@@ -315,9 +291,9 @@
                       </div>
                     </div>
                   </template>
-                  <div v-if="campaigns.length === 0" class="text-center py-5">
-                    <i class="fas fa-inbox fa-3x mb-3 opacity-50" style="color: #cbd5e0;"></i>
-                    <p class="text-muted mb-0">No campaigns found</p>
+                  <div v-if="campaigns.length === 0" class="text-center py-4">
+                    <i class="fas fa-inbox fa-2x mb-2 opacity-50" style="color: #cbd5e0;"></i>
+                    <p class="text-muted mb-0" style="font-size: 14px;">No campaigns found</p>
                   </div>
                 </div>
               </div>
@@ -627,6 +603,30 @@ export default {
   overflow-x: hidden !important;
   height: auto !important;
   position: relative !important;
+}
+
+/* Right Sidebar Card Styling */
+.dashboard-sidebar .card {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.dashboard-sidebar .card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-sidebar .card::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 10px;
+}
+
+.dashboard-sidebar .card::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 10px;
+}
+
+.dashboard-sidebar .card::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
 }
 </style>
 
