@@ -436,6 +436,17 @@ class UserController extends Controller
     {
         $user = auth()->user();
 
+        // STEP 2: KYC for review requires ₹990 fee first (review ke liye)
+        $kycFee = 990;
+        $hasPaidKYCFee = Transaction::where('user_id', $user->id)
+            ->where('remark', 'kyc_fee')
+            ->where('trx_type', '-')
+            ->where('amount', $kycFee)
+            ->exists();
+        if (!$hasPaidKYCFee) {
+            return responseError('kyc_fee_required', ['Please pay the KYC review fee of ₹990 first to submit for review.']);
+        }
+
         // Validate KYC fields directly
         $request->validate([
             'aadhaar_number' => 'required|string|size:12|regex:/^[0-9]{12}$/',

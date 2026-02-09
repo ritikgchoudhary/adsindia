@@ -35,7 +35,7 @@
                         @endforeach
                     </ul>
                     <div class="about-content__btn">
-                        <a href="{{ url($aboutContent?->data_values?->button_url) }}" class="btn btn--base pill">
+                        <a href="{{ url($aboutContent?->data_values?->button_url ?? '#') }}" class="btn btn--base pill">
                             {{ __($aboutContent?->data_values?->button_name ?? '') }}
                             <span class="btn-icon"><i class="las la-arrow-right"></i></span>
                         </a>

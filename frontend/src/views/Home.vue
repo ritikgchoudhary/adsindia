@@ -68,18 +68,39 @@ export default {
       return componentMap[sectionName] || null
     }
 
+    const defaultSections = [
+      'about', 'category', 'campaigns', 'work_process', 'why_choose_us',
+      'benefit_section', 'counter_section', 'testimonials', 'cta_section',
+      'faq_section', 'blog', 'partner_section'
+    ]
+
     onMounted(async () => {
       try {
         const response = await appService.getSections()
-        // The API returns data wrapped in a 'data' property
-        if (response.data?.data) {
-          sections.value = response.data.data
-        } else if (response.data && Array.isArray(response.data)) {
-          // Fallback if data is directly the array
-          sections.value = response.data.map(s => s.data_keys.split('.')[0])
+        // API returns { data: { data: [...], secs: [...] } } or similar
+        const data = response?.data || response
+        const secs = data?.secs || data?.data
+        if (Array.isArray(secs) && secs.length) {
+          sections.value = secs
+          return
         }
+        if (secs && typeof secs === 'string') {
+          try {
+            sections.value = JSON.parse(secs)
+            if (Array.isArray(sections.value) && sections.value.length) return
+          } catch (e) {}
+        }
+        if (Array.isArray(data?.data)) {
+          const arr = data.data
+          sections.value = arr.every(s => typeof s === 'string')
+            ? arr
+            : arr.map(s => s?.data_keys?.split?.('.')?.[0] || s).filter(Boolean)
+          if (sections.value.length) return
+        }
+        sections.value = defaultSections
       } catch (error) {
         console.error('Error loading sections:', error)
+        sections.value = defaultSections
       }
     })
 

@@ -20,10 +20,10 @@
             <div class="col-lg-12">
                 <div class="banner-content">
                     <h4 class="banner-content__subtitle">
-                        {{ __($banner?->data_values?->subtitle ?? '') }}
+                        {{ __($banner?->data_values?->subtitle ?? 'Affiliate Marketing Platform') }}
                     </h4>
                     <h1 class="banner-content__title">
-                        {{ __($banner?->data_values?->title ?? '') }}
+                        {{ __($banner?->data_values?->title ?? 'Earn Money With Us') }}
                         <span class="icon">
                             <img src="{{ frontendImage('banner', $banner?->data_values?->image_three ?? '', '32x18') }}" alt="img" />
                             {{ __($banner?->data_values?->affiliate_text ?? '') }}
@@ -45,11 +45,11 @@
                         </span>
                     </h1>
                     <p class="banner-content__desc">
-                        {{ __($banner?->data_values?->description ?? '') }}
+                        {{ __($banner?->data_values?->description ?? 'Join our affiliate program, promote campaigns and earn commission on every conversion. No investment required.') }}
                     </p>
                     <div class="banner-content__btn">
-                        <a href="{{ url($banner?->data_values?->button_url ?? 'javascript:void(0);') }}" class="btn btn--base pill">
-                            {{ __($banner?->data_values?->button_name ?? '') }}
+                        <a href="{{ url($banner?->data_values?->button_url ?? route('user.register')) }}" class="btn btn--base pill">
+                            {{ __($banner?->data_values?->button_name ?? 'Get Started') }}
                             <span class="btn-icon">
                                 <i class="las la-arrow-right"></i>
                             </span>

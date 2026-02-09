@@ -159,8 +159,15 @@ Route::namespace('Api')->name('api.')->group(function(){
                 // Leaderboard
                 Route::get('leaderboard', 'LeaderboardController@getLeaderboard');
 
+                // Course plans (learning) – buy plan to access courses, complete course to get certificate
+                Route::controller(\App\Http\Controllers\Api\CoursePlanController::class)->prefix('course-plans')->group(function () {
+                    Route::get('/', 'getPlans');
+                    Route::get('current', 'getCurrent');
+                    Route::post('purchase', 'purchase');
+                });
                 // Courses
                 Route::get('courses', 'CourseController@getCourses');
+                Route::post('courses/complete', 'CourseController@markComplete');
 
                 // Referral
                 Route::get('referral', 'ReferralController@getReferralData');

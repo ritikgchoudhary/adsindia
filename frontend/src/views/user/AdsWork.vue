@@ -15,23 +15,26 @@
 
     <!-- Step-by-Step Ads -->
     <div v-else-if="!loading && allAds.length > 0" class="row">
-      <!-- Active Plan Info -->
+      <!-- Active Plan Info / New User Offer -->
       <div v-if="activePackage" class="col-12 mb-4">
         <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
           <div class="card-body p-4 text-white">
             <div class="d-flex justify-content-between align-items-center flex-wrap">
               <div class="flex-grow-1">
                 <h5 class="mb-2" style="font-weight: 700; font-size: 22px;">
-                  <i class="fas fa-box me-2"></i>Your Active Plan: {{ activePackage.name }}
+                  <i class="fas fa-box me-2"></i>{{ isNewUserOffer ? 'New User Offer' : 'Your Active Plan' }}: {{ activePackage.name }}
                 </h5>
+                <p v-if="isNewUserOffer" class="mb-2 opacity-90" style="font-size: 14px;">
+                  Watch 2 ads to earn ₹10,000. Then submit KYC (₹990 fee) → Withdraw (18% GST) → To earn more, buy an Ad Plan (₹2999–₹9999).
+                </p>
                 <div class="d-flex flex-wrap gap-3 mt-2">
                   <div class="d-flex align-items-center">
                     <i class="fas fa-calendar-day me-2"></i>
-                    <span style="font-size: 14px;">Daily Limit: <strong>{{ activePackage.daily_limit }}</strong> ads</span>
+                    <span style="font-size: 14px;">{{ isNewUserOffer ? 'Ads in offer:' : 'Daily Limit:' }} <strong>{{ activePackage.daily_limit }}</strong> ads</span>
                   </div>
                   <div class="d-flex align-items-center">
                     <i class="fas fa-eye me-2"></i>
-                    <span style="font-size: 14px;">Today Watched: <strong>{{ activePackage.today_views || 0 }}</strong></span>
+                    <span style="font-size: 14px;">Watched: <strong>{{ activePackage.today_views || 0 }}</strong></span>
                   </div>
                   <div class="d-flex align-items-center">
                     <i class="fas fa-clock me-2"></i>
@@ -39,7 +42,7 @@
                   </div>
                 </div>
               </div>
-              <div class="mt-3 mt-md-0 d-flex flex-column align-items-end gap-2">
+              <div v-if="!isNewUserOffer" class="mt-3 mt-md-0 d-flex flex-column align-items-end gap-2">
                 <div class="badge bg-white text-primary px-4 py-2" style="font-size: 16px; border-radius: 12px; font-weight: 600;">
                   <i class="fas fa-check-circle me-2"></i>Plan Active
                 </div>
@@ -47,6 +50,14 @@
                    @mouseenter="$event.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'; $event.currentTarget.style.boxShadow = '0 6px 20px rgba(245, 87, 108, 0.6)'" 
                    @mouseleave="$event.currentTarget.style.transform = 'translateY(0) scale(1)'; $event.currentTarget.style.boxShadow = '0 4px 15px rgba(245, 87, 108, 0.4)'">
                   <i class="fas fa-arrow-up me-2"></i>Upgrade Plan
+                </router-link>
+              </div>
+              <div v-else class="mt-3 mt-md-0">
+                <router-link to="/user/account-kyc" class="btn px-4 py-2 text-white me-2" style="background: rgba(255,255,255,0.25); border: 2px solid white; border-radius: 12px; font-weight: 600; text-decoration: none;">
+                  <i class="fas fa-id-card me-2"></i>KYC
+                </router-link>
+                <router-link to="/user/ad-plans" class="btn px-4 py-2 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; border-radius: 12px; font-weight: 700; text-decoration: none;">
+                  <i class="fas fa-shopping-cart me-2"></i>Ad Plans
                 </router-link>
               </div>
             </div>
@@ -165,7 +176,7 @@
             </h4>
             <p class="text-muted mb-4" style="font-size: 16px;">
               <span v-if="!hasActivePackage">
-                You need to purchase an Ad Plan to watch ads and earn money.
+                {{ noPackageMessage || 'You need to purchase an Ad Plan to watch ads and earn money.' }}
               </span>
               <span v-else>
                 All ads have been watched today. Come back tomorrow for more ads!
@@ -173,7 +184,7 @@
             </p>
             <div v-if="!hasActivePackage" class="alert alert-info" style="border-radius: 10px; background: #e0f2fe; border-color: #0ea5e9; color: #0c4a6e;">
               <i class="fas fa-info-circle me-2"></i>
-              <strong>How it works:</strong> Purchase an Ad Plan, then watch video ads to earn ₹5,000 - ₹6,000 per ad!
+              <strong>Plans:</strong> ₹2999, ₹4999, ₹7499, ₹9999 – Purchase an Ad Plan to watch ads and earn!
             </div>
             <router-link v-if="!hasActivePackage" to="/user/ad-plans" class="btn btn-lg mt-4 px-5 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 12px; font-weight: 700; font-size: 16px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); text-decoration: none; display: inline-flex; align-items: center; justify-content: center;" 
                @mouseenter="$event.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'; $event.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)'" 
@@ -314,6 +325,8 @@ export default {
     const watchedAds = ref([]) // Track watched ads
     const activePackage = ref(null) // Store active package info
     const currentUnlockedIndex = ref(0) // Track which ad is currently unlocked
+    const isNewUserOffer = ref(false) // New user: 2 ads = ₹10K, then KYC ₹990, withdraw 18% GST, then buy plan
+    const noPackageMessage = ref('') // Message when no package (e.g. after new user offer completed)
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
@@ -741,6 +754,8 @@ export default {
           allAds.value = Array.isArray(adsList) ? adsList : []
           currencySymbol.value = responseData.currency_symbol || response.data.currency_symbol || '₹'
           activePackage.value = responseData.active_package || null
+          isNewUserOffer.value = !!responseData.is_new_user_offer
+          noPackageMessage.value = ''
           
           console.log('Loaded ads:', allAds.value)
           console.log('First 3 ads details:', allAds.value.slice(0, 3).map(a => ({ 
@@ -829,13 +844,16 @@ export default {
         console.error('Error loading ads:', error)
         console.error('Error response:', error.response?.data)
         
-        // Check if no active package
+        // Check if no active package (e.g. new user offer completed – buy plan to continue)
         if (error.response?.data?.remark === 'no_active_package') {
           hasActivePackage.value = false
           allAds.value = []
           currentAd.value = null
           ads.value = []
           activePackage.value = null
+          isNewUserOffer.value = false
+          const msg = error.response?.data?.message?.error?.[0] || error.response?.data?.message
+          noPackageMessage.value = (Array.isArray(msg) ? msg[0] : msg) || 'Purchase an ad plan (₹2999–₹9999) to continue earning.'
         } else {
           hasActivePackage.value = true
           const errorMsg = error.response?.data?.message?.error?.[0] || error.response?.data?.message || 'Failed to load ads. Please try again.'
@@ -931,7 +949,9 @@ export default {
       watchedAds,
       showNextAd,
       activePackage,
-      currentUnlockedIndex
+      currentUnlockedIndex,
+      isNewUserOffer,
+      noPackageMessage
     }
   }
 }

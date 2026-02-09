@@ -17,10 +17,10 @@
         <div class="col-lg-12">
           <div class="banner-content">
             <h4 class="banner-content__subtitle">
-              {{ bannerData?.subtitle || '' }}
+              {{ bannerData?.subtitle || 'Affiliate Marketing Platform' }}
             </h4>
             <h1 class="banner-content__title">
-              {{ bannerData?.title || '' }}
+              {{ bannerData?.title || 'Earn Money With Us' }}
               <span class="icon" v-if="bannerData?.image_three">
                 <img :src="$getImage('banner', bannerData.image_three)" alt="img" />
                 {{ bannerData?.affiliate_text || '' }}
@@ -35,7 +35,7 @@
               </span>
             </h1>
             <p class="banner-content__desc">
-              {{ bannerData?.description || '' }}
+              {{ bannerData?.description || 'Join our affiliate program, promote campaigns and earn commission on every conversion. No investment required.' }}
             </p>
             <div class="banner-content__btn">
               <router-link :to="bannerData?.button_url || '/register'" class="btn btn--base pill">
@@ -91,8 +91,8 @@ export default {
           appService.getSections('banner'),
           appService.getSections('banner.element')
         ])
-        bannerData.value = bannerRes.data?.content?.data_values || null
-        bannerFeatures.value = featuresRes.data || []
+        bannerData.value = bannerRes.data?.data_values || bannerRes.data?.content?.data_values || null
+        bannerFeatures.value = Array.isArray(featuresRes.data) ? featuresRes.data : (featuresRes.data?.data || [])
 
         await nextTick()
         

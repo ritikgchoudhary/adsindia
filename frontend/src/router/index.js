@@ -204,15 +204,11 @@ const routes = [
   },
   {
     path: '/user/package-payment',
-    name: 'PackagePayment',
-    component: () => import('../views/user/PackagePayment.vue'),
-    meta: { requiresAuth: true }
+    redirect: '/user/packages'
   },
   {
     path: '/user/upgrade-package',
-    name: 'UpgradePackage',
-    component: () => import('../views/user/UpgradePackage.vue'),
-    meta: { requiresAuth: true }
+    redirect: '/user/packages'
   },
         {
           path: '/user/ad-plans',

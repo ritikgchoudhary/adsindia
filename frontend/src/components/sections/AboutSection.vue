@@ -27,7 +27,7 @@
             <p class="about-content__desc" v-if="aboutData.subheading">{{ aboutData.subheading }}</p>
             <ul class="text-list" v-if="aboutElements.length">
               <li class="text-list__item" v-for="(element, index) in aboutElements" :key="index">
-                {{ element.feature }}
+                {{ element.data_values.feature }}
               </li>
             </ul>
             <div class="about-content__btn" v-if="aboutData.button_name">

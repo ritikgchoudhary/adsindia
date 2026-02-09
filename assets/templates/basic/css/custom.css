@@ -586,3 +586,163 @@ button .spinner-border {
   align-items: center;
   justify-content: flex-start;
 }
+
+/* ========== User panel: text contrast – dark bg = white text, light bg = dark text ========== */
+.dashboard {
+  color: hsl(var(--white));
+}
+.dashboard .dashboard__right,
+.dashboard .dashboard-body {
+  color: hsl(var(--white));
+}
+.dashboard .dashboard-body .title,
+.dashboard .dashboard-body h1,
+.dashboard .dashboard-body h2,
+.dashboard .dashboard-body h3,
+.dashboard .dashboard-body h4,
+.dashboard .dashboard-body h5,
+.dashboard .dashboard-body h6,
+.dashboard .dashboard-body p {
+  color: hsl(var(--white)) !important;
+}
+.dashboard .dashboard-body .text-muted {
+  color: hsl(var(--white) / 0.75) !important;
+}
+/* Sidebar – keep text white on dark */
+.dashboard .sidebar-menu-list__link,
+.dashboard .sidebar-menu-list__link .text,
+.dashboard .sidebar-menu-list__link .icon,
+.dashboard .sidebar-submenu-list__link,
+.dashboard .sidebar-menu .menu-title {
+  color: hsl(var(--white) / 0.9) !important;
+}
+.dashboard .sidebar-menu-list__link:hover,
+.dashboard .sidebar-menu-list__link.active,
+.dashboard .sidebar-submenu-list__link:hover {
+  color: hsl(var(--white)) !important;
+}
+.dashboard .sidebar-submenu-list__item.active > a {
+  color: hsl(var(--base)) !important;
+}
+/* Header – white text on dark */
+.dashboard .dashboard-header,
+.dashboard .user-info__name {
+  color: hsl(var(--white)) !important;
+}
+.dashboard .dashboard-body__bar-icon {
+  color: hsl(var(--white)) !important;
+}
+/* Dark cards (custom--card, dashboard-widget) – white text */
+.dashboard .custom--card,
+.dashboard .custom--card .card-body,
+.dashboard .custom--card .card-title,
+.dashboard .custom--card h1, .dashboard .custom--card h2, .dashboard .custom--card h3,
+.dashboard .custom--card h4, .dashboard .custom--card h5, .dashboard .custom--card h6,
+.dashboard .custom--card p,
+.dashboard .dashboard-widget,
+.dashboard .dashboard-widget * {
+  color: inherit;
+}
+.dashboard .custom--card,
+.dashboard .dashboard-widget {
+  color: hsl(var(--white));
+}
+.dashboard .custom--card .text-muted,
+.dashboard .dashboard-widget .text-muted {
+  color: hsl(var(--white) / 0.75) !important;
+}
+/* Tables on dark – white text */
+.dashboard .table,
+.dashboard .table th,
+.dashboard .table td {
+  color: hsl(var(--white)) !important;
+  border-color: hsl(var(--white) / 0.15) !important;
+}
+.dashboard .table thead th {
+  color: hsl(var(--white) / 0.9) !important;
+}
+/* Light backgrounds – dark text */
+.dashboard .alert,
+.dashboard .alert * {
+  color: inherit !important;
+}
+.dashboard .alert-warning,
+.dashboard .alert-warning .text-muted,
+.dashboard .alert-warning h5,
+.dashboard .alert-warning p,
+.dashboard .alert-warning a {
+  color: #212529 !important;
+}
+.dashboard .alert-success,
+.dashboard .alert-success .text-muted,
+.dashboard .alert-success h5,
+.dashboard .alert-success p {
+  color: #212529 !important;
+}
+.dashboard .alert-info h5,
+.dashboard .alert-info p,
+.dashboard .alert-info .text-muted {
+  color: #0c5460 !important;
+}
+.dashboard .card:not(.custom--card),
+.dashboard .card.bg-white,
+.dashboard .card.bg-light {
+  color: #212529 !important;
+}
+.dashboard .card:not(.custom--card) .card-body,
+.dashboard .card:not(.custom--card) .card-title,
+.dashboard .card:not(.custom--card) h1, .dashboard .card:not(.custom--card) h2,
+.dashboard .card:not(.custom--card) h3, .dashboard .card:not(.custom--card) h4,
+.dashboard .card:not(.custom--card) h5, .dashboard .card:not(.custom--card) h6,
+.dashboard .card:not(.custom--card) p,
+.dashboard .card:not(.custom--card) .text-muted {
+  color: #212529 !important;
+}
+.dashboard .form-control,
+.dashboard .form-select,
+.dashboard input:not([type="checkbox"]):not([type="radio"]),
+.dashboard textarea {
+  color: #212529 !important;
+  background-color: #fff !important;
+}
+.dashboard .form-label,
+.dashboard label {
+  color: hsl(var(--white) / 0.95) !important;
+}
+/* User dropdown – dark bg, white text */
+.dashboard .user-info-dropdown,
+.dashboard .user-info-dropdown__link {
+  color: hsl(var(--white)) !important;
+}
+.dashboard .user-info-dropdown__link:hover {
+  color: hsl(var(--base)) !important;
+}
+/* Links inside content – visible */
+.dashboard .dashboard-body a:not(.btn):not(.sidebar-menu-list__link):not(.user-info-dropdown__link) {
+  color: hsl(var(--base-l-400)) !important;
+}
+.dashboard .dashboard-body a:not(.btn):hover {
+  color: hsl(var(--base-l-500)) !important;
+}
+/* Badges and small text on dark */
+.dashboard .badge:not(.bg-warning):not(.bg-success):not(.bg-info):not(.bg-light) {
+  color: hsl(var(--white)) !important;
+}
+.dashboard .btn-outline-primary,
+.dashboard .btn-outline-secondary {
+  color: hsl(var(--white)) !important;
+  border-color: hsl(var(--white) / 0.5);
+}
+.dashboard .btn-outline-primary:hover,
+.dashboard .btn-outline-secondary:hover {
+  color: hsl(var(--base)) !important;
+  border-color: hsl(var(--base));
+  background-color: hsl(var(--white)) !important;
+}
+.dashboard .dashboard-heading,
+.dashboard .dashboard-label {
+  color: hsl(var(--white)) !important;
+}
+.dashboard .dashboard-label {
+  color: hsl(var(--white) / 0.95) !important;
+}

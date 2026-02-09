@@ -198,6 +198,7 @@ class AppController extends Controller
                 'about' => 'about.content',
                 'login' => 'login.content',
                 'register' => 'register.content',
+                'banner' => 'banner.content',
             ];
 
             // Try mapped key first
@@ -254,16 +255,25 @@ class AppController extends Controller
 
         // Get all sections from home page
         $page = Page::where('tempname', activeTemplateName())->where('slug', '/')->first();
+        $sections = null;
         if ($page && $page->secs) {
-            $sections = json_decode($page->secs, true);
-            return responseSuccess('sections', ['Sections retrieved successfully'], [
-                'data' => $sections
-            ]);
+            $decoded = json_decode($page->secs, true);
+            if (is_array($decoded) && !empty($decoded)) {
+                $sections = $decoded;
+            }
         }
-
-        // Fallback: get all frontend sections
-        $sections = Frontend::where('data_keys', 'like', '%.%')->get();
-        return responseSuccess('sections', ['Sections retrieved successfully'], $sections);
+        // Default homepage section order (old project / full UI)
+        if (empty($sections)) {
+            $sections = [
+                'about', 'category', 'campaigns', 'work_process', 'why_choose_us',
+                'benefit_section', 'counter_section', 'testimonials', 'cta_section',
+                'faq_section', 'blog', 'partner_section'
+            ];
+        }
+        return responseSuccess('sections', ['Sections retrieved successfully'], [
+            'data' => $sections,
+            'secs' => $sections
+        ]);
     }
 
     public function viewTicket($ticket)

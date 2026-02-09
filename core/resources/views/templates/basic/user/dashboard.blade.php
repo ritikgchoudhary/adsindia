@@ -1,16 +1,23 @@
 @extends($activeTemplate . 'layouts.master')
+@push('style')
+<style>
+    .dashboard .dashboard-widget .dashboard-widget__content { width: auto; padding-left: 0; }
+    .dashboard .dashboard-widget a.stretched-link { z-index: 1; }
+</style>
+@endpush
 @section('content')
     @php
         $kyc = getContent('kyc.content', true);
         $user = auth()->user();
     @endphp
     <div class="notice"></div>
+
+    {{-- KYC Alerts --}}
     @if ($user->kv == Status::KYC_UNVERIFIED && $user->kyc_rejection_reason)
         <div class="alert alert--danger mb-4" role="alert">
             <div class="alert__icon">
                 <i class="fa-solid fa-circle-exclamation"></i>
             </div>
-
             <div class="alert__content">
                 <h4 class="alert__title">@lang('KYC Documents Rejected')</h4>
                 <p class="alert__desc">
@@ -49,142 +56,149 @@
         </div>
     @endif
 
-    <div class="row gy-4 justify-content-center">
+    {{-- Welcome & Quick Stats --}}
+    <div class="dashboard-overview mb-4">
+        <p class="text-muted mb-0">@lang('Here’s what’s happening with your account')</p>
+    </div>
+
+    <div class="row gy-4">
         <div class="col-xxl-9 col-lg-12">
-            <div class="row gy-4 justify-content-center">
-                <div class="col-xl-3 col-md-4 col-sm-6">
-                    <div class="dashboard-widget">
-                        <div class="dashboard-widget__icon flex-center">
-                            <i class="las la-coins"></i>
+            {{-- Stats Cards --}}
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="dashboard-widget h-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="dashboard-widget__icon flex-center rounded-3" style="min-width: 52px; height: 52px; background: hsl(var(--base) / 0.12);">
+                                <i class="las la-wallet text--base" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div class="dashboard-widget__content flex-grow-1">
+                                <span class="dashboard-widget__text d-block small text-muted">@lang('Balance')</span>
+                                <h3 class="dashboard-widget__number mb-0 fs-5">{{ gs('cur_sym') }}{{ getAmount($widget['balance']) }}</h3>
+                            </div>
                         </div>
-                        <div class="dashboard-widget__content">
-                            <h3 class="dashboard-widget__number">
-                                {{ gs('cur_sym') }}{{ getAmount($widget['balance']) }}
-                            </h3>
-                            <span class="dashboard-widget__text"> @lang('Balance') </span>
-                        </div>
+                        <a href="{{ route('user.withdraw') }}" class="stretched-link"></a>
                     </div>
                 </div>
-
-                <div class="col-xl-3 col-md-4 col-sm-6">
-                    <div class="dashboard-widget">
-                        <div class="dashboard-widget__icon flex-center">
-                            <i class="fas fa-money-bill-wave-alt"></i>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="dashboard-widget h-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="dashboard-widget__icon flex-center rounded-3" style="min-width: 52px; height: 52px; background: rgba(34, 197, 94, 0.12);">
+                                <i class="fas fa-link text-success" style="font-size: 1.25rem;"></i>
+                            </div>
+                            <div class="dashboard-widget__content flex-grow-1">
+                                <span class="dashboard-widget__text d-block small text-muted">@lang('Affiliate Income')</span>
+                                <h3 class="dashboard-widget__number mb-0 fs-5">{{ gs('cur_sym') }}{{ getAmount($widget['total_earning']) }}</h3>
+                            </div>
                         </div>
-                        <div class="dashboard-widget__content">
-                            <h3 class="dashboard-widget__number"> {{ gs('cur_sym') }}{{ getAmount($widget['total_earning']) }} </h3>
-                            <span class="dashboard-widget__text"> @lang('Affiliate Income') </span>
-                        </div>
+                        <a href="{{ route('user.conversion.log') }}" class="stretched-link"></a>
                     </div>
                 </div>
-
-                <div class="col-xl-3 col-md-4 col-sm-6">
-                    <div class="dashboard-widget">
-                        <div class="dashboard-widget__icon flex-center">
-                            <i class="fas fa-video"></i>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="dashboard-widget h-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="dashboard-widget__icon flex-center rounded-3" style="min-width: 52px; height: 52px; background: rgba(59, 130, 246, 0.12);">
+                                <i class="fas fa-video text-primary" style="font-size: 1.25rem;"></i>
+                            </div>
+                            <div class="dashboard-widget__content flex-grow-1">
+                                <span class="dashboard-widget__text d-block small text-muted">@lang('Ads Income')</span>
+                                <h3 class="dashboard-widget__number mb-0 fs-5">{{ gs('cur_sym') }}{{ getAmount($widget['ads_income'] ?? 0) }}</h3>
+                            </div>
                         </div>
-                        <div class="dashboard-widget__content">
-                            <h3 class="dashboard-widget__number"> {{ gs('cur_sym') }}{{ getAmount($widget['ads_income'] ?? 0) }} </h3>
-                            <span class="dashboard-widget__text"> @lang('Ads Income') </span>
-                        </div>
+                        @if(\Illuminate\Support\Facades\Route::has('user.ad.view.index'))
+                            <a href="{{ route('user.ad.view.index') }}" class="stretched-link"></a>
+                        @endif
                     </div>
                 </div>
-
-                <div class="col-xl-3 col-md-4 col-sm-6">
-                    <div class="dashboard-widget">
-                        <div class="dashboard-widget__icon flex-center">
-                            <i class="fas fa-hand-holding-usd"></i>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="dashboard-widget h-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="dashboard-widget__icon flex-center rounded-3" style="min-width: 52px; height: 52px; background: rgba(245, 158, 11, 0.12);">
+                                <i class="fas fa-hand-holding-usd text-warning" style="font-size: 1.25rem;"></i>
+                            </div>
+                            <div class="dashboard-widget__content flex-grow-1">
+                                <span class="dashboard-widget__text d-block small text-muted">@lang('Withdrawn')</span>
+                                <h3 class="dashboard-widget__number mb-0 fs-5">{{ gs('cur_sym') }}{{ getAmount($widget['total_withdraw']) }}</h3>
+                            </div>
                         </div>
-                        <div class="dashboard-widget__content">
-                            <h3 class="dashboard-widget__number"> {{ gs('cur_sym') }}{{ getAmount($widget['total_withdraw']) }} </h3>
-                            <span class="dashboard-widget__text"> @lang('Withdrawan') </span>
-                        </div>
+                        <a href="{{ route('user.withdraw.history') }}" class="stretched-link"></a>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-12">
-                    <div class="card custom--card">
-                        <div class="card-header">
-                            <h5 class="mb-0">@lang('Latest Transactions')</h5>
-                        </div>
-                        <div class="card-body">
-                            <table class="table table--responsive--lg">
-                                <thead>
+            {{-- Latest Transactions --}}
+            <div class="card custom--card">
+                <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <h5 class="mb-0">@lang('Latest Transactions')</h5>
+                    <a href="{{ route('user.transactions') }}" class="btn btn--base btn--sm">@lang('View All')</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table--responsive--lg table-hover mb-0">
+                            <thead class="bg--light">
+                                <tr>
+                                    <th>@lang('Trx')</th>
+                                    <th>@lang('Date')</th>
+                                    <th>@lang('Amount')</th>
+                                    <th>@lang('Post Balance')</th>
+                                    <th>@lang('Detail')</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($transactions as $trx)
                                     <tr>
-                                        <th>@lang('Trx')</th>
-                                        <th>@lang('Transacted')</th>
-                                        <th>@lang('Amount')</th>
-                                        <th>@lang('Post Balance')</th>
-                                        <th>@lang('Detail')</th>
+                                        <td><code class="small">{{ $trx->trx }}</code></td>
+                                        <td>
+                                            <span class="d-block">{{ showDateTime($trx->created_at, 'd M Y') }}</span>
+                                            <small class="text-muted">{{ diffForHumans($trx->created_at) }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold @if ($trx->trx_type == '+') text--success @else text--danger @endif">
+                                                {{ $trx->trx_type }}{{ gs('cur_sym') }}{{ getAmount($trx->amount) }}
+                                            </span>
+                                        </td>
+                                        <td>{{ gs('cur_sym') }}{{ getAmount($trx->post_balance) }}</td>
+                                        <td><span class="text-muted small">{{ __($trx->details) }}</span></td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($transactions as $trx)
-                                        <tr>
-                                            <td>
-                                                <div><strong>{{ $trx->trx }}</strong></div>
-                                            </td>
-                                            <td>
-                                                <div>
-                                                    {{ showDateTime($trx->created_at) }}<br>
-                                                    <small class="text-muted">{{ diffForHumans($trx->created_at) }}</small>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div>
-                                                    <span class="fw-bold @if ($trx->trx_type == '+') text--success @else text--danger @endif">
-                                                        {{ $trx->trx_type }} {{ showAmount($trx->amount) }}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div>{{ showAmount($trx->post_balance) }}</div>
-                                            </td>
-                                            <td>
-                                                <div>{{ __($trx->details) }}</div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted">{{ __($emptyMessage) }}</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="las la-exchange-alt fa-2x mb-2 d-block opacity-50"></i>
+                                            {{ __($emptyMessage) }}
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
-
                 </div>
             </div>
         </div>
-        <div class="col-xxl-3 col-lg-12 ps-xxl-4">
+
+        {{-- Sidebar: Suggested Campaigns --}}
+        <div class="col-xxl-3 col-lg-12">
             <div class="dashboard-sidebar">
-                <div class="dashboard-sidebar__item">
-                    <h5 class="dashboard-sidebar__title"> @lang('Suggest for you') </h5>
-                    <div class="dashboard-sidebar__content">
-                        @forelse ($campaigns as $campaign)
-                            <div class="latest-item">
-                                <div class="latest-item__thumb">
-                                    <a href="{{ route('campaign.details', $campaign->slug) }}">
-                                        <img src="{{ getImage(getFilePath('campaign') . '/' . 'thumb_' . $campaign->image, getFileThumb('campaign')) }}" class="fit-image" alt="img">
-                                    </a>
+                <div class="dashboard-sidebar__item card custom--card border-0">
+                    <div class="card-body">
+                        <h5 class="dashboard-sidebar__title mb-3">@lang('Suggest for you')</h5>
+                        <div class="dashboard-sidebar__content">
+                            @forelse ($campaigns as $campaign)
+                                <a href="{{ route('campaign.details', $campaign->slug) }}" class="latest-item d-flex align-items-center gap-3 p-3 rounded-3 mb-2 text-decoration-none" style="background: var(--section-bg); transition: background 0.2s;">
+                                    <div class="latest-item__thumb flex-shrink-0 rounded-2 overflow-hidden" style="width: 56px; height: 56px;">
+                                        <img src="{{ getImage(getFilePath('campaign') . '/' . 'thumb_' . $campaign->image, getFileThumb('campaign')) }}" class="fit-image w-100 h-100" alt="{{ __($campaign->title) }}">
+                                    </div>
+                                    <div class="latest-item__content flex-grow-1 min-w-0">
+                                        <h6 class="latest-item__title mb-1 text-dark">{{ Str::limit(__($campaign->title), 28) }}</h6>
+                                        <span class="badge bg--base text-white">{{ gs('cur_sym') }}{{ showAmount($campaign->payout_per_conversion) }}</span>
+                                    </div>
+                                    <i class="las la-arrow-right text-muted"></i>
+                                </a>
+                            @empty
+                                <div class="text-center py-4 text-muted small">
+                                    <i class="las la-bullhorn fa-2x mb-2 d-block opacity-50"></i>
+                                    @lang('No campaign found')
                                 </div>
-                                <div class="latest-item__content">
-                                    <h6 class="latest-item__title">
-                                        <a href="{{ route('campaign.details', $campaign->slug) }}">
-                                            {{ __($campaign->title) }}
-                                        </a>
-                                    </h6>
-                                    <a href="{{ route('campaign.details', $campaign->slug) }}" class="btn btn-outline--white btn--sm">{{ showAmount($campaign->payout_per_conversion) }}</a>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="latest-item">
-                                <i class="las la-list-ul"></i>
-                                <br>
-                                @lang('No campaign found')
-                            </div>
-                        @endforelse
+                            @endforelse
+                        </div>
                     </div>
                 </div>
             </div>

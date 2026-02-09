@@ -5,13 +5,14 @@
 
       <div class="sidebar-logo">
         <router-link to="/" class="sidebar-logo__link">
-          <img :src="siteLogo" alt="Logo">
+          <img v-if="siteLogo" :src="siteLogo" alt="Logo" @error="siteLogo = null">
+        <span v-else class="sidebar-logo-text">Logo</span>
         </router-link>
       </div>
       <ul class="sidebar-menu-list">
         <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/dashboard') }" role="presentation">
           <router-link to="/user/dashboard" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fa-solid fa-border-all"></i></span>
+            <span class="icon"><i class="fas fa-border-all"></i></span>
             <span class="text">Dashboard</span>
           </router-link>
         </li>
@@ -41,29 +42,15 @@
             <span class="text">Account & KYC</span>
           </router-link>
         </li>
-        <li class="sidebar-menu-list__item has-dropdown" :class="{ active: isDropdownActive(['/user/packages', '/user/upgrade-package', '/user/package-payment']) }" role="presentation">
-          <a href="javascript:void(0)" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-box"></i></span>
-            <span class="text">Packages</span>
-          </a>
-          <div class="sidebar-submenu">
-            <ul class="sidebar-submenu-list">
-              <li class="sidebar-submenu-list__item" :class="{ active: isActive('/user/packages') }">
-                <router-link to="/user/packages" class="sidebar-submenu-list__link">
-                  <span class="text">My Package</span>
-                </router-link>
-              </li>
-              <li class="sidebar-submenu-list__item" :class="{ active: isActive('/user/upgrade-package') }">
-                <router-link to="/user/upgrade-package" class="sidebar-submenu-list__link">
-                  <span class="text">Upgrade Package</span>
-                </router-link>
-              </li>
-            </ul>
-          </div>
+        <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/packages') }" role="presentation">
+          <router-link to="/user/packages" class="sidebar-menu-list__link">
+            <span class="icon"><i class="fas fa-graduation-cap"></i></span>
+            <span class="text">Courses Packages</span>
+          </router-link>
         </li>
         <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/courses') }" role="presentation">
           <router-link to="/user/courses" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-graduation-cap"></i></span>
+            <span class="icon"><i class="fas fa-play-circle"></i></span>
             <span class="text">Courses</span>
           </router-link>
         </li>
@@ -161,7 +148,7 @@
         </li>
         <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/change-password') }" role="presentation">
           <router-link to="/user/change-password" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fa-solid fa-lock"></i></span>
+            <span class="icon"><i class="fas fa-lock"></i></span>
             <span class="text">Password Change</span>
           </router-link>
         </li>
@@ -182,6 +169,7 @@
       </ul>
     </div>
   </div>
+
 </template>
 
 <script>
@@ -194,7 +182,7 @@ export default {
   setup() {
     const router = useRouter()
     const route = useRoute()
-    const siteLogo = ref('/assets/images/logo.png')
+    const siteLogo = ref('/assets/images/logo_icon/logo.png')
 
     // Helper function to check if a route is active
     const isActive = (path) => {
@@ -264,3 +252,145 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.sidebar-menu {
+  background-color: #1e293b;
+  width: 280px;
+  min-height: 100vh;
+  color: #94a3b8;
+  font-family: 'Outfit', sans-serif;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
+  display: flex !important;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 1rem;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-logo__link {
+  display: block;
+  width: 100%;
+}
+
+.sidebar-logo img {
+  max-width: 160px;
+  height: auto;
+}
+
+.sidebar-menu-list {
+  list-style: none;
+  padding: 0 1rem;
+  margin: 0;
+  flex: 1;
+}
+
+.sidebar-menu-list__item {
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-menu-list__link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #94a3b8;
+  text-decoration: none;
+  border-radius: 12px;
+  transition: all 0.2s;
+  font-weight: 500;
+  gap: 1rem;
+}
+
+.sidebar-menu-list__link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.sidebar-menu-list__item.active > .sidebar-menu-list__link {
+  background: #4f46e5;
+  color: white;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.sidebar-menu-list__link .icon {
+  width: 24px;
+  min-width: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+/* Ensure Font Awesome icons render in sidebar */
+.sidebar-menu-list__link .icon i,
+.sidebar-menu .icon i {
+  font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', FontAwesome !important;
+  font-weight: 900 !important;
+  font-style: normal !important;
+  display: inline-block !important;
+}
+
+.sidebar-logo-text {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.sidebar-logo img {
+  max-width: 100%;
+  height: auto;
+  max-height: 48px;
+  object-fit: contain;
+}
+
+.sidebar-submenu {
+  padding-left: 2.5rem;
+  margin-top: 0.25rem;
+}
+
+.sidebar-submenu-list {
+  list-style: none;
+  padding: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-submenu-list__link {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.sidebar-submenu-list__link:hover {
+  color: white;
+}
+
+.sidebar-submenu-list__item.active .sidebar-submenu-list__link {
+  color: white;
+  font-weight: 600;
+}
+
+/* Mobile Toggle */
+@media (max-width: 991px) {
+  .sidebar-menu {
+    position: fixed;
+    left: -280px;
+    z-index: 1050;
+    transition: all 0.3s;
+  }
+  .sidebar-menu.show-sidebar {
+    left: 0;
+  }
+}
+</style>

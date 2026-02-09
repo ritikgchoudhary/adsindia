@@ -31,31 +31,31 @@
         <!-- Step 1: Bank Details -->
         <div v-if="currentStep === 1" class="card custom--card mb-4 border-0 shadow-sm" style="border-radius: 15px;">
           <div class="card-header bg-transparent border-0 pb-0" style="border-radius: 15px 15px 0 0;">
-            <h5 class="mb-0" style="font-weight: 700; color: #2d3748;">
-              <i class="fas fa-university me-2 text-primary"></i>Step 1: Bank Details
+            <h5 class="mb-0 account-kyc-heading">
+              <i class="fas fa-university me-2"></i>Step 1: Bank Details
             </h5>
           </div>
           <div class="card-body pt-3">
             <form @submit.prevent="submitBankDetails">
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Account Holder Name <span class="text-danger">*</span></label>
+                  <label class="form-label account-kyc-label">Account Holder Name <span class="text-danger">*</span></label>
                   <input type="text" v-model="bankDetails.account_holder_name" class="form-control" style="border-radius: 10px; padding: 12px;" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Bank Name <span class="text-danger">*</span></label>
+                  <label class="form-label account-kyc-label">Bank Name <span class="text-danger">*</span></label>
                   <input type="text" v-model="bankDetails.bank_name" class="form-control" style="border-radius: 10px; padding: 12px;" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Account Number <span class="text-danger">*</span></label>
+                  <label class="form-label account-kyc-label">Account Number <span class="text-danger">*</span></label>
                   <input type="text" v-model="bankDetails.account_number" class="form-control" style="border-radius: 10px; padding: 12px;" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label" style="font-weight: 600; color: #4a5568;">IFSC Code <span class="text-danger">*</span></label>
+                  <label class="form-label account-kyc-label">IFSC Code <span class="text-danger">*</span></label>
                   <input type="text" v-model="bankDetails.ifsc_code" class="form-control" style="border-radius: 10px; padding: 12px; text-transform: uppercase;" maxlength="11" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Bank Registered No. <span class="text-danger">*</span></label>
+                  <label class="form-label account-kyc-label">Bank Registered No. <span class="text-danger">*</span></label>
                   <input type="text" v-model="bankDetails.bank_registered_no" class="form-control" style="border-radius: 10px; padding: 12px;" required>
                 </div>
               </div>
@@ -71,32 +71,32 @@
         <!-- Step 2: KYC Documents -->
         <div v-if="currentStep === 2" class="card custom--card mb-4 border-0 shadow-sm" style="border-radius: 15px;">
           <div class="card-header bg-transparent border-0 pb-0" style="border-radius: 15px 15px 0 0;">
-            <h5 class="mb-0" style="font-weight: 700; color: #2d3748;">
-              <i class="fas fa-id-card me-2 text-primary"></i>Step 2: KYC Documents
+            <h5 class="mb-0 account-kyc-heading">
+              <i class="fas fa-id-card me-2"></i>Step 2: KYC Documents
             </h5>
           </div>
           <div class="card-body pt-3">
             <form @submit.prevent="submitKYC">
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Aadhaar Number <span class="text-danger">*</span></label>
+                  <label class="form-label account-kyc-label">Aadhaar Number <span class="text-danger">*</span></label>
                   <input type="text" v-model="kycData.aadhaar_number" class="form-control" style="border-radius: 10px; padding: 12px;" maxlength="12" pattern="[0-9]{12}" required>
-                  <small class="text-muted">Enter 12-digit Aadhaar number</small>
+                  <small class="account-kyc-hint">Enter 12-digit Aadhaar number</small>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label" style="font-weight: 600; color: #4a5568;">Aadhaar Document <span class="text-danger">*</span></label>
+                  <label class="form-label account-kyc-label">Aadhaar Document <span class="text-danger">*</span></label>
                   <input type="file" @change="handleFileChange('aadhaar', $event)" class="form-control" style="border-radius: 10px; padding: 12px;" accept="image/*,.pdf" required>
-                  <small class="text-muted">Upload Aadhaar card (Image or PDF)</small>
+                  <small class="account-kyc-hint">Upload Aadhaar card (Image or PDF)</small>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label" style="font-weight: 600; color: #4a5568;">PAN Card Number <span class="text-danger">*</span></label>
+                  <label class="form-label account-kyc-label">PAN Card Number <span class="text-danger">*</span></label>
                   <input type="text" v-model="kycData.pan_number" class="form-control" style="border-radius: 10px; padding: 12px; text-transform: uppercase;" maxlength="10" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" required>
-                  <small class="text-muted">Enter 10-character PAN number</small>
+                  <small class="account-kyc-hint">Enter 10-character PAN number</small>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label" style="font-weight: 600; color: #4a5568;">PAN Card Document <span class="text-danger">*</span></label>
+                  <label class="form-label account-kyc-label">PAN Card Document <span class="text-danger">*</span></label>
                   <input type="file" @change="handleFileChange('pan', $event)" class="form-control" style="border-radius: 10px; padding: 12px;" accept="image/*,.pdf" required>
-                  <small class="text-muted">Upload PAN card (Image or PDF)</small>
+                  <small class="account-kyc-hint">Upload PAN card (Image or PDF)</small>
                 </div>
               </div>
               <div class="d-flex justify-content-between mt-4">
@@ -118,8 +118,8 @@
               <div class="d-inline-block p-4 rounded-circle mb-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                 <i class="fas fa-clock fa-4x text-white"></i>
               </div>
-              <h3 class="mb-3" style="color: #2d3748; font-weight: 700;">KYC Under Review</h3>
-              <p class="text-muted mb-4">Your KYC application has been submitted successfully and is pending admin review.</p>
+              <h3 class="mb-3 account-kyc-status-title">KYC Under Review</h3>
+              <p class="account-kyc-desc mb-4">Your KYC application has been submitted successfully and is pending admin review.</p>
               
               <!-- Payment Status Section -->
               <div v-if="hasPaidKYCFee" class="alert alert-success mb-4" style="border-radius: 12px;">
@@ -153,15 +153,15 @@
               <div class="d-inline-block p-4 rounded-circle mb-3" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                 <i class="fas fa-check-circle fa-4x text-white"></i>
               </div>
-              <h3 class="mb-3" style="color: #2d3748; font-weight: 700;">KYC Verified!</h3>
-              <p class="text-muted mb-4">Congratulations! Your KYC has been verified by admin.</p>
+              <h3 class="mb-3 account-kyc-status-title">KYC Verified!</h3>
+              <p class="account-kyc-desc mb-4">Congratulations! Your KYC has been verified by admin.</p>
             </div>
             <div v-else-if="kycStatus === 3" class="mb-4">
               <div class="d-inline-block p-4 rounded-circle mb-3" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);">
                 <i class="fas fa-times-circle fa-4x text-white"></i>
               </div>
-              <h3 class="mb-3" style="color: #2d3748; font-weight: 700;">KYC Rejected</h3>
-              <p class="text-muted mb-4" v-if="kycRejectionReason">{{ kycRejectionReason }}</p>
+              <h3 class="mb-3 account-kyc-status-title">KYC Rejected</h3>
+              <p class="account-kyc-desc mb-4" v-if="kycRejectionReason">{{ kycRejectionReason }}</p>
               <button @click="currentStep = 1" class="btn btn-lg px-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 600;">
                 <i class="fas fa-redo me-2"></i>Re-submit KYC
               </button>
@@ -186,8 +186,8 @@
               <div class="d-inline-block p-3 rounded-circle mb-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                 <i class="fas fa-rupee-sign fa-3x text-white"></i>
               </div>
-              <h4 class="mb-2" style="font-weight: 700; color: #2d3748;">Pay KYC Fee</h4>
-              <p class="text-muted mb-3">Complete your KYC verification by paying the required fee</p>
+              <h4 class="mb-2 account-kyc-heading">Pay KYC Fee</h4>
+              <p class="account-kyc-desc mb-3">Complete your KYC verification by paying the required fee</p>
               <div class="alert alert-info" style="border-radius: 12px;">
                 <h3 class="mb-0" style="font-weight: 700; color: #667eea;">
                   {{ currencySymbol }}{{ formatAmount(kycFee) }}
@@ -196,7 +196,7 @@
               </div>
             </div>
             <div class="mb-3">
-              <label class="form-label" style="font-weight: 600;">Current Balance</label>
+              <label class="form-label account-kyc-label">Current Balance</label>
               <div class="input-group">
                 <span class="input-group-text" style="background: #f7fafc; border-radius: 10px 0 0 10px;">{{ currencySymbol }}</span>
                 <input type="text" :value="formatAmount(userBalance)" class="form-control" style="border-radius: 0 10px 10px 0;" readonly>
@@ -500,6 +500,62 @@ export default {
 </script>
 
 <style scoped>
+/* ========== Override global white text – force visible ========== */
+.card.custom--card,
+.card.custom--card .card-body,
+.card.custom--card .card-header {
+  color: #1e293b !important;
+  background: #ffffff !important;
+}
+.card.custom--card h1,
+.card.custom--card h2,
+.card.custom--card h3,
+.card.custom--card h4,
+.card.custom--card h5,
+.card.custom--card h6,
+.card.custom--card p,
+.card.custom--card label,
+.card.custom--card .form-label,
+.card.custom--card small {
+  color: inherit !important;
+}
+
+.account-kyc-heading {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+}
+.account-kyc-heading i {
+  color: #4f46e5 !important;
+}
+
+.account-kyc-label {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+}
+
+.account-kyc-hint {
+  color: #64748b !important;
+  font-weight: 500 !important;
+  font-size: 0.85rem !important;
+  display: block !important;
+  margin-top: 0.35rem !important;
+}
+
+.account-kyc-desc {
+  color: #475569 !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+}
+
+.account-kyc-status-title {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 1.5rem !important;
+}
+
+/* Step indicator */
 .step-indicator {
   position: relative;
   display: inline-block;
@@ -509,8 +565,8 @@ export default {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: #e2e8f0;
-  color: #718096;
+  background: #e2e8f0 !important;
+  color: #475569 !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -521,29 +577,90 @@ export default {
 }
 
 .step-indicator.active .step-number {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+  color: #ffffff !important;
   transform: scale(1.1);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
 }
 
 .step-indicator.completed .step-number {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  color: white;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+  color: #ffffff !important;
 }
 
 .step-label {
-  font-weight: 600;
-  color: #4a5568;
-  font-size: 14px;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  font-size: 14px !important;
 }
 
 .step-indicator.active .step-label {
-  color: #667eea;
-  font-weight: 700;
+  color: #4f46e5 !important;
+  font-weight: 700 !important;
+}
+
+/* Form controls – dark text */
+.card .form-control {
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.card .form-control::placeholder {
+  color: #94a3b8 !important;
+}
+.input-group-text {
+  color: #475569 !important;
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Alerts – readable text */
+.alert {
+  color: #1e293b !important;
+}
+.alert strong {
+  color: #0f172a !important;
+}
+.alert-success {
+  background: #ecfdf5 !important;
+  border-color: #10b981 !important;
+}
+.alert-warning {
+  background: #fffbeb !important;
+  border-color: #f59e0b !important;
+}
+.alert-info {
+  background: #eff6ff !important;
+  border-color: #3b82f6 !important;
+  color: #1e40af !important;
+}
+
+/* Buttons – clear colors */
+.btn[style*="linear-gradient"] {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+.btn[style*="#e2e8f0"] {
+  color: #334155 !important;
+  background: #e2e8f0 !important;
+}
+.btn-secondary {
+  color: #1e293b !important;
+  background: #e2e8f0 !important;
+  border: none !important;
 }
 
 .modal.show {
   display: block !important;
+}
+.modal-body .account-kyc-heading,
+.modal-body .account-kyc-desc,
+.modal-body .account-kyc-hint,
+.modal-body .account-kyc-label {
+  color: #0f172a !important;
+}
+.modal-body .account-kyc-desc,
+.modal-body .account-kyc-hint {
+  color: #475569 !important;
 }
 </style>

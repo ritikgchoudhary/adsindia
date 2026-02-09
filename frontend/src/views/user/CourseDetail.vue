@@ -13,7 +13,17 @@
         <div class="card custom--card" style="border-radius: 12px; overflow: hidden;">
           <div class="card-body p-0">
             <div class="video-container" style="position: relative; width: 100%; padding-top: 56.25%; background: #000;">
+              <!-- YouTube / Vimeo embed: admin can paste YouTube link in master panel -->
+              <iframe
+                v-if="isYoutubeOrVimeoUrl(course.video_url)"
+                :src="embedVideoUrl(course.video_url)"
+                class="w-100 h-100"
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                allowfullscreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              ></iframe>
               <video
+                v-else-if="course.video_url"
                 ref="videoPlayer"
                 :src="course.video_url"
                 controls
@@ -24,6 +34,9 @@
               >
                 Your browser does not support the video tag.
               </video>
+              <div v-else class="d-flex align-items-center justify-content-center text-white h-100" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                <span><i class="fas fa-video-slash me-2"></i>Video link not added yet. Admin can add from master panel.</span>
+              </div>
             </div>
           </div>
         </div>
@@ -149,7 +162,8 @@ export default {
         'Graphic Design': 'bg-primary',
         'Digital Marketing': 'bg-success',
         'Content Writing': 'bg-info',
-        'UI/UX Design': 'bg-warning'
+        'UI/UX Design': 'bg-warning',
+        'Web Development': 'bg-dark'
       }
       return categoryMap[category] || 'bg-secondary'
     }
@@ -163,6 +177,30 @@ export default {
         5: 'AdsPremium+'
       }
       return packageNames[packageId] || 'Unknown'
+    }
+
+    const isYoutubeOrVimeoUrl = (url) => {
+      if (!url || typeof url !== 'string') return false
+      return /youtube\.com|youtu\.be|vimeo\.com/i.test(url)
+    }
+
+    const embedVideoUrl = (url) => {
+      if (!url) return ''
+      const u = url.trim()
+      let vid = ''
+      if (u.includes('youtube.com/watch?v=')) {
+        vid = u.split('v=')[1]?.split('&')[0] || ''
+        return vid ? `https://www.youtube.com/embed/${vid}` : u
+      }
+      if (u.includes('youtu.be/')) {
+        vid = u.split('youtu.be/')[1]?.split('?')[0] || ''
+        return vid ? `https://www.youtube.com/embed/${vid}` : u
+      }
+      if (u.includes('vimeo.com/')) {
+        const m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/)
+        return m ? `https://player.vimeo.com/video/${m[1]}` : u
+      }
+      return u
     }
 
     const handleVideoError = (event) => {
@@ -216,6 +254,8 @@ export default {
       formatAmount,
       getCategoryBadgeClass,
       getPackageName,
+      isYoutubeOrVimeoUrl,
+      embedVideoUrl,
       handleVideoError,
       handleVideoLoaded
     }

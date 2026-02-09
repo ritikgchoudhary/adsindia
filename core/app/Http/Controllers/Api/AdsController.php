@@ -12,6 +12,16 @@ use Illuminate\Support\Facades\Log;
 
 class AdsController extends Controller
 {
+    /**
+     * New user = never purchased any ad package. New user gets 2 ads only, 5000 each = 10K total (one-time offer).
+     */
+    private function isNewUserEligibleForOffer($user)
+    {
+        $hasAnyPackage = AdPackageOrder::where('user_id', $user->id)->exists();
+        $watched = (int) ($user->new_user_ads_watched ?? 0);
+        return !$hasAnyPackage && $watched < 2;
+    }
+
     public function getAds()
     {
         $user = auth()->user();
@@ -23,8 +33,12 @@ class AdsController extends Controller
             ->with('package')
             ->first();
 
+        // STEP 1: New user offer – no package yet, show 2 ads for 10K total (5000 each)
         if (!$activeOrder) {
-            return responseError('no_active_package', ['You need to purchase an ad package first']);
+            if ($this->isNewUserEligibleForOffer($user)) {
+                return $this->getNewUserAds($user, $general);
+            }
+            return responseError('no_active_package', ['You have completed the new user offer. Purchase an ad plan (₹2999–₹9999) to continue earning.']);
         }
 
         // Get today's ad views count and watched ad IDs
@@ -52,54 +66,33 @@ class AdsController extends Controller
                 $watchedAdIds[] = (int)$matches[1];
             } else {
                 // Fallback: use completion order if ad_id not found (for old records)
-                // First watched = ad 1, second = ad 2, etc.
                 $watchedAdIds[] = $viewIndex + 1;
             }
             $viewIndex++;
         }
-        
-        // Debug logging
-        \Log::info("Watched ad IDs extracted: " . json_encode($watchedAdIds) . " from " . $watchedAdViews->count() . " views");
-        \Log::info("Sample ad_url from first view: " . ($watchedAdViews->first() ? $watchedAdViews->first()->ad_url : 'none'));
 
         // Check if daily limit reached
         $canWatchMore = $todayViews < $activeOrder->package->daily_ad_limit;
-
-        // Generate random video ads - Each ad gives 5-6k
-        $ads = [];
         $remainingAds = $activeOrder->package->daily_ad_limit - $todayViews;
-        
-        // Fetch real ads from external API
         $realAds = $this->fetchRealAdsFromAPI($activeOrder->package->daily_ad_limit);
-        
-        // Each ad earns 5000-6000 randomly
         $earnings = [5000, 5500, 6000];
-        
+        $ads = [];
+
         for ($i = 1; $i <= $activeOrder->package->daily_ad_limit; $i++) {
-            $earning = $earnings[array_rand($earnings)]; // Random earning between 5k-6k
-            
-            // Get real ad data or use fallback
+            $earning = $earnings[array_rand($earnings)];
             $adData = isset($realAds[$i - 1]) ? $realAds[$i - 1] : $this->getFallbackAd($i);
-            
-            // Check if this ad has been watched today (by ad ID - position in sequence)
             $isWatched = in_array($i, $watchedAdIds);
-            
-            // Debug logging (remove in production)
-            if ($i <= 3) {
-                \Log::info("Ad $i - isWatched: " . ($isWatched ? 'true' : 'false') . ", watchedAdIds: " . json_encode($watchedAdIds));
-            }
-            
             $ads[] = [
                 'id' => $i,
                 'title' => $adData['title'],
                 'description' => $adData['description'] ?? 'Watch this video ad completely to earn ' . showAmount($earning) . '. Video duration: ' . ($activeOrder->package->duration_seconds / 60) . ' minutes.',
                 'video_url' => $adData['video_url'],
                 'image' => $adData['image'] ?? '/assets/images/default-ad.jpg',
-                'duration' => (int)($activeOrder->package->duration_seconds / 60), // Duration in minutes from package
-                'duration_seconds' => $activeOrder->package->duration_seconds, // Duration in seconds
+                'duration' => (int)($activeOrder->package->duration_seconds / 60),
+                'duration_seconds' => $activeOrder->package->duration_seconds,
                 'earning' => (float)$earning,
                 'is_active' => $canWatchMore && !$isWatched,
-                'is_watched' => $isWatched, // Explicitly set watched status
+                'is_watched' => $isWatched,
                 'timer' => null,
             ];
         }
@@ -113,6 +106,49 @@ class AdsController extends Controller
                 'remaining_ads' => max(0, $remainingAds),
             ],
             'currency_symbol' => $general->cur_sym ?? '₹',
+            'is_new_user_offer' => false,
+        ]);
+    }
+
+    /**
+     * New user offer: exactly 2 ads, 5000 each = 10,000 total.
+     */
+    private function getNewUserAds($user, $general)
+    {
+        $watched = (int) ($user->new_user_ads_watched ?? 0);
+        $realAds = $this->getRealLookingAds(2);
+        $ads = [];
+        $earningPerAd = 5000;
+        $durationSeconds = 60;
+
+        for ($i = 1; $i <= 2; $i++) {
+            $isWatched = $watched >= $i;
+            $adData = $realAds[$i - 1] ?? $this->getFallbackAd($i);
+            $ads[] = [
+                'id' => $i,
+                'title' => $adData['title'],
+                'description' => 'New user offer: Watch this ad completely to earn ' . showAmount($earningPerAd) . '. (2 ads total = ₹10,000.)',
+                'video_url' => $adData['video_url'],
+                'image' => $adData['image'] ?? '/assets/images/default-ad.jpg',
+                'duration' => 1,
+                'duration_seconds' => $durationSeconds,
+                'earning' => (float) $earningPerAd,
+                'is_active' => !$isWatched,
+                'is_watched' => $isWatched,
+                'timer' => null,
+            ];
+        }
+
+        return responseSuccess('ads_data', ['New user offer: Watch 2 ads to earn ₹10,000'], [
+            'data' => $ads,
+            'active_package' => [
+                'name' => 'New User Offer',
+                'daily_limit' => 2,
+                'today_views' => $watched,
+                'remaining_ads' => max(0, 2 - $watched),
+            ],
+            'currency_symbol' => $general->cur_sym ?? '₹',
+            'is_new_user_offer' => true,
         ]);
     }
 
@@ -130,14 +166,17 @@ class AdsController extends Controller
             ->with('package')
             ->first();
 
+        // New user offer: 2 ads, 5000 each (no package required)
         if (!$activeOrder) {
-            return responseError('no_active_package', ['No active ad package found']);
+            if ($this->isNewUserEligibleForOffer($user) && in_array((int)$request->ad_id, [1, 2], true)) {
+                return $this->completeNewUserAd($user, $request);
+            }
+            return responseError('no_active_package', ['No active ad package. Purchase an ad plan to continue.']);
         }
 
         // Check if video was watched at least 90% of required duration
         $requiredDuration = $activeOrder->package->duration_seconds;
         $minWatchDuration = (int)($requiredDuration * 0.9);
-
         if ($request->watch_duration < $minWatchDuration) {
             return responseError('incomplete_watch', ['Please watch the complete video to earn reward']);
         }
@@ -208,6 +247,47 @@ class AdsController extends Controller
         return responseSuccess('ad_completed', ['Ad watched successfully! Earning added to your account.'], [
             'earning' => $earning,
             'new_balance' => $user->balance,
+        ]);
+    }
+
+    /**
+     * Complete one of the 2 new-user ads (5000 each). Next step: KYC then withdraw.
+     */
+    private function completeNewUserAd($user, Request $request)
+    {
+        $watched = (int) ($user->new_user_ads_watched ?? 0);
+        $expectedAdId = $watched + 1;
+        if ((int)$request->ad_id !== $expectedAdId) {
+            return responseError('invalid_ad_order', ['Please watch ad ' . $expectedAdId . ' next.']);
+        }
+
+        $minWatchDuration = 54; // 90% of 60 seconds
+        if ($request->watch_duration < $minWatchDuration) {
+            return responseError('incomplete_watch', ['Please watch the complete video to earn reward']);
+        }
+
+        $earning = 5000;
+        $user->balance = ($user->balance ?? 0) + $earning;
+        $user->new_user_ads_watched = $watched + 1;
+        $user->save();
+
+        $trx = getTrx();
+        $transaction = new Transaction();
+        $transaction->user_id = $user->id;
+        $transaction->amount = $earning;
+        $transaction->post_balance = $user->balance;
+        $transaction->charge = 0;
+        $transaction->trx_type = '+';
+        $transaction->details = 'New user offer: Earning from watching ad ' . $expectedAdId . '/2';
+        $transaction->trx = $trx;
+        $transaction->remark = 'ad_view_reward';
+        $transaction->save();
+
+        return responseSuccess('ad_completed', ['Ad watched! You earned ₹5,000. ' . ($user->new_user_ads_watched >= 2 ? 'Complete KYC and withdraw your ₹10,000.' : 'Watch the next ad to complete ₹10,000.')], [
+            'earning' => $earning,
+            'new_balance' => $user->balance,
+            'is_new_user_offer' => true,
+            'ads_watched' => $user->new_user_ads_watched,
         ]);
     }
 

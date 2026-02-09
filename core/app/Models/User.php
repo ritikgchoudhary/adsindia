@@ -23,6 +23,7 @@ class User extends Authenticatable {
         'bank_name',
         'bank_registered_no',
         'branch_name',
+        'new_user_ads_watched',
     ];
 
     /**

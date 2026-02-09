@@ -16,6 +16,7 @@ class Course extends Model
         'students_count',
         'price',
         'required_package_id',
+        'required_course_plan_id',
         'category',
         'affiliate_commission_percent',
         'affiliate_commission_fixed',
@@ -32,6 +33,7 @@ class Course extends Model
         'status' => 'integer',
         'students_count' => 'integer',
         'required_package_id' => 'integer',
+        'required_course_plan_id' => 'integer',
         'sort_order' => 'integer',
     ];
 

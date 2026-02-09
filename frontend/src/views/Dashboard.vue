@@ -1,54 +1,24 @@
 <template>
-  <DashboardLayout page-title="Dashboard">
-    <div class="notice"></div>
-    
+  <DashboardLayout page-title="Dashboard" :dark-theme="true">
+    <div class="dashboard-dark-wrap">
     <!-- KYC Alerts -->
     <div v-if="user.kv === 0 && user.kyc_rejection_reason" class="mb-4">
-      <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border-radius: 15px !important;">
-        <div class="card-body p-4 text-white">
-          <div class="d-flex align-items-start gap-3">
-            <div class="flex-shrink-0">
-              <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                <i class="fa-solid fa-circle-exclamation fa-2x"></i>
-              </div>
-            </div>
-            <div class="flex-grow-1">
-              <h4 class="mb-2" style="font-weight: 700; font-size: 20px;">KYC Documents Rejected</h4>
-              <p class="mb-3 opacity-90" style="font-size: 15px;">
-                {{ kycContent?.reject || 'Your KYC documents have been rejected. Please review the reason and resubmit.' }}
-              </p>
-              <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-light btn-sm px-3" data-bs-toggle="modal" href="#kycRejectionReason" style="border-radius: 8px; font-weight: 600;">
-                  <i class="fas fa-info-circle me-1"></i>Show Reason
-                </a>
-                <router-link class="btn btn-light btn-sm px-3" to="/user/kyc-form" style="border-radius: 8px; font-weight: 600;">
-                  <i class="fas fa-redo me-1"></i>Re-submit Documents
-                </router-link>
-                <router-link class="btn btn-light btn-sm px-3" to="/user/kyc-data" style="border-radius: 8px; font-weight: 600;">
-                  <i class="fas fa-eye me-1"></i>See KYC Data
-                </router-link>
-              </div>
-            </div>
+      <div class="kyc-banner-wrapper kyc-banner-rejected shadow-sm">
+        <div class="d-flex align-items-center gap-4">
+          <div class="icon-box-high">
+            <i class="fa-solid fa-circle-exclamation text-danger fa-2x"></i>
           </div>
-        </div>
-      </div>
-    </div>
-    <div v-else-if="user.kv === 2" class="mb-4">
-      <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 15px !important;">
-        <div class="card-body p-4 text-white">
-          <div class="d-flex align-items-start gap-3">
-            <div class="flex-shrink-0">
-              <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
-              </div>
-            </div>
-            <div class="flex-grow-1">
-              <h4 class="mb-2" style="font-weight: 700; font-size: 20px;">KYC Verification Pending</h4>
-              <p class="mb-3 opacity-90" style="font-size: 15px;">
-                {{ kycContent?.pending || 'Your KYC documents are under review. We will notify you once the verification is complete.' }}
-              </p>
-              <router-link class="btn btn-light btn-sm px-3" to="/user/kyc-data" style="border-radius: 8px; font-weight: 600;">
-                <i class="fas fa-eye me-1"></i>See KYC Data
+          <div class="flex-grow-1" style="min-width: 0;">
+            <h4 class="kyc-text-title" style="color: #0f172a; font-weight: 800; font-size: 1.5rem;">KYC Documents Rejected</h4>
+            <p class="kyc-text-desc mb-3" style="color: #1e293b; font-weight: 600; line-height: 1.65;">
+              {{ kycContent?.reject || 'Your KYC documents have been rejected. Please review the reason and resubmit.' }}
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn-premium btn-primary-premium" data-bs-toggle="modal" data-bs-target="#kycRejectionReason">
+                <i class="fas fa-info-circle"></i> Show Reason
+              </button>
+              <router-link class="btn-premium" style="background: white !important; border: 1px solid #e2e8f0 !important; color: #000000 !important;" to="/user/kyc-form">
+                <i class="fas fa-redo"></i> Re-submit
               </router-link>
             </div>
           </div>
@@ -56,264 +26,167 @@
       </div>
     </div>
 
-    <!-- Ads Income / Earning Dashboard Section -->
-    <div class="row gy-4 mb-4">
+    <div v-else-if="user.kv === 2" class="mb-4">
+      <div class="kyc-banner-wrapper shadow-sm">
+        <div class="d-flex align-items-center gap-4">
+          <div class="icon-box-high kyc-pending-icon">
+            <i class="fas fa-spinner fa-spin fa-2x" style="color: #b45309;"></i>
+          </div>
+          <div class="flex-grow-1" style="min-width: 0;">
+            <h4 class="kyc-text-title" style="color: #0f172a; font-weight: 800; font-size: 1.5rem;">KYC Verification Pending</h4>
+            <p class="kyc-text-desc mb-3" style="color: #1e293b; font-weight: 600; line-height: 1.65; max-width: 100%;">
+              {{ kycContent?.pending || 'Your KYC verification is being reviewed. We might need some additional information. You will get an email update soon. In the meantime, explore our platform with limited features.' }}
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+              <router-link to="/user/kyc-data" class="btn-premium btn-primary-premium">
+                <i class="fas fa-eye"></i> See Data
+              </router-link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Ads Income / Earning Section -->
+    <div class="row g-4 mb-4">
       <div class="col-12">
-        <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px !important;">
-          <div class="card-header bg-transparent border-0 pb-0" style="border-radius: 15px 15px 0 0 !important;">
-            <h5 class="mb-0" style="font-weight: 600; color: #2d3748;">
-              <i class="fas fa-chart-line me-2 text-primary"></i>Ads Income / Earning Dashboard
-            </h5>
-          </div>
-          <div class="card-body pt-3">
-            <div class="row gy-4">
-              <div class="col-xl-3 col-md-6">
-                <div class="dashboard-widget earning-card earning-card-today border-0 shadow-sm" style="border-radius: 12px !important; transition: all 0.3s ease !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: none !important;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 30px rgba(102, 126, 234, 0.4)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)'">
-                  <div class="dashboard-widget__icon flex-center" style="background: rgba(255,255,255,0.25) !important; border-radius: 12px !important; width: 60px !important; height: 60px !important; margin: 0 !important;">
-                    <i class="fas fa-calendar-day text-white" style="font-size: 24px !important;"></i>
-                  </div>
-                  <div class="dashboard-widget__content" style="color: white !important;">
-                    <h3 class="dashboard-widget__number text-white" style="font-weight: 700 !important; font-size: 28px !important; color: white !important; margin-bottom: 8px !important;">{{ currencySymbol }}{{ formatAmount(earnings.today) }}</h3>
-                    <span class="dashboard-widget__text text-white" style="font-size: 14px !important; color: rgba(255,255,255,0.9) !important; font-weight: 500 !important;">Today Earning</span>
-                  </div>
-                </div>
+        <div class="mb-4">
+          <h5 class="dashboard-dark-title">
+            <i class="fas fa-chart-line me-2"></i>Ads Income / Earning Dashboard
+          </h5>
+        </div>
+        <div class="row g-4">
+          <div v-for="(val, key) in { today: 'Today Earning', last7Days: 'Last 7 Days Earning', last30Days: 'Last 30 Days Earning', total: 'Total Earning' }" :key="key" class="col-xl-3 col-md-6">
+            <div class="gradient-card p-4 h-100" :class="key === 'today' ? 'gradient-purple' : key === 'last7Days' ? 'gradient-pink' : key === 'last30Days' ? 'gradient-blue' : 'gradient-green'">
+              <div class="gradient-card-icon mb-3">
+                <i :class="key === 'total' ? 'fas fa-coins' : 'fas fa-calendar-alt'"></i>
               </div>
-              <div class="col-xl-3 col-md-6">
-                <div class="dashboard-widget earning-card earning-card-week border-0 shadow-sm" style="border-radius: 12px !important; transition: all 0.3s ease !important; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important; border: none !important;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 30px rgba(240, 147, 251, 0.4)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)'">
-                  <div class="dashboard-widget__icon flex-center" style="background: rgba(255,255,255,0.25) !important; border-radius: 12px !important; width: 60px !important; height: 60px !important; margin: 0 !important;">
-                    <i class="fas fa-calendar-week text-white" style="font-size: 24px !important;"></i>
-                  </div>
-                  <div class="dashboard-widget__content" style="color: white !important;">
-                    <h3 class="dashboard-widget__number text-white" style="font-weight: 700 !important; font-size: 28px !important; color: white !important; margin-bottom: 8px !important;">{{ currencySymbol }}{{ formatAmount(earnings.last7Days) }}</h3>
-                    <span class="dashboard-widget__text text-white" style="font-size: 14px !important; color: rgba(255,255,255,0.9) !important; font-weight: 500 !important;">Last 7 Days Earning</span>
-                  </div>
-                </div>
-              </div>
-              <div class="col-xl-3 col-md-6">
-                <div class="dashboard-widget earning-card earning-card-month border-0 shadow-sm" style="border-radius: 12px !important; transition: all 0.3s ease !important; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important; border: none !important;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 30px rgba(79, 172, 254, 0.4)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)'">
-                  <div class="dashboard-widget__icon flex-center" style="background: rgba(255,255,255,0.25) !important; border-radius: 12px !important; width: 60px !important; height: 60px !important; margin: 0 !important;">
-                    <i class="fas fa-calendar-alt text-white" style="font-size: 24px !important;"></i>
-                  </div>
-                  <div class="dashboard-widget__content" style="color: white !important;">
-                    <h3 class="dashboard-widget__number text-white" style="font-weight: 700 !important; font-size: 28px !important; color: white !important; margin-bottom: 8px !important;">{{ currencySymbol }}{{ formatAmount(earnings.last30Days) }}</h3>
-                    <span class="dashboard-widget__text text-white" style="font-size: 14px !important; color: rgba(255,255,255,0.9) !important; font-weight: 500 !important;">Last 30 Days Earning</span>
-                  </div>
-                </div>
-              </div>
-              <div class="col-xl-3 col-md-6">
-                <div class="dashboard-widget earning-card earning-card-total border-0 shadow-sm" style="border-radius: 12px !important; transition: all 0.3s ease !important; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important; border: none !important;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 30px rgba(67, 233, 123, 0.4)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)'">
-                  <div class="dashboard-widget__icon flex-center" style="background: rgba(255,255,255,0.25) !important; border-radius: 12px !important; width: 60px !important; height: 60px !important; margin: 0 !important;">
-                    <i class="fas fa-coins text-white" style="font-size: 24px !important;"></i>
-                  </div>
-                  <div class="dashboard-widget__content" style="color: white !important;">
-                    <h3 class="dashboard-widget__number text-white" style="font-weight: 700 !important; font-size: 28px !important; color: white !important; margin-bottom: 8px !important;">{{ currencySymbol }}{{ formatAmount(earnings.total) }}</h3>
-                    <span class="dashboard-widget__text text-white" style="font-size: 14px !important; color: rgba(255,255,255,0.9) !important; font-weight: 500 !important;">Total Earning</span>
-                  </div>
-                </div>
-              </div>
+              <span class="gradient-card-label">{{ val }}</span>
+              <h3 class="gradient-card-value m-0">{{ currencySymbol }}{{ formatAmount(earnings[key] ?? 0) }}</h3>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="row gy-4 justify-content-center">
-      <div class="col-xxl-9 col-lg-12">
-        <div class="row gy-4 justify-content-center">
-          <!-- Balance Widget -->
-          <div class="col-xl-3 col-md-4 col-sm-6">
-            <div class="dashboard-widget border-0 shadow-sm" style="border-radius: 12px; transition: all 0.3s ease; background: #fff;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)'">
-              <div class="dashboard-widget__icon flex-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; width: 60px; height: 60px;">
-                <i class="las la-coins text-white" style="font-size: 24px;"></i>
+    <div class="row g-4 scroll-contain">
+      <div class="col-xxl-9 col-lg-8">
+        <div class="row g-4 mb-4">
+          <!-- Balance Widgets - gradient cards -->
+          <div v-for="(stat, index) in [
+            { label: 'Balance', value: widget.balance, icon: 'fas fa-wallet', grad: 'gradient-purple' },
+            { label: 'Affiliate Income', value: widget.total_earning, icon: 'fas fa-tags', grad: 'gradient-pink' },
+            { label: 'Ads Income', value: widget.ads_income || 0, icon: 'fas fa-video', grad: 'gradient-blue' },
+            { label: 'Withdrawal', value: widget.total_withdraw, icon: 'fas fa-hand-holding-usd', grad: 'gradient-green' }
+          ]" :key="index" class="col-xl-3 col-md-6">
+            <div class="gradient-card p-4 h-100" :class="stat.grad">
+              <div class="gradient-card-icon mb-3">
+                <i :class="stat.icon"></i>
               </div>
-              <div class="dashboard-widget__content">
-                <h3 class="dashboard-widget__number" style="font-weight: 700; font-size: 24px; color: #2d3748;">
-                  {{ currencySymbol }}{{ formatAmount(widget.balance) }}
-                </h3>
-                <span class="dashboard-widget__text" style="color: #718096; font-size: 14px;"> Balance </span>
-              </div>
+              <span class="gradient-card-label">{{ stat.label }}</span>
+              <h3 class="gradient-card-value m-0">{{ currencySymbol }}{{ formatAmount(stat.value ?? 0) }}</h3>
             </div>
           </div>
 
-          <div class="col-xl-3 col-md-4 col-sm-6">
-            <div class="dashboard-widget border-0 shadow-sm" style="border-radius: 12px; transition: all 0.3s ease; background: #fff;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)'">
-              <div class="dashboard-widget__icon flex-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px; width: 60px; height: 60px;">
-                <i class="fas fa-money-bill-wave-alt text-white" style="font-size: 24px;"></i>
+          <!-- Transaction Table -->
+          <div class="col-12 mt-4">
+            <div class="dashboard-table-card p-0">
+              <div class="p-4 border-bottom d-flex justify-content-between align-items-center dashboard-table-header">
+                <h5 class="dashboard-dark-title mb-0">
+                  <i class="fas fa-sync-alt me-2"></i>Latest Transactions
+                </h5>
+                <router-link to="/user/transactions" class="dashboard-view-all-link">
+                  View All <i class="fas fa-arrow-right ms-1"></i>
+                </router-link>
               </div>
-              <div class="dashboard-widget__content">
-                <h3 class="dashboard-widget__number" style="font-weight: 700; font-size: 24px; color: #2d3748;"> {{ currencySymbol }}{{ formatAmount(widget.total_earning) }} </h3>
-                <span class="dashboard-widget__text" style="color: #718096; font-size: 14px;"> Affiliate Income </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-xl-3 col-md-4 col-sm-6">
-            <div class="dashboard-widget border-0 shadow-sm" style="border-radius: 12px; transition: all 0.3s ease; background: #fff;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)'">
-              <div class="dashboard-widget__icon flex-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 12px; width: 60px; height: 60px;">
-                <i class="fas fa-video text-white" style="font-size: 24px;"></i>
-              </div>
-              <div class="dashboard-widget__content">
-                <h3 class="dashboard-widget__number" style="font-weight: 700; font-size: 24px; color: #2d3748;"> {{ currencySymbol }}{{ formatAmount(widget.ads_income || 0) }} </h3>
-                <span class="dashboard-widget__text" style="color: #718096; font-size: 14px;"> Ads Income </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-xl-3 col-md-4 col-sm-6">
-            <div class="dashboard-widget border-0 shadow-sm" style="border-radius: 12px; transition: all 0.3s ease; background: #fff;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)'">
-              <div class="dashboard-widget__icon flex-center" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-radius: 12px; width: 60px; height: 60px;">
-                <i class="fas fa-hand-holding-usd text-white" style="font-size: 24px;"></i>
-              </div>
-              <div class="dashboard-widget__content">
-                <h3 class="dashboard-widget__number" style="font-weight: 700; font-size: 24px; color: #2d3748;"> {{ currencySymbol }}{{ formatAmount(widget.total_withdraw) }} </h3>
-                <span class="dashboard-widget__text" style="color: #718096; font-size: 14px;"> Withdrawan </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12">
-            <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px !important;">
-              <div class="card-header bg-transparent border-0 pb-0" style="border-radius: 15px 15px 0 0 !important;">
-                <div class="d-flex justify-content-between align-items-center">
-                  <h5 class="mb-0" style="font-weight: 700; color: #1a202c; font-size: 18px;">
-                    <i class="fas fa-history me-2" style="color: #667eea;"></i>Latest Transactions
-                  </h5>
-                  <router-link to="/user/transactions" class="btn btn-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; padding: 8px 16px; transition: all 0.3s ease;"
-                    @mouseenter="$event.currentTarget.style.transform = 'translateX(3px)'; $event.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)'"
-                    @mouseleave="$event.currentTarget.style.transform = 'translateX(0)'; $event.currentTarget.style.boxShadow = 'none'">
-                    View All <i class="fas fa-arrow-right ms-1"></i>
-                  </router-link>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="table-responsive">
-                  <table class="table table--responsive--lg mb-0" style="border-collapse: separate; border-spacing: 0;">
-                    <thead>
-                      <tr style="background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); border-radius: 10px;">
-                        <th style="padding: 18px 15px; font-weight: 700; color: #ffffff; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Trx</th>
-                        <th style="padding: 18px 15px; font-weight: 700; color: #ffffff; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Transacted</th>
-                        <th style="padding: 18px 15px; font-weight: 700; color: #ffffff; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
-                        <th style="padding: 18px 15px; font-weight: 700; color: #ffffff; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Post Balance</th>
-                        <th style="padding: 18px 15px; font-weight: 700; color: #ffffff; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Detail</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <template v-for="trx in transactions" :key="trx?.id || Math.random()">
-                        <tr v-if="trx && trx.id" style="border-bottom: 1px solid #e2e8f0; transition: all 0.2s ease; background: #ffffff;" @mouseenter="$event.currentTarget.style.backgroundColor = '#f7fafc'; $event.currentTarget.style.transform = 'scale(1.01)'" @mouseleave="$event.currentTarget.style.backgroundColor = '#ffffff'; $event.currentTarget.style.transform = 'scale(1)'">
-                          <td style="padding: 18px 15px; border: none;">
-                            <div><strong style="color: #1a202c; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700;">{{ trx.trx }}</strong></div>
-                          </td>
-                          <td style="padding: 18px 15px; border: none;">
-                            <div>
-                              <span style="color: #2d3748; font-weight: 600; font-size: 14px;">{{ formatDateTime(trx.created_at) }}</span><br>
-                              <small style="font-size: 12px; color: #718096;">{{ trx.created_at_human }}</small>
-                            </div>
-                          </td>
-                          <td style="padding: 18px 15px; border: none;">
-                            <div>
-                              <span class="fw-bold" :class="trx.trx_type === '+' ? 'text-success' : 'text-danger'" style="font-size: 16px; font-weight: 700;">
-                                {{ trx.trx_type }} {{ currencySymbol }}{{ formatAmount(trx.amount) }}
-                              </span>
-                            </div>
-                          </td>
-                          <td style="padding: 18px 15px; border: none;">
-                            <div style="color: #2d3748; font-weight: 600; font-size: 14px;">{{ currencySymbol }}{{ formatAmount(trx.post_balance) }}</div>
-                          </td>
-                          <td style="padding: 18px 15px; border: none;">
-                            <div style="color: #4a5568; font-size: 14px; font-weight: 500;">{{ trx.details }}</div>
-                          </td>
-                        </tr>
-                      </template>
-                      <tr v-if="transactions.length === 0">
-                        <td colspan="5" class="text-center py-5" style="border: none; background: #f7fafc;">
-                          <i class="fas fa-inbox fa-3x mb-3" style="color: #cbd5e0;"></i>
-                          <p class="mb-0" style="color: #718096; font-weight: 500;">No transactions found</p>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+              <div class="table-responsive">
+                <table class="premium-table">
+                  <thead>
+                    <tr>
+                      <th>Transaction ID</th>
+                      <th>Date & Time</th>
+                      <th>Amount</th>
+                      <th>Balance</th>
+                      <th>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="trx in transactions" :key="trx?.id || Math.random()">
+                      <td><span class="trx-id">{{ trx.trx }}</span></td>
+                      <td>
+                        <div class="fw-bold trx-date">{{ formatDateTime(trx.created_at) }}</div>
+                        <div class="small trx-date-muted">{{ trx.created_at_human }}</div>
+                      </td>
+                      <td>
+                        <span class="fw-bold" :class="trx.trx_type === '+' ? 'text-success' : 'text-danger'">
+                          {{ trx.trx_type }}{{ currencySymbol }}{{ formatAmount(trx.amount) }}
+                        </span>
+                      </td>
+                      <td><span class="fw-bold trx-balance">{{ currencySymbol }}{{ formatAmount(trx.post_balance) }}</span></td>
+                      <td class="small trx-details">{{ trx.details }}</td>
+                    </tr>
+                    <tr v-if="transactions.length === 0">
+                      <td colspan="5" class="text-center py-5">
+                        <div class="opacity-25 mb-3"><i class="fas fa-inbox fa-3x"></i></div>
+                        <p class="dashboard-empty-state" style="color: #475569; font-weight: 600;">No transactions found</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-        <div class="col-xxl-3 col-lg-12 ps-xxl-4">
-          <div class="dashboard-sidebar">
-            <!-- Quick Withdraw Card -->
-            <div class="dashboard-sidebar__item mb-4">
-              <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body p-4 text-white">
-                  <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                      <h6 class="mb-1" style="font-weight: 600; font-size: 14px; opacity: 0.9;">Available Balance</h6>
-                      <h4 class="mb-0" style="font-weight: 700; font-size: 28px;">{{ currencySymbol }}{{ formatAmount(widget.balance) }}</h4>
-                    </div>
-                    <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                      <i class="fas fa-wallet fa-2x"></i>
-                    </div>
-                  </div>
-                  <router-link to="/user/withdraw" class="btn w-100 btn-lg" style="background: #1a202c; color: white; border: none; border-radius: 12px; font-weight: 700; padding: 12px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.2);"
-                    @mouseenter="$event.currentTarget.style.background = '#2d3748'; $event.currentTarget.style.transform = 'translateY(-2px)'; $event.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.3)'"
-                    @mouseleave="$event.currentTarget.style.background = '#1a202c'; $event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'">
-                    <i class="fas fa-hand-holding-usd me-2"></i>Withdraw Money
-                  </router-link>
-                </div>
-              </div>
+      <!-- Right Sidebar -->
+      <div class="col-xxl-3 col-lg-4">
+        <div class="dashboard-sidebar">
+          <!-- Available Balance Card -->
+          <div class="gradient-card balance-card-right p-4 text-center mb-4 gradient-purple">
+            <div class="gradient-card-icon mx-auto mb-3">
+              <i class="fas fa-wallet"></i>
             </div>
-
-            <!-- Suggest for you Card -->
-            <div class="dashboard-sidebar__item">
-              <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px !important; max-height: 600px; overflow-y: auto;">
-                <div class="card-header bg-transparent border-0 pb-0" style="border-radius: 15px 15px 0 0 !important; position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 15px;">
-                  <h5 class="mb-0" style="font-weight: 700; color: #1a202c; font-size: 16px;">
-                    <i class="fas fa-lightbulb me-2" style="color: #fbbf24;"></i>Suggest for you
-                  </h5>
-                </div>
-                <div class="card-body pt-3" style="padding-top: 0 !important;">
-                  <template v-for="campaign in campaigns" :key="campaign?.id || Math.random()">
-                    <div v-if="campaign && campaign.id" class="latest-item mb-3 p-3 border rounded" style="border-radius: 10px !important; transition: all 0.3s ease; border-color: #e2e8f0 !important;" @mouseenter="$event.currentTarget.style.backgroundColor = '#f7fafc'; $event.currentTarget.style.transform = 'translateX(5px)'" @mouseleave="$event.currentTarget.style.backgroundColor = 'transparent'; $event.currentTarget.style.transform = 'translateX(0)'">
-                      <div class="latest-item__thumb mb-2">
-                        <router-link :to="`/campaign/${campaign.slug}`">
-                          <img :src="campaign.image" class="fit-image rounded" alt="img" style="border-radius: 8px; width: 100%; height: 120px; object-fit: cover;">
-                        </router-link>
-                      </div>
-                      <div class="latest-item__content">
-                        <h6 class="latest-item__title mb-2" style="font-weight: 600; color: #2d3748; font-size: 14px;">
-                          <router-link :to="`/campaign/${campaign.slug}`" style="color: #2d3748; text-decoration: none;">
-                            {{ campaign.title }}
-                          </router-link>
-                        </h6>
-                        <router-link :to="`/campaign/${campaign.slug}`" class="btn btn-sm btn-primary w-100" style="border-radius: 8px; font-weight: 600;">
-                          <i class="fas fa-coins me-1"></i>{{ currencySymbol }}{{ formatAmount(campaign.payout_per_conversion) }}
-                        </router-link>
-                      </div>
-                    </div>
-                  </template>
-                  <div v-if="campaigns.length === 0" class="text-center py-4">
-                    <i class="fas fa-inbox fa-2x mb-2 opacity-50" style="color: #cbd5e0;"></i>
-                    <p class="text-muted mb-0" style="font-size: 14px;">No campaigns found</p>
-                  </div>
-                </div>
-              </div>
+            <p class="gradient-card-label mb-2">Available Balance</p>
+            <h2 class="gradient-card-value balance-amount mb-4">{{ currencySymbol }}{{ formatAmount(widget.balance) }}</h2>
+            <router-link to="/user/withdraw" class="btn-withdraw-money">
+              <i class="fas fa-hand-holding-usd me-2"></i> Withdraw Money
+            </router-link>
+          </div>
+          <!-- Suggest for you -->
+          <div class="dashboard-table-card p-4">
+            <h6 class="dashboard-dark-title mb-3">
+              <i class="fas fa-lightbulb me-2"></i>Suggest for you
+            </h6>
+            <div class="text-center py-4">
+              <i class="fas fa-folder-open fa-2x mb-2 suggest-icon"></i>
+              <p class="suggest-empty mb-0">No campaigns found</p>
             </div>
           </div>
         </div>
+      </div>
+    </div>
     </div>
 
-    <div v-if="user.kv === 0 && user.kyc_rejection_reason" class="modal fade custom--modal" id="kycRejectionReason">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">KYC Document Rejection Reason</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>{{ user.kyc_rejection_reason }}</p>
-                </div>
+    <!-- KYC Modal -->
+    <div class="modal fade" id="kycRejectionReason" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+          <div class="modal-header border-0 p-4 pb-0">
+            <h5 class="modal-heading m-0"><i class="fas fa-info-circle me-2"></i>Rejection Reason</h5>
+            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="p-3 bg-light rounded-3" style="font-size: 1.1rem; line-height: 1.6; color: #334155; font-weight: 500;">
+              {{ user.kyc_rejection_reason }}
             </div>
+          </div>
+          <div class="modal-footer border-0 p-4 pt-0">
+            <button type="button" class="btn-premium w-100 justify-content-center" style="background: #f1f5f9; color: #475569;" data-bs-dismiss="modal">Got it</button>
+          </div>
         </div>
+      </div>
     </div>
   </DashboardLayout>
 </template>
@@ -345,7 +218,6 @@ export default {
       total: 0
     })
     const transactions = ref([])
-    const campaigns = ref([])
     const user = ref({})
     const kycContent = ref(null)
     const currencySymbol = ref('$')
@@ -373,19 +245,22 @@ export default {
       loading.value = true
       try {
         const response = await userService.getDashboard()
-        if (response.status === 'success' && response.data) {
-          widget.value = response.data.widget || {}
-          earnings.value = response.data.earnings || {
+        const payload = response.data?.data || response.data
+        if (response.status === 'success' && payload) {
+          widget.value = payload.widget || {}
+          const w = payload.widget || {}
+          const defaultEarnings = {
             today: 0,
             last7Days: 0,
             last30Days: 0,
-            total: widget.value.total_earning || 0
+            total: Number(w.total_earning) + Number(w.ads_income || 0) || 0
           }
-          transactions.value = response.data.transactions || []
-          campaigns.value = response.data.campaigns || []
-          user.value = response.data.user || {}
-          kycContent.value = response.data.kyc_content
-          currencySymbol.value = response.data.currency_symbol || '$'
+          earnings.value = payload.earnings || defaultEarnings
+          transactions.value = payload.transactions || []
+          campaigns.value = payload.campaigns || []
+          user.value = payload.user || {}
+          kycContent.value = payload.kyc_content
+          currencySymbol.value = payload.currency_symbol || '₹'
         }
       } catch (error) {
         console.error('Error loading dashboard:', error)
@@ -428,7 +303,6 @@ export default {
       widget,
       earnings,
       transactions,
-      campaigns,
       user,
       kycContent,
       currencySymbol,
@@ -438,195 +312,586 @@ export default {
   }
 }
 </script>
-
 <style scoped>
-/* Dashboard UI Improvements */
-.dashboard-widget {
-  padding: 24px 20px !important;
+/* Bulletproof Dashboard Layout Architecture */
+.dashboard {
+  font-family: 'Outfit', sans-serif;
+  background-color: #f8fafc !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  overflow: hidden !important; 
   display: flex !important;
-  align-items: center !important;
-  gap: 20px !important;
-  min-height: 120px;
 }
 
-.dashboard-widget__icon {
-  flex-shrink: 0 !important;
+.dashboard__inner {
   display: flex !important;
-  align-items: center !important;
+  flex-direction: row !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Sidebar: Fixed & Push */
+:deep(.sidebar-menu) {
+  width: 280px !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+  flex: 0 0 280px !important;
+  height: 100vh !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  background-color: #1e293b !important;
+}
+
+/* Content Area: Flexible but Contained */
+.dashboard__right {
+  flex: 1 !important;
+  min-width: 0 !important;
+  background-color: #f8fafc !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.dashboard-body {
+  padding: 2.5rem !important;
+  width: 100% !important;
+  flex: 1 !important;
+}
+
+:deep(.page-header-title) {
+  font-weight: 800 !important;
+  font-size: 2.25rem !important;
+  color: #0f172a !important;
+  margin-bottom: 2.5rem !important;
+  letter-spacing: -0.04em !important;
+}
+
+/* IMPORTANT: Fix for Icons (Font Awesome) */
+:deep(.fas), :deep(.fab), :deep(.far), :deep(.fa), :deep(.la), :deep(.las) {
+  font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands", "Line Awesome Free", "Line Awesome Brands", "FontAwesome" !important;
+  font-weight: 900 !important;
+  display: inline-block !important;
+  font-style: normal !important;
+}
+
+/* Sidebar Logo Styling */
+:deep(.sidebar-logo) {
+  background: white !important;
+  padding: 1.5rem !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  margin-bottom: 1.5rem !important;
+  display: flex !important;
   justify-content: center !important;
 }
 
-.dashboard-widget__content {
-  flex: 1;
+@media (max-width: 991px) {
+  :deep(.sidebar-menu) {
+    position: fixed !important;
+    left: -280px !important;
+    transition: left 0.3s ease !important;
+  }
+  :deep(.sidebar-menu.show-sidebar) {
+    left: 0 !important;
+  }
+  .dashboard-body {
+    padding: 1.5rem !important;
+  }
 }
 
-.dashboard-widget__number {
-  margin-bottom: 8px !important;
-  line-height: 1.2;
+/* Dashboard View - Dark theme wrap */
+.dashboard-dark-wrap {
+  width: 100%;
+  min-height: 400px;
+  padding-bottom: 2rem;
+}
+.dashboard-dark-title {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif !important;
+}
+.dashboard-dark-title i {
+  color: #60a5fa !important;
 }
 
-.dashboard-widget__text {
-  font-size: 14px !important;
-  opacity: 0.9;
+/* Gradient cards (earning + balance widgets) */
+.gradient-card {
+  border-radius: 16px !important;
+  border: none !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+  color: #ffffff !important;
+  min-height: 140px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+.gradient-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.2) !important;
+}
+.gradient-card-label {
+  color: rgba(255,255,255,0.9) !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  display: block !important;
+  margin-bottom: 0.35rem !important;
+  font-family: 'Outfit', system-ui, sans-serif !important;
+}
+.gradient-card-value {
+  color: #ffffff !important;
+  font-size: 1.6rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  font-family: 'Outfit', system-ui, sans-serif !important;
+  word-break: break-all !important;
+}
+.gradient-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.2) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.25rem !important;
+  flex-shrink: 0 !important;
+}
+.gradient-purple {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+}
+.gradient-pink {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%) !important;
+}
+.gradient-blue {
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%) !important;
+}
+.gradient-green {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
 }
 
-/* Earning Cards - Gradient Backgrounds */
-.earning-card-today {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
+/* Right side balance card */
+.balance-card-right {
+  min-height: 200px !important;
+}
+.balance-card-right .balance-amount {
+  font-size: 1.75rem !important;
+  word-break: break-all !important;
+}
+.btn-withdraw-money {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 48px !important;
+  padding: 12px 1rem !important;
+  background: rgba(30, 27, 75, 0.95) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  text-decoration: none !important;
+  border: none !important;
+  transition: all 0.2s !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+.btn-withdraw-money:hover {
+  background: #1e1b4b !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
 }
 
-.earning-card-week {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
-  color: white !important;
+/* Suggest for you card */
+.dashboard-table-card.p-4 {
+  min-height: 120px !important;
 }
 
-.earning-card-month {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
-  color: white !important;
-}
-
-.earning-card-total {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
-  color: white !important;
-}
-
-/* Balance Widgets - White Cards */
-.balance-widget {
+/* Table card - light background */
+.dashboard-table-card {
   background: #ffffff !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+  border: 1px solid #e2e8f0 !important;
+  overflow: hidden !important;
+}
+.dashboard-table-header {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
+}
+.dashboard-table-card .dashboard-dark-title {
+  color: #0f172a !important;
+}
+.dashboard-table-card .dashboard-dark-title i {
+  color: #4f46e5 !important;
+}
+.dashboard-view-all-link {
+  color: #3b82f6 !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+}
+.dashboard-view-all-link:hover {
+  color: #2563eb !important;
+}
+.trx-date, .trx-balance {
+  color: #1e293b !important;
+}
+.trx-date-muted, .trx-details {
+  color: #64748b !important;
+}
+
+/* Suggest for you */
+.suggest-icon {
+  color: #94a3b8 !important;
+}
+.suggest-empty {
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+
+/* Dashboard View - Proper Spacing & Visibility */
+.dashboard-view {
+  font-family: 'Outfit', sans-serif;
+  color: #0f172a !important;
+}
+
+
+/* Page Section Headers - high contrast */
+.section-main-title {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 1.5rem !important;
+  margin-bottom: 0.5rem !important;
+  display: block !important;
+}
+
+.section-sub-title {
+  color: #334155 !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  display: block !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.dashboard-empty-state {
+  color: #475569 !important;
+}
+
+/* Stat Cards Refinement */
+.premium-card {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+  padding: 1.5rem !important;
+}
+
+.icon-box-high {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  margin-bottom: 1rem !important;
+}
+
+.icon-blue { background: #eef2ff !important; color: #4f46e5 !important; }
+.icon-pink { background: #fdf2f8 !important; color: #db2777 !important; }
+.icon-cyan { background: #ecfeff !important; color: #0891b2 !important; }
+.icon-green { background: #ecfdf5 !important; color: #10b981 !important; }
+
+.stat-label {
+  color: #64748b !important;
+  font-size: 0.85rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  margin-bottom: 0.5rem !important;
+  display: block !important;
+}
+
+.stat-value {
+  color: #0f172a !important;
+  font-size: 1.85rem !important;
+  font-weight: 950 !important;
+}
+
+/* KYC Banner - readable text, no truncation */
+.kyc-banner-wrapper {
+  background: #fffbeb !important;
+  border: 1px solid #fde68a !important;
+  border-left: 10px solid #f59e0b !important;
+  border-radius: 16px !important;
+  padding: 1.5rem 1.5rem 1.5rem 1.25rem !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+@media (max-width: 768px) {
+  .kyc-banner-wrapper {
+    padding: 1.25rem !important;
+  }
+  .kyc-banner-wrapper .d-flex.gap-4 {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+}
+
+.kyc-banner-wrapper .kyc-text-title {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+.kyc-banner-wrapper .kyc-text-desc {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  max-width: 100% !important;
+}
+
+.kyc-banner-rejected {
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  border-left: 10px solid #ef4444 !important;
+}
+
+.kyc-banner-wrapper .flex-grow-1 {
+  overflow: visible !important;
+  min-width: 0 !important;
+}
+
+.kyc-text-title {
+  color: #0f172a !important;
+  font-weight: 950 !important;
+  font-size: 1.75rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.kyc-text-desc {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  line-height: 1.65 !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  word-wrap: break-word !important;
+}
+
+/* KYC Pending: icon clearly visible on yellow banner */
+.kyc-pending-icon {
+  background: rgba(180, 83, 9, 0.15) !important;
+  color: #b45309 !important;
+}
+.kyc-pending-icon i {
+  color: #b45309 !important;
+}
+
+/* Ads Earning Overview - strong readable colors */
+.ads-overview-title {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 1.5rem !important;
+}
+.ads-overview-subtitle {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+}
+.ads-card-label {
+  color: #475569 !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  font-size: 0.85rem !important;
+}
+.ads-card-value {
+  color: #0f172a !important;
+  font-size: 1.85rem !important;
+  font-weight: 900 !important;
+}
+
+/* Table - Clear Contrast */
+.premium-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Outfit', system-ui, sans-serif !important;
+}
+
+.premium-table th {
+  background: #f8fafc !important;
+  color: #334155 !important;
+  font-weight: 700 !important;
+  padding: 1rem 0.75rem !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.03em !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  white-space: nowrap !important;
+}
+
+.premium-table td {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  padding: 1rem 0.75rem !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  vertical-align: middle !important;
+}
+
+.premium-table tbody tr:hover {
+  background: #f8fafc !important;
+}
+
+.table-responsive {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Balance Card (Right Side) */
+.balance-card-inner {
+  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%) !important;
+  color: white !important;
   border: none !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
 }
 
-.balance-widget:hover {
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-  transform: translateY(-5px) !important;
-}
-
-/* Card Improvements */
-.card.custom--card {
-  border: none !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
-  transition: all 0.3s ease !important;
-}
-
-.card.custom--card:hover {
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Table Improvements */
-.table thead tr {
-  background: #f7fafc !important;
-}
-
-.table tbody tr {
-  transition: all 0.2s ease !important;
-}
-
-.table tbody tr:hover {
-  background-color: #f7fafc !important;
-}
-
-/* Campaign Cards */
-.latest-item {
-  transition: all 0.3s ease !important;
-  border-radius: 10px !important;
-}
-
-.latest-item:hover {
-  background-color: #f7fafc !important;
-  transform: translateX(5px) !important;
-}
-
-/* Welcome Banner */
-.welcome-banner {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  border-radius: 15px !important;
+.balance-card-inner * {
   color: white !important;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .dashboard-widget {
-    padding: 16px !important;
-    min-height: 100px;
+.balance-card-inner .icon-box-high {
+  background: rgba(255,255,255,0.2) !important;
+}
+
+.scroll-contain {
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+/* Responsive grid */
+@media (max-width: 576px) {
+  .gradient-card {
+    min-height: 120px !important;
   }
-  
-  .dashboard-widget__number {
-    font-size: 20px !important;
+  .gradient-card-value {
+    font-size: 1.35rem !important;
+  }
+  .dashboard-table-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
   }
 }
 
-/* Fix scrolling issues - Ensure page can scroll */
-:deep(.dashboard-body) {
-  overflow-y: visible !important;
-  overflow-x: hidden !important;
-  height: auto !important;
-  min-height: auto !important;
-  max-height: none !important;
-  position: relative !important;
+/* ========== Headings – always visible ========== */
+.dashboard-section-heading {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+}
+.dashboard-section-heading i {
+  color: #4f46e5 !important;
+}
+.dashboard-table-header {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
 }
 
-:deep(.dashboard__right) {
-  overflow-y: visible !important;
-  overflow-x: hidden !important;
-  height: auto !important;
-  position: relative !important;
+/* ========== Table & body text – readable ========== */
+.dashboard-cell-strong {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+.dashboard-cell-muted {
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+.dashboard-view p,
+.dashboard-body p,
+.dashboard-view .small {
+  color: #334155 !important;
+  font-weight: 500 !important;
 }
 
-:deep(.dashboard) {
-  overflow: visible !important;
-  height: auto !important;
-  position: relative !important;
+/* ========== Buttons – clear color & text ========== */
+.btn-premium {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.6rem 1.25rem !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  border-radius: 12px !important;
+  text-decoration: none !important;
+  transition: all 0.2s !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+.btn-primary-premium {
+  background: #4f46e5 !important;
+  color: #ffffff !important;
+}
+.btn-primary-premium:hover {
+  background: #4338ca !important;
+  color: #ffffff !important;
+}
+.btn-premium:not(.btn-primary-premium):not(.btn-withdraw) {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.btn-premium:not(.btn-primary-premium):not(.btn-withdraw):hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+.btn-withdraw {
+  background: #ffffff !important;
+  color: #4f46e5 !important;
+  font-weight: 700 !important;
+  padding: 12px 1rem !important;
+}
+.btn-withdraw:hover {
+  background: #eef2ff !important;
+  color: #4338ca !important;
+}
+/* Modal heading */
+.modal-heading {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+}
+.modal-heading i {
+  color: #dc2626 !important;
 }
 
-:deep(.dashboard__inner) {
-  overflow: visible !important;
-  height: auto !important;
-  position: relative !important;
+/* Modal button */
+button.btn-premium[data-bs-dismiss="modal"] {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+}
+button.btn-premium[data-bs-dismiss="modal"]:hover {
+  background: #1e293b !important;
+  color: #ffffff !important;
 }
 
-:deep(.container-fluid) {
-  overflow: visible !important;
-  height: auto !important;
+/* Balance card right sidebar */
+.balance-card-label {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+.balance-card-amount {
+  font-size: 1.75rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
 }
 
-/* Ensure body and html can scroll */
-:deep(html) {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  height: auto !important;
-}
-
-:deep(body) {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  height: auto !important;
-  position: relative !important;
-}
-
-/* Right Sidebar Card Styling */
-.dashboard-sidebar .card {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e0 #f7fafc;
-}
-
-.dashboard-sidebar .card::-webkit-scrollbar {
-  width: 6px;
-}
-
-.dashboard-sidebar .card::-webkit-scrollbar-track {
-  background: #f7fafc;
-  border-radius: 10px;
-}
-
-.dashboard-sidebar .card::-webkit-scrollbar-thumb {
-  background: #cbd5e0;
-  border-radius: 10px;
-}
-
-.dashboard-sidebar .card::-webkit-scrollbar-thumb:hover {
-  background: #a0aec0;
+:deep(*) {
+  font-family: inherit; /* Don't force global font on everything to save icons */
 }
 </style>
-

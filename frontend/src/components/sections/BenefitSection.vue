@@ -17,7 +17,8 @@
 
           <ul class="benefit-list" v-if="benefitItems.length">
             <li v-for="(item, index) in benefitItems" :key="index" class="benefit-list__item">
-              {{ item.benefit }}
+              <span v-if="item.data_values">{{ item.data_values.benefit }}</span>
+              <span v-else>{{ item.benefit }}</span>
             </li>
           </ul>
         </div>
@@ -25,7 +26,7 @@
           <div class="benefit-wrapper">
             <div class="benefit-wrapper__shape"></div>
             <div class="benefit-thumb-item">
-              <div class="thumb">
+              <div class="thumb" v-if="benefitContent.thumb">
                 <img :src="$getImage('benefit_section', benefitContent.thumb)" alt="Benefit Image" class="fit-image">
               </div>
             </div>
