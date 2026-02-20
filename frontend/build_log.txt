@@ -1,0 +1,30 @@
+
+> a22-com-frontend@1.0.0 build
+> vite build && node copy-landing-assets.js
+
+vite v5.4.21 building for production...
+<script src="/assets/global/js/jquery-3.7.1.min.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/assets/global/js/bootstrap.bundle.min.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/assets/global/js/select2.min.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/assets/templates/basic/js/slick.min.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/assets/templates/basic/js/main.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/assets/global/js/iziToast.min.js"> in "/index.html" can't be bundled without type="module" attribute
+
+/assets/global/css/bootstrap.min.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/global/css/all.min.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/global/css/line-awesome.min.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/global/css/select2.min.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/templates/basic/css/slick.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/templates/basic/css/custom.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/templates/basic/css/main.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/global/css/iziToast.min.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/global/css/iziToast_custom.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+transforming...

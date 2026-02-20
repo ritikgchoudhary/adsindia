@@ -110,7 +110,11 @@ class WithdrawalController extends Controller {
     }
 
     public function reject(Request $request) {
-        $request->validate(['id' => 'required|integer']);
+        $request->validate([
+            'id' => 'required|integer',
+            // Rejection reason is mandatory (shown to user)
+            'details' => 'required|string|max:1000',
+        ]);
         $withdraw = Withdrawal::where('id', $request->id)->where('status', Status::PAYMENT_PENDING)->with('user')->firstOrFail();
 
         $withdraw->status         = Status::PAYMENT_REJECT;

@@ -11,6 +11,8 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: true,
+    strictPort: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
@@ -19,12 +21,17 @@ export default defineConfig({
       }
     }
   },
+  define: {
+    __BUILD_ID__: JSON.stringify(new Date().toISOString().slice(0, 19).replace('T', ' ')),
+  },
   build: {
     outDir: '../public',
-    emptyOutDir: false,
+    emptyOutDir: true,
     rollupOptions: {
       output: {
-        assetFileNames: 'assets/[name].[ext]'
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js'
       }
     },
     assetsInlineLimit: 0,

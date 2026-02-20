@@ -1,65 +1,88 @@
 <template>
-  <DashboardLayout page-title="Upgrade Package">
-    <div class="row">
+  <DashboardLayout page-title="Upgrade Package" :dark-theme="true">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-6">
       <template v-for="pkg in packages" :key="pkg?.id || Math.random()">
-        <div v-if="pkg && pkg.id" class="col-lg-4 col-md-6 mb-4">
-          <div class="card custom--card" :class="{ 
-            'border-warning': pkg.is_recommended,
-            'border-success': pkg.id === currentPackageId,
-            'opacity-75': !canUpgradeTo(pkg.id)
-          }">
-          <div v-if="pkg.is_recommended" class="card-header bg-warning text-dark">
-            <h5 class="mb-0"><i class="fas fa-star me-2"></i>Recommended</h5>
+        <div v-if="pkg && pkg.id" 
+          class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-transition-all tw-duration-300 tw-flex tw-flex-col tw-h-full hover:-tw-translate-y-1 hover:tw-shadow-xl"
+          :class="{ 
+            'tw-border-amber-400 tw-ring-2 tw-ring-amber-400/20': pkg.is_recommended,
+            'tw-border-emerald-500 tw-ring-2 tw-ring-emerald-500/20': pkg.id === currentPackageId,
+            'tw-opacity-75 tw-grayscale-[0.5]': !canUpgradeTo(pkg.id) && pkg.id !== currentPackageId,
+            'tw-border-slate-200': !pkg.is_recommended && pkg.id !== currentPackageId
+          }"
+        >
+          <div v-if="pkg.is_recommended" class="tw-bg-amber-400 tw-text-indigo-900 tw-py-2 tw-px-4 tw-text-center tw-font-bold tw-text-sm tw-uppercase tw-tracking-wide">
+            <i class="fas fa-star tw-mr-1"></i>Recommended
           </div>
-          <div v-if="pkg.id === currentPackageId" class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Current Package</h5>
+          <div v-if="pkg.id === currentPackageId" class="tw-bg-emerald-500 tw-text-white tw-py-2 tw-px-4 tw-text-center tw-font-bold tw-text-sm tw-uppercase tw-tracking-wide">
+            <i class="fas fa-check-circle tw-mr-1"></i>Current Package
           </div>
-          <div class="card-body">
-            <h4 class="text-center mb-3">{{ pkg.name }}</h4>
-            <div class="text-center mb-3">
-              <h2 class="text-primary">{{ currencySymbol }}{{ formatAmount(pkg.price) }}</h2>
-              <p class="text-muted mb-0">{{ pkg.validity_days }} Days Validity</p>
+
+          <div class="tw-p-6 tw-flex-1 tw-flex tw-flex-col">
+            <h4 class="tw-text-xl tw-font-bold tw-text-slate-900 tw-text-center tw-mb-4">{{ pkg.name }}</h4>
+            
+            <div class="tw-text-center tw-mb-6">
+              <h2 class="tw-text-3xl tw-font-extrabold tw-text-indigo-600 tw-mb-1">{{ currencySymbol }}{{ formatAmount(pkg.price) }}</h2>
+              <p class="tw-text-slate-400 tw-text-sm tw-m-0">{{ pkg.validity_days }} Days Validity</p>
             </div>
             
             <!-- Remaining Amount Display -->
-            <div v-if="pkg.id !== currentPackageId && canUpgradeTo(pkg.id)" class="alert alert-info mb-3 text-center">
-              <strong>Pay Only:</strong><br>
-              <span class="h4 text-primary">{{ currencySymbol }}{{ formatAmount(getRemainingAmount(pkg.id)) }}</span>
-              <small class="d-block text-muted mt-1">
+            <div v-if="pkg.id !== currentPackageId && canUpgradeTo(pkg.id)" class="tw-bg-indigo-50 tw-border tw-border-indigo-100 tw-rounded-xl tw-p-4 tw-mb-6 tw-text-center">
+              <strong class="tw-block tw-text-indigo-900 tw-text-sm tw-uppercase tw-tracking-wide tw-mb-1">Pay Only</strong>
+              <span class="tw-block tw-text-2xl tw-font-bold tw-text-indigo-600 tw-mb-1">{{ currencySymbol }}{{ formatAmount(getRemainingAmount(pkg.id)) }}</span>
+              <small class="tw-block tw-text-slate-500 tw-text-xs">
                 (Full Price: {{ currencySymbol }}{{ formatAmount(pkg.price) }})
               </small>
             </div>
             
-            <ul class="list-unstyled mb-4">
-              <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Daily Ads Limit: {{ pkg.daily_ads_limit }}</li>
-              <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Earning Per Ad: {{ currencySymbol }}{{ formatAmount(pkg.earning_per_ad) }}</li>
-              <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Max Daily Earning: {{ currencySymbol }}{{ formatAmount(pkg.max_daily_earning) }}</li>
-              <li v-for="feature in pkg.features" :key="feature" class="mb-2">
-                <i class="fas fa-check text-success me-2"></i>{{ feature }}
+            <ul class="tw-space-y-3 tw-mb-8 tw-flex-1">
+              <li class="tw-flex tw-items-start tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-5 tw-h-5 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-[10px]"></i>
+                </div>
+                <span class="tw-text-slate-600 tw-text-sm">Daily Ads Limit: <strong>{{ pkg.daily_ads_limit }}</strong></span>
+              </li>
+              <li class="tw-flex tw-items-start tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-5 tw-h-5 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-[10px]"></i>
+                </div>
+                <span class="tw-text-slate-600 tw-text-sm">Earning Per Ad: <strong>{{ currencySymbol }}{{ formatAmount(pkg.earning_per_ad) }}</strong></span>
+              </li>
+              <li class="tw-flex tw-items-start tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-5 tw-h-5 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-[10px]"></i>
+                </div>
+                <span class="tw-text-slate-600 tw-text-sm">Max Daily Earning: <strong>{{ currencySymbol }}{{ formatAmount(pkg.max_daily_earning) }}</strong></span>
+              </li>
+              <li v-for="feature in pkg.features" :key="feature" class="tw-flex tw-items-start tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-5 tw-h-5 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-[10px]"></i>
+                </div>
+                <span class="tw-text-slate-600 tw-text-sm">{{ feature }}</span>
               </li>
             </ul>
             
             <button 
-              class="btn w-100" 
+              type="button"
+              class="tw-w-full tw-py-3 tw-font-bold tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-gap-2 tw-transition-all tw-border-0 tw-cursor-pointer" 
               :class="{
-                'btn-success': pkg.id === currentPackageId,
-                'btn--base': canUpgradeTo(pkg.id) && pkg.id !== currentPackageId,
-                'btn-secondary': !canUpgradeTo(pkg.id) && pkg.id !== currentPackageId
+                'tw-bg-emerald-100 tw-text-emerald-700 tw-cursor-not-allowed': pkg.id === currentPackageId,
+                'tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-shadow-lg tw-shadow-indigo-500/20': canUpgradeTo(pkg.id) && pkg.id !== currentPackageId,
+                'tw-bg-slate-100 tw-text-slate-400 tw-cursor-not-allowed': !canUpgradeTo(pkg.id) && pkg.id !== currentPackageId
               }"
               @click="purchasePackage(pkg)" 
               :disabled="!canUpgradeTo(pkg.id) || pkg.id === currentPackageId">
               <span v-if="pkg.id === currentPackageId">
-                <i class="fas fa-check-circle me-2"></i>Current Package
+                <i class="fas fa-check-circle"></i> Current Package
               </span>
               <span v-else-if="canUpgradeTo(pkg.id)">
-                <i class="fas fa-arrow-up me-2"></i>Upgrade Now (Pay {{ currencySymbol }}{{ formatAmount(getRemainingAmount(pkg.id)) }})
+                <i class="fas fa-arrow-up"></i> Upgrade Now
               </span>
               <span v-else>
-                <i class="fas fa-lock me-2"></i>Upgrade Previous Package First
+                <i class="fas fa-lock"></i> Locked
               </span>
             </button>
           </div>
-        </div>
         </div>
       </template>
     </div>
@@ -67,7 +90,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import DashboardLayout from '../../components/DashboardLayout.vue'
 import api from '../../services/api'
 

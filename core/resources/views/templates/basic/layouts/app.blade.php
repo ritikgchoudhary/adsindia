@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>{{ gs()->siteName(__($pageTitle)) }}</title>
+    <title>Ads Skill India - {{ __($pageTitle) }}</title>
 
     @include('partials.seo')
 
@@ -17,8 +17,8 @@
 
     @stack('style-lib')
 
-    <link rel="stylesheet" href="{{ asset($activeTemplateTrue . 'css/custom.css') }}">
-    <link rel="stylesheet" href="{{ asset($activeTemplateTrue . 'css/main.css') }}">
+    <link rel="stylesheet" href="{{ asset($activeTemplateTrue . 'css/custom.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset($activeTemplateTrue . 'css/main.css') }}?v={{ time() }}">
 
     @stack('style')
 
@@ -30,14 +30,6 @@
 <body>
     @stack('fbComment')
 
-    <div class="preloader">
-        <div class="lds-roller">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
-    </div>
     <div class="body-overlay"></div>
     <div class="sidebar-overlay"></div>
     <a class="scroll-top"><i class="fas fa-angle-double-up"></i></a>

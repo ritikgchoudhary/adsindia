@@ -1,44 +1,144 @@
 <template>
-  <DashboardLayout page-title="Ad Plans">
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="alert alert-info" role="alert" style="background: #e0f2fe; border-color: #0ea5e9; color: #0c4a6e;">
-          <h5 class="alert-heading" style="color: #075985; font-weight: 600;"><i class="fas fa-info-circle me-2"></i>How Ad Plans Work</h5>
-          <p class="mb-0" style="color: #0c4a6e;">Purchase an ad plan to unlock the ability to watch ads and earn money. After purchase, you can watch {{ currencySymbol }}5,000 - {{ currencySymbol }}6,000 per ad. Each ad takes 1 minute to watch completely.</p>
+  <DashboardLayout page-title="Ad Plans" :dark-theme="true">
+    
+    <!-- Terms gate -->
+    <div class="tw-mb-6">
+      <div class="tw-bg-amber-500/10 tw-border tw-border-amber-500/30 tw-rounded-2xl tw-p-5">
+        <div class="tw-text-white tw-font-bold tw-mb-2">
+          <i class="fas fa-check-circle tw-mr-2 tw-text-amber-400"></i>Terms Required
+        </div>
+        <label class="tw-flex tw-items-start tw-gap-3 tw-cursor-pointer tw-select-none">
+          <input type="checkbox" v-model="termsAccepted" class="tw-mt-1">
+          <span class="tw-text-white/90 tw-text-sm tw-leading-relaxed">
+            I agree with
+            <router-link to="/policy/terms-of-service" class="tw-font-bold tw-text-indigo-200 tw-no-underline hover:tw-underline">Terms of Service</router-link>
+            and
+            <router-link to="/policy/privacy-policy" class="tw-font-bold tw-text-indigo-200 tw-no-underline hover:tw-underline">Privacy Policy</router-link>
+            before payment.
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Info Alert (Master Admin editable) -->
+    <div class="tw-mb-8">
+      <div class="tw-bg-slate-800/80 tw-backdrop-blur-sm tw-border tw-border-slate-700 tw-rounded-2xl tw-p-6 tw-flex tw-items-start tw-gap-4 tw-shadow-xl">
+        <div class="tw-bg-indigo-500/20 tw-rounded-full tw-p-3 tw-text-indigo-400 tw-shrink-0">
+          <i class="fas fa-info-circle tw-text-2xl"></i>
+        </div>
+        <div>
+          <h5 class="tw-text-white tw-font-bold tw-text-xl tw-mb-3">{{ infoTitle }}</h5>
+          <p v-if="infoDescription" class="tw-text-slate-300 tw-m-0 tw-leading-relaxed tw-mb-3" v-html="infoDescription"></p>
+          <p v-else class="tw-text-slate-300 tw-m-0 tw-leading-relaxed tw-mb-3">
+            Purchase an ad plan to unlock the ability to watch ads and earn money. After purchase, go to <strong class="tw-text-white">Ads Work</strong> page to watch ads.
+          </p>
+          <ul class="tw-text-slate-300 tw-m-0 tw-pl-5 tw-space-y-2">
+            <li v-for="(b, idx) in infoBullets" :key="idx" v-html="renderBullet(b)"></li>
+          </ul>
         </div>
       </div>
     </div>
-    <div class="row">
+
+    <!-- Plans Grid -->
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 tw-gap-6">
       <template v-for="plan in adPlans" :key="plan?.id || Math.random()">
-        <div v-if="plan && plan.id" class="col-lg-3 col-md-6 mb-4">
-          <div class="card custom--card h-100" :class="{ 'border-warning': plan.is_recommended, 'border-success': activePlanId === plan.id }" style="border-radius: 15px; transition: all 0.3s ease; background: #fff; border: 1px solid #e2e8f0;" @mouseenter="$event.currentTarget.style.transform = 'translateY(-5px)'; $event.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'" @mouseleave="$event.currentTarget.style.transform = 'translateY(0)'; $event.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)'">
-            <div v-if="activePlanId === plan.id" class="card-header bg-success text-white text-center" style="border-radius: 15px 15px 0 0;">
-              <strong><i class="fas fa-check-circle me-2"></i>Activated</strong>
+        <div v-if="plan && plan.id" 
+          class="tw-bg-white tw-rounded-2xl tw-border tw-transition-all tw-duration-300 tw-flex tw-flex-col tw-h-full tw-overflow-hidden tw-relative"
+          :class="[
+            activePlanId === plan.id ? 'tw-border-emerald-500 tw-shadow-lg tw-shadow-emerald-500/10' : (plan.is_recommended ? 'tw-border-amber-400 tw-shadow-lg tw-shadow-amber-500/10' : 'tw-border-slate-200 tw-shadow-sm hover:tw-shadow-xl hover:-tw-translate-y-1')
+          ]"
+        >
+          <!-- Badge -->
+          <div v-if="activePlanId === plan.id" class="tw-bg-emerald-500 tw-text-white tw-text-center tw-py-2 tw-font-bold tw-text-sm tw-uppercase tw-tracking-wide">
+            <i class="fas fa-check-circle tw-mr-1"></i> Activated
+          </div>
+          <div v-else-if="plan.is_recommended" class="tw-bg-amber-400 tw-text-white tw-text-center tw-py-2 tw-font-bold tw-text-sm tw-uppercase tw-tracking-wide">
+            <i class="fas fa-star tw-mr-1"></i> Recommended
+          </div>
+
+          <div class="tw-p-6 tw-flex-1 tw-flex tw-flex-col">
+            <div class="tw-text-center tw-mb-6">
+              <h4 class="tw-text-xl tw-font-bold tw-text-slate-800 tw-mb-2">{{ plan.name }}</h4>
+              <h2 class="tw-text-3xl tw-font-extrabold tw-text-indigo-600">{{ currencySymbol }}{{ formatAmount(plan.price) }}</h2>
             </div>
-            <div v-else-if="plan.is_recommended" class="card-header bg-warning text-dark text-center" style="border-radius: 15px 15px 0 0;">
-              <strong><i class="fas fa-star me-2"></i>Recommended</strong>
-            </div>
-            <div class="card-body text-center" style="background: #fff; color: #2d3748;">
-              <h4 class="mb-3" style="font-weight: 600; color: #2d3748;">{{ plan.name }}</h4>
-              <h2 class="mb-3" style="font-weight: 700; color: #667eea;">{{ currencySymbol }}{{ formatAmount(plan.price) }}</h2>
-              <ul class="list-unstyled mb-4 text-start" style="color: #4a5568;">
-                <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i><strong style="color: #2d3748;">{{ plan.ads_count }}</strong> <span style="color: #4a5568;">Ads Available</span></li>
-                <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i>Valid for <strong style="color: #2d3748;">{{ plan.validity_days }} days</strong></li>
-                <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i><strong style="color: #2d3748;">{{ plan.daily_ad_limit }}</strong> <span style="color: #4a5568;">ads per day</span></li>
-                <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i>Earning per ad: <strong style="color: #2d3748;">{{ currencySymbol }}{{ formatAmount(plan.reward_per_ad) }}</strong></li>
-                <li class="mb-2" style="color: #4a5568;"><i class="fas fa-check text-success me-2"></i>Total Potential: <strong style="color: #2d3748;">{{ currencySymbol }}{{ formatAmount(plan.total_earning) }}</strong></li>
-              </ul>
-              <button v-if="activePlanId === plan.id" class="btn btn-success w-100 btn-lg" disabled style="border-radius: 10px; font-weight: 600; color: #fff; cursor: not-allowed;">
-                <i class="fas fa-check-circle me-2"></i>Activated
+            
+            <ul class="tw-space-y-3 tw-mb-8 tw-flex-1">
+              <li class="tw-flex tw-items-start tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-xs"></i>
+                </div>
+                <span class="tw-text-slate-600 tw-text-sm">
+                  <strong class="tw-text-slate-800">{{ plan.ads_count }}</strong> Ads Available
+                </span>
+              </li>
+              <li class="tw-flex tw-items-start tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-xs"></i>
+                </div>
+                <span class="tw-text-slate-600 tw-text-sm">
+                  Valid for <strong class="tw-text-slate-800">{{ plan.validity_days }} days</strong>
+                </span>
+              </li>
+              <li class="tw-flex tw-items-start tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-xs"></i>
+                </div>
+                <span class="tw-text-slate-600 tw-text-sm">
+                  <strong class="tw-text-slate-800">{{ plan.daily_ad_limit }}</strong> ads per day
+                </span>
+              </li>
+              <li class="tw-flex tw-items-start tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-xs"></i>
+                </div>
+                <span class="tw-text-slate-600 tw-text-sm">
+                  Earnings are credited after each completed ad.
+                </span>
+              </li>
+              <li class="tw-flex tw-items-start tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-xs"></i>
+                </div>
+                <span class="tw-text-slate-600 tw-text-sm">
+                  Total Potential:
+                  <strong class="tw-text-slate-800">
+                    {{ currencySymbol }}{{ formatAmount(plan.total_earning_min ?? 0) }} - {{ currencySymbol }}{{ formatAmount(plan.total_earning_max ?? plan.total_earning ?? 0) }}
+                  </strong>
+                </span>
+              </li>
+            </ul>
+
+            <div v-if="activePlanId === plan.id" class="tw-grid tw-grid-cols-1 tw-gap-3">
+              <button
+                class="tw-w-full tw-py-3 tw-bg-emerald-500 tw-text-white tw-font-bold tw-rounded-xl tw-cursor-not-allowed tw-opacity-90 tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0"
+                disabled
+              >
+                <i class="fas fa-check-circle"></i> Activated
               </button>
-              <button v-else class="btn btn--base w-100 btn-lg" @click="initiatePayment(plan)" style="border-radius: 10px; font-weight: 600; color: #fff;">
-                <i class="fas fa-shopping-cart me-2"></i>Buy Now
+              <button
+                type="button"
+                @click="initiatePayment(plan)"
+                :disabled="!termsAccepted"
+                class="tw-w-full tw-py-3 tw-bg-white tw-text-emerald-700 tw-font-bold tw-rounded-xl tw-border tw-border-emerald-200 hover:tw-border-emerald-300 hover:tw-bg-emerald-50 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2"
+                :class="!termsAccepted ? 'tw-opacity-60 tw-cursor-not-allowed' : ''"
+              >
+                <i class="fas fa-pen"></i> Edit / Renew Plan
               </button>
             </div>
+            <button
+              v-else
+              @click="initiatePayment(plan)"
+              :disabled="!termsAccepted"
+              class="tw-w-full tw-py-3 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-indigo-500/20 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-cursor-pointer"
+              :class="!termsAccepted ? 'tw-bg-slate-500 hover:tw-bg-slate-500 tw-opacity-70 tw-cursor-not-allowed tw-shadow-none' : ''"
+            >
+              <i class="fas fa-shopping-cart"></i> Buy Now
+            </button>
           </div>
         </div>
       </template>
     </div>
+
   </DashboardLayout>
 </template>
 
@@ -55,23 +155,44 @@ export default {
   setup() {
     const adPlans = ref([])
     const currencySymbol = ref('₹')
-    const activePlanId = ref(null) // Store active plan ID
+    const activePlanId = ref(null)
+    const termsAccepted = ref(false)
+    const infoTitle = ref('How Ad Plans Work')
+    const infoDescription = ref('')
+    const infoBullets = ref([
+      'Each ad takes <strong class="tw-text-white">1 minute</strong> to watch completely',
+      'Higher plans = More ads per day = More earning potential',
+      'Plans are valid for specific number of days (7-60 days)'
+    ])
+    const rewardMin = ref(1000)
+    const rewardMax = ref(5000)
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
       return parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
     }
 
-    const initiatePayment = (plan) => {
+    const initiatePayment = async (plan) => {
       if (!plan || !plan.id) {
         console.error('Invalid plan:', plan)
         return
       }
-      
-      // Redirect to payment page
-      window.location.href = `/user/ad-plans/payment?plan_id=${plan.id}&amount=${plan.price}&plan_name=${encodeURIComponent(plan.name)}`
-    }
 
+      if (!termsAccepted.value) {
+        if (window.notify) window.notify('error', 'Please accept Terms & Privacy Policy before payment.')
+        return
+      }
+
+      // Open same-site redirect page in new tab (reliable in all browsers)
+      const redirectUrl = `/user/payment-redirect?flow=ad_plan&plan_id=${encodeURIComponent(plan.id)}&amount=${plan.price}&plan_name=${encodeURIComponent(plan.name)}&back=${encodeURIComponent('/user/ad-plans')}`
+      const w = window.open(redirectUrl, '_blank')
+      if (!w) {
+        // Popup blocked: fallback to same tab
+        window.location.href = redirectUrl
+      } else if (window.notify) {
+        window.notify('info', 'Payment tab opened. Complete payment to activate your ad plan.')
+      }
+    }
 
     const fetchAdPlans = async () => {
       try {
@@ -79,24 +200,33 @@ export default {
         console.log('Ad Plans API Response:', response.data)
         
         if (response.data.status === 'success') {
-          // Response structure: { status: 'success', data: { data: [...], currency_symbol: '₹' } }
           const responseData = response.data.data || {}
           const plans = responseData.data || []
           
           adPlans.value = Array.isArray(plans) ? plans : []
           currencySymbol.value = responseData.currency_symbol || '₹'
-          
-          console.log('Loaded ad plans:', adPlans.value)
-          console.log('Currency symbol:', currencySymbol.value)
+
+          const ui = responseData.ui || {}
+          if (ui && typeof ui === 'object') {
+            if (ui.info_title) infoTitle.value = ui.info_title
+            if (ui.info_description) infoDescription.value = ui.info_description
+            if (Array.isArray(ui.info_bullets) && ui.info_bullets.length) {
+              // Always remove the old "Earn {reward_min}-{reward_max} per ad" line from UI
+              infoBullets.value = ui.info_bullets.filter(b => {
+                const s = String(b || '')
+                return !(s.includes('{reward_min}') || s.includes('{reward_max}'))
+              })
+            }
+            if (ui.reward_min != null) rewardMin.value = Number(ui.reward_min) || rewardMin.value
+            if (ui.reward_max != null) rewardMax.value = Number(ui.reward_max) || rewardMax.value
+          }
           
           if (adPlans.value.length === 0) {
-            console.warn('No ad plans found in response')
             if (window.notify) {
               window.notify('warning', 'No ad plans available at the moment')
             }
           }
         } else {
-          console.error('API returned error:', response.data)
           const errorMsg = response.data.message?.error?.[0] || response.data.message?.success?.[0] || 'Failed to load ad plans'
           if (window.notify) {
             window.notify('error', errorMsg)
@@ -104,7 +234,6 @@ export default {
         }
       } catch (error) {
         console.error('Error loading ad plans:', error)
-        console.error('Error response:', error.response?.data)
         const errorMsg = error.response?.data?.message?.error?.[0] || error.response?.data?.message || 'Failed to load ad plans. Please try again.'
         if (window.notify) {
           window.notify('error', errorMsg)
@@ -112,28 +241,34 @@ export default {
       }
     }
 
+    const renderBullet = (b) => {
+      const s = String(b || '')
+      return s
+        .replaceAll('{currency}', currencySymbol.value || '₹')
+        .replaceAll('{reward_min}', formatAmount(rewardMin.value))
+        .replaceAll('{reward_max}', formatAmount(rewardMax.value))
+    }
+
     const fetchActivePlan = async () => {
       try {
-        const response = await api.get('/packages/current')
-        console.log('Current package API response:', response.data)
-        if (response.data.status === 'success' && response.data.data?.data) {
-          const currentPackage = response.data.data.data
-          // Match by package ID
-          activePlanId.value = currentPackage.id || null
-          console.log('Active plan ID:', activePlanId.value)
+        // Fetch ads/work to get the active ad package info
+        const response = await api.get('/ads/work')
+        if (response.data.status === 'success' && response.data.data?.active_package) {
+          const activePackage = response.data.data.active_package
+          // Backend provides package_id (AdPackage ID) for active plan
+          activePlanId.value = activePackage.package_id || null
         } else {
           activePlanId.value = null
         }
       } catch (error) {
         console.error('Error fetching active plan:', error)
-        // If no active plan, that's okay
         activePlanId.value = null
       }
     }
 
-    onMounted(() => {
-      fetchAdPlans()
-      fetchActivePlan()
+    onMounted(async () => {
+      await fetchAdPlans()
+      await fetchActivePlan()
     })
 
     return {
@@ -141,7 +276,12 @@ export default {
       currencySymbol,
       formatAmount,
       initiatePayment,
-      activePlanId
+      activePlanId,
+      termsAccepted,
+      infoTitle,
+      infoDescription,
+      infoBullets,
+      renderBullet,
     }
   }
 }

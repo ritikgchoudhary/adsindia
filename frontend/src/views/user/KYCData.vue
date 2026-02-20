@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout page-title="KYC Data">
+  <DashboardLayout page-title="KYC Data" :dark-theme="true">
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-lg-12">

@@ -1,19 +1,78 @@
 <template>
-  <DashboardLayout page-title="Payment Gateway">
+  <DashboardLayout page-title="Payment Gateway" :dark-theme="true">
     <div class="row justify-content-center">
       <div class="col-lg-6 col-md-8">
         <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px;">
           <div class="card-body p-5 text-center">
+            <!-- Gateway Selection -->
+            <div v-if="paymentStatus === 'selecting_gateway'">
+              <div class="mb-4 text-center">
+                <h4 class="mb-3" style="color: #2d3748; font-weight: 600;">Select Payment Gateway</h4>
+                <p class="text-muted mb-4">Choose a gateway to complete your payment of {{ currencySymbol }}{{ formatAmount(paymentAmount) }}</p>
+                
+                <div class="tw-grid tw-grid-cols-1 tw-gap-4 tw-mt-6">
+                  <!-- WatchPay Option -->
+                  <div 
+                    @click="selectedGateway = 'watchpay'"
+                    class="tw-p-4 tw-border-2 tw-rounded-xl tw-cursor-pointer tw-transition-all tw-flex tw-items-center tw-justify-between"
+                    :class="selectedGateway === 'watchpay' ? 'tw-border-indigo-600 tw-bg-indigo-50' : 'tw-border-slate-200 hover:tw-border-slate-300'"
+                  >
+                    <div class="tw-flex tw-items-center">
+                      <div class="tw-w-12 tw-h-12 tw-bg-white tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-mr-4 tw-shadow-sm">
+                        <i class="fas fa-credit-card tw-text-indigo-600"></i>
+                      </div>
+                      <div class="tw-text-left">
+                        <div class="tw-font-bold tw-text-slate-900">WatchPay</div>
+                        <div class="tw-text-xs tw-text-slate-500">Fast & Secure UPI Payment</div>
+                      </div>
+                    </div>
+                    <div v-if="selectedGateway === 'watchpay'" class="tw-text-indigo-600">
+                      <i class="fas fa-check-circle"></i>
+                    </div>
+                  </div>
+
+                  <!-- SimplyPay Option -->
+                  <div 
+                    @click="selectedGateway = 'simplypay'"
+                    class="tw-p-4 tw-border-2 tw-rounded-xl tw-cursor-pointer tw-transition-all tw-flex tw-items-center tw-justify-between"
+                    :class="selectedGateway === 'simplypay' ? 'tw-border-indigo-600 tw-bg-indigo-50' : 'tw-border-slate-200 hover:tw-border-slate-300'"
+                  >
+                    <div class="tw-flex tw-items-center">
+                      <div class="tw-w-12 tw-h-12 tw-bg-white tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-mr-4 tw-shadow-sm">
+                        <i class="fas fa-bolt tw-text-amber-500"></i>
+                      </div>
+                      <div class="tw-text-left">
+                        <div class="tw-font-bold tw-text-slate-900">SimplyPay</div>
+                        <div class="tw-text-xs tw-text-slate-500">Premium Gateway (Recommended)</div>
+                      </div>
+                    </div>
+                    <div v-if="selectedGateway === 'simplypay'" class="tw-text-indigo-600">
+                      <i class="fas fa-check-circle"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tw-mt-8">
+                  <button 
+                    class="btn btn--base btn-lg tw-w-full" 
+                    @click="initiatePayment" 
+                    :disabled="!selectedGateway || processingPayment"
+                    style="border-radius: 10px; font-weight: 600;"
+                  >
+                    <i class="fas" :class="processingPayment ? 'fa-spinner fa-spin' : 'fa-arrow-right'"></i>
+                    {{ processingPayment ? 'Redirecting...' : 'Continue to Payment' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <!-- Payment Processing -->
             <div v-if="paymentStatus === 'processing'">
               <div class="mb-4">
-                <div class="spinner-border text-primary mb-3" role="status" style="width: 4rem; height: 4rem;">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
                 <h4 class="mb-3" style="color: #2d3748; font-weight: 600;">Processing Payment...</h4>
                 <p class="text-muted mb-4">Please wait while we process your payment</p>
-                <div class="progress mb-3" style="height: 8px; border-radius: 10px;">
-                  <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                <div class="tw-flex tw-justify-center tw-mb-4">
+                  <div class="tw-w-16 tw-h-16 tw-border-4 tw-border-indigo-600 tw-border-t-transparent tw-rounded-full tw-animate-spin"></div>
                 </div>
                 <p class="small text-muted">Amount: <strong style="color: #667eea;">{{ currencySymbol }}{{ formatAmount(paymentAmount) }}</strong></p>
                 <p class="small text-muted">Package: <strong>{{ packageName }}</strong></p>
@@ -58,12 +117,12 @@
               </div>
             </div>
 
-            <!-- Dummy Gateway Info -->
+            <!-- Gateway Info -->
             <div v-if="paymentStatus === 'processing'" class="mt-4">
               <div class="alert alert-info" role="alert" style="border-radius: 10px; background: #e0f2fe; border-color: #0ea5e9; color: #0c4a6e;">
                 <small>
                   <i class="fas fa-info-circle me-2"></i>
-                  <strong>Dummy Gateway:</strong> This is a test payment gateway. In production, this will be replaced with a real payment gateway.
+                  <strong>WatchPay:</strong> You will be redirected to complete payment. After payment, we’ll confirm automatically.
                 </small>
               </div>
             </div>
@@ -95,6 +154,8 @@ export default {
     const transactionId = ref('')
     const currencySymbol = ref('₹')
     const errorMessage = ref('')
+    const selectedGateway = ref('')
+    const processingPayment = ref(false)
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
@@ -107,14 +168,7 @@ export default {
         packageId.value = route.query.package_id || route.params.package_id
         paymentAmount.value = parseFloat(route.query.amount) || 0
         packageName.value = route.query.package_name || 'Package'
-        transactionId.value = route.query.trx || ''
-
-        console.log('Payment page loaded with params:', {
-          package_id: packageId.value,
-          amount: paymentAmount.value,
-          package_name: packageName.value,
-          trx: transactionId.value
-        })
+        transactionId.value = route.query.watchpay_trx || route.query.simplypay_trx || route.query.trx || ''
 
         if (!packageId.value) {
           paymentStatus.value = 'failed'
@@ -122,72 +176,67 @@ export default {
           return
         }
 
-        if (!transactionId.value) {
-          // If no transaction ID, we need to initiate payment first
-          console.log('No transaction ID, initiating payment...')
-          const initResponse = await api.post('/packages/purchase', {
-            package_id: packageId.value,
-            payment_method: 'gateway'
-          })
-
-          console.log('Payment initiation response:', initResponse.data)
-
-          if (initResponse.data.status === 'success' && initResponse.data.data?.trx) {
-            transactionId.value = initResponse.data.data.trx
-            paymentAmount.value = initResponse.data.data.amount || paymentAmount.value
-            packageName.value = initResponse.data.data.package_name || packageName.value
-          } else {
-            paymentStatus.value = 'failed'
-            errorMessage.value = initResponse.data.message?.error?.[0] || 'Failed to initiate payment'
-            return
+        // If we have a trx (returned from Gateway), confirm payment
+        if (transactionId.value) {
+          paymentStatus.value = 'processing'
+          const gateway = route.query.simplypay_trx ? 'simplypay' : 'watchpay'
+          const maxTries = 12
+          for (let i = 0; i < maxTries; i++) {
+            try {
+              const paymentResponse = await api.post('/packages/payment/dummy', {
+                trx: transactionId.value,
+                package_id: parseInt(packageId.value),
+                gateway: gateway
+              })
+              if (paymentResponse.data.status === 'success') {
+                paymentStatus.value = 'success'
+                if (window.notify) window.notify('success', 'Payment completed successfully!')
+                return
+              }
+            } catch (e) {
+              // ignore and retry
+            }
+            await new Promise(r => setTimeout(r, 1500))
           }
+          paymentStatus.value = 'failed'
+          errorMessage.value = 'Payment not verified yet. Please wait and try again.'
+          return
         }
 
-        // Simulate payment processing delay (2 seconds)
-        setTimeout(async () => {
-          try {
-            // Process dummy payment
-            console.log('Processing dummy payment with:', {
-              trx: transactionId.value,
-              package_id: packageId.value,
-              status: 'success'
-            })
+        // NO TRX? Then show selection UI
+        paymentStatus.value = 'selecting_gateway'
 
-            const paymentResponse = await api.post('/packages/payment/dummy', {
-              trx: transactionId.value,
-              package_id: parseInt(packageId.value),
-              status: 'success' // Always success for dummy gateway
-            })
-
-            console.log('Payment response:', paymentResponse.data)
-
-            if (paymentResponse.data.status === 'success') {
-              paymentStatus.value = 'success'
-              if (window.notify) {
-                window.notify('success', 'Payment completed successfully!')
-              }
-            } else {
-              paymentStatus.value = 'failed'
-              errorMessage.value = paymentResponse.data.message?.error?.[0] || 'Payment failed'
-            }
-          } catch (error) {
-            console.error('Payment processing error:', error)
-            console.error('Error details:', error.response?.data)
-            paymentStatus.value = 'failed'
-            errorMessage.value = error.response?.data?.message?.error?.[0] || error.response?.data?.message || 'Payment processing failed'
-            if (window.notify) {
-              window.notify('error', errorMessage.value)
-            }
-          }
-        }, 2000)
       } catch (error) {
         console.error('Payment initiation error:', error)
-        console.error('Error details:', error.response?.data)
         paymentStatus.value = 'failed'
         errorMessage.value = error.response?.data?.message?.error?.[0] || error.response?.data?.message || 'Failed to initiate payment'
         if (window.notify) {
           window.notify('error', errorMessage.value)
         }
+      }
+    }
+
+    const initiatePayment = async () => {
+      if (!selectedGateway.value) return
+      processingPayment.value = true
+      try {
+        const response = await api.post('/packages/purchase', {
+          package_id: packageId.value,
+          payment_method: 'gateway',
+          gateway: selectedGateway.value
+        })
+        if (response.data.status === 'success' && response.data.data?.payment_url) {
+          window.location.href = response.data.data.payment_url
+          return
+        }
+        throw new Error(response.data.message?.error?.[0] || 'Failed to initiate payment')
+      } catch (error) {
+        console.error('Payment initiation error:', error)
+        errorMessage.value = error.response?.data?.message?.error?.[0] || error.message || 'Failed to initiate payment'
+        paymentStatus.value = 'failed'
+        if (window.notify) window.notify('error', errorMessage.value)
+      } finally {
+        processingPayment.value = false
       }
     }
 
@@ -216,10 +265,13 @@ export default {
       transactionId,
       currencySymbol,
       errorMessage,
+      selectedGateway,
+      processingPayment,
       formatAmount,
       retryPayment,
       goBack,
-      goToPackages
+      goToPackages,
+      initiatePayment
     }
   }
 }

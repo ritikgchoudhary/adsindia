@@ -1,93 +1,121 @@
 <template>
-  <DashboardLayout page-title="Transactions">
-    <div class="row justify-content-center">
-      <div class="col-md-12">
-        <div class="show-filter mb-3 text-end">
-          <button type="button" class="btn btn--base showFilterBtn btn--sm" @click="toggleFilter">
-            <i class="las la-filter"></i> Filter
+  <DashboardLayout page-title="Transactions" :dark-theme="true">
+    <div class="tw-grid tw-grid-cols-1 tw-gap-6">
+      <div class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200">
+        <!-- Header -->
+        <div class="tw-p-5 tw-border-b tw-border-slate-200 tw-bg-slate-50/50 tw-flex tw-flex-col md:tw-flex-row tw-items-center tw-justify-between tw-gap-4">
+          <h5 class="tw-text-slate-900 tw-font-bold tw-text-lg tw-m-0 tw-flex tw-items-center">
+            <i class="fas fa-exchange-alt tw-mr-2 tw-text-indigo-600"></i>Transaction History
+          </h5>
+          <button 
+            type="button" 
+            class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-rounded-xl tw-text-sm tw-font-semibold tw-transition-all tw-border tw-cursor-pointer"
+            :class="showFilter ? 'tw-bg-indigo-600 tw-text-white tw-border-indigo-600 tw-shadow-md tw-shadow-indigo-500/20' : 'tw-bg-white tw-text-slate-600 tw-border-slate-200 hover:tw-bg-slate-50 hover:tw-text-slate-900'"
+            @click="toggleFilter"
+          >
+            <i class="fas fa-filter"></i> Filter
           </button>
         </div>
-        <div class="card custom--card responsive-filter-card mb-4" v-show="showFilter">
-          <div class="card-body">
-            <form @submit.prevent="handleFilter">
-              <div class="d-flex flex-wrap gap-4">
-                <div class="flex-grow-1">
-                  <label class="form--label">Transaction Number</label>
-                  <input type="search" v-model="filters.search" name="search" class="form-control form--control">
-                </div>
-                <div class="flex-grow-1 select2-parent">
-                  <label class="form--label d-block">Type</label>
-                  <select v-model="filters.trx_type" name="trx_type" class="form-select form--control select2" data-minimum-results-for-search="-1">
-                    <option value="">All</option>
-                    <option value="+">Plus</option>
-                    <option value="-">Minus</option>
-                  </select>
-                </div>
-                <div class="flex-grow-1 select2-parent">
-                  <label class="form--label d-block">Remark</label>
-                  <select v-model="filters.remark" class="form-select form--control select2" data-minimum-results-for-search="-1" name="remark">
-                    <option value="">All</option>
-                    <option v-for="remark in remarks" :key="remark" :value="remark">{{ formatRemark(remark) }}</option>
-                  </select>
-                </div>
-                <div class="flex-grow-1 align-self-end">
-                  <button type="submit" class="btn btn--base w-100">
-                    <i class="las la-filter"></i> Filter
-                  </button>
-                </div>
+
+        <!-- Filter Panel -->
+        <div v-show="showFilter" class="tw-bg-white tw-border-b tw-border-slate-200 tw-p-5 tw-bg-slate-50/30">
+          <form @submit.prevent="handleFilter">
+            <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-4 tw-gap-4">
+              <div class="tw-flex tw-flex-col tw-gap-2">
+                <label class="tw-text-xs tw-font-bold tw-uppercase tw-text-slate-400 tw-tracking-wide">Transaction Number</label>
+                <input 
+                  type="search" 
+                  v-model="filters.search" 
+                  placeholder="TRX-123..." 
+                  class="tw-w-full tw-px-4 tw-py-2.5 tw-bg-white tw-border tw-border-slate-200 tw-rounded-lg tw-text-slate-700 tw-text-sm focus:tw-outline-none focus:tw-border-indigo-500 focus:tw-ring-2 focus:tw-ring-indigo-500/10 tw-transition-all"
+                >
               </div>
-            </form>
-          </div>
+              <div class="tw-flex tw-flex-col tw-gap-2">
+                <label class="tw-text-xs tw-font-bold tw-uppercase tw-text-slate-400 tw-tracking-wide">Type</label>
+                <select 
+                  v-model="filters.trx_type" 
+                  class="tw-w-full tw-px-4 tw-py-2.5 tw-bg-white tw-border tw-border-slate-200 tw-rounded-lg tw-text-slate-700 tw-text-sm focus:tw-outline-none focus:tw-border-indigo-500 focus:tw-ring-2 focus:tw-ring-indigo-500/10 tw-transition-all"
+                >
+                  <option value="">All Types</option>
+                  <option value="+">Plus (+)</option>
+                  <option value="-">Minus (−)</option>
+                </select>
+              </div>
+              <div class="tw-flex tw-flex-col tw-gap-2">
+                <label class="tw-text-xs tw-font-bold tw-uppercase tw-text-slate-400 tw-tracking-wide">Remark</label>
+                <select 
+                  v-model="filters.remark" 
+                  class="tw-w-full tw-px-4 tw-py-2.5 tw-bg-white tw-border tw-border-slate-200 tw-rounded-lg tw-text-slate-700 tw-text-sm focus:tw-outline-none focus:tw-border-indigo-500 focus:tw-ring-2 focus:tw-ring-indigo-500/10 tw-transition-all"
+                >
+                  <option value="">All Remarks</option>
+                  <option v-for="remark in remarks" :key="remark" :value="remark">{{ formatRemark(remark) }}</option>
+                </select>
+              </div>
+              <div class="tw-flex tw-items-end">
+                <button 
+                  type="submit" 
+                  class="tw-w-full tw-py-2.5 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-semibold tw-rounded-lg tw-transition-all tw-border-0 tw-cursor-pointer tw-flex tw-items-center tw-justify-center tw-gap-2 tw-shadow-lg tw-shadow-indigo-500/20"
+                >
+                  <i class="fas fa-search"></i> Apply Filter
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
 
-        <div class="campaign-table">
-          <div class="card custom--card">
-            <div class="card-body">
-              <table class="table table--responsive--lg">
-                <thead>
-                  <tr>
-                    <th>Trx</th>
-                    <th>Transacted</th>
-                    <th>Amount</th>
-                    <th>Post Balance</th>
-                    <th>Detail</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template v-for="trx in transactions" :key="trx?.id || Math.random()">
-                    <tr v-if="trx && trx.id">
-                    <td>
-                      <div><strong>{{ trx.trx }}</strong></div>
-                    </td>
-                    <td>
-                      <div>
-                        {{ formatDateTime(trx.created_at) }}<br>
-                        <small class="text-muted">{{ trx.created_at_human }}</small>
-                      </div>
-                    </td>
-                    <td>
-                      <div>
-                        <span class="fw-bold" :class="trx.trx_type === '+' ? 'text--success' : 'text--danger'">
-                          {{ trx.trx_type }} {{ formatAmount(trx.amount) }}
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <div>{{ formatAmount(trx.post_balance) }}</div>
-                    </td>
-                    <td>
-                      <div>{{ trx.details }}</div>
-                    </td>
-                    </tr>
-                  </template>
-                  <tr v-if="transactions.length === 0">
-                    <td colspan="5" class="text-center text-muted">Data not found</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <!-- Table -->
+        <div class="tw-overflow-x-auto">
+          <table class="tw-w-full tw-text-sm tw-borer-collapse">
+            <thead>
+              <tr class="tw-bg-slate-50 tw-border-b tw-border-slate-200">
+                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-text-slate-500 tw-tracking-wider">Transaction ID</th>
+                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-text-slate-500 tw-tracking-wider">Date</th>
+                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-text-slate-500 tw-tracking-wider">Amount</th>
+                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-text-slate-500 tw-tracking-wider">Balance</th>
+                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-text-slate-500 tw-tracking-wider">Details</th>
+              </tr>
+            </thead>
+            <tbody class="tw-divide-y tw-divide-slate-100">
+              <tr 
+                v-for="trx in transactions" 
+                :key="trx?.id || Math.random()" 
+                v-show="trx && trx.id"
+                class="hover:tw-bg-slate-50/80 tw-transition-colors"
+              >
+                <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap">
+                  <span class="tw-font-mono tw-text-xs tw-font-semibold tw-bg-slate-100 tw-text-slate-700 tw-px-2 tw-py-1 tw-rounded">{{ trx.trx }}</span>
+                </td>
+                <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap">
+                  <div class="tw-font-semibold tw-text-slate-900">{{ formatDateTime(trx.created_at) }}</div>
+                  <div class="tw-text-xs tw-text-slate-500">{{ trx.created_at_human }}</div>
+                </td>
+                <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap">
+                  <span class="tw-font-bold tw-text-[15px]" :class="trx.trx_type === '+' ? 'tw-text-emerald-600' : 'tw-text-red-500'">
+                    {{ trx.trx_type }} {{ currencySymbol }}{{ formatAmount(trx.amount) }}
+                  </span>
+                </td>
+                <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap">
+                  <span class="tw-font-bold tw-text-slate-700">{{ currencySymbol }}{{ formatAmount(trx.post_balance) }}</span>
+                </td>
+                <td class="tw-px-6 tw-py-4">
+                  <span class="tw-text-slate-600 tw-leading-snug tw-max-w-xs tw-block">{{ trx.details }}</span>
+                </td>
+              </tr>
+              <tr v-if="transactions.length === 0">
+                <td colspan="5" class="tw-px-6 tw-py-16 tw-text-center">
+                  <div class="tw-w-16 tw-h-16 tw-bg-slate-50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
+                    <i class="fas fa-receipt tw-text-3xl tw-text-slate-300"></i>
+                  </div>
+                  <h3 class="tw-text-slate-900 tw-font-bold tw-text-lg tw-mb-1">No transactions found</h3>
+                  <p class="tw-text-slate-500 tw-text-sm">Try adjusting your filters or check back later.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+        
+        <!-- Pagination (Simple placeholder if needed later) -->
+        <!-- <div class="tw-p-4 tw-border-t tw-border-slate-200 tw-bg-slate-50">...</div> -->
       </div>
     </div>
   </DashboardLayout>
@@ -107,6 +135,7 @@ export default {
     const transactions = ref([])
     const remarks = ref([])
     const showFilter = ref(false)
+    const currencySymbol = ref('₹')
     const filters = ref({
       search: '',
       trx_type: '',
@@ -147,10 +176,10 @@ export default {
       try {
         const response = await userService.getTransactions(filters.value)
         if (response.status === 'success') {
-          transactions.value = response.data?.data || []
-          if (response.data?.remarks) {
-            remarks.value = response.data.remarks
-          }
+          transactions.value = response.data?.data?.data ? response.data.data.data : (response.data?.data || [])
+          
+          if (response.data?.remarks) remarks.value = response.data.remarks
+          if (response.data?.currency_symbol) currencySymbol.value = response.data.currency_symbol
         }
       } catch (error) {
         console.error('Error loading transactions:', error)
@@ -159,12 +188,6 @@ export default {
 
     onMounted(() => {
       fetchTransactions()
-      // Initialize select2
-      if (window.jQuery) {
-        setTimeout(() => {
-          window.jQuery('.select2').select2()
-        }, 100)
-      }
     })
 
     return {
@@ -172,6 +195,7 @@ export default {
       remarks,
       showFilter,
       filters,
+      currencySymbol,
       formatAmount,
       formatDateTime,
       formatRemark,
@@ -181,57 +205,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.select2+.select2-container .select2-selection__rendered {
-  line-height: unset;
-}
-
-.select2-container--default .select2-selection--single {
-  border-width: 1px !important;
-  border-radius: 12px !important;
-  border-color: var(--select2-border) !important;
-}
-
-.select2-container--open .select2-selection.select2-selection--single,
-.select2-container--open .select2-selection.select2-selection--multiple {
-  border-radius: 12px !important;
-}
-
-.select2-container--default .select2-selection--single {
-  padding: 16px 24px !important;
-}
-
-.select2+.select2-container .select2-selection__rendered {
-  padding-right: 0px !important;
-  padding-left: 0px !important;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-  top: 28px !important;
-}
-
-.select2-results__option.select2-results__option--selected,
-.select2-results__option--selectable,
-.select2-container--default .select2-results__option--disabled {
-  border-bottom-color: hsl(var(--border-color)) !important;
-}
-
-.select2-results__option.select2-results__option--selected,
-.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
-  color: hsl(var(--white)) !important;
-  background-color: hsl(var(--base)) !important;
-}
-
-.select2-results__option.select2-results__option--selected,
-.select2-results__option--selectable,
-.select2-container--default .select2-results__option--disabled {
-  border-bottom-color: hsl(var(--white)/0.2) !important;
-}
-
-.select2-container--default.select2-container--focus .select2-selection--single {
-  outline: none !important;
-  box-shadow: none !important;
-  border-color: hsl(var(--base)) !important;
-}
-</style>

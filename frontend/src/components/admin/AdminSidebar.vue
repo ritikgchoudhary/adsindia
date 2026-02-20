@@ -1,9 +1,21 @@
 <template>
-  <div class="admin-sidebar" :class="{ collapsed: isCollapsed }">
+  <div class="admin-sidebar" :class="{ collapsed: collapsed, 'mobile-open': mobileOpen }">
     <div class="sidebar-header">
-      <h3 class="sidebar-logo">Admin Panel</h3>
+      <div class="sidebar-logo-wrapper" v-if="!collapsed">
+        <img :src="logoUrl" alt="Admin Panel" class="sidebar-logo-img" @error="onLogoError" v-if="showLogo">
+        <h3 class="sidebar-logo" v-else>Admin Panel</h3>
+      </div>
+      <h3 class="sidebar-logo" v-else>AP</h3>
       <button @click="toggleSidebar" class="toggle-btn">
         <i class="fas fa-bars"></i>
+      </button>
+      <button
+        type="button"
+        class="tw-absolute tw-right-3 tw-top-3 tw-w-10 tw-h-10 tw-rounded-xl tw-border tw-border-white/10 tw-bg-white/10 tw-text-white md:tw-hidden"
+        @click="$emit('close-mobile')"
+        aria-label="Close sidebar"
+      >
+        <i class="fas fa-times"></i>
       </button>
     </div>
     <ul class="sidebar-menu">
@@ -29,6 +41,12 @@
         <router-link to="/admin/campaigns">
           <i class="fas fa-briefcase"></i>
           <span>Campaigns</span>
+        </router-link>
+      </li>
+      <li :class="{ active: isActive('/admin/packages') }">
+        <router-link to="/admin/packages">
+          <i class="fas fa-box"></i>
+          <span>Packages</span>
         </router-link>
       </li>
       <li :class="{ active: isActive('/admin/categories') }">
@@ -60,23 +78,33 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../../services/api'
 
 export default {
   name: 'AdminSidebar',
-  setup() {
+  props: {
+    collapsed: { type: Boolean, default: false },
+    mobileOpen: { type: Boolean, default: false }
+  },
+  emits: ['toggle', 'close-mobile'],
+  setup(_props, { emit }) {
     const route = useRoute()
     const router = useRouter()
-    const isCollapsed = ref(false)
+    const showLogo = ref(true)
+    const logoUrl = ref('/assets/images/logo_icon/logo.png?v=' + new Date().getTime())
 
     const isActive = (path) => {
       return route.path === path || route.path.startsWith(path + '/')
     }
 
     const toggleSidebar = () => {
-      isCollapsed.value = !isCollapsed.value
+      emit('toggle')
+    }
+    
+    const onLogoError = () => {
+      showLogo.value = false
     }
 
     const handleLogout = async () => {
@@ -92,10 +120,12 @@ export default {
     }
 
     return {
-      isCollapsed,
       isActive,
       toggleSidebar,
-      handleLogout
+      handleLogout,
+      logoUrl,
+      showLogo,
+      onLogoError
     }
   }
 }
@@ -110,7 +140,7 @@ export default {
   height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  transition: width 0.3s;
+  transition: width 0.3s, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
   overflow-y: auto;
 }
@@ -125,6 +155,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
 }
 
 .sidebar-logo {
@@ -132,6 +163,18 @@ export default {
   font-weight: 700;
   margin: 0;
   color: white;
+}
+
+.sidebar-logo-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-logo-img {
+  max-height: 52px;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .toggle-btn {
@@ -193,7 +236,7 @@ export default {
     transform: translateX(-100%);
   }
   
-  .admin-sidebar.collapsed {
+  .admin-sidebar.mobile-open {
     transform: translateX(0);
   }
 }

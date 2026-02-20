@@ -11503,3 +11503,8 @@ label.required:after {
 .modal-backdrop.show {
   --bs-backdrop-opacity: .7;
 }
+
+/* Ensure landing page scrolls - body scroll only locked when mobile menu open */
+html { overflow-y: auto !important; overflow-x: hidden; }
+body { overflow-y: auto !important; overflow-x: hidden; position: relative !important; }
+body.scroll-hide-sm { overflow-y: hidden !important; position: absolute !important; }

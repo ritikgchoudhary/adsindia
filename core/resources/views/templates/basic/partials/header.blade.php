@@ -2,7 +2,7 @@
     <div class="container position-relative">
         <nav class="navbar navbar-expand-xl navbar-light">
             <a class="navbar-brand logo" href="{{ route('home') }}">
-                <img src="{{ siteLogo() }}" alt="{{ gs('site_name') }}">
+                <img src="{{ siteLogo() }}" alt="Ads Skill India">
             </a>
             <button class="navbar-toggler header-button" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"

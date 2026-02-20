@@ -59,7 +59,7 @@
         <div class="container">
             <div class="flex-between gap-3">
                 <div class="bottom-footer-text">
-                    @lang('Copyright') &copy; {{ date('Y') }} <a href="{{ route('home') }}">{{ __(gs('site_name')) }}</a> @lang('All rights reserved')
+                    @lang('Copyright') &copy; {{ date('Y') }} <a href="{{ route('home') }}">Ads Skill India</a> @lang('All rights reserved')
                 </div>
                 <ul class="social-list">
                     @foreach ($socialIcons as $icon)

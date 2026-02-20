@@ -72,13 +72,13 @@ class TrackController extends Controller {
             }
         }
 
-        $this->logConversion($campaign, $userAgent, $ip, $user);
+        $this->logConversion($campaign, $user, $userAgent, $ip);
 
         $notify[] = 'Tracking recorded successfully';
         return responseSuccess('track_recorded', $notify);
     }
 
-    protected function logConversion(Campaign $campaign, $userAgent = null, $ip = null, $user) {
+    protected function logConversion(Campaign $campaign, $user, $userAgent = null, $ip = null) {
         $ip        = $ip ?? request()->ip();
         $userAgent = $userAgent ?? request()->userAgent();
 
@@ -109,25 +109,27 @@ class TrackController extends Controller {
                 $conversion->details = 'Conversion paid successfully';
                 $conversion->save();
 
-                $user->balance += $campaign->payout_per_conversion;
+                // Affiliate commission goes to affiliate wallet (separate from main balance)
+                $user->affiliate_balance = (float) ($user->affiliate_balance ?? 0) + (float) ($campaign->payout_per_conversion ?? 0);
                 $user->save();
 
                 $transaction               = new Transaction();
                 $transaction->user_id      = $user->id;
                 $transaction->amount       = $campaign->payout_per_conversion;
-                $transaction->post_balance = $user->balance;
+                $transaction->post_balance = (float) ($user->affiliate_balance ?? 0);
                 $transaction->charge       = 0;
                 $transaction->trx_type     = '+';
                 $transaction->details      = 'Affiliate Commission for Campaign: ' . $campaign->title;
                 $transaction->trx          = $trx;
                 $transaction->remark       = 'affiliate_commission';
+                $transaction->wallet       = 'affiliate';
                 $transaction->save();
 
                 notify($user, 'CONVERSION_CONFIRMED', [
                     'trx'            => $trx,
                     'campaign_title' => $campaign->title,
                     'amount'         => showAmount($campaign->payout_per_conversion),
-                    'post_balance'   => showAmount($user->balance),
+                    'post_balance'   => showAmount($user->affiliate_balance ?? 0),
                 ]);
 
                 $advertiser = $campaign->advertiser;

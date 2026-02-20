@@ -2,17 +2,10 @@
   <div class="app-layout">
     <!-- Dynamic Color CSS -->
     <DynamicColorCSS />
-    
-    <!-- Preloader -->
-    <div class="preloader">
-      <div class="lds-roller">
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
-    </div>
-    
+
+    <!-- Dynamic Color CSS -->
+    <DynamicColorCSS />
+
     <div class="body-overlay"></div>
     <div class="sidebar-overlay"></div>
     <a class="scroll-top"><i class="fas fa-angle-double-up"></i></a>
@@ -34,7 +27,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from './Header.vue'
 import Footer from './Footer.vue'
@@ -53,20 +46,28 @@ export default {
     const route = useRoute()
     const showCookieNotice = ref(false)
 
-    // Check if current route is a dashboard route
+    // Check if current route is a dashboard route (or admin / master_admin – no header/footer)
     const isDashboardRoute = computed(() => {
       const path = route.path
-      return path.startsWith('/dashboard') || path.startsWith('/user/')
+      return path.startsWith('/dashboard') || path.startsWith('/user/') ||
+        path.startsWith('/admin') || path.startsWith('/master_admin')
     })
 
+    // Add body class for master admin - enables global CSS overrides
+    const isMasterAdminRoute = computed(() => route.path.startsWith('/master_admin'))
+    
+    // Add body class for user dashboard - enables global CSS overrides
+    const isUserDashboardRoute = computed(() => route.path.startsWith('/user/') || route.path === '/dashboard')
+
     onMounted(() => {
-      // Hide preloader after data is loaded (or after a delay)
-      setTimeout(() => {
-        const preloader = document.querySelector('.preloader')
-        if (preloader) {
-          preloader.style.display = 'none'
-        }
-      }, 500)
+      // Ensure landing page can scroll: remove any body scroll lock from template CSS
+      if (!route.path.startsWith('/dashboard') && !route.path.startsWith('/user/') && !route.path.startsWith('/admin') && !route.path.startsWith('/master_admin')) {
+        document.body.classList.remove('scroll-hide-sm', 'scroll-hide')
+        document.body.style.overflow = ''
+        document.body.style.position = ''
+        document.documentElement.style.overflow = ''
+      }
+
 
       // Initialize jQuery scripts
       if (window.jQuery) {
@@ -128,6 +129,24 @@ export default {
       if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
+    // Watch route to add/remove master-admin body class
+    watch(isMasterAdminRoute, (val) => {
+      if (val) {
+        document.body.classList.add('master-admin-route')
+      } else {
+        document.body.classList.remove('master-admin-route')
+      }
+    }, { immediate: true })
+    
+    // Watch route to add/remove user-dashboard body class
+    watch(isUserDashboardRoute, (val) => {
+      if (val) {
+        document.body.classList.add('user-dashboard-route')
+      } else {
+        document.body.classList.remove('user-dashboard-route')
+      }
+    }, { immediate: true })
+
     return {
       showCookieNotice,
       isDashboardRoute
@@ -135,7 +154,3 @@ export default {
   }
 }
 </script>
-
-<style>
-/* Styles are loaded from external CSS files */
-</style>

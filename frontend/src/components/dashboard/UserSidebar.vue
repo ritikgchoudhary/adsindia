@@ -1,190 +1,268 @@
 <template>
-  <div class="sidebar-menu flex-between">
-    <div class="sidebar-menu__inner">
-      <span class="sidebar-menu__close d-lg-none d-block"><i class="fas fa-times"></i></span>
+  <div 
+    class="tw-w-[280px] tw-fixed tw-left-0 tw-top-0 tw-h-screen tw-z-50 tw-flex tw-flex-col tw-bg-slate-900 tw-border-r tw-border-slate-800 tw-transition-transform tw-duration-300 tw-overflow-hidden lg:tw-translate-x-0"
+    :class="isOpen ? 'tw-translate-x-0' : '-tw-translate-x-full'"
+  >
+    <!-- Close Button (Mobile) -->
+    <button 
+      class="lg:tw-hidden tw-absolute tw-top-4 tw-right-4 tw-w-9 tw-h-9 tw-flex tw-items-center tw-justify-center tw-bg-slate-800 tw-text-slate-400 hover:tw-text-white tw-rounded-lg tw-transition-all tw-border-0 tw-cursor-pointer tw-z-10"
+      @click="$emit('close')"
+    >
+      <i class="fas fa-times"></i>
+    </button>
 
-      <div class="sidebar-logo">
-        <router-link to="/" class="sidebar-logo__link">
-          <img v-if="siteLogo" :src="siteLogo" alt="Logo" @error="siteLogo = null">
-        <span v-else class="sidebar-logo-text">Logo</span>
-        </router-link>
-      </div>
-      <ul class="sidebar-menu-list">
-        <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/dashboard') }" role="presentation">
-          <router-link to="/user/dashboard" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-border-all"></i></span>
-            <span class="text">Dashboard</span>
-          </router-link>
-        </li>
-        <li class="sidebar-menu-list__item has-dropdown" :class="{ active: isDropdownActive(['/user/ads-work', '/user/ad-plans']) }" role="presentation">
-          <a href="javascript:void(0)" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-video"></i></span>
-            <span class="text">Ads</span>
-          </a>
-          <div class="sidebar-submenu">
-            <ul class="sidebar-submenu-list">
-              <li class="sidebar-submenu-list__item" :class="{ active: isActive('/user/ads-work') }">
-                <router-link to="/user/ads-work" class="sidebar-submenu-list__link">
-                  <span class="text">Ads Work</span>
-                </router-link>
-              </li>
-              <li class="sidebar-submenu-list__item" :class="{ active: isActive('/user/ad-plans') }">
-                <router-link to="/user/ad-plans" class="sidebar-submenu-list__link">
-                  <span class="text">Ad Plans</span>
-                </router-link>
-              </li>
-            </ul>
-          </div>
-        </li>
-        <li class="sidebar-menu-list__item" :class="{ active: isActive(['/user/account-kyc', '/user/kyc-form', '/user/kyc-data']) }" role="presentation">
-          <router-link to="/user/account-kyc" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-user-shield"></i></span>
-            <span class="text">Account & KYC</span>
-          </router-link>
-        </li>
-        <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/packages') }" role="presentation">
-          <router-link to="/user/packages" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-graduation-cap"></i></span>
-            <span class="text">Courses Packages</span>
-          </router-link>
-        </li>
-        <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/courses') }" role="presentation">
-          <router-link to="/user/courses" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-play-circle"></i></span>
-            <span class="text">Courses</span>
-          </router-link>
-        </li>
-        <li class="sidebar-menu-list__item has-dropdown" :class="{ active: isDropdownActive(['/user/referral', '/user/affiliate-income', '/user/partner-program']) }" role="presentation">
-          <a href="javascript:void(0)" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-users"></i></span>
-            <span class="text">My Team</span>
-          </a>
-          <div class="sidebar-submenu">
-            <ul class="sidebar-submenu-list">
-              <li class="sidebar-submenu-list__item" :class="{ active: isActive('/user/referral') }">
-                <router-link to="/user/referral" class="sidebar-submenu-list__link">
-                  <span class="text">Referral</span>
-                </router-link>
-              </li>
-              <li class="sidebar-submenu-list__item" :class="{ active: isActive('/user/affiliate-income') }">
-                <router-link to="/user/affiliate-income" class="sidebar-submenu-list__link">
-                  <span class="text">Affiliate Income</span>
-                </router-link>
-              </li>
-              <li class="sidebar-submenu-list__item" :class="{ active: isActive('/user/partner-program') }">
-                <router-link to="/user/partner-program" class="sidebar-submenu-list__link">
-                  <span class="text">Partner Program</span>
-                </router-link>
-              </li>
-            </ul>
-          </div>
-        </li>
-        <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/certificates') }" role="presentation">
-          <router-link to="/user/certificates" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-certificate"></i></span>
-            <span class="text">Certificates</span>
-          </router-link>
-        </li>
-        <li class="sidebar-menu-list__item has-dropdown" :class="{ active: isDropdownActive(['/user/withdraw', '/user/withdraw/history']) }" role="presentation">
-          <a href="javascript:void(0)" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-hand-holding-usd"></i></span>
-            <span class="text">Withdraw</span>
-          </a>
-          <div class="sidebar-submenu">
-            <ul class="sidebar-submenu-list">
-              <li class="sidebar-submenu-list__item" :class="{ active: isActive('/user/withdraw') && !isActive('/user/withdraw/history') }">
-                <router-link to="/user/withdraw" class="sidebar-submenu-list__link">
-                  <span class="text">Withdraw Money</span>
-                </router-link>
-              </li>
-              <li class="sidebar-submenu-list__item" :class="{ active: isActive('/user/withdraw/history') }">
-                <router-link to="/user/withdraw/history" class="sidebar-submenu-list__link">
-                  <span class="text">Withdraw Log</span>
-                </router-link>
-              </li>
-            </ul>
-          </div>
-        </li>
-
-        <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/transactions') }" role="presentation">
-          <router-link to="/user/transactions" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-random"></i></span>
-            <span class="text">Transactions</span>
-          </router-link>
-        </li>
-
-        <li class="sidebar-menu-list__item has-dropdown" :class="{ active: isDropdownActive(['/user/ticket', '/user/ticket/open']) }" role="presentation">
-          <a href="javascript:void(0)" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-headset"></i></span>
-            <span class="text">Support Ticket</span>
-          </a>
-          <div class="sidebar-submenu">
-            <ul class="sidebar-submenu-list">
-              <li class="sidebar-submenu-list__item" :class="{ active: isActive('/user/ticket/open') }">
-                <router-link to="/user/ticket/open" class="sidebar-submenu-list__link">
-                  <span class="text">Open New Ticket</span>
-                </router-link>
-              </li>
-              <li class="sidebar-submenu-list__item" :class="{ active: isActive('/user/ticket') && !isActive('/user/ticket/open') }">
-                <router-link to="/user/ticket" class="sidebar-submenu-list__link">
-                  <span class="text">My Tickets</span>
-                </router-link>
-              </li>
-            </ul>
-          </div>
-        </li>
-
-        <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/leaderboard') }" role="presentation">
-          <router-link to="/user/leaderboard" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-trophy"></i></span>
-            <span class="text">Leaderboard</span>
-          </router-link>
-        </li>
-        <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/customer-support') }" role="presentation">
-          <router-link to="/user/customer-support" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-headset"></i></span>
-            <span class="text">Customer Support</span>
-          </router-link>
-        </li>
-        <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/change-password') }" role="presentation">
-          <router-link to="/user/change-password" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-lock"></i></span>
-            <span class="text">Password Change</span>
-          </router-link>
-        </li>
-        <li class="sidebar-menu-list__item" :class="{ active: isActive('/user/twofactor') }" role="presentation">
-          <router-link to="/user/twofactor" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-shield-alt"></i></span>
-            <span class="text">2FA Security</span>
-          </router-link>
-        </li>
-
-        <li class="sidebar-menu-list__item" role="presentation">
-          <a href="#" @click.prevent="handleLogout" class="sidebar-menu-list__link">
-            <span class="icon"><i class="fas fa-sign-out-alt"></i></span>
-            <span class="text">Logout</span>
-          </a>
-        </li>
-
-      </ul>
+    <!-- Logo -->
+    <div class="tw-px-6 tw-py-5 tw-border-b tw-border-slate-800 tw-bg-slate-900/50">
+      <router-link to="/user/dashboard" class="tw-flex tw-items-center tw-justify-center tw-no-underline">
+        <img v-if="siteLogo" :src="siteLogo" alt="Logo" class="tw-h-14 tw-w-auto tw-object-contain" @error="onLogoError">
+        <span v-else class="tw-text-white tw-font-bold tw-text-xl tw-tracking-wide">Ads Skill India</span>
+      </router-link>
     </div>
-  </div>
 
+    <!-- Menu List -->
+    <ul class="tw-flex-1 tw-overflow-y-auto tw-px-3 tw-py-4 tw-m-0 tw-list-none hover:tw-overflow-y-auto custom-scrollbar">
+      
+      <!-- Dashboard -->
+      <li class="tw-mb-1">
+        <router-link 
+          to="/user/dashboard" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline"
+          :class="isActive('/user/dashboard') ? 'tw-bg-indigo-500/10 tw-text-indigo-400 tw-border-l-2 tw-border-indigo-500' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200 tw-border-l-2 tw-border-transparent'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-border-all"></i></span>
+          <span class="tw-flex-1">Dashboard</span>
+        </router-link>
+      </li>
+
+      <!-- Ads (Dropdown) -->
+      <li class="tw-mb-1">
+        <a 
+          href="#" 
+          class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-cursor-pointer tw-no-underline"
+          :class="isDropdownActive(['/user/ads-work', '/user/ad-plans']) ? 'tw-bg-indigo-500/10 tw-text-indigo-400' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200'"
+          @click.prevent="toggleSubmenu('ads')"
+        >
+          <div class="tw-flex tw-items-center tw-gap-3">
+            <span class="tw-w-6 tw-text-center"><i class="fas fa-video"></i></span>
+            <span>Ads</span>
+          </div>
+          <i class="fas fa-chevron-down tw-text-xs tw-transition-transform" :class="{ 'tw-rotate-180': openSubmenus.includes('ads') }"></i>
+        </a>
+        <div v-show="openSubmenus.includes('ads')" class="tw-pl-4 tw-mt-1 tw-ml-4 tw-border-l tw-border-slate-800">
+          <ul class="tw-list-none tw-p-0 tw-m-0">
+            <li class="tw-mb-1">
+              <router-link to="/user/ads-work" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/ads-work') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Ads Work</router-link>
+            </li>
+            <li class="tw-mb-1">
+              <router-link to="/user/ad-plans" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/ad-plans') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Ad Plans</router-link>
+            </li>
+          </ul>
+        </div>
+      </li>
+
+      <!-- Account & KYC -->
+      <li class="tw-mb-1">
+        <router-link 
+          to="/user/account-kyc" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline"
+          :class="isActive(['/user/account-kyc', '/user/kyc-form', '/user/kyc-data']) ? 'tw-bg-indigo-500/10 tw-text-indigo-400 tw-border-l-2 tw-border-indigo-500' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200 tw-border-l-2 tw-border-transparent'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-user-shield"></i></span>
+          <span class="tw-flex-1">Account & KYC</span>
+        </router-link>
+      </li>
+
+      <!-- Course Packages -->
+      <li class="tw-mb-1">
+        <a 
+          href="#" 
+          class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-cursor-pointer tw-no-underline"
+          :class="isDropdownActive(['/user/courses', '/user/packages']) ? 'tw-bg-indigo-500/10 tw-text-indigo-400' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200'"
+          @click.prevent="toggleSubmenu('courses')"
+        >
+          <div class="tw-flex tw-items-center tw-gap-3">
+            <span class="tw-w-6 tw-text-center"><i class="fas fa-graduation-cap"></i></span>
+            <span>Courses</span>
+          </div>
+          <i class="fas fa-chevron-down tw-text-xs tw-transition-transform" :class="{ 'tw-rotate-180': openSubmenus.includes('courses') }"></i>
+        </a>
+        <div v-show="openSubmenus.includes('courses')" class="tw-pl-4 tw-mt-1 tw-ml-4 tw-border-l tw-border-slate-800">
+          <ul class="tw-list-none tw-p-0 tw-m-0">
+            <li class="tw-mb-1">
+              <router-link to="/user/courses" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/courses') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">
+                <i class="fas fa-play-circle tw-mr-2"></i>Courses
+              </router-link>
+            </li>
+            <li class="tw-mb-1">
+              <router-link to="/user/packages" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/packages') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">
+                <i class="fas fa-box-open tw-mr-2"></i>Course Packages
+              </router-link>
+            </li>
+          </ul>
+        </div>
+      </li>
+
+      <!-- My Team (Dropdown) -->
+      <li class="tw-mb-1">
+        <a 
+          href="#" 
+          class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-cursor-pointer tw-no-underline"
+          :class="isDropdownActive(teamMenuPaths) ? 'tw-bg-indigo-500/10 tw-text-indigo-400' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200'"
+          @click.prevent="toggleSubmenu('team')"
+        >
+          <div class="tw-flex tw-items-center tw-gap-3">
+            <span class="tw-w-6 tw-text-center"><i class="fas fa-users"></i></span>
+            <span>My Team</span>
+          </div>
+          <i class="fas fa-chevron-down tw-text-xs tw-transition-transform" :class="{ 'tw-rotate-180': openSubmenus.includes('team') }"></i>
+        </a>
+        <div v-show="openSubmenus.includes('team')" class="tw-pl-4 tw-mt-1 tw-ml-4 tw-border-l tw-border-slate-800">
+          <ul class="tw-list-none tw-p-0 tw-m-0">
+            <li class="tw-mb-1">
+              <router-link to="/user/referral" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/referral') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Referral</router-link>
+            </li>
+            <li v-if="isAgent" class="tw-mb-1">
+              <router-link to="/user/affiliate-income" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/affiliate-income') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Affiliate Income</router-link>
+            </li>
+            <li v-if="isAgent" class="tw-mb-1">
+              <router-link to="/user/affiliate-withdraw" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/affiliate-withdraw') && !isActive('/user/affiliate-withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">
+                Affiliate Withdraw
+              </router-link>
+            </li>
+            <li v-if="isAgent" class="tw-mb-1">
+              <router-link to="/user/affiliate-withdraw/history" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/affiliate-withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">
+                Affiliate Withdraw Log
+              </router-link>
+            </li>
+          </ul>
+        </div>
+      </li>
+
+      <!-- Certificates -->
+      <li class="tw-mb-1">
+        <router-link 
+          to="/user/certificates" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline"
+          :class="isActive('/user/certificates') ? 'tw-bg-indigo-500/10 tw-text-indigo-400 tw-border-l-2 tw-border-indigo-500' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200 tw-border-l-2 tw-border-transparent'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-certificate"></i></span>
+          <span class="tw-flex-1">Certificates</span>
+        </router-link>
+      </li>
+
+      <!-- Withdraw (Dropdown) -->
+      <li class="tw-mb-1">
+        <a 
+          href="#" 
+          class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-cursor-pointer tw-no-underline"
+          :class="isDropdownActive(['/user/withdraw', '/user/withdraw/history']) ? 'tw-bg-indigo-500/10 tw-text-indigo-400' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200'"
+          @click.prevent="toggleSubmenu('withdraw')"
+        >
+          <div class="tw-flex tw-items-center tw-gap-3">
+            <span class="tw-w-6 tw-text-center"><i class="fas fa-hand-holding-usd"></i></span>
+            <span>Withdraw</span>
+          </div>
+          <i class="fas fa-chevron-down tw-text-xs tw-transition-transform" :class="{ 'tw-rotate-180': openSubmenus.includes('withdraw') }"></i>
+        </a>
+        <div v-show="openSubmenus.includes('withdraw')" class="tw-pl-4 tw-mt-1 tw-ml-4 tw-border-l tw-border-slate-800">
+          <ul class="tw-list-none tw-p-0 tw-m-0">
+            <li class="tw-mb-1">
+              <router-link to="/user/withdraw" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/withdraw') && !isActive('/user/withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Withdraw Money</router-link>
+            </li>
+            <li class="tw-mb-1">
+              <router-link to="/user/withdraw/history" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Withdraw Log</router-link>
+            </li>
+          </ul>
+        </div>
+      </li>
+
+      <!-- Leaderboard -->
+      <li class="tw-mb-1">
+        <router-link 
+          to="/user/leaderboard" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline"
+          :class="isActive('/user/leaderboard') ? 'tw-bg-indigo-500/10 tw-text-indigo-400 tw-border-l-2 tw-border-indigo-500' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200 tw-border-l-2 tw-border-transparent'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-trophy"></i></span>
+          <span class="tw-flex-1">Leaderboard</span>
+        </router-link>
+      </li>
+
+      <!-- Customer Support -->
+      <li class="tw-mb-1">
+        <router-link 
+          to="/user/customer-support" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline"
+          :class="isActive('/user/customer-support') ? 'tw-bg-indigo-500/10 tw-text-indigo-400 tw-border-l-2 tw-border-indigo-500' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200 tw-border-l-2 tw-border-transparent'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-headset"></i></span>
+          <span class="tw-flex-1">Customer Support</span>
+        </router-link>
+      </li>
+
+      <!-- Password Change -->
+      <li class="tw-mb-1">
+        <router-link 
+          to="/user/change-password" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline"
+          :class="isActive('/user/change-password') ? 'tw-bg-indigo-500/10 tw-text-indigo-400 tw-border-l-2 tw-border-indigo-500' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200 tw-border-l-2 tw-border-transparent'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-lock"></i></span>
+          <span class="tw-flex-1">Password Change</span>
+        </router-link>
+      </li>
+
+      <!-- 2FA Security -->
+      <li class="tw-mb-1">
+        <router-link 
+          to="/user/twofactor" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline"
+          :class="isActive('/user/twofactor') ? 'tw-bg-indigo-500/10 tw-text-indigo-400 tw-border-l-2 tw-border-indigo-500' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200 tw-border-l-2 tw-border-transparent'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-shield-alt"></i></span>
+          <span class="tw-flex-1">2FA Security</span>
+        </router-link>
+      </li>
+
+      <!-- Logout -->
+      <li class="tw-mt-4 tw-pt-4 tw-border-t tw-border-slate-800">
+        <a 
+          href="#" 
+          @click.prevent="handleLogout" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-text-red-400 hover:tw-bg-red-500/10 hover:tw-text-red-300 tw-transition-all tw-border-l-2 tw-border-transparent tw-no-underline"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-sign-out-alt"></i></span>
+          <span class="tw-flex-1">Logout</span>
+        </a>
+      </li>
+    </ul>
+  </div>
 </template>
 
 <script>
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { authService } from '../../services/authService'
+import api from '../../services/api'
 
 export default {
   name: 'UserSidebar',
+  props: {
+    isOpen: {
+      type: Boolean,
+      default: false
+    }
+  },
+  emits: ['close'],
   setup() {
     const router = useRouter()
     const route = useRoute()
-    const siteLogo = ref('/assets/images/logo_icon/logo.png')
+    const siteLogo = ref('/assets/images/logo_icon/logo.png?v=' + new Date().getTime())
+    const openSubmenus = ref([])
+    const isAgent = ref(false)
 
-    // Helper function to check if a route is active
+    const onLogoError = () => { siteLogo.value = null }
+
     const isActive = (path) => {
       if (Array.isArray(path)) {
         return path.some(p => route.path === p || route.path.startsWith(p + '/'))
@@ -192,24 +270,36 @@ export default {
       return route.path === path || route.path.startsWith(path + '/')
     }
 
-    // Check if any submenu item is active (for dropdowns)
     const isDropdownActive = (paths) => {
       return paths.some(path => isActive(path))
     }
 
-    // Auto-open dropdowns when submenu items are active
-    const openActiveDropdowns = () => {
-      nextTick(() => {
-        const dropdowns = document.querySelectorAll('.has-dropdown')
-        dropdowns.forEach(dropdown => {
-          const submenu = dropdown.querySelector('.sidebar-submenu')
-          const activeItem = submenu?.querySelector('.sidebar-submenu-list__item.active')
-          if (activeItem && submenu) {
-            dropdown.classList.add('active')
-            submenu.style.display = 'block'
-          }
-        })
-      })
+    const toggleSubmenu = (menu) => {
+      if (openSubmenus.value.includes(menu)) {
+        openSubmenus.value = openSubmenus.value.filter(m => m !== menu)
+      } else {
+        openSubmenus.value.push(menu)
+      }
+    }
+
+    const teamMenuPaths = computed(() => {
+      return isAgent.value
+        ? ['/user/referral', '/user/affiliate-income', '/user/affiliate-withdraw', '/user/affiliate-withdraw/history']
+        : ['/user/referral']
+    })
+
+    const fetchUserInfo = async () => {
+      try {
+        const res = await api.get('/user-info', { __skipLoader: true })
+        const d = res?.data?.data || res?.data
+        isAgent.value = !!(d?.is_agent)
+        // Ensure submenu visibility if user is already on an agent-only page
+        if (isDropdownActive(teamMenuPaths.value) && !openSubmenus.value.includes('team')) {
+          openSubmenus.value.push('team')
+        }
+      } catch (_) {
+        // non-blocking; default false
+      }
     }
 
     const handleLogout = async () => {
@@ -222,24 +312,18 @@ export default {
       }
     }
 
-    // Watch route changes to open active dropdowns
     watch(() => route.path, () => {
-      openActiveDropdowns()
+      // Logic to auto-open could go here if needed, but manual control is often better in Vue
+      // We can also close sidebar on mobile if route changes
     })
 
-    onMounted(async () => {
-      // Fetch site logo from API if needed
-      try {
-        // const response = await appService.getGeneralSettings()
-        // if (response.data?.logo) {
-        //   siteLogo.value = response.data.logo
-        // }
-      } catch (error) {
-        console.error('Error loading logo:', error)
-      }
-      
-      // Open active dropdowns on mount
-      openActiveDropdowns()
+    onMounted(() => {
+       fetchUserInfo()
+       // Pre-open menus based on current route
+       if (isDropdownActive(['/user/ads-work', '/user/ad-plans'])) toggleSubmenu('ads')
+       if (isDropdownActive(['/user/courses', '/user/packages'])) toggleSubmenu('courses')
+       if (isDropdownActive(teamMenuPaths.value)) toggleSubmenu('team')
+       if (isDropdownActive(['/user/withdraw', '/user/withdraw/history'])) toggleSubmenu('withdraw')
     })
 
     return {
@@ -247,150 +331,26 @@ export default {
       handleLogout,
       isActive,
       isDropdownActive,
-      route
+      onLogoError,
+      openSubmenus,
+      toggleSubmenu,
+      isAgent,
+      teamMenuPaths
     }
   }
 }
 </script>
 
 <style scoped>
-.sidebar-menu {
-  background-color: #1e293b;
-  width: 280px;
-  min-height: 100vh;
-  color: #94a3b8;
-  font-family: 'Outfit', sans-serif;
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
-  display: flex !important;
-  flex-direction: column;
+/* Custom scrollbar for sidebar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
 }
-
-.sidebar-logo {
-  padding: 1.25rem 1.5rem;
-  text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  margin-bottom: 1rem;
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
-
-.sidebar-logo__link {
-  display: block;
-  width: 100%;
-}
-
-.sidebar-logo img {
-  max-width: 160px;
-  height: auto;
-}
-
-.sidebar-menu-list {
-  list-style: none;
-  padding: 0 1rem;
-  margin: 0;
-  flex: 1;
-}
-
-.sidebar-menu-list__item {
-  margin-bottom: 0.5rem;
-}
-
-.sidebar-menu-list__link {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  color: #94a3b8;
-  text-decoration: none;
-  border-radius: 12px;
-  transition: all 0.2s;
-  font-weight: 500;
-  gap: 1rem;
-}
-
-.sidebar-menu-list__link:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-}
-
-.sidebar-menu-list__item.active > .sidebar-menu-list__link {
-  background: #4f46e5;
-  color: white;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-}
-
-.sidebar-menu-list__link .icon {
-  width: 24px;
-  min-width: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-}
-
-/* Ensure Font Awesome icons render in sidebar */
-.sidebar-menu-list__link .icon i,
-.sidebar-menu .icon i {
-  font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', FontAwesome !important;
-  font-weight: 900 !important;
-  font-style: normal !important;
-  display: inline-block !important;
-}
-
-.sidebar-logo-text {
-  font-weight: 700;
-  font-size: 1.25rem;
-  color: #fff;
-  letter-spacing: 0.02em;
-}
-
-.sidebar-logo img {
-  max-width: 100%;
-  height: auto;
-  max-height: 48px;
-  object-fit: contain;
-}
-
-.sidebar-submenu {
-  padding-left: 2.5rem;
-  margin-top: 0.25rem;
-}
-
-.sidebar-submenu-list {
-  list-style: none;
-  padding: 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-submenu-list__link {
-  display: block;
-  padding: 0.5rem 1rem;
-  color: #64748b;
-  text-decoration: none;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-
-.sidebar-submenu-list__link:hover {
-  color: white;
-}
-
-.sidebar-submenu-list__item.active .sidebar-submenu-list__link {
-  color: white;
-  font-weight: 600;
-}
-
-/* Mobile Toggle */
-@media (max-width: 991px) {
-  .sidebar-menu {
-    position: fixed;
-    left: -280px;
-    z-index: 1050;
-    transition: all 0.3s;
-  }
-  .sidebar-menu.show-sidebar {
-    left: 0;
-  }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
 }
 </style>

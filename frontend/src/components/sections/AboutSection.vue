@@ -1,5 +1,5 @@
 <template>
-  <div class="about-section my-120" v-if="aboutData">
+  <div id="about" class="about-section my-120">
     <div class="container">
       <div class="row gy-4 justify-content-center">
         <div class="col-xl-6 pe-xxl-5">
@@ -8,31 +8,31 @@
               <div class="left-thumb"></div>
               <div class="border-shape"></div>
             </div>
-            <div class="about-thumb-wrapper__thumb" v-if="aboutData.image">
-              <img :src="$getImage('about', aboutData.image)" alt="Affiliate Image" />
+            <div class="about-thumb-wrapper__thumb">
+              <img :src="$getImage('about', aboutData?.image)" alt="Affiliate Image" />
             </div>
             <div class="thumb-text-wrapper">
-              <span class="text base--outline" v-if="aboutData.tag_text_one">{{ aboutData.tag_text_one }}</span>
-              <span class="text success--outline" v-if="aboutData.tag_text_two">{{ aboutData.tag_text_two }}</span>
-              <span class="text warning--outline" v-if="aboutData.tag_text_three">{{ aboutData.tag_text_three }}</span>
-              <span class="text success--outline" v-if="aboutData.tag_text_four">{{ aboutData.tag_text_four }}</span>
-              <span class="text base--outline" v-if="aboutData.tag_text_five">{{ aboutData.tag_text_five }}</span>
+              <span class="text base--outline">{{ aboutData?.tag_text_one ?? '' }}</span>
+              <span class="text success--outline">{{ aboutData?.tag_text_two ?? '' }}</span>
+              <span class="text warning--outline">{{ aboutData?.tag_text_three ?? '' }}</span>
+              <span class="text success--outline">{{ aboutData?.tag_text_four ?? '' }}</span>
+              <span class="text base--outline">{{ aboutData?.tag_text_five ?? '' }}</span>
             </div>
           </div>
         </div>
         <div class="col-xl-6 ps-lg-5">
           <div class="about-content">
-            <span class="about-content__badge" v-if="aboutData.badge">{{ aboutData.badge }}</span>
-            <h2 class="about-content__title" v-if="aboutData.heading">{{ aboutData.heading }}</h2>
-            <p class="about-content__desc" v-if="aboutData.subheading">{{ aboutData.subheading }}</p>
-            <ul class="text-list" v-if="aboutElements.length">
+            <span class="about-content__badge">{{ aboutData?.badge ?? '' }}</span>
+            <h2 class="about-content__title">{{ aboutData?.heading ?? '' }}</h2>
+            <p class="about-content__desc">{{ aboutData?.subheading ?? '' }}</p>
+            <ul class="text-list">
               <li class="text-list__item" v-for="(element, index) in aboutElements" :key="index">
-                {{ element.data_values.feature }}
+                {{ element?.data_values?.feature ?? element?.feature ?? '' }}
               </li>
             </ul>
-            <div class="about-content__btn" v-if="aboutData.button_name">
-              <router-link :to="aboutData.button_url || '/'" class="btn btn--base pill">
-                {{ aboutData.button_name }}
+            <div class="about-content__btn">
+              <router-link :to="aboutData?.button_url || '#'" class="btn btn--base pill">
+                {{ aboutData?.button_name ?? '' }}
                 <span class="btn-icon"><i class="las la-arrow-right"></i></span>
               </router-link>
             </div>
@@ -59,8 +59,8 @@ export default {
           appService.getSections('about'),
           appService.getSections('about.element')
         ])
-        aboutData.value = contentRes.data?.content?.data_values || null
-        aboutElements.value = elementsRes.data || []
+        aboutData.value = appService.getSectionContent(contentRes)
+        aboutElements.value = elementsRes?.data ?? []
       } catch (error) {
         console.error('Error loading about section:', error)
       }

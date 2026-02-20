@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Lib\AgentCommission;
+use App\Lib\DirectAffiliateCommission;
 use App\Models\AdPackage;
 use App\Models\AdPackageOrder;
 use App\Models\Transaction;
@@ -121,10 +123,9 @@ class PackageController extends Controller
         $user = auth()->user();
         $request->validate([
             'package_id' => 'required|integer|in:1,2,3,4,5',
-            'payment_method' => 'nullable|in:balance,gateway',
+            'payment_method' => 'required|in:gateway',
+            'gateway' => 'nullable|string|in:watchpay,simplypay',
         ]);
-
-        $paymentMethod = $request->payment_method ?? 'balance'; // Default to balance
 
         $packagesData = [
             1 => ['name' => 'AdsLite', 'price' => 1499],
@@ -177,42 +178,61 @@ class PackageController extends Controller
             $remainingAmount = $package['price'];
         }
 
-        // If gateway payment, initiate gateway flow
-        if ($paymentMethod === 'gateway') {
-            return $this->initiateGatewayPayment($user, $packageId, $package, $remainingAmount, $currentOrder);
-        }
-
-        // Balance payment - check balance
-        if ($remainingAmount > 0 && $user->balance < $remainingAmount) {
-            return responseError('insufficient_balance', ['Insufficient balance. You need to pay ₹' . number_format($remainingAmount, 2) . ' more']);
-        }
-
-        // Process balance payment
-        return $this->processPackagePurchase($user, $packageId, $package, $remainingAmount, $currentOrder);
+        // Only gateway payment is allowed
+        return $this->initiateGatewayPayment($user, $packageId, $package, $remainingAmount, $currentOrder, $request->input('gateway', 'watchpay'));
     }
 
     /**
      * Process package purchase with balance
      */
-    private function processPackagePurchase($user, $packageId, $package, $remainingAmount, $currentOrder)
+    private function processPackagePurchase($user, $packageId, $package, $remainingAmount, $currentOrder, ?string $gatewayTrx = null)
     {
-        // Deduct remaining amount
-        if ($remainingAmount > 0) {
-            $user->balance -= $remainingAmount;
-            $user->save();
+        $postBalance = (float) ($user->balance ?? 0);
 
-            // Create transaction
-            $trx = getTrx();
+        // Log transaction as paid via gateway (without changing balance)
+        if ($remainingAmount > 0) {
+            $trx = $gatewayTrx ?: getTrx();
             $transaction = new Transaction();
             $transaction->user_id = $user->id;
             $transaction->amount = $remainingAmount;
-            $transaction->post_balance = $user->balance;
+            $transaction->post_balance = $postBalance;
             $transaction->charge = 0;
             $transaction->trx_type = '-';
-            $transaction->details = 'Upgrade package: ' . $package['name'];
+            $transaction->details = 'Upgrade package via WatchPay: ' . $package['name'];
             $transaction->trx = $trx;
-            $transaction->remark = 'package_upgrade';
+            $transaction->remark = 'package_upgrade_gateway';
             $transaction->save();
+
+            // Direct affiliate commission (ALL users) – package-wise fixed amount (Master Admin controlled)
+            try {
+                DirectAffiliateCommission::creditForPackage(
+                    $user,
+                    (int) $packageId,
+                    (float) $remainingAmount,
+                    (string) $trx,
+                    (string) ($package['name'] ?? '')
+                );
+            } catch (\Throwable $e) {
+                // non-blocking
+            }
+
+            // Agent commission (only if sponsor is Agent) – allow per-plan override by package id
+            try {
+                $agentId = (int) ($user->ref_by ?? 0);
+                if ($agentId > 0) {
+                    $commissionType = $currentOrder ? 'upgrade' : 'registration';
+                    AgentCommission::process(
+                        $agentId,
+                        $commissionType,
+                        (float) $remainingAmount,
+                        (string) $trx,
+                        'Agent commission from User#' . (int) $user->id . ' – Package: ' . (string) ($package['name'] ?? '') . ' | Base: ₹' . (float) $remainingAmount,
+                        ['plan_type' => 'package', 'plan_id' => (int) $packageId]
+                    );
+                }
+            } catch (\Throwable $e) {
+                // non-blocking
+            }
         }
 
         // Create or update ad package order
@@ -242,25 +262,51 @@ class PackageController extends Controller
     /**
      * Initiate dummy gateway payment
      */
-    private function initiateGatewayPayment($user, $packageId, $package, $remainingAmount, $currentOrder)
+    private function initiateGatewayPayment($user, $packageId, $package, $remainingAmount, $currentOrder, string $gateway = 'watchpay')
     {
-        // Create a temporary payment session/order
         $trx = getTrx();
-        
-        // Store payment data in session or create a temporary record
-        // For dummy gateway, we'll return payment data
-        $paymentData = [
+
+        // Create payment session for gateway IPN to update
+        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        cache()->put($cacheKey, [
+            'type' => 'package',
             'user_id' => $user->id,
             'package_id' => $packageId,
-            'package_name' => $package['name'],
-            'amount' => $remainingAmount,
-            'trx' => $trx,
-            'created_at' => now(),
-        ];
+            'amount' => (float) $remainingAmount,
+            'status' => 'pending',
+            'created_at' => now()->format('Y-m-d H:i:s'),
+        ], now()->addHours(2));
 
-        // In production, store this in database/cache
-        // For dummy gateway, we'll return payment URL
-        $paymentUrl = url('/user/package-payment?trx=' . $trx . '&amount=' . $remainingAmount . '&package_id=' . $packageId . '&package_name=' . urlencode($package['name']));
+        // Return to SPA payment screen to confirm
+        $base = request()->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
+        $pageUrl = $base . '/user/package-payment?' . ($gateway === 'simplypay' ? 'simplypay_trx=' : 'watchpay_trx=') . urlencode($trx) . '&amount=' . $remainingAmount . '&package_id=' . $packageId . '&package_name=' . urlencode($package['name']);
+        $notifyUrl = $base . '/ipn/' . $gateway;
+        try {
+            if ($gateway === 'simplypay') {
+                $sp = \App\Lib\SimplyPayGateway::createPayment([
+                    'merOrderNo' => $trx,
+                    'amount' => $remainingAmount,
+                    'notifyUrl' => $notifyUrl,
+                    'returnUrl' => $pageUrl,
+                    'name' => $user->fullname ?: $user->username,
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'attach' => 'Package: ' . $package['name'],
+                ]);
+                $paymentUrl = $sp['pay_link'];
+            } else {
+                $wp = \App\Lib\WatchPayGateway::createWebPayment(
+                    $trx,
+                    (float) $remainingAmount,
+                    'Package: ' . $package['name'],
+                    $pageUrl,
+                    $notifyUrl
+                );
+                $paymentUrl = $wp['pay_link'];
+            }
+        } catch (\Throwable $e) {
+            return responseError('payment_gateway_error', ['Payment gateway init failed. Please try again.']);
+        }
 
         return responseSuccess('payment_initiated', ['Payment gateway initialized'], [
             'payment_url' => $paymentUrl,
@@ -268,7 +314,7 @@ class PackageController extends Controller
             'amount' => $remainingAmount,
             'package_id' => $packageId,
             'package_name' => $package['name'],
-            'gateway_name' => 'Dummy Gateway',
+            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : 'WatchPay'),
         ]);
     }
 
@@ -281,12 +327,12 @@ class PackageController extends Controller
         $request->validate([
             'trx' => 'required|string',
             'package_id' => 'required|integer|in:1,2,3,4,5',
-            'status' => 'required|in:success,failed', // For testing
+            'gateway' => 'nullable|string|in:watchpay,simplypay',
         ]);
 
         $user = auth()->user();
         $packageId = $request->package_id;
-        $status = $request->status;
+        $gateway = $request->input('gateway', 'watchpay');
 
         $packagesData = [
             1 => ['name' => 'AdsLite', 'price' => 1499],
@@ -320,14 +366,17 @@ class PackageController extends Controller
             $remainingAmount = $package['price'];
         }
 
-        // Simulate payment processing delay
-        sleep(2);
-
-        if ($status === 'success') {
-            // Process purchase after successful payment
-            return $this->processPackagePurchase($user, $packageId, $package, $remainingAmount, $currentOrder);
-        } else {
-            return responseError('payment_failed', ['Payment failed. Please try again.']);
+        // Gateway verification
+        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $request->trx;
+        $session = cache()->get($cacheKey);
+        if (!is_array($session) || ($session['type'] ?? '') !== 'package' || (int)($session['user_id'] ?? 0) !== (int)$user->id) {
+            return responseError('payment_not_found', ['Payment session not found. Please initiate payment again.']);
         }
+        if (($session['status'] ?? '') !== 'success') {
+            return responseError('payment_pending', ['Payment not verified yet. Please complete payment and try again.']);
+        }
+
+        // Gateway verified: activate package without using wallet
+        return $this->processPackagePurchase($user, $packageId, $package, $remainingAmount, $currentOrder, (string) $request->trx);
     }
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="why-choose-section my-120" v-if="chooseUsContent">
+  <div class="why-choose-section my-120">
     <div class="container">
       <div class="row gy-5 justify-content-center flex-wrap-reverse">
         <div class="col-xl-6 col-lg-7 pe-xl-5">
@@ -9,28 +9,28 @@
               <div class="col-6">
                 <div class="choose-item">
                   <div class="choose-item__thumb">
-                    <img :src="$getImage('why_choose_us', chooseUsContent.thumb_one)" alt="thumb one">
+                    <img :src="$getImage('why_choose_us', chooseUsContent ? chooseUsContent.thumb_one : '')" alt="thumb one">
                   </div>
                 </div>
               </div>
               <div class="col-6">
                 <div class="choose-item">
                   <div class="choose-item__thumb">
-                    <img :src="$getImage('why_choose_us', chooseUsContent.thumb_two)" alt="thumb two">
+                    <img :src="$getImage('why_choose_us', chooseUsContent ? chooseUsContent.thumb_two : '')" alt="thumb two">
                   </div>
                 </div>
               </div>
               <div class="col-6">
                 <div class="item-shape">
                   <div class="shape-one">
-                    <img :src="$getImage('why_choose_us', chooseUsContent.thumb_four)" alt="shape one">
+                    <img :src="$getImage('why_choose_us', chooseUsContent ? chooseUsContent.thumb_four : '')" alt="shape one">
                   </div>
                   <div class="shape-two">
                     <img :src="'/assets/templates/basic/images/shapes/shape-1.png'" alt="shape two">
                   </div>
 
                   <div class="choose-btn">
-                    <a :href="chooseUsContent.video_url" class="play-button popup-youtube">
+                    <a :href="(chooseUsContent && chooseUsContent.video_url) ? chooseUsContent.video_url : '#'" class="play-button popup-youtube">
                       <span class="icon"><i class="fas fa-play"></i></span>
                     </a>
                   </div>
@@ -39,7 +39,7 @@
               <div class="col-6">
                 <div class="choose-item">
                   <div class="choose-item__thumb">
-                    <img :src="$getImage('why_choose_us', chooseUsContent.thumb_three)" alt="thumb four">
+                    <img :src="$getImage('why_choose_us', chooseUsContent ? chooseUsContent.thumb_three : '')" alt="thumb four">
                   </div>
                 </div>
               </div>
@@ -49,9 +49,9 @@
 
         <div class="col-xl-6 col-lg-5 ps-lg-5">
           <div class="section-heading style-left">
-            <span class="section-heading__subtitle">{{ chooseUsContent.heading }}</span>
-            <h3 class="section-heading__title">{{ chooseUsContent.subheading }}</h3>
-            <p class="section-heading__desc">{{ chooseUsContent.description }}</p>
+            <span class="section-heading__subtitle">{{ (chooseUsContent && chooseUsContent.heading) || '' }}</span>
+            <h3 class="section-heading__title">{{ (chooseUsContent && chooseUsContent.subheading) || '' }}</h3>
+            <p class="section-heading__desc">{{ (chooseUsContent && chooseUsContent.description) || '' }}</p>
           </div>
           <div>
             <div 
@@ -61,11 +61,11 @@
               :class="getCardClass(index)"
             >
               <div class="choose-card__icon">
-                <img :src="$getImage('why_choose_us', item.image)" alt="">
+                <img :src="$getImage('why_choose_us', item?.data_values?.image ?? item?.image)" alt="">
               </div>
               <div class="choose-card__content">
-                <h5 class="choose-card__title">{{ item.title }}</h5>
-                <p class="choose-card__text">{{ item.subtitle }}</p>
+                <h5 class="choose-card__title">{{ item?.data_values?.title ?? item?.title ?? '' }}</h5>
+                <p class="choose-card__text">{{ item?.data_values?.subtitle ?? item?.subtitle ?? '' }}</p>
               </div>
             </div>
           </div>
@@ -96,8 +96,8 @@ export default {
           appService.getSections('why_choose_us'),
           appService.getSections('why_choose_us.element')
         ])
-        chooseUsContent.value = contentRes.data?.content?.data_values || null
-        chooseUsItems.value = elementsRes.data || []
+        chooseUsContent.value = appService.getSectionContent(contentRes)
+        chooseUsItems.value = elementsRes?.data ?? []
       } catch (error) {
         console.error('Error loading why choose us:', error)
       }

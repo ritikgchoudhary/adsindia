@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Constants\Status;
+use App\Lib\AgentCommission;
 use App\Models\Campaign;
 use App\Models\Conversion;
 use App\Models\Transaction;
@@ -22,6 +23,15 @@ class UserController extends Controller
     {
         $user = auth()->user();
         
+        // Only these credit transactions count as "income" in dashboard totals.
+        // (Exclude refunds/recredits like withdraw_reject, and admin balance adjustments.)
+        $incomeRemarks = [
+            'ad_view_reward',
+            'referral_commission',
+            'affiliate_commission',
+            'downline_commission',
+        ];
+
         // Calculate widget data
         $widget = [
             'balance' => $user->balance ?? 0,
@@ -83,20 +93,23 @@ class UserController extends Controller
         $last7Days = now()->subDays(7)->startOfDay();
         $last30Days = now()->subDays(30)->startOfDay();
 
+        $trxIncome = Transaction::where('user_id', $user->id)
+            ->where('trx_type', '+')
+            ->whereIn('remark', $incomeRemarks);
+
+        $convIncome = Conversion::where('user_id', $user->id)
+            ->where('is_paid', Status::PAID);
+
         $earnings = [
-            'today' => Transaction::where('user_id', $user->id)
-                ->where('trx_type', '+')
-                ->where('created_at', '>=', $today)
-                ->sum('amount'),
-            'last7Days' => Transaction::where('user_id', $user->id)
-                ->where('trx_type', '+')
-                ->where('created_at', '>=', $last7Days)
-                ->sum('amount'),
-            'last30Days' => Transaction::where('user_id', $user->id)
-                ->where('trx_type', '+')
-                ->where('created_at', '>=', $last30Days)
-                ->sum('amount'),
-            'total' => $widget['total_earning'] + $widget['ads_income'],
+            // Period income = paid conversions + income credit transactions
+            'today' => (float) (clone $convIncome)->where('created_at', '>=', $today)->sum('user_payout')
+                + (float) (clone $trxIncome)->where('created_at', '>=', $today)->sum('amount'),
+            'last7Days' => (float) (clone $convIncome)->where('created_at', '>=', $last7Days)->sum('user_payout')
+                + (float) (clone $trxIncome)->where('created_at', '>=', $last7Days)->sum('amount'),
+            'last30Days' => (float) (clone $convIncome)->where('created_at', '>=', $last30Days)->sum('user_payout')
+                + (float) (clone $trxIncome)->where('created_at', '>=', $last30Days)->sum('amount'),
+            'total' => (float) (clone $convIncome)->sum('user_payout')
+                + (float) (clone $trxIncome)->sum('amount'),
         ];
 
         // Get general settings for currency
@@ -117,6 +130,9 @@ class UserController extends Controller
                 'lastname' => $user->lastname,
                 'kv' => $user->kv,
                 'kyc_rejection_reason' => $user->kyc_rejection_reason,
+                'image' => $user->image
+                    ? getImage(getFilePath('userProfile') . '/' . $user->image, getFileSize('userProfile'))
+                    : '/assets/images/default.png',
             ],
         ]);
     }
@@ -172,14 +188,24 @@ class UserController extends Controller
     {
         $user = auth()->user();
         $general = gs();
-        $kycFee = 990; // Fixed ₹990 fee for Account KYC
+        // Phase 1 requirement: KYC fee must be ₹990 (payment-first via gateway)
+        // If setting is missing/invalid/0, force 990 to avoid bypass.
+        $kycFee = (float) ($general->kyc_fee ?? 990);
+        if ($kycFee <= 0) {
+            $kycFee = 990;
+        }
 
-        // Check if KYC payment has been made
-        $hasPaidKYCFee = Transaction::where('user_id', $user->id)
-            ->where('remark', 'kyc_fee')
-            ->where('trx_type', '-')
-            ->where('amount', $kycFee)
-            ->exists();
+        // Check if KYC payment has been made (gateway-only).
+        // IMPORTANT: Do NOT infer paid status from legacy `transactions.remark = kyc_fee`.
+        // There is a migration that deletes those rows because they were wallet-style and not a reliable gateway proof.
+        $hasPaidKYCFee = (bool) ($user->has_paid_kyc_fee ?? false);
+        $hasProof = !empty($user->kyc_fee_trx) || !empty($user->kyc_fee_paid_at);
+        if ($hasPaidKYCFee && !$hasProof) {
+            // Auto-correct any incorrectly set flags (e.g., legacy auto-upgrade without proof)
+            $user->has_paid_kyc_fee = false;
+            $user->save();
+            $hasPaidKYCFee = false;
+        }
 
         return responseSuccess('account_kyc', ['Account KYC data retrieved successfully'], [
             'personal_details' => [
@@ -200,6 +226,7 @@ class UserController extends Controller
                 'bank_name' => $user->bank_name ?? '',
                 'bank_registered_no' => $user->bank_registered_no ?? '',
                 'branch_name' => $user->branch_name ?? '',
+                'upi_id' => $user->upi_id ?? '',
             ],
             'kyc_fee' => $kycFee,
             'kyc_status' => $user->kv ?? 0,
@@ -207,12 +234,19 @@ class UserController extends Controller
             'balance' => $user->balance ?? 0,
             'currency_symbol' => $general->cur_sym ?? '₹',
             'has_paid_kyc_fee' => $hasPaidKYCFee,
+            'kyc_fee_trx' => $user->kyc_fee_trx ?? null,
+            'kyc_fee_paid_at' => $user->kyc_fee_paid_at ? $user->kyc_fee_paid_at->toDateTimeString() : null,
         ]);
     }
 
     public function updateBankDetails(Request $request)
     {
         $user = auth()->user();
+
+        // Once KYC is verified, user must reset old KYC before editing bank details
+        if ($user->kv == Status::KYC_VERIFIED) {
+            return responseError('kyc_verified_locked', ['KYC is verified. You cannot edit details unless you delete old KYC and resubmit.']);
+        }
         
         $validated = $request->validate([
             'account_holder_name' => 'required|string|max:255',
@@ -221,6 +255,7 @@ class UserController extends Controller
             'bank_name' => 'required|string|max:255',
             'bank_registered_no' => 'nullable|string|max:255',
             'branch_name' => 'nullable|string|max:255',
+            'upi_id' => 'nullable|string|max:255',
         ]);
 
         $user->update($validated);
@@ -231,44 +266,134 @@ class UserController extends Controller
     public function kycPayment(Request $request)
     {
         $user = auth()->user();
-        $kycFee = 990; // Fixed ₹990 fee for Account KYC
-        
-        // Check balance
-        if ($user->balance < $kycFee) {
-            return responseError('insufficient_balance', ['Insufficient balance. Please add funds to your account.']);
+        $general = gs();
+        $kycFee = (float) ($general->kyc_fee ?? 990);
+        if ($kycFee <= 0) {
+            $kycFee = 990;
         }
 
-        // Check if payment already made (check for existing kyc_fee transaction)
-        $existingPayment = Transaction::where('user_id', $user->id)
-            ->where('remark', 'kyc_fee')
-            ->where('trx_type', '-')
-            ->where('amount', $kycFee)
-            ->first();
+        $gateway = $request->input('gateway', 'watchpay');
 
-        if ($existingPayment) {
+        // Check if payment already made (gateway-only proof; NOT wallet balance payment)
+        $hasPaid = (bool) ($user->has_paid_kyc_fee ?? false) && (!empty($user->kyc_fee_trx) || !empty($user->kyc_fee_paid_at));
+        if ((bool) ($user->has_paid_kyc_fee ?? false) && !$hasPaid) {
+            // Fix any bad legacy flags so user can pay again properly
+            $user->has_paid_kyc_fee = false;
+            $user->save();
+        }
+        if ($hasPaid) {
             return responseError('payment_already_made', ['KYC payment has already been made. Please proceed with KYC submission.']);
         }
 
-        // Deduct KYC fee
-        $user->balance -= $kycFee;
-        $user->save();
-        
-        // Create transaction for KYC fee
         $trx = getTrx();
-        $transaction = new Transaction();
-        $transaction->user_id = $user->id;
-        $transaction->amount = $kycFee;
-        $transaction->post_balance = $user->balance;
-        $transaction->charge = 0;
-        $transaction->trx_type = '-';
-        $transaction->details = 'Account KYC Application Fee';
-        $transaction->trx = $trx;
-        $transaction->remark = 'kyc_fee';
-        $transaction->save();
+        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        cache()->put($cacheKey, [
+            'type' => 'kyc_fee',
+            'user_id' => $user->id,
+            'amount' => $kycFee,
+            'status' => 'pending',
+            'created_at' => now()->format('Y-m-d H:i:s'),
+        ], now()->addHours(2));
 
-        return responseSuccess('kyc_payment_success', ['KYC payment processed successfully'], [
-            'balance' => $user->balance,
-            'amount_paid' => $kycFee,
+        $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
+        $pageUrl = $base . '/user/account-kyc?' . ($gateway === 'simplypay' ? 'simplypay_trx=' : 'watchpay_trx=') . urlencode($trx);
+        $notifyUrl = $base . '/ipn/' . $gateway;
+
+        try {
+            if ($gateway === 'simplypay') {
+                $sp = \App\Lib\SimplyPayGateway::createPayment([
+                    'merOrderNo' => $trx,
+                    'amount' => $kycFee,
+                    'notifyUrl' => $notifyUrl,
+                    'returnUrl' => $pageUrl,
+                    'name' => $user->fullname ?: $user->username,
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'attach' => 'KYC Verification Fee',
+                ]);
+                $paymentUrl = $sp['pay_link'];
+            } else {
+                $wp = \App\Lib\WatchPayGateway::createWebPayment(
+                    $trx,
+                    (float) $kycFee,
+                    'KYC Verification Fee',
+                    $pageUrl,
+                    $notifyUrl
+                );
+                $paymentUrl = $wp['pay_link'];
+            }
+        } catch (\Throwable $e) {
+            \Log::error($gateway . ' KYC payment init failed', [
+                'user_id' => $user->id,
+                'amount' => $kycFee,
+                'trx' => $trx,
+                'error' => $e->getMessage(),
+            ]);
+            return responseError('payment_gateway_error', [$e->getMessage() ?: 'Payment gateway init failed. Please try again.']);
+        }
+
+        return responseSuccess('payment_initiated', ['Payment gateway initialized'], [
+            'payment_url' => $paymentUrl,
+            'trx' => $trx,
+            'amount' => $kycFee,
+            'currency_symbol' => $general->cur_sym ?? '₹',
+            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : 'WatchPay'),
+        ]);
+    }
+
+    public function confirmKycPayment(Request $request)
+    {
+        $request->validate([
+            'trx' => 'required|string',
+            'gateway' => 'nullable|string|in:watchpay,simplypay',
+        ]);
+
+        $user = auth()->user();
+        $general = gs();
+        $kycFee = (float) ($general->kyc_fee ?? 990);
+        if ($kycFee <= 0) {
+            $kycFee = 990;
+        }
+
+        $trx = (string) $request->trx;
+        $gateway = $request->input('gateway', 'watchpay');
+        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+
+        $session = cache()->get($cacheKey);
+        if (!is_array($session) || ($session['type'] ?? '') !== 'kyc_fee' || (int)($session['user_id'] ?? 0) !== (int)$user->id) {
+            return responseError('payment_not_found', ['Payment session not found. Please initiate payment again.']);
+        }
+        if (($session['status'] ?? '') !== 'success') {
+            return responseError('payment_pending', ['Payment not verified yet. Please complete payment and try again.']);
+        }
+
+        // Mark paid on user (do NOT deduct wallet balance)
+        if (!(bool) ($user->has_paid_kyc_fee ?? false)) {
+            $user->has_paid_kyc_fee = true;
+            $user->kyc_fee_trx = $trx;
+            $user->kyc_fee_paid_at = now();
+            $user->save();
+        }
+
+        // Agent commission on KYC fee (only if sponsor is Agent and commission enabled)
+        try {
+            $agentId = (int) ($user->ref_by ?? 0);
+            $paidAmount = (float) ($session['amount'] ?? $kycFee);
+            if ($agentId > 0 && $paidAmount > 0) {
+                AgentCommission::process(
+                    $agentId,
+                    'kyc',
+                    $paidAmount,
+                    $trx,
+                    'Agent KYC commission from User#' . $user->id . ' (KYC fee) | Base: ₹' . $paidAmount
+                );
+            }
+        } catch (\Throwable $e) {
+            // never block KYC confirmation because of commission failure
+        }
+
+        return responseSuccess('kyc_payment_success', ['KYC payment verified successfully'], [
+            'has_paid_kyc_fee' => true,
         ]);
     }
 
@@ -286,16 +411,27 @@ class UserController extends Controller
             'mobile' => $user->mobile,
             'dial_code' => $user->dial_code,
             'balance' => $user->balance,
+            'is_agent' => (bool) ($user->is_agent ?? false),
             'status' => $user->status,
             'ev' => $user->ev,
             'sv' => $user->sv,
             'kv' => $user->kv,
             'kyc_rejection_reason' => $user->kyc_rejection_reason,
+            'image' => $user->image
+                ? getImage(getFilePath('userProfile') . '/' . $user->image, getFileSize('userProfile'))
+                : asset('assets/images/default.png'),
         ]);
     }
 
     public function submitProfile(Request $request)
     {
+        // Profile editing disabled (as per product requirement).
+        return response()->json([
+            'status' => 'error',
+            'remark' => 'profile_update_disabled',
+            'message' => ['Profile updates are disabled. Please contact support.'],
+        ], 403);
+
         $request->validate([
             'firstname' => 'required|string',
             'lastname' => 'required|string',
@@ -303,7 +439,21 @@ class UserController extends Controller
             'city' => 'nullable|string',
             'state' => 'nullable|string',
             'zip' => 'nullable|string',
-            'image' => ['nullable', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
+            // NOTE: Do NOT use Laravel's `image` validator here.
+            // Some servers don't have `php_fileinfo` enabled which breaks MIME guessing:
+            // "Unable to guess the MIME type as no guessers are available"
+            'image' => [
+                'nullable',
+                'file',
+                'max:2048', // 2MB
+                function ($attribute, $value, $fail) {
+                    if (!$value) return;
+                    $ext = strtolower($value->getClientOriginalExtension() ?? '');
+                    if (!in_array($ext, ['jpg', 'jpeg', 'png'])) {
+                        $fail('Profile image must be a JPG or PNG file.');
+                    }
+                },
+            ],
         ]);
 
         $user = auth()->user();
@@ -318,6 +468,10 @@ class UserController extends Controller
                     $old
                 );
             } catch (\Exception $e) {
+                \Log::error('Profile image upload failed', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
                 return responseError('image_upload_failed', ['Could not upload your image']);
             }
         }
@@ -436,15 +590,42 @@ class UserController extends Controller
     {
         $user = auth()->user();
 
-        // STEP 2: KYC for review requires ₹990 fee first (review ke liye)
-        $kycFee = 990;
-        $hasPaidKYCFee = Transaction::where('user_id', $user->id)
-            ->where('remark', 'kyc_fee')
-            ->where('trx_type', '-')
-            ->where('amount', $kycFee)
-            ->exists();
+        // Prevent updating KYC while verified or pending review
+        if ($user->kv == Status::KYC_VERIFIED) {
+            return responseError('kyc_verified_locked', ['KYC is verified. You cannot edit KYC unless you delete old KYC and resubmit.']);
+        }
+        if ($user->kv == Status::KYC_PENDING) {
+            return responseError('kyc_pending', ['Your KYC is under review. Please wait for admin approval.']);
+        }
+
+        // Optional: enforce "watch 2 ads, earn ₹10k" before KYC – set to true to re-enable
+        $requireNewUserOfferForKyc = (bool) (gs()->require_new_user_offer_for_kyc ?? false);
+        if ($requireNewUserOfferForKyc) {
+            $newUserAdsWatched = (int) ($user->new_user_ads_watched ?? 0);
+            $requiredEarning = 10000;
+            $newUserEarnings = Transaction::where('user_id', $user->id)
+                ->where('remark', 'ad_view_reward')
+                ->where('trx_type', '+')
+                ->where('details', 'like', 'New user offer%')
+                ->sum('amount');
+            if ($newUserAdsWatched < 2 || $newUserEarnings < $requiredEarning) {
+                return responseError('earn_10k_first', [
+                    'Please complete the new user offer first. Watch 2 ads to earn ₹10,000, then you can submit KYC.'
+                ]);
+            }
+        }
+
+        // Enforce KYC fee payment BEFORE allowing submission (Phase 1: ₹990 payment-first)
+        $general = gs();
+        $kycFee = (float) ($general->kyc_fee ?? 990);
+        if ($kycFee <= 0) {
+            $kycFee = 990;
+        }
+        $hasPaidKYCFee = (bool) ($user->has_paid_kyc_fee ?? false) && (!empty($user->kyc_fee_trx) || !empty($user->kyc_fee_paid_at));
         if (!$hasPaidKYCFee) {
-            return responseError('kyc_fee_required', ['Please pay the KYC review fee of ₹990 first to submit for review.']);
+            return responseError('kyc_fee_required', [
+                'Please pay the KYC verification fee (₹990) before submitting your documents.',
+            ]);
         }
 
         // Validate KYC fields directly
@@ -558,7 +739,51 @@ class UserController extends Controller
         $user->kv = Status::KYC_PENDING;
         $user->save();
 
-        return responseSuccess('kyc_submitted', ['KYC data submitted successfully. Payment will be processed at verification step.']);
+        return responseSuccess('kyc_submitted', ['KYC data submitted successfully. Your verification will be reviewed by admin soon.']);
+    }
+
+    /**
+     * Reset (delete) existing bank + KYC data so user can resubmit after verification.
+     */
+    public function resetAccountKyc(Request $request)
+    {
+        $user = auth()->user();
+
+        if ($user->kv != Status::KYC_VERIFIED) {
+            return responseError('kyc_not_verified', ['Reset is only available after KYC is verified.']);
+        }
+
+        // Delete old KYC files (if any)
+        $existing = $user->kyc_data ?? null;
+        if ($existing) {
+            foreach ($existing as $kycData) {
+                $type  = is_object($kycData) ? ($kycData->type ?? null) : ($kycData['type'] ?? null);
+                $value = is_object($kycData) ? ($kycData->value ?? null) : ($kycData['value'] ?? null);
+                if ($type === 'file' && $value) {
+                    $oldPath = getFilePath('verify') . '/' . $value;
+                    if (file_exists($oldPath)) {
+                        @unlink($oldPath);
+                    }
+                }
+            }
+        }
+
+        // Clear KYC + bank info
+        $user->kyc_data = null;
+        $user->kyc_rejection_reason = null;
+        $user->kv = Status::KYC_UNVERIFIED;
+
+        $user->account_holder_name = null;
+        $user->account_number = null;
+        $user->ifsc_code = null;
+        $user->bank_name = null;
+        $user->bank_registered_no = null;
+        $user->branch_name = null;
+        $user->upi_id = null;
+
+        $user->save();
+
+        return responseSuccess('account_kyc_reset', ['Old KYC deleted. You can now add new bank details and submit KYC again.']);
     }
 
     public function transactions(Request $request)

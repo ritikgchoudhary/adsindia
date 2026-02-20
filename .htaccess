@@ -4,6 +4,10 @@
     </IfModule>
 
     RewriteEngine On
+    RewriteBase /
+
+    # Mark SPA routes so we can send no-cache (user/courses, login, etc.)
+    SetEnvIf Request_URI "^/(user|login|register|master_admin|campaigns|contact|policy|all-courses)(/|$)" SPA_PAGE=1
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
@@ -17,6 +21,10 @@
     # API and special routes go to Laravel
     RewriteCond %{REQUEST_URI} ^/(api|ipn|track|cron|clear|user/social-login|advertiser/social-login|admin) [NC]
     RewriteRule ^ index.php [L]
+
+    # Master Admin – Vue SPA (must not go to Laravel)
+    RewriteCond %{REQUEST_URI} ^/master_admin(/.*)?$ [NC]
+    RewriteRule ^ public/index.html [L]
 
     # Serve Vue.js built assets from public/assets/ (priority)
     RewriteCond %{REQUEST_URI} ^/assets/(.*)$
@@ -32,17 +40,37 @@
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
-    # For Vue.js SPA - serve index.html for all other routes
+    # For Vue.js SPA - serve index.html for all other routes (set env so we can no-cache it)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ public/index.html [L]
+    RewriteRule ^ public/index.html [L,E=SPA:1]
 </IfModule>
 
 # Security Headers
 <IfModule mod_headers.c>
+    # Prevent caching of SPA pages so /user/courses etc show latest after deploy
+    Header set Cache-Control "no-cache, no-store, must-revalidate" env=SPA
+    Header set Pragma "no-cache" env=SPA
+    Header set Cache-Control "no-cache, no-store, must-revalidate" env=SPA_PAGE
+    Header set Pragma "no-cache" env=SPA_PAGE
+    Header set Expires "0" env=SPA_PAGE
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
+    
+    # Set proper MIME types for assets
+    <FilesMatch "\.(js)$">
+        Header set Content-Type "application/javascript"
+    </FilesMatch>
+    <FilesMatch "\.(css)$">
+        Header set Content-Type "text/css"
+    </FilesMatch>
+</IfModule>
+
+# MIME Types
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/css .css
 </IfModule>
 
 # Prevent access to sensitive files

@@ -15,6 +15,20 @@ use Illuminate\Support\Facades\Route;
 
 Route::namespace('Api')->name('api.')->group(function(){
 
+    // No-auth: check if live site is this server (see DEPLOY_SEE_CHANGES.md)
+    Route::get('deploy-check', function () {
+        // Laravel base_path() points to /core. version.txt is written to project root.
+        $vFileCore = base_path('version.txt');
+        $vFileRoot = base_path('../version.txt');
+        $vFile = file_exists($vFileRoot) ? $vFileRoot : $vFileCore;
+        $build = file_exists($vFile) ? trim(file_get_contents($vFile)) : 'version.txt not found';
+        return response()->json([
+            'ok' => true,
+            'build' => $build,
+            'message' => 'If you see this, API is from this server. Frontend: hard refresh (Ctrl+Shift+R) on /user/courses.',
+        ]);
+    });
+
     Route::controller('AppController')->group(function () {
         Route::get('general-setting','generalSetting');
         Route::get('get-countries','getCountries');
@@ -31,11 +45,19 @@ Route::namespace('Api')->name('api.')->group(function(){
         Route::get('custom-page/{slug}', 'customPageData');
         Route::get('sections/{key?}', 'allSections');
         Route::get('categories', 'getCategories');
+        Route::get('traffic-types', 'getTrafficTypes');
         Route::get('campaigns', 'getCampaigns');
         Route::get('campaign/details/{slug}', 'getCampaignDetails');
         Route::get('ticket/{ticket}', 'viewTicket');
         Route::post('ticket/ticket-reply/{id}', 'replyTicket');
     });
+
+    // Public Package Routes (for Registration)
+    Route::get('packages', 'PackageController@getPackages');
+
+    // Public Courses & Course Packages (Homepage)
+    Route::get('public/courses', 'CourseController@publicCourses');
+    Route::get('public/course-plans', 'CoursePlanController@getPlans');
 
 	Route::namespace('Auth')->group(function(){
         Route::controller('LoginController')->group(function(){
@@ -43,6 +65,10 @@ Route::namespace('Api')->name('api.')->group(function(){
             Route::post('check-token', 'checkToken');
             Route::post('social-login', 'socialLogin');
         });
+		Route::get('register/referrer-info', 'RegisterController@getReferrerInfo');
+		Route::post('register/validate', 'RegisterController@validateRegistration');
+		Route::post('register/payment/initiate', 'RegisterController@initiateRegistrationPayment');
+		Route::get('register/payment/dummy', 'RegisterController@dummyPaymentHandler');
 		Route::post('register', 'RegisterController@register');
 
         Route::controller('ForgotPasswordController')->group(function(){
@@ -110,6 +136,17 @@ Route::namespace('Api')->name('api.')->group(function(){
                         Route::post('withdraw-request', 'withdrawStore');
                         Route::post('withdraw-request/pay-fee', 'payWithdrawalFee');
                         Route::post('withdraw-request/confirm', 'withdrawSubmit');
+                        // Main wallet GST (18%) payment via gateway before withdraw
+                        Route::post('withdraw-request/gst/initiate', 'initiateWithdrawGstPayment');
+                        Route::post('withdraw-request/gst/confirm', 'confirmWithdrawGstPayment');
+                    });
+
+                    // Affiliate wallet withdraw (separate wallet)
+                    Route::get('affiliate/withdraw-method', 'affiliateWithdrawMethod');
+                    Route::get('affiliate/withdraw/history', 'affiliateWithdrawLog');
+                    Route::middleware('kyc')->group(function(){
+                        Route::post('affiliate/withdraw-request', 'affiliateWithdrawStore');
+                        Route::post('affiliate/withdraw-request/pay-fee', 'affiliatePayWithdrawalFee');
                     });
                 });
 
@@ -140,10 +177,12 @@ Route::namespace('Api')->name('api.')->group(function(){
                 Route::get('account-kyc', 'UserController@accountKYC');
                 Route::post('bank-details', 'UserController@updateBankDetails');
                 Route::post('kyc-payment', 'UserController@kycPayment');
+                Route::post('kyc-payment/confirm', 'UserController@confirmKycPayment');
+                Route::post('account-kyc/reset', 'UserController@resetAccountKyc');
 
                 // Packages
                 Route::controller('PackageController')->prefix('packages')->group(function () {
-                    Route::get('/', 'getPackages');
+                    // Removed getPackages as it needs to be public for registration
                     Route::get('current', 'getCurrentPackage');
                     Route::post('purchase', 'purchasePackage');
                     Route::post('payment/dummy', 'dummyGatewayPayment'); // Dummy gateway payment
@@ -164,6 +203,14 @@ Route::namespace('Api')->name('api.')->group(function(){
                     Route::get('/', 'getPlans');
                     Route::get('current', 'getCurrent');
                     Route::post('purchase', 'purchase');
+                    Route::post('payment/confirm', 'confirmPayment');
+                });
+
+                // Ad Certificate (₹1250) – mandatory unlock for courses/certificates
+                Route::controller(\App\Http\Controllers\Api\AdCertificateController::class)->prefix('ad-certificate')->group(function () {
+                    Route::get('status', 'status');
+                    Route::post('purchase', 'purchase');
+                    Route::post('payment/confirm', 'confirmPayment');
                 });
                 // Courses
                 Route::get('courses', 'CourseController@getCourses');
@@ -180,12 +227,13 @@ Route::namespace('Api')->name('api.')->group(function(){
                     Route::get('plans', 'getPartnerPlans');
                     Route::get('current', 'getCurrentPlan');
                     Route::post('join', 'joinPartnerProgram');
+                    Route::post('payment/confirm', 'confirmPayment');
                 });
 
                 // Certificates
                 Route::controller('CertificateController')->prefix('certificates')->group(function () {
                     Route::get('/', 'getCertificates');
-                    Route::post('apply', 'applyCertificate');
+                    Route::get('{id}', 'getCertificate');
                 });
 
                 // Customer Support
@@ -200,26 +248,90 @@ Route::namespace('Api')->name('api.')->group(function(){
         Route::get('logout', 'Auth\LoginController@logout');
     });
 
-    // Admin API Routes
+    // Admin API Routes (controllers are in App\Http\Controllers\Admin, NOT Api\Admin)
     Route::prefix('admin')->group(function () {
         // Admin Auth
-        Route::namespace('Api\Admin\Auth')->group(function () {
-            Route::post('login', 'LoginController@login');
-        });
+        Route::post('login', [\App\Http\Controllers\Api\Admin\Auth\LoginController::class, 'login']);
         
         Route::middleware('auth:sanctum')->group(function () {
-            Route::namespace('Admin')->group(function () {
-                Route::get('dashboard', 'AdminController@dashboard');
-                Route::get('user', 'AdminController@user');
-                
-                // Courses Management
-                Route::controller('CourseController')->prefix('course')->group(function () {
-                    Route::get('/', 'index');
-                    Route::get('edit/{id}', 'edit');
-                    Route::post('store', 'store');
-                    Route::post('update/{id}', 'update');
-                    Route::post('delete/{id}', 'delete');
-                });
+            // Dashboard & Users
+            Route::get('dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard']);
+            Route::get('user', [\App\Http\Controllers\Admin\AdminController::class, 'user']);
+            Route::get('users', [\App\Http\Controllers\Admin\AdminController::class, 'allUsers']);
+            Route::post('users/create', [\App\Http\Controllers\Admin\AdminController::class, 'createUser']);
+            Route::post('user/{id}/ban', [\App\Http\Controllers\Admin\AdminController::class, 'banUser']);
+            Route::post('user/{id}/unban', [\App\Http\Controllers\Admin\AdminController::class, 'unbanUser']);
+            Route::post('user/{id}/basic-update', [\App\Http\Controllers\Admin\AdminController::class, 'updateUserBasic']);
+            Route::post('user/{id}/reset-password', [\App\Http\Controllers\Admin\AdminController::class, 'resetUserPassword']);
+            Route::post('user/{id}/change-sponsor', [\App\Http\Controllers\Admin\AdminController::class, 'changeUserSponsor']);
+            // Agent tag + commission settings (dynamic per agent)
+            Route::post('user/{id}/agent', [\App\Http\Controllers\Admin\AdminController::class, 'setUserAgent']);
+            Route::get('user/{id}/agent-commissions', [\App\Http\Controllers\Admin\AdminController::class, 'getAgentCommissionSettings']);
+            Route::post('user/{id}/agent-commissions', [\App\Http\Controllers\Admin\AdminController::class, 'updateAgentCommissionSettings']);
+            Route::post('user/{id}/approve-kyc', [\App\Http\Controllers\Admin\AdminController::class, 'approveKyc']);
+            Route::post('user/{id}/reject-kyc', [\App\Http\Controllers\Admin\AdminController::class, 'rejectKyc']);
+            Route::post('user/{id}/unapprove-kyc', [\App\Http\Controllers\Admin\AdminController::class, 'unapproveKyc']);
+            Route::post('user/{id}/bank-details', [\App\Http\Controllers\Admin\AdminController::class, 'updateUserBankDetails']);
+            Route::get('transactions', [\App\Http\Controllers\Admin\AdminController::class, 'allTransactions']);
+            Route::get('deposits', [\App\Http\Controllers\Admin\AdminController::class, 'allDeposits']);
+            Route::get('withdrawals', [\App\Http\Controllers\Admin\AdminController::class, 'allWithdrawals']);
+            // Commission Management (Master Admin)
+            Route::get('commissions/direct-affiliate', [\App\Http\Controllers\Admin\AdminController::class, 'directAffiliateCommissions']);
+            Route::post('commissions/direct-affiliate/{packageId}', [\App\Http\Controllers\Admin\AdminController::class, 'updateDirectAffiliateCommission']);
+            Route::get('commissions/agent-defaults', [\App\Http\Controllers\Admin\AdminController::class, 'getAgentCommissionDefaults']);
+            Route::post('commissions/agent-defaults', [\App\Http\Controllers\Admin\AdminController::class, 'updateAgentCommissionDefaults']);
+            Route::get('commissions/agent-upgrade-rules', [\App\Http\Controllers\Admin\AdminController::class, 'listAgentUpgradeRules']);
+            Route::post('commissions/agent-upgrade-rules', [\App\Http\Controllers\Admin\AdminController::class, 'upsertAgentUpgradeRule']);
+            Route::post('commissions/reverse', [\App\Http\Controllers\Admin\AdminController::class, 'reverseAffiliateCommission']);
+            Route::get('gateway-orders', [\App\Http\Controllers\Admin\AdminController::class, 'gatewayOrders']);
+            Route::get('gateway-deposit-orders', [\App\Http\Controllers\Admin\AdminController::class, 'gatewayDepositOrders']);
+            Route::get('all-gateway-orders', [\App\Http\Controllers\Admin\AdminController::class, 'allGatewayOrders']);
+            Route::get('ads-income/settings', [\App\Http\Controllers\Admin\AdsIncomeController::class, 'settings']);
+            Route::post('ads-income/settings', [\App\Http\Controllers\Admin\AdsIncomeController::class, 'updateSettings']);
+            Route::get('ads-income/liability', [\App\Http\Controllers\Admin\AdsIncomeController::class, 'liability']);
+            Route::post('referral/special-link', [\App\Http\Controllers\Admin\ReferralLinksController::class, 'generateSpecialLink']);
+            Route::get('referral/special-links', [\App\Http\Controllers\Admin\ReferralLinksController::class, 'listSpecialLinks']);
+            Route::put('referral/special-links/{id}', [\App\Http\Controllers\Admin\ReferralLinksController::class, 'updateSpecialLink']);
+            Route::delete('referral/special-links/{id}', [\App\Http\Controllers\Admin\ReferralLinksController::class, 'deleteSpecialLink']);
+            Route::post('deposit/approve/{id}', [\App\Http\Controllers\Admin\DepositController::class, 'approve']);
+            Route::post('deposit/reject', [\App\Http\Controllers\Admin\DepositController::class, 'reject']);
+            Route::post('withdraw/approve', [\App\Http\Controllers\Admin\AdminController::class, 'approveWithdrawal']);
+            Route::post('withdraw/reject', [\App\Http\Controllers\Admin\AdminController::class, 'rejectWithdrawal']);
+            // Dummy (GET) deposit gateway – creates pending deposit for admin approval
+            Route::get('dummy/user-deposit', [\App\Http\Controllers\Admin\DummyGatewayController::class, 'createUserDeposit']);
+            
+            // Courses Management
+            Route::prefix('course')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\CourseController::class, 'index']);
+                Route::get('edit/{id}', [\App\Http\Controllers\Admin\CourseController::class, 'edit']);
+                Route::post('store', [\App\Http\Controllers\Admin\CourseController::class, 'store']);
+                Route::post('update/{id}', [\App\Http\Controllers\Admin\CourseController::class, 'update']);
+                Route::post('delete/{id}', [\App\Http\Controllers\Admin\CourseController::class, 'delete']);
+            });
+
+            // Customer Support Links (Master Admin – values shown on /user/customer-support)
+            Route::get('support-links', [\App\Http\Controllers\Admin\SupportLinksController::class, 'index']);
+            Route::post('support-links', [\App\Http\Controllers\Admin\SupportLinksController::class, 'update']);
+
+            // Homepage Contact Section (Master Admin – values shown on /#contact)
+            Route::get('contact-info', [\App\Http\Controllers\Admin\ContactInfoController::class, 'index']);
+            Route::post('contact-info', [\App\Http\Controllers\Admin\ContactInfoController::class, 'update']);
+
+            // Policy Pages (Master Admin – Privacy, Terms, Refund, Disclaimer)
+            Route::get('policy-pages', [\App\Http\Controllers\Admin\PolicyPagesController::class, 'index']);
+            Route::post('policy-pages/{slug}', [\App\Http\Controllers\Admin\PolicyPagesController::class, 'update']);
+
+            // WatchPay Gateway Test (Master Admin)
+            Route::post('watchpay/test-payment', [\App\Http\Controllers\Admin\WatchPayTestController::class, 'initiate']);
+            Route::get('watchpay/test-payment/status', [\App\Http\Controllers\Admin\WatchPayTestController::class, 'status']);
+
+            // Packages Management
+            Route::prefix('packages')->group(function () {
+                Route::get('all', [\App\Http\Controllers\Admin\CoursePlanController::class, 'all']);
+                Route::post('create', [\App\Http\Controllers\Admin\CoursePlanController::class, 'store']);
+                Route::get('edit/{id}', [\App\Http\Controllers\Admin\CoursePlanController::class, 'edit']);
+                Route::post('update/{id}', [\App\Http\Controllers\Admin\CoursePlanController::class, 'update']);
+                Route::post('delete/{id}', [\App\Http\Controllers\Admin\CoursePlanController::class, 'delete']);
             });
             
             // Admin Logout

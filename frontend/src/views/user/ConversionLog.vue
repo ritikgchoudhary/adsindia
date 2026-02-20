@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout page-title="Conversion Log">
+  <DashboardLayout page-title="Conversion Log" :dark-theme="true">
     <div class="d-flex justify-content-end">
       <form @submit.prevent="handleSearch">
         <div class="input-group">

@@ -13,21 +13,21 @@
           <div class="col-xxl-9 col-lg-8">
             <div class="contact-wrapper">
               <span class="contact-wrapper__subtitle">DROP YOUR MESSAGES</span>
-              <h4 class="contact-wrapper__title">{{ contactData?.title || 'Contact Us' }}</h4>
+              <h4 class="contact-wrapper__title">{{ contactData?.title ?? 'Contact Us' }}</h4>
 
-              <form @submit.prevent="handleSubmit" class="contact-form">
+              <form @submit.prevent="handleSubmit" class="contact-form verify-gcaptcha">
                 <div class="row">
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label class="form--label">Name</label>
-                      <input v-model="form.name" type="text" name="name" class="form--control" required>
+                      <input v-model="form.name" type="text" name="name" class="form--control" :readonly="userReadonly" required>
                     </div>
                   </div>
 
                   <div class="col-sm-6">
                     <div class="form-group">
                       <label class="form--label">Email</label>
-                      <input v-model="form.email" type="email" name="email" class="form--control" required>
+                      <input v-model="form.email" type="email" name="email" class="form--control" :readonly="userReadonly" required>
                     </div>
                   </div>
 
@@ -63,7 +63,7 @@
                   <span class="contact-item__icon"><i class="las la-map-marker-alt"></i></span>
                   <div class="contact-item__content">
                     <h6 class="contact-item__title">Office address</h6>
-                    <p class="contact-item__desc">{{ contactData?.address || '' }}</p>
+                    <p class="contact-item__desc">{{ contactData?.address ?? '' }}</p>
                   </div>
                 </div>
                 <div class="contact-item">
@@ -71,8 +71,8 @@
                   <div class="contact-item__content">
                     <h6 class="contact-item__title">Email address</h6>
                     <p class="contact-item__desc">
-                      <a :href="`mailto:${contactData?.email_address || ''}`" class="link">
-                        {{ contactData?.email_address || '' }}
+                      <a :href="`mailto:${contactData?.email_address ?? ''}`" class="link">
+                        {{ contactData?.email_address ?? '' }}
                       </a>
                     </p>
                   </div>
@@ -82,8 +82,8 @@
                   <div class="contact-item__content">
                     <h6 class="contact-item__title">Phone number</h6>
                     <p class="contact-item__desc">
-                      <a :href="`tel:${contactData?.contact_number || ''}`" class="link">
-                        {{ contactData?.contact_number || '' }}
+                      <a :href="`tel:${contactData?.contact_number ?? ''}`" class="link">
+                        {{ contactData?.contact_number ?? '' }}
                       </a>
                     </p>
                   </div>
@@ -99,6 +99,7 @@
 
 <script>
 import { ref, onMounted } from 'vue'
+import api from '../services/api'
 import { appService } from '../services/appService'
 
 export default {
@@ -112,13 +113,44 @@ export default {
     })
     const loading = ref(false)
     const contactData = ref(null)
+    const userReadonly = ref(false)
 
     onMounted(async () => {
       try {
-        const response = await appService.getSections('contact_us')
-        contactData.value = response.data?.content?.data_values || null
+        const response = await appService.getSections('contact_us.content')
+        const content = appService.getSectionContent(response)
+        if (content) {
+          // Handle both nested data_values and flat structure
+          contactData.value = {
+            title: content.title || content.data_values?.title || '',
+            address: content.address || content.data_values?.address || '',
+            email_address: content.email_address || content.data_values?.email_address || '',
+            contact_number: content.contact_number || content.data_values?.contact_number || ''
+          }
+        }
       } catch (error) {
         console.error('Error loading contact data:', error)
+      }
+      
+      // Auto-fill user data if logged in
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('token')) {
+        try {
+          const res = await api.get('/user-info')
+          const user = res.data?.data ?? res.data
+          if (user) {
+            if (user.fullname) {
+              form.value.name = user.fullname
+            } else if (user.firstname || user.lastname) {
+              form.value.name = [user.firstname, user.lastname].filter(Boolean).join(' ').trim()
+            }
+            if (user.email) {
+              form.value.email = user.email
+              userReadonly.value = true
+            }
+          }
+        } catch (error) {
+          console.error('Error loading user info:', error)
+        }
       }
     })
 
@@ -126,20 +158,20 @@ export default {
       loading.value = true
       try {
         const response = await appService.submitContact(form.value)
+        const msg = response.message
+        const successMsg = (msg?.success && msg.success[0]) || (Array.isArray(msg) ? msg[0] : msg) || 'Ticket created successfully!'
+        const errorMsg = (msg?.error && (Array.isArray(msg.error) ? msg.error[0] : msg.error)) || (Array.isArray(msg) ? msg[0] : msg) || 'Failed to send message'
         if (response.status === 'success') {
-          if (window.notify) {
-            window.notify('success', response.message || 'Message sent successfully!')
-          }
-          form.value = { name: '', email: '', subject: '', message: '' }
+          if (window.notify) window.notify('success', successMsg)
+          form.value = { name: form.value.name, email: form.value.email, subject: '', message: '' }
         } else {
-          if (window.notify) {
-            window.notify('error', response.message || 'Failed to send message')
-          }
+          if (window.notify) window.notify('error', errorMsg)
         }
       } catch (error) {
-        if (window.notify) {
-          window.notify('error', error.response?.data?.message || 'An error occurred')
-        }
+        const data = error.response?.data
+        const errMsg = data?.message
+        const text = Array.isArray(errMsg) ? errMsg[0] : errMsg || 'An error occurred'
+        if (window.notify) window.notify('error', text)
       } finally {
         loading.value = false
       }
@@ -149,6 +181,7 @@ export default {
       form,
       loading,
       contactData,
+      userReadonly,
       handleSubmit
     }
   }

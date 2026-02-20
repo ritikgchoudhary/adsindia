@@ -1,24 +1,23 @@
 <template>
-  <div class="benefit-section my-120" v-if="benefitContent">
+  <div class="benefit-section my-120">
     <div class="container">
       <div class="row gy-5 justify-content-center">
         <div class="col-lg-6 pe-xl-5">
           <div class="section-heading style-left">
             <span class="section-heading__subtitle">
-              {{ benefitContent.heading }}
+              {{ benefitContent?.heading ?? '' }}
             </span>
             <h3 class="section-heading__title">
-              {{ benefitContent.subheading }}
+              {{ benefitContent?.subheading ?? '' }}
             </h3>
             <p class="section-heading__desc">
-              {{ benefitContent.description }}
+              {{ benefitContent?.description ?? '' }}
             </p>
           </div>
 
-          <ul class="benefit-list" v-if="benefitItems.length">
+          <ul class="benefit-list">
             <li v-for="(item, index) in benefitItems" :key="index" class="benefit-list__item">
-              <span v-if="item.data_values">{{ item.data_values.benefit }}</span>
-              <span v-else>{{ item.benefit }}</span>
+              {{ item?.data_values?.benefit ?? item?.benefit ?? '' }}
             </li>
           </ul>
         </div>
@@ -26,8 +25,8 @@
           <div class="benefit-wrapper">
             <div class="benefit-wrapper__shape"></div>
             <div class="benefit-thumb-item">
-              <div class="thumb" v-if="benefitContent.thumb">
-                <img :src="$getImage('benefit_section', benefitContent.thumb)" alt="Benefit Image" class="fit-image">
+              <div class="thumb">
+                <img :src="$getImage('benefit_section', benefitContent?.thumb)" alt="Benefit Image" class="fit-image">
               </div>
             </div>
           </div>
@@ -53,8 +52,8 @@ export default {
           appService.getSections('benefit_section'),
           appService.getSections('benefit_section.element')
         ])
-        benefitContent.value = contentRes.data?.content?.data_values || null
-        benefitItems.value = elementsRes.data || []
+        benefitContent.value = appService.getSectionContent(contentRes)
+        benefitItems.value = elementsRes?.data ?? []
       } catch (error) {
         console.error('Error loading benefit section:', error)
       }

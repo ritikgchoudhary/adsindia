@@ -18,6 +18,8 @@ use Illuminate\Support\Str;
 use Laramin\Utility\VugiChugi;
 
 function systemDetails() {
+    // Internal system slug (used for updater paths, etc.)
+    // Keep as original to avoid breaking updater/integrations.
     $system['name']          = 'affilab';
     $system['version']       = '1.0';
     $system['build_version'] = '5.1.13';
@@ -185,18 +187,31 @@ function getPageSections($arr = false) {
 
 function getImage($image, $size = null, $avatar = false) {
     $clean = '';
-    if (file_exists($image) && is_file($image)) {
-        return asset($image) . $clean;
+
+    if (!$image) {
+        return $avatar ? '/assets/images/avatar.png' : '/assets/images/default.png';
     }
 
+    // If already a full URL, return as-is
+    if (preg_match('~^https?://~i', $image)) {
+        return $image . $clean;
+    }
+
+    // Resolve relative paths against site root (Laravel is under /core)
+    $relative = ltrim($image, '/');
+    $siteRoot = dirname(base_path()); // /www/wwwroot/... (public root)
+    $fsPath   = $siteRoot . '/' . $relative;
+
+    if (file_exists($fsPath) && is_file($fsPath)) {
+        // Return path-relative URL so it's not dependent on APP_URL (often misconfigured)
+        return '/' . $relative . $clean;
+    }
+
+    // Avoid placeholder route (depends on APP_URL); use stable local fallback
     if ($avatar) {
-        return asset('assets/images/avatar.png');
+        return '/assets/images/avatar.png';
     }
-
-    if ($size) {
-        return route('placeholder.image', $size);
-    }
-    return asset('assets/images/default.png');
+    return '/assets/images/default.png';
 }
 
 function notify($user, $templateName, $shortCodes = null, $sendVia = null, $createLog = true, $pushImage = null) {

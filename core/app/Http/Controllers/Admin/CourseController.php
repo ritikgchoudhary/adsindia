@@ -12,6 +12,7 @@ class CourseController extends Controller
     public function index()
     {
         $courses = Course::ordered()->get()->map(function ($course) {
+            $plan = \App\Models\CoursePlan::find($course->required_course_plan_id);
             return [
                 'id' => $course->id,
                 'name' => $course->name,
@@ -21,6 +22,8 @@ class CourseController extends Controller
                 'duration' => $course->duration,
                 'video_url' => $course->video_url,
                 'required_package_id' => $course->required_package_id,
+                'required_course_plan_id' => $course->required_course_plan_id ?? 1,
+                'package_name' => $plan ? $plan->name : ('Plan #' . ($course->required_course_plan_id ?? 1)),
                 'price' => (float) $course->price,
                 'students_count' => $course->students_count ?? 0,
                 'status' => $course->status,
@@ -48,7 +51,7 @@ class CourseController extends Controller
             'slug' => 'nullable|string|max:255|unique:courses,slug',
             'description' => 'nullable|string',
             'image' => ['nullable', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
-            'video_url' => 'nullable|url|max:500',
+            'video_url' => 'nullable|max:500',
             'duration' => 'nullable|string|max:50',
             'students_count' => 'nullable|integer|min:0',
             'price' => 'required|numeric|min:0',
@@ -114,6 +117,7 @@ class CourseController extends Controller
             'duration' => $course->duration,
             'video_url' => $course->video_url,
             'required_package_id' => $course->required_package_id,
+            'required_course_plan_id' => $course->required_course_plan_id ?? 1,
             'price' => (float) $course->price,
             'students_count' => $course->students_count ?? 0,
             'status' => $course->status,
@@ -137,11 +141,12 @@ class CourseController extends Controller
             'slug' => 'nullable|string|max:255|unique:courses,slug,' . $id,
             'description' => 'nullable|string',
             'image' => ['nullable', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
-            'video_url' => 'nullable|url|max:500',
+            'video_url' => 'nullable|max:500',
             'duration' => 'nullable|string|max:50',
             'students_count' => 'nullable|integer|min:0',
             'price' => 'required|numeric|min:0',
             'required_package_id' => 'required|integer|min:1|max:5',
+            'required_course_plan_id' => 'nullable|integer|exists:course_plans,id',
             'category' => 'nullable|string|max:100',
             'affiliate_commission_percent' => 'nullable|numeric|min:0|max:100',
             'affiliate_commission_fixed' => 'nullable|numeric|min:0',
@@ -158,6 +163,9 @@ class CourseController extends Controller
         $course->students_count = $request->students_count ?? 0;
         $course->price = $request->price;
         $course->required_package_id = $request->required_package_id;
+        if ($request->has('required_course_plan_id')) {
+            $course->required_course_plan_id = $request->required_course_plan_id ?: 1;
+        }
         $course->category = $request->category;
         $course->affiliate_commission_percent = $request->affiliate_commission_percent ?? 0;
         $course->affiliate_commission_fixed = $request->affiliate_commission_fixed ?? 0;

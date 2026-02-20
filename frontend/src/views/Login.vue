@@ -1,41 +1,12 @@
 <template>
-  <section class="account">
+  <section class="account" style="padding-top: 160px;">
     <div class="account-inner">
       <div class="container">
-        <div class="row gy-4 flex-wrap-reverse justify-content-between">
-          <!-- Left Side - Logo and About Image -->
-          <div class="col-lg-6 d-xl-block d-none pe-xl-5">
-            <router-link to="/" class="account-logo">
-              <img :src="siteLogo" alt="logo">
-            </router-link>
-            <div class="about-thumb-wrapper" v-if="aboutData">
-              <div class="left-thumb-wrapper">
-                <div class="left-thumb"></div>
-                <div class="border-shape"></div>
-              </div>
-              <div class="about-thumb-wrapper__thumb" v-if="aboutData.image">
-                <img :src="aboutData.image" alt="Affiliate Image" />
-              </div>
-              <div class="thumb-text-wrapper">
-                <span class="text base--outline" v-if="aboutData.tag_text_one">{{ aboutData.tag_text_one }}</span>
-                <span class="text success--outline" v-if="aboutData.tag_text_two">{{ aboutData.tag_text_two }}</span>
-                <span class="text warning--outline" v-if="aboutData.tag_text_three">{{ aboutData.tag_text_three }}</span>
-                <span class="text success--outline" v-if="aboutData.tag_text_four">{{ aboutData.tag_text_four }}</span>
-                <span class="text base--outline" v-if="aboutData.tag_text_five">{{ aboutData.tag_text_five }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right Side - Login Form -->
-          <div class="col-xl-6 ps-xl-5">
-            <div class="right-thumb-wrapper">
-              <div class="right-thumb"></div>
-              <div class="border-shape"></div>
-              <div class="bg-style"></div>
-            </div>
-
-            <div class="account-form">
-              <router-link to="/" class="d-xl-none account-logo">
+        <div class="row gy-4 justify-content-center">
+          <!-- Centered Login Form -->
+          <div class="col-xl-6 col-lg-7 col-md-9">
+            <div class="account-form login-centered-form">
+              <router-link to="/" class="account-logo d-block text-center mb-4">
                 <img :src="siteLogo" alt="logo">
               </router-link>
               <div class="account-form__content">
@@ -47,13 +18,15 @@
                 <div class="row">
                   <div class="col-sm-12">
                     <div class="form-group">
-                      <label class="form--label">Username or Email</label>
+                      <label class="form--label">Email</label>
                       <input 
-                        v-model="form.username" 
-                        type="text" 
-                        name="username" 
+                        v-model="form.email" 
+                        type="email" 
+                        inputmode="email"
+                        name="email" 
                         class="form--control" 
                         required
+                        autocomplete="email"
                       >
                     </div>
                   </div>
@@ -108,7 +81,7 @@
                   class="btn btn--base w-100 btn--lg mt-3"
                   :disabled="loading"
                 >
-                  {{ loading ? 'Logging in...' : 'Submit' }}
+                  Submit
                 </button>
               </form>
 
@@ -148,14 +121,14 @@ export default {
   setup() {
     const router = useRouter()
     const form = ref({
-      username: '',
+      email: '',
       password: '',
       remember: false
     })
     const loading = ref(false)
     const error = ref('')
     const showPassword = ref(false)
-    const siteLogo = ref('/assets/images/logo.png')
+    const siteLogo = ref('/assets/images/logo_icon/logo.png?v=' + new Date().getTime())
     const loginContent = ref(null)
     const aboutData = ref(null)
     const registrationEnabled = ref(true)
@@ -169,7 +142,12 @@ export default {
       error.value = ''
       
       try {
-        const response = await authService.login(form.value)
+        const payload = {
+          email: form.value.email,
+          password: form.value.password,
+          remember: !!form.value.remember
+        }
+        const response = await authService.login(payload)
         if (response.status === 'success') {
           if (window.notify) {
             window.notify('success', 'Login successful!')
@@ -229,6 +207,19 @@ export default {
 }
 </script>
 
-<style>
-/* Styles are loaded from external CSS files */
+<style scoped>
+.account {
+  padding-top: 120px;
+}
+
+.login-centered-form {
+  max-width: 520px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.login-centered-form .account-logo img {
+  max-height: 60px;
+}
 </style>

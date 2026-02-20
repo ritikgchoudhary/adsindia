@@ -2,28 +2,50 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
+import { storeRefFromUrl } from './services/referralStore'
+
+/* Master Admin global styles */
+import './assets/master-admin-global.css'
+/* Tailwind – used only in user panel components (content scoped in tailwind.config.js) */
+import './assets/user-panel-tailwind.css'
+
+// Fix: allow page scroll on load (remove template body lock that can block scroll)
+if (typeof document !== 'undefined') {
+  document.body.classList.remove('scroll-hide-sm', 'scroll-hide')
+  document.body.style.overflow = ''
+  document.body.style.position = ''
+  document.documentElement.style.overflow = ''
+}
+
+// Referral persistence: if user lands with ?ref=ADSxxxx, store it
+storeRefFromUrl()
 
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
 
+const assetBase = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ASSET_BASE) ? import.meta.env.VITE_ASSET_BASE.replace(/\/$/, '') : ''
 app.config.globalProperties.$getImage = (path, filename) => {
-  if (!filename) return '/assets/images/default.png';
-  if (filename.startsWith('http')) return filename;
+  if (!filename && filename !== 0) return assetBase + '/assets/images/default.png';
+  const f = String(filename).trim();
+  if (!f) return assetBase + '/assets/images/default.png';
+  if (f.startsWith('http')) return f;
 
-  // Handle some common aliases or direct paths
-  if (path === 'campaign') return `/assets/images/campaign/${filename}`;
-  if (path === 'category') return `/assets/images/language/${filename}`;
-  if (path === 'logo') return `/assets/images/logo_icon/${filename}`;
-
-  // Default to frontend section path if path is just the section name
-  if (!path.includes('/')) {
-    return `/assets/images/frontend/${path}/${filename}`;
+  let p
+  if (path === 'campaign') {
+    const name = f.startsWith('thumb_') ? f : 'thumb_' + f;
+    p = `/assets/images/campaign/${name}`;
+  } else if (path === 'category') {
+    p = `/assets/images/language/${f}`;
+  } else if (path === 'logo') {
+    p = `/assets/images/logo_icon/${f}`;
+  } else if (!path.includes('/')) {
+    p = `/assets/images/frontend/${path}/${f}`;
+  } else {
+    p = `/assets/${path}/${f}`;
   }
-
-  // Otherwise use the path as provided
-  return `/assets/${path}/${filename}`;
+  return assetBase + p;
 }
 
 app.mount('#app')

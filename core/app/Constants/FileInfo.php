@@ -77,7 +77,8 @@ class FileInfo {
         ];
         $data['withdrawMethod'] = [
             'path' => 'assets/images/withdraw_method',
-            'size' => '',
+            // used as placeholder size in SPA if method image missing
+            'size' => '64x64',
         ];
         $data['pushConfig'] = [
             'path' => 'assets/admin',

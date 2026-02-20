@@ -46,6 +46,13 @@ export const appService = {
     return response.data
   },
 
+  /** Get section content data_values from API response (handles both .data.data_values and .data.content.data_values) */
+  getSectionContent(apiResponse) {
+    if (!apiResponse) return null
+    const d = apiResponse.data || apiResponse
+    return d?.data_values ?? d?.content?.data_values ?? null
+  },
+
   async getCustomPages() {
     const response = await api.get('/custom-pages')
     return response.data

@@ -14,7 +14,8 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => 'required|string',
+            // Product requirement: login ONLY via email + password (no username login)
+            'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
@@ -22,15 +23,11 @@ class LoginController extends Controller
             return responseError('validation_failed', $validator->errors());
         }
 
-        // Determine if username is email or username
-        $login = $request->username;
-        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-
-        // Find user
-        $user = User::where($fieldType, $login)->first();
+        $email = strtolower(trim((string) $request->email));
+        $user = User::where('email', $email)->first();
 
         if (!$user) {
-            return responseError('invalid_credentials', ['Invalid username or password']);
+            return responseError('invalid_credentials', ['Invalid email or password']);
         }
 
         // Check if user is banned
@@ -40,7 +37,7 @@ class LoginController extends Controller
 
         // Check plain password (system stores plain passwords)
         if ($user->password !== $request->password) {
-            return responseError('invalid_credentials', ['Invalid username or password']);
+            return responseError('invalid_credentials', ['Invalid email or password']);
         }
 
         // Create Sanctum token

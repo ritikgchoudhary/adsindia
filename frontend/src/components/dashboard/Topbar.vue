@@ -1,68 +1,102 @@
 <template>
-  <div class="dashboard-header">
-    <div class="dashboard-header__inner flex-between">
-      <div class="dashboard-header__left">
-        <div class="dashboard-body__bar d-lg-none d-block">
-          <span class="dashboard-body__bar-icon"><i class="fas fa-bars"></i></span>
-        </div>
-        <div class="search-form-wrapper">
-        </div>
+  <header class="tw-fixed tw-top-0 tw-left-0 tw-w-full tw-z-40 tw-bg-slate-900 tw-border-b tw-border-slate-700 tw-py-3 tw-px-4 md:tw-px-6 tw-transition-all tw-duration-300 lg:tw-pl-[280px]">
+    <div class="tw-flex tw-justify-between tw-items-center tw-w-full">
+      <div class="tw-flex tw-items-center tw-gap-4">
+        <!-- Sidebar Toggle (Mobile) -->
+        <button 
+          class="lg:tw-hidden tw-text-slate-300 hover:tw-text-white tw-text-2xl tw-transition-colors tw-bg-transparent tw-border-0 tw-cursor-pointer" 
+          @click="$emit('toggle-sidebar')"
+        >
+          <i class="fas fa-bars"></i>
+        </button>
+        
+        <!-- Logo (Mobile) -->
+        <router-link to="/" class="tw-flex tw-items-center tw-gap-2 tw-no-underline lg:tw-hidden">
+          <img v-if="siteLogo" :src="siteLogo" alt="ADS SKILL INDIA" class="tw-h-8 tw-w-auto" @error="siteLogo = null">
+          <span v-else class="tw-text-white tw-font-bold tw-text-lg tracking-tight">Ads Skill India</span>
+        </router-link>
       </div>
-      <div class="user-info">
-        <div class="user-info__right">
-          <div class="user-info__button">
-            <p class="user-info__name">Hello, {{ userFullname }}</p>
-            <div class="user-info__thumb">
-              <img :src="userImage" alt="User">
-            </div>
+
+      <!-- User Dropdown -->
+      <div class="tw-relative" ref="dropdownRef">
+        <div class="tw-flex tw-items-center tw-gap-3 tw-cursor-pointer" @click="toggleDropdown">
+          <div class="tw-text-right tw-hidden md:tw-block">
+            <p class="tw-text-white tw-font-medium tw-text-sm tw-mb-0.5 tw-leading-tight">Hello, {{ userFullname }}</p>
+            <p class="tw-text-slate-400 tw-text-xs tw-m-0">User Panel</p>
+          </div>
+          <div class="tw-w-10 tw-h-10 tw-rounded-full tw-overflow-hidden tw-border-2 tw-border-slate-600 tw-transition-all hover:tw-border-indigo-500">
+            <img :src="userImage" alt="User" class="tw-w-full tw-h-full tw-object-cover">
           </div>
         </div>
-        <ul class="user-info-dropdown">
-          <li class="user-info-dropdown__item">
-            <router-link to="/user/profile-setting" class="user-info-dropdown__link">
-              <span class="icon"><i class="far fa-user-circle"></i></span>
-              <span class="text">Profile Setting</span>
-            </router-link>
-          </li>
 
-          <li class="user-info-dropdown__item">
-            <router-link to="/user/change-password" class="user-info-dropdown__link">
-              <span class="icon"><i class="fas fa-key"></i></span>
-              <span class="text">Change Password</span>
-            </router-link>
-          </li>
-
-          <li class="user-info-dropdown__item">
-            <router-link to="/user/twofactor" class="user-info-dropdown__link">
-              <span class="icon"><i class="fas fa-shield-alt"></i></span>
-              <span class="text">2FA Security</span>
-            </router-link>
-          </li>
-
-          <li class="user-info-dropdown__item">
-            <a href="#" @click.prevent="handleLogout" class="user-info-dropdown__link">
-              <span class="icon"><i class="fas fa-sign-out-alt"></i></span>
-              <span class="text">Logout</span>
-            </a>
-          </li>
-        </ul>
+        <transition
+          enter-active-class="tw-transition tw-ease-out tw-duration-100"
+          enter-from-class="tw-transform tw-opacity-0 tw-scale-95"
+          enter-to-class="tw-transform tw-opacity-100 tw-scale-100"
+          leave-active-class="tw-transition tw-ease-in tw-duration-75"
+          leave-from-class="tw-transform tw-opacity-100 tw-scale-100"
+          leave-to-class="tw-transform tw-opacity-0 tw-scale-95"
+        >
+          <div v-show="showDropdown" class="tw-absolute tw-right-0 tw-top-full tw-mt-2 tw-w-56 tw-bg-slate-800 tw-border tw-border-slate-700 tw-rounded-xl tw-shadow-xl tw-overflow-hidden tw-z-50">
+            <ul class="tw-p-2 tw-list-none tw-m-0">
+              <li>
+                <router-link to="/user/profile-setting" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-2.5 tw-text-slate-300 tw-rounded-lg hover:tw-bg-slate-700 hover:tw-text-white tw-no-underline tw-transition-colors">
+                  <i class="far fa-user-circle tw-w-5"></i>
+                  <span class="tw-text-sm tw-font-medium">Profile Setting</span>
+                </router-link>
+              </li>
+              <li>
+                <router-link to="/user/change-password" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-2.5 tw-text-slate-300 tw-rounded-lg hover:tw-bg-slate-700 hover:tw-text-white tw-no-underline tw-transition-colors">
+                  <i class="fas fa-key tw-w-5"></i>
+                  <span class="tw-text-sm tw-font-medium">Change Password</span>
+                </router-link>
+              </li>
+              <li>
+                <router-link to="/user/twofactor" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-2.5 tw-text-slate-300 tw-rounded-lg hover:tw-bg-slate-700 hover:tw-text-white tw-no-underline tw-transition-colors">
+                  <i class="fas fa-shield-alt tw-w-5"></i>
+                  <span class="tw-text-sm tw-font-medium">2FA Security</span>
+                </router-link>
+              </li>
+              <li class="tw-border-t tw-border-slate-700 tw-my-1"></li>
+              <li>
+                <a href="#" @click.prevent="handleLogout" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-2.5 tw-text-red-400 tw-rounded-lg hover:tw-bg-red-500/10 hover:tw-text-red-300 tw-no-underline tw-transition-colors">
+                  <i class="fas fa-sign-out-alt tw-w-5"></i>
+                  <span class="tw-text-sm tw-font-medium">Logout</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </transition>
       </div>
     </div>
-  </div>
+  </header>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '../../services/authService'
 import { userService } from '../../services/userService'
 
 export default {
   name: 'Topbar',
-  setup() {
+  setup(_, { emit }) {
     const router = useRouter()
     const userFullname = ref('User')
     const userImage = ref('/assets/images/default.png')
+    const siteLogo = ref('/assets/images/logo_icon/logo.png?v=' + new Date().getTime())
+    const showDropdown = ref(false)
+    const dropdownRef = ref(null)
+
+    const toggleDropdown = () => {
+      showDropdown.value = !showDropdown.value
+    }
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+        showDropdown.value = false
+      }
+    }
 
     const handleLogout = async () => {
       try {
@@ -77,9 +111,13 @@ export default {
     const fetchUserInfo = async () => {
       try {
         const response = await userService.getUserInfo()
-        if (response.status === 'success' && response.data) {
-          userFullname.value = response.data.fullname || `${response.data.firstname} ${response.data.lastname}` || 'User'
-          // userImage.value = response.data.image || '/assets/images/default.png'
+        if (response.status === 'success') {
+          const data = response.data?.data || response.data
+          if (data) {
+             const name = data.fullname || [data.firstname, data.lastname].filter(Boolean).join(' ')
+             if (name) userFullname.value = name
+             if(data.image) userImage.value = data.image
+          }
         }
       } catch (error) {
         console.error('Error loading user info:', error)
@@ -88,118 +126,23 @@ export default {
 
     onMounted(() => {
       fetchUserInfo()
+      document.addEventListener('click', handleClickOutside)
+    })
+
+    onUnmounted(() => {
+      document.removeEventListener('click', handleClickOutside)
     })
 
     return {
       userFullname,
       userImage,
+      siteLogo,
+      showDropdown,
+      toggleDropdown,
+      dropdownRef,
       handleLogout
     }
-  }
+  },
+  emits: ['toggle-sidebar']
 }
 </script>
-
-<style scoped>
-.dashboard-header {
-  background: white;
-  padding: 0.75rem 2rem;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-  z-index: 100;
-  font-family: 'Outfit', sans-serif;
-}
-
-.dashboard-body__bar-icon {
-  font-size: 1.25rem;
-  color: #1e293b;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 8px;
-  transition: background 0.2s;
-}
-
-.dashboard-body__bar-icon:hover {
-  background: #f1f5f9;
-}
-
-.user-info__button {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-  padding: 0.5rem 0.75rem;
-  border-radius: 12px;
-  transition: all 0.2s;
-}
-
-.user-info__button:hover {
-  background: #f8fafc;
-}
-
-.user-info__name {
-  font-weight: 600;
-  color: #1e293b;
-  margin: 0;
-  font-size: 0.95rem;
-}
-
-.user-info__thumb {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 2px solid #f1f5f9;
-}
-
-.user-info__thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.user-info-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 2rem;
-  background: white;
-  min-width: 220px;
-  border-radius: 16px;
-  padding: 0.75rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
-  list-style: none;
-  visibility: hidden;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.2s;
-  z-index: 1000;
-}
-
-.user-info-dropdown.show {
-  visibility: visible;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.user-info-dropdown__link {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  color: #475569;
-  text-decoration: none;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.user-info-dropdown__link:hover {
-  background: #f1f5f9;
-  color: #4f46e5;
-}
-
-.user-info-dropdown__item:not(:last-child) {
-  margin-bottom: 0.25rem;
-}
-</style>

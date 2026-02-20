@@ -1,0 +1,915 @@
+/* ============================================
+   Dashboard Global Override Styles
+   Master Admin + User Dashboard
+   Loaded in main.js - ensures styles apply over template CSS
+   ============================================ */
+
+/* When master admin route - body class added by Layout.vue */
+body.master-admin-route {
+  /* Pure black theme */
+  background: #000000 !important;
+  background-attachment: fixed !important;
+  min-height: 100vh !important;
+}
+
+body.master-admin-route #app {
+  background: transparent !important;
+}
+
+/* Fix: global overrides were forcing desktop offsets on mobile */
+@media (max-width: 768px) {
+  .master-content {
+    margin-left: 0 !important;
+  }
+  .master-header {
+    left: 0 !important;
+  }
+  .master-main-content {
+    padding: 20px !important;
+  }
+  .master-sidebar {
+    transform: translateX(-100%);
+  }
+  body.master-admin-sidebar-open .master-sidebar {
+    transform: translateX(0);
+  }
+}
+
+/* Extra override when layout is in DOM (fallback) */
+body:has(.master-admin-layout) {
+  background: #000000 !important;
+  background-attachment: fixed !important;
+}
+
+/* Layout - force gradient background */
+.master-admin-layout {
+  display: flex !important;
+  min-height: 100vh !important;
+  background: #000000 !important;
+  background-attachment: fixed !important;
+  position: relative !important;
+  width: 100% !important;
+}
+
+.master-admin-layout::before {
+  content: none;
+}
+
+.master-content {
+  flex: 1 !important;
+  margin-left: 240px !important;
+  min-height: 100vh !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.master-main-content {
+  padding: 32px !important;
+  margin-top: 72px !important;
+}
+
+/* Sidebar */
+.master-sidebar {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 240px !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.88) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  color: white !important;
+  z-index: 1000 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+.master-sidebar .sidebar-header {
+  padding: 24px 20px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(0, 0, 0, 0.55) !important;
+}
+
+.master-sidebar .sidebar-logo-wrapper {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-radius: 14px !important;
+  padding: 14px 18px !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.master-sidebar .sidebar-menu li a {
+  padding: 12px 16px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border-radius: 12px !important;
+  font-size: 0.9rem !important;
+}
+
+.master-sidebar .sidebar-menu li.active a {
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+.master-sidebar .sidebar-menu li a:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Header */
+.master-header {
+  background: rgba(0, 0, 0, 0.70) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  height: 72px !important;
+  left: 240px !important;
+}
+
+.master-header .page-title {
+  color: #ffffff !important;
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+}
+
+/* Dashboard KPI cards */
+.master-dashboard .stat-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  padding: 28px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}
+
+.master-dashboard .stat-card:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 14px 46px rgba(0, 0, 0, 0.45) !important;
+  transform: translateY(-4px);
+}
+
+.master-dashboard .stat-icon {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  color: #ffffff !important;
+  border-radius: 16px !important;
+}
+
+.master-dashboard .stat-content h3 {
+  color: #f1f5f9 !important;
+  font-size: 2rem !important;
+  font-weight: 800 !important;
+}
+
+.master-dashboard .stat-content p {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.master-dashboard .welcome-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  padding: 32px !important;
+}
+
+/* Transactions - Cards */
+.ma-transactions .ma-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}
+
+.ma-transactions .ma-card__header--gradient {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.ma-transactions .ma-card__title {
+  color: #f1f5f9 !important;
+  font-size: 1.35rem !important;
+}
+
+.ma-transactions .ma-card__title i {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Transactions - Table */
+.ma-transactions .ma-table th {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.ma-transactions .ma-table th i {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.ma-transactions .ma-table td {
+  color: rgba(255, 255, 255, 0.85) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.ma-transactions .ma-table-row:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.ma-transactions .ma-table-row:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Search & filters */
+.ma-transactions .ma-search-box {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 14px !important;
+}
+
+/* Transactions - missing primitives (page-level) */
+.ma-transactions .ma-card__body {
+  padding: 18px 18px;
+}
+.ma-transactions .ma-card__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.ma-transactions .ma-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+}
+.ma-transactions .ma-search-box i {
+  color: rgba(255, 255, 255, 0.75);
+}
+.ma-transactions .ma-search-input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+}
+.ma-transactions .ma-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.ma-transactions .ma-select {
+  min-height: 44px;
+  padding: 10px 12px;
+}
+.ma-transactions .ma-select option {
+  background: #0b1220;
+  color: #fff;
+}
+
+.ma-transactions .ma-btn-refresh {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.ma-transactions .ma-btn-refresh:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.10);
+  transform: translateY(-1px);
+}
+.ma-transactions .ma-btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ma-transactions .ma-table-wrapper {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ma-transactions .ma-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1100px; /* keep columns readable, allow horizontal scroll */
+}
+.ma-transactions .ma-table th,
+.ma-transactions .ma-table td {
+  padding: 14px 14px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.ma-transactions .ma-table__loading,
+.ma-transactions .ma-table__empty {
+  padding: 34px 18px !important;
+  text-align: center;
+}
+.ma-transactions .ma-table__empty i {
+  font-size: 28px;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+.ma-transactions .ma-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: rgba(255, 255, 255, 0.9);
+  display: inline-block;
+  animation: maSpin 0.8s linear infinite;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+@keyframes maSpin { to { transform: rotate(360deg); } }
+
+.ma-transactions .ma-id-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+.ma-transactions .ma-trx-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ma-transactions .ma-trx-code {
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.85rem;
+}
+.ma-transactions .ma-btn-copy-small {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ma-transactions .ma-btn-copy-small:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.ma-transactions .ma-user-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+}
+.ma-transactions .ma-user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.95);
+  flex-shrink: 0;
+}
+.ma-transactions .ma-user-name {
+  display: block;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.1;
+}
+.ma-transactions .ma-user-username {
+  display: block;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+}
+
+.ma-transactions .ma-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.82rem;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+}
+.ma-transactions .ma-badge--success { background: rgba(16, 185, 129, 0.18); border-color: rgba(16, 185, 129, 0.35); }
+.ma-transactions .ma-badge--danger { background: rgba(239, 68, 68, 0.18); border-color: rgba(239, 68, 68, 0.35); }
+.ma-transactions .ma-badge--secondary { background: rgba(59, 130, 246, 0.14); border-color: rgba(59, 130, 246, 0.28); }
+
+.ma-transactions .ma-amount-cell,
+.ma-transactions .ma-balance-cell,
+.ma-transactions .ma-date-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ma-transactions .ma-amount-credit { color: rgba(16, 185, 129, 0.95); }
+.ma-transactions .ma-amount-debit { color: rgba(239, 68, 68, 0.95); }
+
+.ma-transactions .ma-table__details {
+  display: inline-block;
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ma-transactions .ma-pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 18px;
+  justify-content: center;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ma-transactions .ma-page-info {
+  color: rgba(255, 255, 255, 0.60);
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.ma-transactions .ma-select {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 14px !important;
+  color: #f1f5f9 !important;
+}
+
+/* Pagination */
+.ma-transactions .ma-page-btn--active {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
+/* ============================================
+   Master Admin - Global UI Primitives (Black)
+   Applies across Users/KYC/Deposits/Withdrawals/etc.
+   ============================================ */
+body.master-admin-route {
+  --ma-bg: #000000;
+  --ma-surface: rgba(255, 255, 255, 0.04);
+  --ma-surface-2: rgba(255, 255, 255, 0.06);
+  --ma-border: rgba(255, 255, 255, 0.10);
+  --ma-border-soft: rgba(255, 255, 255, 0.08);
+  --ma-text: rgba(255, 255, 255, 0.92);
+  --ma-muted: rgba(255, 255, 255, 0.62);
+  --ma-muted-2: rgba(255, 255, 255, 0.45);
+  --ma-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+}
+
+/* Cards / containers */
+body.master-admin-route .ma-card,
+body.master-admin-route .ma-doc-card,
+body.master-admin-route .ma-stat-mini,
+body.master-admin-route .ma-modal,
+body.master-admin-route .ma-modal--lg,
+body.master-admin-route .ma-modal--xl {
+  background: var(--ma-surface) !important;
+  border: 1px solid var(--ma-border-soft) !important;
+  box-shadow: var(--ma-shadow) !important;
+}
+
+body.master-admin-route .ma-card__header,
+body.master-admin-route .ma-doc-header,
+body.master-admin-route .ma-modal__header {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border-bottom: 1px solid var(--ma-border-soft) !important;
+}
+
+body.master-admin-route .ma-card__title,
+body.master-admin-route .ma-modal__title {
+  color: var(--ma-text) !important;
+}
+
+body.master-admin-route .ma-card__subtitle {
+  color: var(--ma-muted) !important;
+}
+
+/* Table */
+body.master-admin-route .ma-table {
+  color: var(--ma-text) !important;
+}
+body.master-admin-route .ma-table th {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-bottom: 1px solid var(--ma-border-soft) !important;
+  color: var(--ma-muted) !important;
+}
+body.master-admin-route .ma-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: var(--ma-text) !important;
+}
+body.master-admin-route .ma-table-row:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+body.master-admin-route .ma-table-row:nth-child(even) {
+  background: rgba(255, 255, 255, 0.015) !important;
+}
+
+/* Responsive tables (prevent horizontal overflow breaking layout) */
+body.master-admin-route .ma-table-wrapper {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+body.master-admin-route .ma-table {
+  min-width: 980px;
+}
+
+/* Inputs / selects */
+body.master-admin-route .ma-search-box,
+body.master-admin-route .ma-select,
+body.master-admin-route .ma-form-input,
+body.master-admin-route .form-control {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  color: var(--ma-text) !important;
+}
+body.master-admin-route .ma-form-input::placeholder,
+body.master-admin-route .form-control::placeholder {
+  color: var(--ma-muted-2) !important;
+}
+
+/* Tabs */
+body.master-admin-route .ma-tab {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  color: var(--ma-muted) !important;
+}
+body.master-admin-route .ma-tab:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--ma-text) !important;
+}
+body.master-admin-route .ma-tab--active {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Buttons */
+body.master-admin-route .ma-btn {
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+}
+body.master-admin-route .ma-btn:hover {
+  background: rgba(255, 255, 255, 0.10) !important;
+}
+body.master-admin-route .ma-btn--primary {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: rgba(255, 255, 255, 0.20) !important;
+}
+body.master-admin-route .ma-btn--primary:hover {
+  background: rgba(255, 255, 255, 0.90) !important;
+}
+body.master-admin-route .ma-btn--secondary {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+}
+
+/* Responsive modals */
+@media (max-width: 768px) {
+  body.master-admin-route .ma-modal,
+  body.master-admin-route .ma-modal--lg,
+  body.master-admin-route .ma-modal--xl {
+    width: calc(100% - 24px) !important;
+    margin: 12px auto !important;
+    max-height: calc(100vh - 24px) !important;
+    overflow: auto !important;
+  }
+  body.master-admin-route .ma-modal__body {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
+/* Pagination */
+body.master-admin-route .ma-page-btn {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  color: #ffffff !important;
+}
+body.master-admin-route .ma-page-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+body.master-admin-route .ma-page-btn--active {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Badges */
+body.master-admin-route .ma-badge--info {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+body.master-admin-route .ma-badge--dark {
+  background: rgba(0, 0, 0, 0.55) !important;
+  color: var(--ma-muted) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Text utilities used in some pages */
+body.master-admin-route .text-muted,
+body.master-admin-route .ma-page-info {
+  color: var(--ma-muted) !important;
+}
+
+/* Hide layout elements that clash on master admin */
+.master-admin-layout ~ .preloader,
+body:has(.master-admin-layout) .app-layout > .preloader {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .master-content {
+    margin-left: 0 !important;
+  }
+  .master-header {
+    left: 0 !important;
+  }
+}
+
+/* ============================================
+   User Dashboard Route Overrides
+   ============================================ */
+body.user-dashboard-route {
+  background: #000000 !important;
+  background-attachment: fixed !important;
+  min-height: 100vh !important;
+}
+
+body.user-dashboard-route #app {
+  background: transparent !important;
+}
+
+/* User panel dark UI overrides (cards/forms/tables) */
+body.user-dashboard-route {
+  --ud-surface: rgba(255, 255, 255, 0.04);
+  --ud-surface-2: rgba(255, 255, 255, 0.06);
+  --ud-border: rgba(255, 255, 255, 0.10);
+  --ud-text: rgba(255, 255, 255, 0.92);
+  --ud-muted: rgba(255, 255, 255, 0.62);
+}
+
+body.user-dashboard-route .tw-bg-white,
+body.user-dashboard-route .tw-bg-white\/95,
+body.user-dashboard-route .tw-bg-white\/90,
+body.user-dashboard-route .tw-bg-white\/80,
+body.user-dashboard-route .tw-bg-white\/70,
+body.user-dashboard-route .tw-bg-slate-50,
+body.user-dashboard-route .tw-bg-slate-50\/50,
+body.user-dashboard-route .tw-bg-slate-50\/60,
+body.user-dashboard-route .tw-bg-slate-50\/70,
+body.user-dashboard-route .tw-bg-slate-50\/80,
+body.user-dashboard-route .tw-bg-slate-50\/90,
+body.user-dashboard-route .tw-bg-slate-100,
+body.user-dashboard-route .tw-bg-slate-200,
+body.user-dashboard-route .tw-bg-indigo-50,
+body.user-dashboard-route .tw-bg-blue-50,
+body.user-dashboard-route .tw-bg-amber-50,
+body.user-dashboard-route .tw-bg-red-50,
+body.user-dashboard-route .tw-bg-emerald-50 {
+  background: var(--ud-surface) !important;
+}
+
+/* Slightly stronger neutral surface for chips/buttons */
+body.user-dashboard-route .tw-bg-slate-100,
+body.user-dashboard-route .tw-bg-slate-200 {
+  background: var(--ud-surface-2) !important;
+}
+
+body.user-dashboard-route .tw-border-slate-100,
+body.user-dashboard-route .tw-border-slate-200,
+body.user-dashboard-route .tw-border-slate-300,
+body.user-dashboard-route .tw-border-indigo-100,
+body.user-dashboard-route .tw-border-amber-100,
+body.user-dashboard-route .tw-border-amber-200,
+body.user-dashboard-route .tw-border-red-100,
+body.user-dashboard-route .tw-border-emerald-200 {
+  border-color: var(--ud-border) !important;
+}
+
+body.user-dashboard-route .tw-text-slate-900,
+body.user-dashboard-route .tw-text-slate-800,
+body.user-dashboard-route .tw-text-slate-700,
+body.user-dashboard-route .tw-text-slate-600 {
+  color: var(--ud-text) !important;
+}
+
+body.user-dashboard-route .tw-text-slate-500,
+body.user-dashboard-route .tw-text-slate-400,
+body.user-dashboard-route .tw-text-slate-300 {
+  color: var(--ud-muted) !important;
+}
+
+body.user-dashboard-route input,
+body.user-dashboard-route select,
+body.user-dashboard-route textarea {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+body.user-dashboard-route input::placeholder,
+body.user-dashboard-route textarea::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Fix: gradient light sections (e.g. Packages current plan) */
+body.user-dashboard-route .tw-from-indigo-50 {
+  --tw-gradient-from: rgba(255, 255, 255, 0.04) !important;
+  --tw-gradient-to: rgba(255, 255, 255, 0.04) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+body.user-dashboard-route .tw-to-white {
+  --tw-gradient-to: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Affiliate income + tables: slate gradient headers */
+body.user-dashboard-route .tw-from-slate-50 {
+  --tw-gradient-from: rgba(255, 255, 255, 0.04) !important;
+  --tw-gradient-to: rgba(255, 255, 255, 0.04) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+/* Divider utilities (tables/list separators) */
+body.user-dashboard-route .tw-divide-slate-200,
+body.user-dashboard-route .tw-divide-slate-100 {
+  --tw-divide-opacity: 0.10 !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Accent colors on dark backgrounds */
+body.user-dashboard-route .tw-text-indigo-700,
+body.user-dashboard-route .tw-text-indigo-600,
+body.user-dashboard-route .tw-text-indigo-500 {
+  color: #a5b4fc !important; /* light indigo */
+}
+body.user-dashboard-route .tw-text-emerald-700 { color: #6ee7b7 !important; }
+body.user-dashboard-route .tw-text-emerald-600 { color: #34d399 !important; }
+body.user-dashboard-route .tw-text-green-600 { color: #4ade80 !important; }
+body.user-dashboard-route .tw-text-amber-700 { color: #fcd34d !important; }
+body.user-dashboard-route .tw-text-amber-800 { color: #fde68a !important; }
+body.user-dashboard-route .tw-text-sky-700 { color: #7dd3fc !important; }
+body.user-dashboard-route .tw-text-red-800,
+body.user-dashboard-route .tw-text-red-700,
+body.user-dashboard-route .tw-text-red-500 { color: #fca5a5 !important; }
+
+/* Blue feedback box (withdraw history modal) */
+body.user-dashboard-route .tw-text-blue-800,
+body.user-dashboard-route .tw-text-blue-700 { color: #93c5fd !important; }
+
+/* Accent background chips */
+body.user-dashboard-route .tw-bg-indigo-100 { background: rgba(165, 180, 252, 0.12) !important; }
+body.user-dashboard-route .tw-bg-indigo-50 { background: rgba(165, 180, 252, 0.10) !important; }
+body.user-dashboard-route .tw-border-indigo-200 { border-color: rgba(165, 180, 252, 0.22) !important; }
+
+/* Disabled/neutral backgrounds (e.g. Withdraw submit disabled state) */
+body.user-dashboard-route .tw-bg-slate-400 {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* ============================================
+   Register page (public) – dark dropdown fixes
+   Select2 dropdown is appended to <body>
+   ============================================ */
+body.register-route .select2-dropdown {
+  background: #0b1220 !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+body.register-route .select2-results__option {
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-size: 15px !important;
+  padding: 12px 14px !important; /* bigger dropdown items */
+}
+body.register-route .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+body.register-route .select2-container--default .select2-results__option--selected {
+  background: rgba(37, 99, 235, 0.25) !important;
+  color: #ffffff !important;
+}
+body.register-route .select2-container--default .select2-selection--single,
+body.register-route .select2-container--default .select2-selection--multiple {
+  background: rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
+  color: #ffffff !important;
+  border-radius: 14px !important;
+}
+body.register-route .select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: #ffffff !important;
+}
+
+/* Fix selected area sizing/alignment (Select2) */
+body.register-route .select2-container {
+  width: 100% !important;
+  display: block !important;
+}
+/* Ensure the actual visible "selection box" spans full width */
+body.register-route .select2-container .selection,
+body.register-route .select2-container .select2-selection {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+body.register-route select.register-select2 + .select2-container {
+  width: 100% !important;
+  display: block !important;
+}
+body.register-route .select2-container .select2-selection--single {
+  height: 64px !important; /* bigger control */
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+body.register-route .select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 64px !important;
+  font-size: 16px !important;
+  padding-left: 18px !important;
+  padding-right: 60px !important; /* arrow space */
+}
+body.register-route .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 64px !important;
+  width: 60px !important;
+  top: 0 !important;
+  right: 0 !important;
+}
+body.register-route .select2-container--default .select2-selection--single .select2-selection__arrow b {
+  border: 0 !important;
+}
+body.register-route .select2-search__field {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+/* Native <select> on register (fix white bg on open, make it bigger) */
+body.register-route select.form--control {
+  /* Some mobile browsers ignore bg on native <select> unless we remove default appearance */
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+
+  background-color: #0b1220 !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
+  color: #ffffff !important;
+  border-radius: 14px !important;
+  min-height: 56px !important;
+  padding: 0 44px 0 14px !important; /* room for custom arrow */
+
+  /* Custom arrow (so we can disable native appearance) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 18px 18px;
+}
+body.register-route select.form--control:focus {
+  background-color: #0b1220 !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+  outline: none !important;
+}
+/* Hide default arrow in old MS browsers (safe elsewhere) */
+body.register-route select.form--control::-ms-expand { display: none; }
+body.register-route select.form--control option,
+body.register-route select.form--control optgroup {
+  background: #0b1220 !important;
+  color: #ffffff !important;
+}
+
+/* Locked/disabled select2 (package locked by referral link) */
+body.register-route .select2-container--disabled .select2-selection--single,
+body.register-route .select2-container--disabled .select2-selection--multiple {
+  opacity: 0.85 !important;
+  cursor: not-allowed !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}

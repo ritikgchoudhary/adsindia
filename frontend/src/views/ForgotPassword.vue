@@ -32,7 +32,7 @@
                   </div>
                   <div class="col-sm-12 mt-4">
                     <button type="submit" class="btn btn--base w-100 btn--lg" :disabled="loading">
-                      {{ loading ? 'Sending...' : 'Send Reset Code' }}
+                      Send Reset Code
                     </button>
                   </div>
                 </div>
@@ -47,7 +47,7 @@
                   </div>
                   <div class="col-sm-12 mt-4">
                     <button type="submit" class="btn btn--base w-100 btn--lg" :disabled="loading">
-                      {{ loading ? 'Verifying...' : 'Verify Code' }}
+                      Verify Code
                     </button>
                   </div>
                 </div>
@@ -68,7 +68,7 @@
                   </div>
                   <div class="col-sm-12 mt-4">
                     <button type="submit" class="btn btn--base w-100 btn--lg" :disabled="loading">
-                      {{ loading ? 'Resetting...' : 'Reset Password' }}
+                      Reset Password
                     </button>
                   </div>
                 </div>
@@ -107,7 +107,7 @@ export default {
     const loading = ref(false)
     const codeSent = ref(false)
     const codeVerified = ref(false)
-    const siteLogo = ref('/assets/images/logo.png')
+    const siteLogo = ref('/assets/images/logo_icon/logo.png?v=' + new Date().getTime())
 
     const handleSubmit = async () => {
       loading.value = true

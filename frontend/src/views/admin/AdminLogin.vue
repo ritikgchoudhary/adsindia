@@ -3,6 +3,7 @@
     <div class="login-container">
       <div class="login-card">
         <div class="login-header">
+          <img :src="logoUrl" alt="Logo" class="login-logo mb-3" style="height: 60px;">
           <h2>Admin Login</h2>
           <p>Sign in to access admin panel</p>
         </div>
@@ -34,6 +35,7 @@ export default {
   setup() {
     const router = useRouter()
     const loading = ref(false)
+    const logoUrl = ref('/assets/images/logo_icon/logo.png?v=' + new Date().getTime())
     const formData = ref({
       username: '',
       password: ''

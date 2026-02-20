@@ -12,13 +12,26 @@ use App\Models\SupportMessage;
 use App\Models\SupportTicket;
 use App\Models\Category;
 use App\Models\Campaign;
+use App\Models\CampaignTrafficType;
+use App\Models\TrafficType;
 use App\Constants\Status;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Validator;
 
 class AppController extends Controller
 {
+    private function requiredPolicyPages(): array
+    {
+        return [
+            'privacy-policy'   => 'Privacy Policy',
+            'terms-of-service' => 'Terms And Condition',
+            'refund-policy'    => 'Refund Policy',
+            'disclaimer'       => 'Disclaimer',
+        ];
+    }
+
     public function generalSetting()
     {
         $general = gs();
@@ -47,14 +60,62 @@ class AppController extends Controller
 
     public function policies()
     {
-        $policies = Frontend::where('data_keys', 'policy_pages.element')->get();
+        // Ensure required policy pages exist (so footer always shows them)
+        $temp = activeTemplateName();
+        $required = $this->requiredPolicyPages();
+
+        foreach ($required as $slug => $title) {
+            $existing = Frontend::where('data_keys', 'policy_pages.element')
+                ->where('slug', $slug)
+                ->orderBy('id', 'asc')
+                ->get();
+
+            if ($existing->count() > 0) {
+                $keep = $existing->first();
+                $dupes = $existing->slice(1);
+                foreach ($dupes as $d) {
+                    $d->delete();
+                }
+
+                $values = $keep->data_values ? (array) $keep->data_values : [];
+                if (!$keep->tempname) {
+                    $keep->tempname = $temp;
+                }
+                // Ensure a title exists
+                $keep->data_values = (object) array_merge([
+                    'title' => $values['title'] ?? $title,
+                    'details' => $values['details'] ?? ($values['description'] ?? ''),
+                    'description' => $values['description'] ?? ($values['details'] ?? ''),
+                ], $values);
+                $keep->save();
+                continue;
+            }
+
+            $frontend = new Frontend();
+            $frontend->data_keys = 'policy_pages.element';
+            $frontend->tempname = $temp;
+            $frontend->slug = $slug;
+            $frontend->data_values = (object) [
+                'title' => $title,
+                'details' => '',
+                'description' => '',
+            ];
+            $frontend->save();
+        }
+
+        $policies = Frontend::where('data_keys', 'policy_pages.element')
+            ->whereIn('slug', array_keys($required))
+            ->orderByRaw('FIELD(slug, "' . implode('","', array_keys($required)) . '")')
+            ->get();
+
         $data = $policies->map(function ($policy) {
             return [
                 'id' => $policy->id,
                 'title' => $policy->data_values->title ?? '',
                 'slug' => $policy->slug,
             ];
-        });
+        })->values();
+
         return responseSuccess('policies', ['Policies retrieved successfully'], $data);
     }
 
@@ -204,7 +265,14 @@ class AppController extends Controller
             // Try mapped key first
             $dataKey = $keyMap[$key] ?? null;
             if ($dataKey) {
-                $section = Frontend::where('data_keys', $dataKey)->first();
+                // Prefer records that have actual data_values (non-null) to avoid returning empty records
+                $section = Frontend::where('data_keys', $dataKey)
+                    ->whereNotNull('data_values')
+                    ->first();
+                // Fallback to any record if all are null
+                if (!$section) {
+                    $section = Frontend::where('data_keys', $dataKey)->first();
+                }
                 if ($section) {
                     return responseSuccess('section', ['Section retrieved successfully'], $section);
                 }
@@ -218,7 +286,23 @@ class AppController extends Controller
                 return responseSuccess('sections', ['Sections retrieved successfully'], $sections);
             }
 
-            $section = Frontend::where('data_keys', $key)->first();
+            // Prefer active template & latest non-null content (important when multiple rows exist)
+            $section = Frontend::where('data_keys', $key)
+                ->where('tempname', activeTemplateName())
+                ->whereNotNull('data_values')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            if (!$section) {
+                $section = Frontend::where('data_keys', $key)
+                    ->whereNotNull('data_values')
+                    ->orderBy('id', 'desc')
+                    ->first();
+            }
+
+            if (!$section) {
+                $section = Frontend::where('data_keys', $key)->orderBy('id', 'desc')->first();
+            }
             if ($section) {
                 return responseSuccess('section', ['Section retrieved successfully'], $section);
             }
@@ -315,6 +399,12 @@ class AppController extends Controller
         return responseSuccess('categories', ['Categories retrieved successfully'], $categories);
     }
 
+    public function getTrafficTypes()
+    {
+        $traffics = TrafficType::active()->get();
+        return responseSuccess('traffic_types', ['Traffic types retrieved successfully'], $traffics);
+    }
+
     public function getCampaigns(Request $request)
     {
         $campaigns = Campaign::running()->searchable(['title', 'description'])->whereHas('category', function ($query) {
@@ -324,8 +414,56 @@ class AppController extends Controller
         if ($request->category_id) {
             $campaigns = $campaigns->where('category_id', $request->category_id);
         }
+        if ($request->has('category') && is_array($request->category) && !in_array('on', $request->category)) {
+            $campaigns = $campaigns->whereIn('category_id', $request->category);
+        }
+        if ($request->has('traffic_type') && is_array($request->traffic_type) && !in_array('on', $request->traffic_type)) {
+            $ids = CampaignTrafficType::whereIn('traffic_type_id', $request->traffic_type)->pluck('campaign_id')->toArray();
+            $campaigns = $campaigns->whereIn('id', $ids);
+        }
+        if ($request->date && $request->date !== 'All') {
+            switch ($request->date) {
+                case 'Today':
+                    $campaigns = $campaigns->whereDate('starts_at', today());
+                    break;
+                case 'Yesterday':
+                    $campaigns = $campaigns->whereDate('starts_at', Carbon::yesterday());
+                    break;
+                case 'Last 7 Days':
+                    $campaigns = $campaigns->whereBetween('starts_at', [now()->subDays(7), now()]);
+                    break;
+                case 'Last 30 Days':
+                    $campaigns = $campaigns->whereBetween('starts_at', [now()->subDays(30), now()]);
+                    break;
+            }
+        }
+        if ($request->sort && $request->sort !== 'All') {
+            switch ($request->sort) {
+                case 'Most Recent':
+                    $campaigns = $campaigns->orderBy('created_at', 'desc');
+                    break;
+                case 'Highest Budget':
+                    $campaigns = $campaigns->orderBy('budget', 'desc');
+                    break;
+                case 'Lowest Budget':
+                    $campaigns = $campaigns->orderBy('budget', 'asc');
+                    break;
+                case 'Most conversions':
+                case 'Most Conversions':
+                    $campaigns = $campaigns->orderBy('conversion_limit', 'desc');
+                    break;
+                default:
+                    $campaigns = $campaigns->latest();
+            }
+        } else {
+            $campaigns = $campaigns->latest();
+        }
 
-        $campaigns = $campaigns->latest()->get();
+        $campaigns = $campaigns->paginate(12);
+        $campaigns->getCollection()->transform(function ($c) {
+            $c->payout_text = showAmount($c->payout_per_conversion ?? 0);
+            return $c;
+        });
         return responseSuccess('campaigns', ['Campaigns retrieved successfully'], $campaigns);
     }
 

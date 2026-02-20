@@ -101,6 +101,27 @@ class RegisterController extends Controller {
         $user->tv        = Status::ENABLE;
         $user->save();
 
+        // Send welcome email notification (non-blocking)
+        try {
+            $siteName = gs('site_name') ?? 'Our Platform';
+            $loginUrl = url('/login');
+            $refCode  = 'ADS' . $user->id;
+
+            $message = '<p>Hi <strong>' . e($user->fullname) . '</strong>,</p>'
+                . '<p>Your account has been created successfully on <strong>' . e($siteName) . '</strong>.</p>'
+                . '<p><strong>Username:</strong> ' . e($user->username) . '<br>'
+                . '<strong>Referral Code:</strong> ' . e($refCode) . '</p>'
+                . '<p>You can login here: <a href="' . e($loginUrl) . '">' . e($loginUrl) . '</a></p>'
+                . '<p>Thank you.</p>';
+
+            notify($user, 'DEFAULT', [
+                'subject' => 'Welcome to ' . $siteName,
+                'message' => $message,
+            ], ['email']);
+        } catch (\Throwable $e) {
+            // Never block registration
+        }
+
         $adminNotification            = new AdminNotification();
         $adminNotification->user_id   = $user->id;
         $adminNotification->title     = 'New member registered';

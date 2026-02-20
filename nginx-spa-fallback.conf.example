@@ -1,0 +1,21 @@
+# Nginx: SPA fallback for Vue Router (so /master_admin, /login, etc. work)
+# Add this inside your server { } block, or merge with existing location / block.
+#
+# Option A – if document root is project root (e.g. /www/wwwroot/a22-com.site):
+#   location / {
+#       try_files $uri $uri/ /public/index.html =404;
+#   }
+#
+# Option B – if document root is public (e.g. /www/wwwroot/a22-com.site/public):
+#   location / {
+#       try_files $uri $uri/ /index.html =404;
+#   }
+#
+# IMPORTANT – so /user/courses etc. show NEW UI after deploy (no cache for index.html):
+#   location = /index.html {
+#       add_header Cache-Control "no-cache, no-store, must-revalidate";
+#       add_header Pragma "no-cache";
+#   }
+#   (If root is public folder, use: location = /index.html { ... } as above.)
+#
+# Then reload Nginx: sudo nginx -t && sudo systemctl reload nginx

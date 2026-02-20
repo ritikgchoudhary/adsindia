@@ -1,7 +1,7 @@
 <template>
   <div class="card-item" :class="getBgClass(iteration)">
     <router-link :to="`/campaign/${campaign.slug}`" class="card-item__thumb">
-      <img :src="$getImage('campaign', campaign.image)" alt="img">
+      <img :src="$getImage('campaign', campaign && campaign.image)" alt="img">
     </router-link>
     <div class="card-item__content">
       <h5 class="card-item__title">

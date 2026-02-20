@@ -3,36 +3,105 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
+use App\Models\CoursePlanOrder;
+use App\Models\Transaction;
 use App\Models\UserCertificate;
 use Illuminate\Http\Request;
 
 class CertificateController extends Controller
 {
+    private const AD_CERT_PRICE = 1250.0;
+    private const AD_CERT_REMARK = 'ad_certificate_fee';
+
+    private function hasAdCertificate(int $userId): bool
+    {
+        return Transaction::where('user_id', $userId)
+            ->where('remark', self::AD_CERT_REMARK)
+            ->where('trx_type', '-')
+            ->where('amount', self::AD_CERT_PRICE)
+            ->exists();
+    }
+
     /**
-     * Certificates earned by completing courses (no payment – complete course = get certificate).
+     * Certificates: list of courses (by user's plan). Locked until course completed, then view/download.
      */
     public function getCertificates()
     {
         $user = auth()->user();
+        $hasAdCertificate = $this->hasAdCertificate((int) $user->id);
+        if (!$hasAdCertificate) {
+            return responseSuccess('certificates', ['Certificates retrieved successfully'], [
+                'data' => [],
+                'requires_ad_certificate' => true,
+                'has_ad_certificate' => false,
+                'ad_certificate_price' => (float) self::AD_CERT_PRICE,
+            ]);
+        }
 
-        $certificates = UserCertificate::where('user_id', $user->id)
-            ->with('course')
-            ->orderByDesc('issued_at')
+        $order = CoursePlanOrder::where('user_id', $user->id)
+            ->active()
+            ->with('plan')
             ->get()
-            ->map(function ($uc) {
-                return [
-                    'id' => $uc->id,
-                    'course_id' => $uc->course_id,
-                    'name' => $uc->course ? $uc->course->name . ' – Certificate' : 'Course Certificate',
-                    'description' => $uc->course ? 'Awarded on completion of: ' . $uc->course->name : 'Course completion certificate',
-                    'certificate_number' => $uc->certificate_number,
-                    'issued_at' => $uc->issued_at->format('Y-m-d H:i:s'),
-                    'course_title' => $uc->course ? $uc->course->name : null,
-                ];
-            });
+            ->filter(fn ($o) => $o->plan !== null)
+            ->sortByDesc(fn ($o) => (int) $o->plan->level)
+            ->first();
+
+        $userPlanLevel = $order && $order->plan ? (int) $order->plan->level : 0;
+
+        $courses = Course::active()
+            ->ordered()
+            ->get();
+
+        $list = [];
+        foreach ($courses as $course) {
+            $requiredPlan = (int) ($course->required_course_plan_id ?? 1);
+            if ($userPlanLevel < $requiredPlan) {
+                continue;
+            }
+
+            $userCert = UserCertificate::where('user_id', $user->id)->where('course_id', $course->id)->first();
+
+            $list[] = [
+                'course_id' => $course->id,
+                'course_name' => $course->name,
+                'course_slug' => $course->slug,
+                'locked' => $userCert === null,
+                'certificate_id' => $userCert ? $userCert->id : null,
+                'certificate_number' => $userCert ? $userCert->certificate_number : null,
+                'issued_at' => $userCert && $userCert->issued_at ? $userCert->issued_at->format('Y-m-d H:i:s') : null,
+                'name' => $userCert ? ($course->name . ' – Certificate') : $course->name,
+            ];
+        }
 
         return responseSuccess('certificates', ['Certificates retrieved successfully'], [
-            'data' => $certificates,
+            'data' => $list,
+            'requires_ad_certificate' => true,
+            'has_ad_certificate' => true,
+            'ad_certificate_price' => (float) self::AD_CERT_PRICE,
+        ]);
+    }
+
+    /**
+     * Get single certificate (for view/download). Only own certificates.
+     */
+    public function getCertificate($id)
+    {
+        $user = auth()->user();
+        if (!$this->hasAdCertificate((int) $user->id)) {
+            return responseError('ad_certificate_required', ['Please purchase Ad Certificate (₹1250) to unlock certificates.']);
+        }
+        $uc = UserCertificate::where('user_id', $user->id)->where('id', $id)->with('course')->first();
+        if (!$uc) {
+            return responseError('certificate_not_found', ['Certificate not found']);
+        }
+        return responseSuccess('certificate', ['Certificate retrieved successfully'], [
+            'id' => $uc->id,
+            'course_id' => $uc->course_id,
+            'course_name' => $uc->course ? $uc->course->name : 'Course',
+            'certificate_number' => $uc->certificate_number,
+            'issued_at' => $uc->issued_at ? $uc->issued_at->format('Y-m-d H:i:s') : null,
+            'name' => ($uc->course ? $uc->course->name : 'Course') . ' – Certificate',
         ]);
     }
 }

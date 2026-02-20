@@ -1,55 +1,99 @@
 <template>
-  <DashboardLayout page-title="Open New Ticket">
-    <div class="container">
-      <div class="row justify-content-center mt-4">
-        <div class="col-md-12">
-          <div class="card custom--card">
-            <div class="card-body">
-              <form @submit.prevent="handleSubmit" enctype="multipart/form-data">
-                <div class="row">
-                  <div class="form-group col-md-6">
-                    <label class="form--label">Subject</label>
-                    <input type="text" v-model="form.subject" name="subject" class="form--control" required>
-                  </div>
-                  <div class="form-group col-md-6">
-                    <label class="form--label">Priority</label>
-                    <select v-model="form.priority" name="priority" class="form--control select2" data-minimum-results-for-search="-1" required>
-                      <option value="3">High</option>
-                      <option value="2">Medium</option>
-                      <option value="1">Low</option>
-                    </select>
-                  </div>
-                  <div class="col-12 form-group">
-                    <label class="form--label">Message</label>
-                    <textarea v-model="form.message" id="inputMessage" rows="6" class="form--control" required></textarea>
-                  </div>
-                  <div class="col-md-9">
-                    <button type="button" class="btn btn--dark btn--sm addAttachment my-2" @click="addAttachment">
-                      <i class="fas fa-plus"></i> Add Attachment
+  <DashboardLayout page-title="Open New Ticket" :dark-theme="true">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+      <div class="md:tw-col-span-12 xl:tw-col-span-9">
+        <div class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-overflow-hidden">
+          <div class="tw-bg-slate-50 tw-p-6 tw-border-b tw-border-slate-200">
+            <h5 class="tw-text-slate-900 tw-font-bold tw-text-lg tw-mb-1 tw-flex tw-items-center">
+              <i class="fas fa-edit tw-mr-2 tw-text-indigo-600"></i>Open New Ticket
+            </h5>
+            <p class="tw-text-slate-500 tw-text-sm tw-m-0">
+              Describe your issue and we’ll get back to you as soon as possible.
+            </p>
+          </div>
+          <div class="tw-p-6">
+            <form @submit.prevent="handleSubmit" enctype="multipart/form-data" class="tw-flex tw-flex-col tw-gap-6">
+              <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-6">
+                <div>
+                  <label class="tw-block tw-text-sm tw-font-bold tw-text-slate-700 tw-mb-2">Subject</label>
+                  <input type="text" v-model="form.subject" placeholder="Brief subject of your ticket" class="tw-w-full tw-px-4 tw-py-3 tw-bg-white tw-border tw-border-slate-300 tw-rounded-xl focus:tw-outline-none focus:tw-border-indigo-500 focus:tw-ring-4 focus:tw-ring-indigo-500/10 tw-transition-all" required>
+                </div>
+                <div>
+                  <label class="tw-block tw-text-sm tw-font-bold tw-text-slate-700 tw-mb-2">Priority</label>
+                  <select v-model="form.priority" class="tw-w-full tw-px-4 tw-py-3 tw-bg-white tw-border tw-border-slate-300 tw-rounded-xl focus:tw-outline-none focus:tw-border-indigo-500 focus:tw-ring-4 focus:tw-ring-indigo-500/10 tw-transition-all" required>
+                    <option value="3">High</option>
+                    <option value="2">Medium</option>
+                    <option value="1">Low</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label class="tw-block tw-text-sm tw-font-bold tw-text-slate-700 tw-mb-2">Message</label>
+                <textarea v-model="form.message" rows="6" placeholder="Describe your issue in detail..." class="tw-w-full tw-px-4 tw-py-3 tw-bg-white tw-border tw-border-slate-300 tw-rounded-xl focus:tw-outline-none focus:tw-border-indigo-500 focus:tw-ring-4 focus:tw-ring-indigo-500/10 tw-transition-all tw-resize-y" required></textarea>
+              </div>
+
+              <div>
+                <div class="tw-bg-slate-50 tw-border tw-border-dashed tw-border-slate-300 tw-rounded-xl tw-p-6">
+                  <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
+                    <label class="tw-text-sm tw-font-bold tw-text-slate-700 tw-m-0">Attachments</label>
+                    <button type="button" class="tw-text-indigo-600 tw-bg-indigo-50 hover:tw-bg-indigo-100 tw-font-bold tw-text-sm tw-px-3 tw-py-1.5 tw-rounded-lg tw-transition-colors tw-border-0 tw-cursor-pointer disabled:tw-opacity-50 disabled:tw-cursor-not-allowed" @click="addAttachment" :disabled="attachments.length >= 5">
+                      <i class="fas fa-plus tw-mr-1"></i> Add File
                     </button>
-                    <p class="mb-2"><span class="text--info">Max 5 files can be uploaded | Maximum upload size is 2MB | Allowed File Extensions: .jpg, .jpeg, .png, .pdf, .doc, .docx</span></p>
-                    <div class="row fileUploadsContainer">
-                      <div v-for="(file, index) in attachments" :key="index" class="col-lg-4 col-md-12 removeFileInput">
-                        <div class="form-group">
-                          <div class="input-group">
-                            <input type="file" @change="handleFileChange(index, $event)" class="form-control form--control" accept=".jpeg,.jpg,.png,.pdf,.doc,.docx" required>
-                            <button type="button" class="input-group-text removeFile bg--danger text-white border--danger" @click="removeFile(index)">
-                              <i class="fas fa-times"></i>
-                            </button>
-                          </div>
-                        </div>
+                  </div>
+                  
+                  <div class="tw-space-y-3" v-if="attachments.length > 0">
+                    <div v-for="(file, index) in attachments" :key="index" class="tw-flex tw-items-center tw-gap-3">
+                      <div class="tw-flex-1 tw-relative">
+                        <input type="file" @change="handleFileChange(index, $event)" class="tw-w-full tw-text-sm tw-text-slate-500 file:tw-mr-4 file:tw-py-2 file:tw-px-4 file:tw-rounded-lg file:tw-border-0 file:tw-text-xs file:tw-font-bold file:tw-bg-indigo-50 file:tw-text-indigo-700 hover:file:tw-bg-indigo-100" accept=".jpeg,.jpg,.png,.pdf,.doc,.docx">
                       </div>
+                      <button type="button" class="tw-bg-rose-50 tw-text-rose-600 hover:tw-bg-rose-100 tw-w-9 tw-h-9 tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-transition-colors tw-border-0 tw-cursor-pointer" @click="removeFile(index)" title="Remove">
+                        <i class="fas fa-times"></i>
+                      </button>
                     </div>
                   </div>
-                  <div class="col-md-3">
-                    <button class="btn btn--base w-100 my-2" type="submit">
-                      <i class="las la-paper-plane"></i> Submit
-                    </button>
+                  <div v-else class="tw-text-center tw-py-4 tw-text-slate-400 tw-text-sm">
+                    No files attached. Click "Add File" to attach screenshots or documents.
                   </div>
+                  
+                  <p class="tw-text-slate-400 tw-text-xs tw-mt-4 tw-mb-0">
+                    Max 5 files · 2MB each · Allowed: .jpg, .jpeg, .png, .pdf, .doc, .docx
+                  </p>
                 </div>
-              </form>
-            </div>
+              </div>
+
+              <div>
+                <button type="submit" class="tw-px-8 tw-py-3.5 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-indigo-500/30 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-cursor-pointer">
+                  <i class="fas fa-paper-plane"></i> Submit Ticket
+                </button>
+              </div>
+            </form>
           </div>
+        </div>
+      </div>
+      
+      <div class="md:tw-col-span-12 xl:tw-col-span-3">
+        <div class="tw-bg-indigo-900 tw-text-white tw-rounded-2xl tw-shadow-lg tw-p-6 tw-overflow-hidden tw-relative">
+          <div class="tw-absolute tw-top-0 tw-right-0 -tw-mt-4 -tw-mr-4 tw-w-24 tw-h-24 tw-bg-white/10 tw-rounded-full tw-blur-2xl"></div>
+          <div class="tw-absolute tw-bottom-0 tw-left-0 -tw-mb-4 -tw-ml-4 tw-w-20 tw-h-20 tw-bg-indigo-500/20 tw-rounded-full tw-blur-xl"></div>
+          
+          <h5 class="tw-font-bold tw-text-lg tw-mb-4 tw-flex tw-items-center tw-relative tw-z-10">
+            <i class="fas fa-lightbulb tw-mr-2 tw-text-yellow-400"></i>Tips
+          </h5>
+          <ul class="tw-space-y-4 tw-relative tw-z-10 tw-text-indigo-100 tw-text-sm">
+            <li class="tw-flex tw-items-start tw-gap-3">
+              <i class="fas fa-check-circle tw-mt-1 tw-text-indigo-400"></i>
+              <span>Be specific about the issue you are facing.</span>
+            </li>
+            <li class="tw-flex tw-items-start tw-gap-3">
+              <i class="fas fa-check-circle tw-mt-1 tw-text-indigo-400"></i>
+              <span>Attach screenshots if possible to help us understand better.</span>
+            </li>
+            <li class="tw-flex tw-items-start tw-gap-3">
+              <i class="fas fa-check-circle tw-mt-1 tw-text-indigo-400"></i>
+              <span>Check our FAQ section before opening a ticket.</span>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -133,57 +177,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.select2+.select2-container .select2-selection__rendered {
-  line-height: unset;
-}
-
-.select2-container--default .select2-selection--single {
-  border-width: 1px !important;
-  border-radius: 12px !important;
-  border-color: var(--select2-border) !important;
-}
-
-.select2-container--open .select2-selection.select2-selection--single,
-.select2-container--open .select2-selection.select2-selection--multiple {
-  border-radius: 12px !important;
-}
-
-.select2-container--default .select2-selection--single {
-  padding: 16px 24px !important;
-}
-
-.select2+.select2-container .select2-selection__rendered {
-  padding-right: 0px !important;
-  padding-left: 0px !important;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-  top: 28px !important;
-}
-
-.select2-results__option.select2-results__option--selected,
-.select2-results__option--selectable,
-.select2-container--default .select2-results__option--disabled {
-  border-bottom-color: hsl(var(--border-color)) !important;
-}
-
-.select2-results__option.select2-results__option--selected,
-.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
-  color: hsl(var(--white)) !important;
-  background-color: hsl(var(--base)) !important;
-}
-
-.select2-results__option.select2-results__option--selected,
-.select2-results__option--selectable,
-.select2-container--default .select2-results__option--disabled {
-  border-bottom-color: hsl(var(--white)/0.2) !important;
-}
-
-.select2-container--default.select2-container--focus .select2-selection--single {
-  outline: none !important;
-  box-shadow: none !important;
-  border-color: hsl(var(--base)) !important;
-}
-</style>

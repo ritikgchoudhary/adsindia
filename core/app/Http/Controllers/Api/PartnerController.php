@@ -62,32 +62,109 @@ class PartnerController extends Controller
         $user = auth()->user();
         $request->validate([
             'plan_id' => 'required|integer|in:1,2,3',
+            'gateway' => 'nullable|string|in:watchpay,simplypay',
         ]);
 
         $planPrices = [1 => 2000, 2 => 4000, 3 => 6000];
         $planPrice = $planPrices[$request->plan_id];
 
-        if ($user->balance < $planPrice) {
-            return responseError('insufficient_balance', ['Insufficient balance']);
+        $trx = getTrx();
+        $gateway = $request->input('gateway', 'watchpay');
+
+        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        cache()->put($cacheKey, [
+            'type' => 'partner_program',
+            'user_id' => $user->id,
+            'plan_id' => (int) $request->plan_id,
+            'amount' => (float) $planPrice,
+            'status' => 'pending',
+            'created_at' => now()->format('Y-m-d H:i:s'),
+        ], now()->addHours(2));
+
+        $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
+        $pageUrl = $base . '/user/partner-program?' . ($gateway === 'simplypay' ? 'simplypay_trx=' : 'watchpay_trx=') . urlencode($trx) . '&partner_plan_id=' . (int) $request->plan_id;
+        $notifyUrl = $base . '/ipn/' . $gateway;
+
+        try {
+            if ($gateway === 'simplypay') {
+                $sp = \App\Lib\SimplyPayGateway::createPayment([
+                    'merOrderNo' => $trx,
+                    'amount' => $planPrice,
+                    'notifyUrl' => $notifyUrl,
+                    'returnUrl' => $pageUrl,
+                    'name' => $user->fullname ?: $user->username,
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'attach' => 'Partner Program',
+                ]);
+                $paymentUrl = $sp['pay_link'];
+            } else {
+                $wp = \App\Lib\WatchPayGateway::createWebPayment(
+                    $trx,
+                    (float) $planPrice,
+                    'Partner Program',
+                    $pageUrl,
+                    $notifyUrl
+                );
+                $paymentUrl = $wp['pay_link'];
+            }
+        } catch (\Throwable $e) {
+            return responseError('payment_gateway_error', ['Payment gateway init failed. Please try again.']);
         }
 
-        // Deduct balance
-        $user->balance -= $planPrice;
-        $user->partner_plan_id = $request->plan_id;
+        return responseSuccess('payment_initiated', ['Payment gateway initialized'], [
+            'payment_url' => $paymentUrl,
+            'trx' => $trx,
+            'amount' => (float) $planPrice,
+            'plan_id' => (int) $request->plan_id,
+            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : 'WatchPay'),
+        ]);
+    }
+
+    public function confirmPayment(Request $request)
+    {
+        $user = auth()->user();
+        $request->validate([
+            'trx' => 'required|string',
+            'plan_id' => 'required|integer|in:1,2,3',
+            'gateway' => 'nullable|string|in:watchpay,simplypay',
+        ]);
+
+        $trx = (string) $request->trx;
+        $gateway = $request->input('gateway', 'watchpay');
+        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+
+        $session = cache()->get($cacheKey);
+        if (!is_array($session) || ($session['type'] ?? '') !== 'partner_program' || (int)($session['user_id'] ?? 0) !== (int)$user->id) {
+            return responseError('payment_not_found', ['Payment session not found. Please initiate payment again.']);
+        }
+        if (($session['status'] ?? '') !== 'success') {
+            return responseError('payment_pending', ['Payment not verified yet. Please complete payment and try again.']);
+        }
+
+        $planId = (int) $request->plan_id;
+        $planPrices = [1 => 2000, 2 => 4000, 3 => 6000];
+        $planPrice = (float) $planPrices[$planId];
+
+        // Idempotent: if already active, return ok
+        if ((int)($user->partner_plan_id ?? 0) === $planId && $user->partner_plan_valid_until && now()->lt($user->partner_plan_valid_until)) {
+            return responseSuccess('partner_program_joined', ['Partner program already active']);
+        }
+
+        $user->partner_plan_id = $planId;
         $user->partner_plan_valid_until = now()->addDays(30);
         $user->save();
 
-        // Create transaction
-        $trx = getTrx();
+        // Transaction log (no wallet deduction)
         $transaction = new \App\Models\Transaction();
         $transaction->user_id = $user->id;
         $transaction->amount = $planPrice;
         $transaction->post_balance = $user->balance;
         $transaction->charge = 0;
         $transaction->trx_type = '-';
-        $transaction->details = 'Join Partner Program';
+        $transaction->details = 'Join Partner Program via WatchPay';
         $transaction->trx = $trx;
-        $transaction->remark = 'partner_program';
+        $transaction->remark = 'partner_program_gateway';
         $transaction->save();
 
         return responseSuccess('partner_program_joined', ['Partner program joined successfully']);

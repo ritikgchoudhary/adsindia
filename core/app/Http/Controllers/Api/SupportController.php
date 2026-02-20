@@ -3,26 +3,38 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Frontend;
 use App\Models\GeneralSetting;
 
 class SupportController extends Controller
 {
     public function getSupportLinks()
     {
-        $general = gs();
+        $frontend = Frontend::where('data_keys', 'support_links.data')->first();
+        $data = $frontend && $frontend->data_values ? (array) $frontend->data_values : [];
 
-        // Get support links from general settings or use defaults
-        $socialiteCredentials = $general->socialite_credentials ?? [];
-        
+        if (empty($data['telegram_link']) && empty($data['whatsapp_link']) && empty($data['live_chat_url'])) {
+            $general = gs();
+            $socialiteCredentials = $general->socialite_credentials ?? [];
+            $data = [
+                'telegram_link' => $socialiteCredentials['telegram_link'] ?? 'https://t.me/AdsSkillIndia',
+                'telegram_group_link' => $socialiteCredentials['telegram_group_link'] ?? ($socialiteCredentials['telegram_link'] ?? 'https://t.me/AdsSkillIndia'),
+                'whatsapp_link' => $socialiteCredentials['whatsapp_link'] ?? 'https://wa.me/919999999999',
+                'live_chat_url' => $socialiteCredentials['live_chat_url'] ?? '',
+            ];
+        }
+
         $links = [
-            'telegram' => $socialiteCredentials['telegram_link'] ?? 'https://t.me/AdsSkillIndia',
-            'whatsapp' => $socialiteCredentials['whatsapp_link'] ?? 'https://wa.me/919999999999',
-            'live_chat' => $socialiteCredentials['live_chat_enabled'] ?? true,
-            'live_chat_url' => $socialiteCredentials['live_chat_url'] ?? '/user/ticket/open',
+            'telegram' => $data['telegram_link'] ?? '',
+            'telegram_group' => $data['telegram_group_link'] ?? ($data['telegram_link'] ?? ''),
+            'whatsapp' => $data['whatsapp_link'] ?? '',
+            'live_chat' => !empty($data['live_chat_url']),
+            'live_chat_url' => $data['live_chat_url'] ?? '',
         ];
 
         return responseSuccess('support_links', ['Support links retrieved successfully'], [
-            'data' => $links,
+            // Keep response.data as the links object (frontend expects flat)
+            ...$links,
         ]);
     }
 }

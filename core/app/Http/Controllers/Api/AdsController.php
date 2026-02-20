@@ -12,25 +12,88 @@ use Illuminate\Support\Facades\Log;
 
 class AdsController extends Controller
 {
+    private function adsSettings(): array
+    {
+        $g = gs();
+        $mode = (string) ($g->ads_reward_mode ?? 'random'); // random|fixed
+        $mult = (float) ($g->ads_reward_multiplier ?? 1);
+        $min = (float) ($g->ads_reward_min ?? 1000);
+        $max = (float) ($g->ads_reward_max ?? 5000);
+        $fixed = (float) ($g->ads_reward_fixed ?? 0);
+        $step = (float) ($g->ads_reward_step ?? 100);
+        if ($min > $max) [$min, $max] = [$max, $min];
+        if ($step <= 0) $step = 1;
+        if ($mult <= 0) $mult = 1;
+
+        return [
+            'enabled' => (int) ($g->ads_enabled ?? 1) === 1,
+            'mode' => in_array($mode, ['random', 'fixed'], true) ? $mode : 'random',
+            'mult' => $mult,
+            'min' => $min,
+            'max' => $max,
+            'fixed' => $fixed,
+            'step' => $step,
+            'new_user_offer_enabled' => (int) ($g->new_user_offer_enabled ?? 1) === 1,
+            'new_user_offer_ads' => max(0, (int) ($g->new_user_offer_ads ?? 2)),
+            'new_user_offer_reward' => (float) ($g->new_user_offer_reward ?? 5000),
+        ];
+    }
+
+    private function computeEarning(array $settings, string $seedKey): float
+    {
+        $mode = $settings['mode'] ?? 'random';
+        $mult = (float) ($settings['mult'] ?? 1);
+
+        if ($mode === 'fixed') {
+            $base = (float) ($settings['fixed'] ?? 0);
+            return round($base * $mult, 2);
+        }
+
+        $min = (float) ($settings['min'] ?? 0);
+        $max = (float) ($settings['max'] ?? 0);
+        $step = (float) ($settings['step'] ?? 1);
+        if ($min > $max) [$min, $max] = [$max, $min];
+        if ($step <= 0) $step = 1;
+
+        $span = max(0.0, $max - $min);
+        $steps = (int) floor($span / $step);
+        $n = max(1, $steps + 1);
+
+        $idx = abs((int) crc32($seedKey)) % $n;
+        $val = $min + ($idx * $step);
+        if ($val > $max) $val = $max;
+        return round($val * $mult, 2);
+    }
+
     /**
      * New user = never purchased any ad package. New user gets 2 ads only, 5000 each = 10K total (one-time offer).
      */
     private function isNewUserEligibleForOffer($user)
     {
+        $s = $this->adsSettings();
+        if (!($s['new_user_offer_enabled'] ?? true)) return false;
+        $limit = (int) ($s['new_user_offer_ads'] ?? 2);
+        if ($limit <= 0) return false;
         $hasAnyPackage = AdPackageOrder::where('user_id', $user->id)->exists();
         $watched = (int) ($user->new_user_ads_watched ?? 0);
-        return !$hasAnyPackage && $watched < 2;
+        return !$hasAnyPackage && $watched < $limit;
     }
 
     public function getAds()
     {
         $user = auth()->user();
         $general = gs();
+        $settings = $this->adsSettings();
+
+        if (!($settings['enabled'] ?? true)) {
+            return responseError('ads_disabled', ['Ads earning is temporarily disabled. Please try again later.']);
+        }
 
         // Get active ad package order
         $activeOrder = AdPackageOrder::where('user_id', $user->id)
             ->active()
             ->with('package')
+            ->orderByDesc('id')
             ->first();
 
         // STEP 1: New user offer – no package yet, show 2 ads for 10K total (5000 each)
@@ -71,17 +134,25 @@ class AdsController extends Controller
             $viewIndex++;
         }
 
+        // Next ad must be watched in sequence (1 -> 2 -> 3 ...)
+        $expectedAdId = 1;
+        while (in_array($expectedAdId, $watchedAdIds, true)) {
+            $expectedAdId++;
+        }
+
         // Check if daily limit reached
-        $canWatchMore = $todayViews < $activeOrder->package->daily_ad_limit;
-        $remainingAds = $activeOrder->package->daily_ad_limit - $todayViews;
-        $realAds = $this->fetchRealAdsFromAPI($activeOrder->package->daily_ad_limit);
-        $earnings = [5000, 5500, 6000];
+        $dailyLimit = (int) ($activeOrder->package->daily_ad_limit ?? 0);
+        $canWatchMore = $todayViews < $dailyLimit;
+        $remainingAds = $dailyLimit - $todayViews;
+        $realAds = $this->fetchRealAdsFromAPI($dailyLimit);
         $ads = [];
 
-        for ($i = 1; $i <= $activeOrder->package->daily_ad_limit; $i++) {
-            $earning = $earnings[array_rand($earnings)];
+        for ($i = 1; $i <= $dailyLimit; $i++) {
+            $seed = $user->id . '|' . $activeOrder->id . '|' . $i . '|' . today()->toDateString();
+            $earning = $this->computeEarning($settings, $seed);
             $adData = isset($realAds[$i - 1]) ? $realAds[$i - 1] : $this->getFallbackAd($i);
             $isWatched = in_array($i, $watchedAdIds);
+            $isUnlocked = $i <= $expectedAdId;
             $ads[] = [
                 'id' => $i,
                 'title' => $adData['title'],
@@ -91,8 +162,12 @@ class AdsController extends Controller
                 'duration' => (int)($activeOrder->package->duration_seconds / 60),
                 'duration_seconds' => $activeOrder->package->duration_seconds,
                 'earning' => (float)$earning,
-                'is_active' => $canWatchMore && !$isWatched,
+                'earning_min' => (float) ($settings['mode'] === 'fixed' ? ($settings['fixed'] * $settings['mult']) : ($settings['min'] * $settings['mult'])),
+                'earning_max' => (float) ($settings['mode'] === 'fixed' ? ($settings['fixed'] * $settings['mult']) : ($settings['max'] * $settings['mult'])),
+                // Only next expected ad can be watched (sequence-based) and only if daily limit not reached
+                'is_active' => $canWatchMore && !$isWatched && $i === $expectedAdId,
                 'is_watched' => $isWatched,
+                'is_unlocked' => $isUnlocked,
                 'timer' => null,
             ];
         }
@@ -100,10 +175,15 @@ class AdsController extends Controller
         return responseSuccess('ads_data', ['Ads retrieved successfully'], [
             'data' => $ads,
             'active_package' => [
+                'package_id' => (int) $activeOrder->package->id,
+                'order_id' => (int) $activeOrder->id,
                 'name' => $activeOrder->package->name,
-                'daily_limit' => $activeOrder->package->daily_ad_limit,
+                'daily_limit' => $dailyLimit,
+                'duration_seconds' => (int) ($activeOrder->package->duration_seconds ?? 60),
+                'expires_at' => $activeOrder->expires_at ? $activeOrder->expires_at->toDateTimeString() : null,
                 'today_views' => $todayViews,
                 'remaining_ads' => max(0, $remainingAds),
+                'next_ad_id' => $canWatchMore ? $expectedAdId : null,
             ],
             'currency_symbol' => $general->cur_sym ?? '₹',
             'is_new_user_offer' => false,
@@ -115,37 +195,47 @@ class AdsController extends Controller
      */
     private function getNewUserAds($user, $general)
     {
+        $settings = $this->adsSettings();
         $watched = (int) ($user->new_user_ads_watched ?? 0);
-        $realAds = $this->getRealLookingAds(2);
+        $expectedAdId = $watched + 1;
+        $limit = max(0, (int) ($settings['new_user_offer_ads'] ?? 2));
+        $realAds = $this->getRealLookingAds(max(1, $limit));
         $ads = [];
-        $earningPerAd = 5000;
-        $durationSeconds = 60;
+        $earningPerAd = round(((float) ($settings['new_user_offer_reward'] ?? 5000)) * (float) ($settings['mult'] ?? 1), 2);
+        $durationSeconds = 30 * 60; // 30 minutes per ad for new users
 
-        for ($i = 1; $i <= 2; $i++) {
+        for ($i = 1; $i <= $limit; $i++) {
             $isWatched = $watched >= $i;
             $adData = $realAds[$i - 1] ?? $this->getFallbackAd($i);
             $ads[] = [
                 'id' => $i,
                 'title' => $adData['title'],
-                'description' => 'New user offer: Watch this ad completely to earn ' . showAmount($earningPerAd) . '. (2 ads total = ₹10,000.)',
+                'description' => 'New user offer: Watch this ad completely (30 minutes) to earn ' . showAmount($earningPerAd) . '.',
                 'video_url' => $adData['video_url'],
                 'image' => $adData['image'] ?? '/assets/images/default-ad.jpg',
-                'duration' => 1,
+                'duration' => (int) ceil($durationSeconds / 60),
                 'duration_seconds' => $durationSeconds,
                 'earning' => (float) $earningPerAd,
-                'is_active' => !$isWatched,
+                // Sequence-based: must watch 1 then 2
+                'is_active' => !$isWatched && $i === $expectedAdId,
                 'is_watched' => $isWatched,
+                'is_unlocked' => $i <= $expectedAdId,
                 'timer' => null,
             ];
         }
 
-        return responseSuccess('ads_data', ['New user offer: Watch 2 ads to earn ₹10,000'], [
+        $total = round($earningPerAd * max(1, $limit), 2);
+        return responseSuccess('ads_data', ['New user offer: Watch ' . $limit . ' ads to earn ' . showAmount($total)], [
             'data' => $ads,
             'active_package' => [
+                'package_id' => 0,
+                'order_id' => 0,
                 'name' => 'New User Offer',
-                'daily_limit' => 2,
+                'daily_limit' => $limit,
+                'duration_seconds' => $durationSeconds,
                 'today_views' => $watched,
-                'remaining_ads' => max(0, 2 - $watched),
+                'remaining_ads' => max(0, $limit - $watched),
+                'next_ad_id' => $expectedAdId <= $limit ? $expectedAdId : null,
             ],
             'currency_symbol' => $general->cur_sym ?? '₹',
             'is_new_user_offer' => true,
@@ -164,11 +254,14 @@ class AdsController extends Controller
         $activeOrder = AdPackageOrder::where('user_id', $user->id)
             ->active()
             ->with('package')
+            ->orderByDesc('id')
             ->first();
 
         // New user offer: 2 ads, 5000 each (no package required)
         if (!$activeOrder) {
-            if ($this->isNewUserEligibleForOffer($user) && in_array((int)$request->ad_id, [1, 2], true)) {
+            $settings = $this->adsSettings();
+            $limit = max(0, (int) ($settings['new_user_offer_ads'] ?? 2));
+            if ($limit > 0 && $this->isNewUserEligibleForOffer($user) && (int) $request->ad_id >= 1 && (int) $request->ad_id <= $limit) {
                 return $this->completeNewUserAd($user, $request);
             }
             return responseError('no_active_package', ['No active ad package. Purchase an ad plan to continue.']);
@@ -186,6 +279,7 @@ class AdsController extends Controller
             ->where('user_package_id', $activeOrder->id)
             ->whereDate('viewed_at', today())
             ->where('is_completed', true)
+            ->orderBy('viewed_at', 'asc')
             ->get();
         
         // Check if this ad_id was already watched
@@ -195,6 +289,25 @@ class AdsController extends Controller
                     return responseError('already_watched', ['This ad has already been watched today']);
                 }
             }
+        }
+
+        // Enforce sequential watching (must watch ad 1 -> 2 -> 3 ...)
+        $watchedAdIds = [];
+        $viewIndex = 0;
+        foreach ($watchedAdViews as $view) {
+            if (preg_match('/ad_id:(\d+)/', $view->ad_url, $matches)) {
+                $watchedAdIds[] = (int) $matches[1];
+            } else {
+                $watchedAdIds[] = $viewIndex + 1;
+            }
+            $viewIndex++;
+        }
+        $expectedAdId = 1;
+        while (in_array($expectedAdId, $watchedAdIds, true)) {
+            $expectedAdId++;
+        }
+        if ((int) $request->ad_id !== (int) $expectedAdId) {
+            return responseError('sequential_required', ['Please watch ad ' . $expectedAdId . ' next.']);
         }
 
         // Check daily limit
@@ -208,9 +321,12 @@ class AdsController extends Controller
             return responseError('daily_limit_reached', ['Daily ad viewing limit reached']);
         }
 
-        // Each ad earns 5000-6000 randomly
-        $earnings = [5000, 5500, 6000];
-        $earning = $earnings[array_rand($earnings)];
+        $settings = $this->adsSettings();
+        if (!($settings['enabled'] ?? true)) {
+            return responseError('ads_disabled', ['Ads earning is temporarily disabled. Please try again later.']);
+        }
+        $seed = $user->id . '|' . $activeOrder->id . '|' . (int)$request->ad_id . '|' . today()->toDateString();
+        $earning = $this->computeEarning($settings, $seed);
 
         // Store ad_id in ad_url field as JSON or prefix for tracking
         // Format: "ad_id:1|url:https://..."
@@ -255,18 +371,20 @@ class AdsController extends Controller
      */
     private function completeNewUserAd($user, Request $request)
     {
+        $settings = $this->adsSettings();
         $watched = (int) ($user->new_user_ads_watched ?? 0);
         $expectedAdId = $watched + 1;
         if ((int)$request->ad_id !== $expectedAdId) {
             return responseError('invalid_ad_order', ['Please watch ad ' . $expectedAdId . ' next.']);
         }
 
-        $minWatchDuration = 54; // 90% of 60 seconds
+        $durationSeconds = 30 * 60; // 30 minutes per ad for new users
+        $minWatchDuration = (int) ($durationSeconds * 0.9);
         if ($request->watch_duration < $minWatchDuration) {
             return responseError('incomplete_watch', ['Please watch the complete video to earn reward']);
         }
 
-        $earning = 5000;
+        $earning = round(((float) ($settings['new_user_offer_reward'] ?? 5000)) * (float) ($settings['mult'] ?? 1), 2);
         $user->balance = ($user->balance ?? 0) + $earning;
         $user->new_user_ads_watched = $watched + 1;
         $user->save();
@@ -283,7 +401,10 @@ class AdsController extends Controller
         $transaction->remark = 'ad_view_reward';
         $transaction->save();
 
-        return responseSuccess('ad_completed', ['Ad watched! You earned ₹5,000. ' . ($user->new_user_ads_watched >= 2 ? 'Complete KYC and withdraw your ₹10,000.' : 'Watch the next ad to complete ₹10,000.')], [
+        $limit = max(0, (int) ($settings['new_user_offer_ads'] ?? 2));
+        $total = round($earning * max(1, $limit), 2);
+        $done = (int) ($user->new_user_ads_watched ?? 0) >= $limit;
+        return responseSuccess('ad_completed', ['Ad watched! You earned ' . showAmount($earning) . '. ' . ($done ? ('Complete KYC and withdraw your ' . showAmount($total) . '.') : ('Watch the next ad to complete ' . showAmount($total) . '.'))], [
             'earning' => $earning,
             'new_balance' => $user->balance,
             'is_new_user_offer' => true,
@@ -347,55 +468,56 @@ class AdsController extends Controller
      */
     private function getRealLookingAds($count = 2)
     {
-        // Videos exactly 1 minute (60 seconds) for testing
-        // Using videos that are approximately 60 seconds long
+        // IMPORTANT:
+        // Some public sample buckets (e.g. commondatastorage.googleapis.com) may return 403 on mobile networks/devices.
+        // Use multiple reliable sources that allow direct MP4 playback.
         $realAdVideos = [
             [
                 'title' => 'Test Ad Video 1',
-                'description' => 'Watch this 1-minute (60 seconds) test video to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                'description' => 'Watch this test video to earn rewards.',
+                'video_url' => 'https://www.w3schools.com/html/mov_bbb.mp4',
                 'image' => 'https://picsum.photos/640/360?random=1',
             ],
             [
                 'title' => 'Test Ad Video 2',
-                'description' => 'Watch this 1-minute (60 seconds) test video to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+                'description' => 'Watch this test video to earn rewards.',
+                'video_url' => 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
                 'image' => 'https://picsum.photos/640/360?random=2',
             ],
             [
                 'title' => 'Test Ad Video 3',
-                'description' => 'Watch this 1-minute (60 seconds) test video to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+                'description' => 'Watch this test video to earn rewards.',
+                'video_url' => 'https://filesamples.com/samples/video/mp4/sample_640x360.mp4',
                 'image' => 'https://picsum.photos/640/360?random=3',
             ],
             [
                 'title' => 'Test Ad Video 4',
-                'description' => 'Watch this 1-minute (60 seconds) test video to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+                'description' => 'Watch this test video to earn rewards.',
+                'video_url' => 'https://www.w3schools.com/html/mov_bbb.mp4',
                 'image' => 'https://picsum.photos/640/360?random=4',
             ],
             [
                 'title' => 'Test Ad Video 5',
-                'description' => 'Watch this 1-minute (60 seconds) test video to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+                'description' => 'Watch this test video to earn rewards.',
+                'video_url' => 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
                 'image' => 'https://picsum.photos/640/360?random=5',
             ],
             [
                 'title' => 'Test Ad Video 6',
-                'description' => 'Watch this 1-minute (60 seconds) test video to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+                'description' => 'Watch this test video to earn rewards.',
+                'video_url' => 'https://filesamples.com/samples/video/mp4/sample_640x360.mp4',
                 'image' => 'https://picsum.photos/640/360?random=6',
             ],
             [
                 'title' => 'Test Ad Video 7',
-                'description' => 'Watch this 1-minute (60 seconds) test video to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreet.mp4',
+                'description' => 'Watch this test video to earn rewards.',
+                'video_url' => 'https://www.w3schools.com/html/mov_bbb.mp4',
                 'image' => 'https://picsum.photos/640/360?random=7',
             ],
             [
                 'title' => 'Test Ad Video 8',
-                'description' => 'Watch this 1-minute (60 seconds) test video to earn rewards.',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+                'description' => 'Watch this test video to earn rewards.',
+                'video_url' => 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
                 'image' => 'https://picsum.photos/640/360?random=8',
             ],
         ];
@@ -410,20 +532,20 @@ class AdsController extends Controller
      */
     private function getFallbackAd($index)
     {
-        // 1-minute (60 seconds) test video for fallback
+        // Fallback test videos from reliable sources
         $fallbackAds = [
             [
                 'title' => 'Test Ad Video',
-                'description' => 'Watch this 1-minute (60 seconds) test video to earn rewards',
-                'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                'description' => 'Watch this test video to earn rewards',
+                'video_url' => 'https://www.w3schools.com/html/mov_bbb.mp4',
                 'image' => '/assets/images/default-ad.jpg',
             ],
         ];
         
         return $fallbackAds[0] ?? [
             'title' => 'Test Ad Video #' . $index,
-            'description' => 'Watch this 1-minute (60 seconds) test video to earn rewards',
-            'video_url' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+            'description' => 'Watch this test video to earn rewards',
+            'video_url' => 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
             'image' => '/assets/images/default-ad.jpg',
         ];
     }

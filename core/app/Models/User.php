@@ -23,6 +23,7 @@ class User extends Authenticatable {
         'bank_name',
         'bank_registered_no',
         'branch_name',
+        'upi_id',
         'new_user_ads_watched',
     ];
 
@@ -44,6 +45,7 @@ class User extends Authenticatable {
         'email_verified_at' => 'datetime',
         'kyc_data'          => 'object',
         'ver_code_send_at'  => 'datetime',
+        'is_agent'          => 'boolean',
     ];
 
     public function loginLogs() {

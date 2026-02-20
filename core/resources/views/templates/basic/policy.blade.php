@@ -3,7 +3,7 @@
     <section class="my-120">
         <div class="container">
             @php
-                echo $policy?->data_values?->details ?? '';
+                echo $policy?->data_values?->details ?? ($policy?->data_values?->description ?? '');
             @endphp
         </div>
     </section>

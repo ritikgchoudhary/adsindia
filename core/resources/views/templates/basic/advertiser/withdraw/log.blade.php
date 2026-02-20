@@ -25,7 +25,6 @@
                                     <th>@lang('Gateway | Transaction')</th>
                                     <th>@lang('Initiated')</th>
                                     <th>@lang('Amount')</th>
-                                    <th>@lang('Conversion')</th>
                                     <th>@lang('Status')</th>
                                     <th>@lang('Action')</th>
                                 </tr>
@@ -65,13 +64,6 @@
                                                 <strong data-bs-toggle="tooltip" title="@lang('Amount after charge')">
                                                     {{ showAmount($withdraw->amount - $withdraw->charge) }}
                                                 </strong>
-                                            </div>
-                                        </td>
-
-                                        <td>
-                                            <div>
-                                                {{ showAmount(1) }} = {{ showAmount($withdraw->rate, currencyFormat: false) }} {{ __($withdraw->currency) }}<br>
-                                                <strong>{{ showAmount($withdraw->final_amount, currencyFormat: false) }} {{ __($withdraw->currency) }}</strong>
                                             </div>
                                         </td>
 
@@ -130,6 +122,22 @@
         </div>
     </div>
 @endsection
+
+@push('style')
+<style>
+  /* Fix: some theme styles make withdraw history table text turn white on hover */
+  .campaign-table .table--responsive--lg tbody tr:hover td,
+  .campaign-table .table--responsive--lg tbody tr:hover td div,
+  .campaign-table .table--responsive--lg tbody tr:hover td small,
+  .campaign-table .table--responsive--lg tbody tr:hover td strong,
+  .campaign-table .table--responsive--lg tbody tr:hover td span:not(.badge) {
+    color: #0f172a !important; /* slate-900 */
+  }
+  .campaign-table .table--responsive--lg tbody tr:hover td a:not(.btn) {
+    color: #4f46e5 !important; /* indigo-600 */
+  }
+</style>
+@endpush
 
 @push('script')
     <script>

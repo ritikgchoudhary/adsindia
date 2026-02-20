@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-header">
+  <div class="admin-header" :class="{ collapsed: sidebarCollapsed }">
     <div class="header-left">
       <button @click="$emit('toggle-sidebar')" class="menu-toggle">
         <i class="fas fa-bars"></i>
@@ -27,8 +27,13 @@ export default {
     pageTitle: {
       type: String,
       default: 'Dashboard'
+    },
+    sidebarCollapsed: {
+      type: Boolean,
+      default: false
     }
   },
+  emits: ['toggle-sidebar'],
   setup() {
     const adminName = ref('Admin')
 
@@ -43,9 +48,7 @@ export default {
       }
     })
 
-    return {
-      adminName
-    }
+    return { adminName }
   }
 }
 </script>
@@ -65,6 +68,10 @@ export default {
   padding: 0 30px;
   z-index: 999;
   transition: left 0.3s;
+}
+
+.admin-header.collapsed {
+  left: 70px;
 }
 
 .header-left {

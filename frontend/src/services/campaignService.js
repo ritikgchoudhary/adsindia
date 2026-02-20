@@ -1,14 +1,13 @@
 import api from './api'
 
 export const campaignService = {
-  async getCampaigns(categoryId = null) {
-    const params = categoryId ? { category_id: categoryId } : {}
-    const response = await api.get('/campaigns', { params })
+  async getTrafficTypes() {
+    const response = await api.get('/traffic-types')
     return response.data
   },
 
-  async filterCampaigns(filters) {
-    const response = await api.get('/campaign/filter', { params: filters })
+  async getCampaigns(params = {}) {
+    const response = await api.get('/campaigns', { params })
     return response.data
   },
 

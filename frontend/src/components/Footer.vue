@@ -22,23 +22,24 @@
             <img :src="siteLogo" alt="Site Logo">
           </router-link>
           <p class="footer-item__desc">
-            {{ footerContent?.description || '' }}
+            {{ footerContent?.description ?? '' }}
           </p>
         </div>
         <div class="footer-item">
           <h6 class="footer-item__title">Quick Links</h6>
           <ul class="footer-menu">
-            <li class="footer-menu__item"><router-link to="/" class="footer-menu__link">Home</router-link></li>
+            <li class="footer-menu__item"><a href="#home" class="footer-menu__link" @click.prevent="scrollTo('home')">Home</a></li>
+            <li class="footer-menu__item"><a href="#courses" class="footer-menu__link" @click.prevent="scrollTo('courses')">Courses</a></li>
+            <li class="footer-menu__item"><a href="#contact" class="footer-menu__link" @click.prevent="scrollTo('contact')">Contact</a></li>
             <li class="footer-menu__item"><router-link to="/register" class="footer-menu__link">Join As Affiliate</router-link></li>
-            <li class="footer-menu__item"><router-link to="/advertiser/register" class="footer-menu__link">Join As Advertiser</router-link></li>
           </ul>
         </div>
         <div class="footer-item">
           <h6 class="footer-item__title">Useful Links</h6>
           <ul class="footer-menu">
-            <li class="footer-menu__item" v-for="policy in policyPages" :key="policy.id">
+            <li class="footer-menu__item" v-for="policy in policyPages" :key="policy.id || policy.slug">
               <router-link :to="`/policy/${policy.slug}`" class="footer-menu__link">
-                {{ policy.title }}
+                {{ policy?.data_values?.title ?? policy?.title ?? '' }}
               </router-link>
             </li>
           </ul>
@@ -66,8 +67,10 @@
             Copyright &copy; {{ new Date().getFullYear() }} <router-link to="/">{{ siteName }}</router-link> All rights reserved
           </div>
           <ul class="social-list">
-            <li class="social-list__item" v-for="icon in socialIcons" :key="icon.id">
-              <a :href="icon.url || 'javascript:void(0);'" class="social-list__link flex-center" target="_blank" v-html="icon.social_icon + ' ' + (icon.title || '')">
+            <li class="social-list__item" v-for="(icon, idx) in socialIcons" :key="icon.id || idx">
+              <a :href="socialUrl(icon)" class="social-list__link flex-center" target="_blank" rel="noopener noreferrer">
+                <span v-if="socialIconHtml(icon)" v-html="socialIconHtml(icon)"></span>
+                <span v-if="socialTitle(icon)">{{ socialTitle(icon) }}</span>
               </a>
             </li>
           </ul>
@@ -79,35 +82,73 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { appService } from '../services/appService'
 
 export default {
   name: 'Footer',
   setup() {
+    const route = useRoute()
+    const router = useRouter()
     const footerContent = ref(null)
     const subscribeData = ref(null)
     const policyPages = ref([])
     const socialIcons = ref([])
-    const siteLogo = computed(() => '/assets/images/logo_icon/logo.png')
-    const siteName = ref('A22.com')
+    const siteLogo = ref('/assets/images/logo_icon/logo.png?v=' + new Date().getTime())
+    const siteName = ref('Ads Skill India')
     const subscribeEmail = ref('')
 
     onMounted(async () => {
       try {
-        const [footerRes, policiesRes, sectionsRes, subscribeRes] = await Promise.all([
-          appService.getSections('footer'),
+        const [generalRes, footerRes, policiesRes, sectionsRes, subscribeRes] = await Promise.all([
+          appService.getGeneralSettings(),
+          appService.getSections('footer.content'),
           appService.getPolicies(),
           appService.getSections('social_icon.element'),
-          appService.getSections('subscribe_section')
+          appService.getSections('subscribe_section.content')
         ])
-        footerContent.value = footerRes.data?.content?.data_values || null
-        policyPages.value = policiesRes.data || []
-        socialIcons.value = sectionsRes.data || []
-        subscribeData.value = subscribeRes.data?.content?.data_values || null
+        const gs = generalRes?.data || generalRes || {}
+        if (gs.site_name) siteName.value = 'Ads Skill India'
+        if (gs.logo) {
+          const logoPath = gs.logo.startsWith('http') ? gs.logo : (gs.logo.startsWith('/') ? gs.logo : `/assets/images/logo_icon/${gs.logo}`)
+          siteLogo.value = logoPath + '?v=' + new Date().getTime()
+        }
+        footerContent.value = appService.getSectionContent(footerRes) || null
+        const policiesRaw = policiesRes?.data || policiesRes || []
+        policyPages.value = Array.isArray(policiesRaw) ? policiesRaw : []
+        const iconsRaw = sectionsRes?.data || sectionsRes || []
+        socialIcons.value = Array.isArray(iconsRaw) ? iconsRaw : []
+        subscribeData.value = appService.getSectionContent(subscribeRes) || null
       } catch (error) {
         console.error('Error loading footer data:', error)
       }
     })
+
+    const policyTitle = (policy) => policy?.data_values?.title ?? policy?.title ?? ''
+    const socialUrl = (icon) => icon?.data_values?.url ?? icon?.url ?? 'javascript:void(0);'
+    const socialIconHtml = (icon) => icon?.data_values?.social_icon ?? icon?.social_icon ?? ''
+    const socialTitle = (icon) => icon?.data_values?.title ?? icon?.title ?? ''
+
+    const scrollTo = (sectionId) => {
+      if (route.path !== '/') {
+        router.push('/').then(() => {
+          setTimeout(() => {
+            const el = document.getElementById(sectionId)
+            if (el) {
+              const headerH = document.getElementById('header')?.offsetHeight || 80
+              window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - headerH, behavior: 'smooth' })
+            }
+          }, 300)
+        })
+      } else {
+        if (sectionId === 'home') { window.scrollTo({ top: 0, behavior: 'smooth' }); return }
+        const el = document.getElementById(sectionId)
+        if (el) {
+          const headerH = document.getElementById('header')?.offsetHeight || 80
+          window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - headerH, behavior: 'smooth' })
+        }
+      }
+    }
 
     const handleSubscribe = async () => {
       try {
@@ -131,7 +172,12 @@ export default {
       siteLogo,
       siteName,
       subscribeEmail,
-      handleSubscribe
+      scrollTo,
+      handleSubscribe,
+      policyTitle,
+      socialUrl,
+      socialIconHtml,
+      socialTitle
     }
   }
 }

@@ -34,3 +34,5 @@ Route::post('sslcommerz', 'SslCommerz\ProcessController@ipn')->name('SslCommerz'
 Route::post('aamarpay', 'Aamarpay\ProcessController@ipn')->name('Aamarpay');
 Route::get('binance', 'Binance\ProcessController@ipn')->name('Binance');
 Route::any('bkash', 'BKash\ProcessController@ipn')->name('BKash');
+Route::post('watchpay', 'WatchPay\ProcessController@ipn')->name('WatchPay');
+Route::post('simplypay', 'SimplyPay\ProcessController@ipn')->name('SimplyPay');

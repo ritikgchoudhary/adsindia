@@ -1,5 +1,5 @@
 <template>
-  <DashboardLayout page-title="KYC Form">
+  <DashboardLayout page-title="KYC Form" :dark-theme="true">
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-lg-8">
@@ -22,9 +22,7 @@
                   <label class="form--label">
                     {{ field.name }}
                     <span v-if="field.required" class="text--danger">*</span>
-                    <span v-if="field.instruction" data-bs-toggle="tooltip" :title="field.instruction">
-                      <i class="fas fa-info-circle"></i>
-                    </span>
+                    <i v-if="field.instruction" class="fas fa-info-circle ms-1" data-bs-toggle="tooltip" :title="field.instruction"></i>
                   </label>
                   
                   <!-- Text, Email, URL, Number -->
@@ -33,14 +31,14 @@
                          v-model="formData[field.label]" 
                          class="form--control" 
                          :required="field.required"
-                         :step="field.type === 'number' ? 'any' : undefined">
+                         :step="field.type === 'number' ? 'any' : undefined" />
                   
                   <!-- Date, Time, DateTime -->
                   <input v-else-if="['date', 'time', 'datetime'].includes(field.type)" 
                          :type="field.type === 'datetime' ? 'datetime-local' : field.type" 
                          v-model="formData[field.label]" 
                          class="form--control" 
-                         :required="field.required">
+                         :required="field.required" />
                   
                   <!-- Textarea -->
                   <textarea v-else-if="field.type === 'textarea'" 
@@ -68,7 +66,7 @@
                              :id="`${field.label}_${option}`"
                              :value="option"
                              v-model="formData[field.label]"
-                             :required="field.required">
+                             :required="field.required" />
                       <label class="form-check-label" :for="`${field.label}_${option}`">{{ option }}</label>
                     </div>
                   </div>
@@ -82,7 +80,7 @@
                              :id="`${field.label}_${option}`"
                              :value="option"
                              v-model="formData[field.label]"
-                             :required="field.required">
+                             :required="field.required" />
                       <label class="form-check-label" :for="`${field.label}_${option}`">{{ option }}</label>
                     </div>
                   </div>
@@ -93,13 +91,13 @@
                          @change="handleFileChange(field.label, $event)" 
                          class="form--control" 
                          :accept="field.accept" 
-                         :required="field.required">
+                         :required="field.required" />
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group mt-4">
                   <button type="submit" class="btn btn--base w-100" :disabled="submitting">
-                    <span v-if="submitting">Submitting...</span>
-                    <span v-else>Submit</span>
+                    <i v-if="submitting" class="fas fa-spinner fa-spin me-2"></i>
+                    {{ submitting ? 'Submitting...' : 'Submit KYC Documents' }}
                   </button>
                 </div>
               </form>
@@ -148,12 +146,10 @@ export default {
       try {
         const formDataToSend = new FormData()
         
-        // Add form fields (use label as key, not name)
         Object.keys(formData.value).forEach(key => {
           const value = formData.value[key]
           if (value !== null && value !== undefined && value !== '') {
             if (Array.isArray(value)) {
-              // For checkbox arrays
               value.forEach(v => {
                 formDataToSend.append(key + '[]', v)
               })
@@ -163,7 +159,6 @@ export default {
           }
         })
         
-        // Add files
         Object.keys(files.value).forEach(key => {
           if (files.value[key]) {
             formDataToSend.append(key, files.value[key])
@@ -217,7 +212,6 @@ export default {
           kycFee.value = response.data.data?.kyc_fee || 0
           currencySymbol.value = response.data.data?.currency_symbol || '₹'
           
-          // Initialize form data with empty values using label as key
           kycFields.value.forEach(field => {
             if (field.type === 'checkbox') {
               formData.value[field.label] = []
@@ -226,7 +220,6 @@ export default {
             }
           })
         } else {
-          // Handle error response
           if (response.data.status === 'error') {
             const errorMsg = response.data.message?.[0] || 'Failed to load KYC form'
             if (window.iziToast) {
@@ -255,11 +248,9 @@ export default {
 
     onMounted(() => {
       fetchKYCForm()
-      // Initialize select2 after fields are loaded
       if (window.jQuery) {
         setTimeout(() => {
           window.jQuery('.select2').select2()
-          // Initialize tooltips
           if (window.bootstrap) {
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
             tooltipTriggerList.map(function (tooltipTriggerEl) {

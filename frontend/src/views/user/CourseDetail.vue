@@ -1,24 +1,23 @@
 <template>
-  <DashboardLayout page-title="Course Details">
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-3">Loading course...</p>
+  <DashboardLayout page-title="Course Details" :dark-theme="true">
+    <!-- Loading -->
+    <div v-if="loading" class="tw-flex tw-justify-center tw-py-20">
+      <div class="tw-w-10 tw-h-10 tw-border-4 tw-border-indigo-500 tw-border-t-transparent tw-rounded-full tw-animate-spin"></div>
     </div>
 
-    <div v-else-if="course" class="row">
-      <!-- Video Player Section -->
-      <div class="col-lg-8 mb-4">
-        <div class="card custom--card" style="border-radius: 12px; overflow: hidden;">
-          <div class="card-body p-0">
-            <div class="video-container" style="position: relative; width: 100%; padding-top: 56.25%; background: #000;">
-              <!-- YouTube / Vimeo embed: admin can paste YouTube link in master panel -->
+    <!-- Course Found -->
+    <div v-else-if="course" class="tw-animate-fade-in-up">
+      <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-8">
+
+        <!-- Left: Video + Info -->
+        <div class="lg:tw-col-span-2">
+          <!-- Video Player -->
+          <div class="tw-bg-white/95 tw-backdrop-blur-xl tw-rounded-2xl tw-shadow-xl tw-overflow-hidden tw-border-0">
+            <div class="tw-relative tw-w-full tw-pt-[56.25%] tw-bg-black">
               <iframe
                 v-if="isYoutubeOrVimeoUrl(course.video_url)"
                 :src="embedVideoUrl(course.video_url)"
-                class="w-100 h-100"
-                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                class="tw-absolute tw-top-0 tw-left-0 tw-w-full tw-h-full tw-border-0"
                 allowfullscreen
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               ></iframe>
@@ -27,106 +26,169 @@
                 ref="videoPlayer"
                 :src="course.video_url"
                 controls
-                class="w-100 h-100"
-                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                class="tw-absolute tw-top-0 tw-left-0 tw-w-full tw-h-full tw-border-0"
                 @error="handleVideoError"
                 @loadeddata="handleVideoLoaded"
+                @ended="onVideoEnded"
               >
                 Your browser does not support the video tag.
               </video>
-              <div v-else class="d-flex align-items-center justify-content-center text-white h-100" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-                <span><i class="fas fa-video-slash me-2"></i>Video link not added yet. Admin can add from master panel.</span>
+              <div v-if="course && course.video_url && !isYoutubeOrVimeoUrl(course.video_url) && course.is_completed" class="tw-absolute tw-bottom-0 tw-left-0 tw-right-0 tw-py-2 tw-px-3 tw-bg-emerald-500/90 tw-text-white tw-text-sm tw-font-bold tw-flex tw-items-center tw-justify-center tw-gap-2">
+                <i class="fas fa-check-circle"></i> Video watched – Course completed
+              </div>
+              <div v-else class="tw-absolute tw-inset-0 tw-flex tw-flex-col tw-items-center tw-justify-center tw-text-white/50 tw-gap-3">
+                <i class="fas fa-play-circle tw-text-5xl tw-opacity-40"></i>
+                <p class="tw-m-0 tw-font-medium tw-text-base">Video not available yet</p>
+              </div>
+            </div>
+            <!-- Mark as watched for YouTube/Vimeo (embed) – we can't detect end inside iframe -->
+            <div v-if="course && isYoutubeOrVimeoUrl(course.video_url) && !course.is_completed" class="tw-mt-4 tw-p-4 tw-bg-indigo-50 tw-rounded-xl tw-border tw-border-indigo-100">
+              <p class="tw-text-slate-600 tw-text-sm tw-mb-3 tw-m-0">Video embed (YouTube/Vimeo) – after watching, mark as complete to get your certificate.</p>
+              <button
+                type="button"
+                :disabled="markingComplete"
+                class="tw-px-5 tw-py-2.5 tw-bg-indigo-600 hover:tw-bg-indigo-700 disabled:tw-opacity-60 tw-text-white tw-font-bold tw-rounded-xl tw-border-0 tw-cursor-pointer tw-transition-all"
+                @click="markCourseComplete"
+              >
+                <span><i class="fas fa-check-circle tw-mr-2"></i>I've watched the video – Mark as complete</span>
+              </button>
+            </div>
+            <div v-else-if="course && course.is_completed" class="tw-mt-4 tw-p-4 tw-bg-emerald-50 tw-rounded-xl tw-border tw-border-emerald-200 tw-flex tw-items-center tw-gap-2">
+              <i class="fas fa-check-circle tw-text-emerald-600 tw-text-xl"></i>
+              <span class="tw-text-emerald-800 tw-font-bold">Video watched – Course completed</span>
+            </div>
+          </div>
+
+          <!-- Course Info -->
+          <div class="tw-mt-6 tw-bg-white/95 tw-backdrop-blur-xl tw-rounded-2xl tw-shadow-lg tw-border tw-border-slate-200/70 tw-overflow-hidden">
+            <div class="tw-p-6">
+              <div class="tw-mb-4">
+                <div class="tw-flex tw-flex-col md:tw-flex-row md:tw-items-start md:tw-justify-between tw-gap-4">
+                  <div>
+                    <h3 class="tw-text-slate-900 tw-font-extrabold tw-text-2xl tw-mb-2 tw-leading-tight">{{ course.title }}</h3>
+                    <div class="tw-flex tw-flex-wrap tw-gap-2">
+                      <span class="tw-inline-flex tw-items-center tw-px-3 tw-py-1 tw-rounded-lg tw-text-xs tw-font-bold tw-text-white" :class="getCategoryBadgeClass(course.category)">
+                        {{ course.category }}
+                      </span>
+                      <span v-if="course.is_free" class="tw-inline-flex tw-items-center tw-px-3 tw-py-1 tw-rounded-lg tw-text-xs tw-font-bold tw-text-white tw-bg-gradient-to-r tw-from-emerald-500 tw-to-emerald-400">
+                        <i class="fas fa-check-circle tw-mr-1"></i>Free Access
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="tw-text-slate-600 tw-text-base tw-leading-relaxed tw-mb-6">{{ course.description }}</p>
+
+              <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4">
+                <div class="tw-flex tw-items-center tw-gap-3 tw-p-3 tw-bg-slate-50 tw-rounded-xl tw-border tw-border-slate-100 hover:tw-bg-indigo-50/50 hover:tw-border-indigo-100 tw-transition-colors">
+                  <div class="tw-w-10 tw-h-10 tw-rounded-lg tw-bg-blue-100 tw-text-blue-600 tw-flex tw-items-center tw-justify-center tw-shrink-0">
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <div>
+                    <span class="tw-block tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-wide">Duration</span>
+                    <span class="tw-block tw-text-slate-900 tw-font-bold tw-text-sm">{{ course.duration || 'N/A' }}</span>
+                  </div>
+                </div>
+                
+                <div class="tw-flex tw-items-center tw-gap-3 tw-p-3 tw-bg-slate-50 tw-rounded-xl tw-border tw-border-slate-100 hover:tw-bg-emerald-50/50 hover:tw-border-emerald-100 tw-transition-colors">
+                  <div class="tw-w-10 tw-h-10 tw-rounded-lg tw-bg-emerald-100 tw-text-emerald-600 tw-flex tw-items-center tw-justify-center tw-shrink-0">
+                    <i class="fas fa-users"></i>
+                  </div>
+                  <div>
+                    <span class="tw-block tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-wide">Students</span>
+                    <span class="tw-block tw-text-slate-900 tw-font-bold tw-text-sm">{{ course.students_count || 0 }} enrolled</span>
+                  </div>
+                </div>
+
+                <div class="tw-flex tw-items-center tw-gap-3 tw-p-3 tw-bg-slate-50 tw-rounded-xl tw-border tw-border-slate-100 hover:tw-bg-purple-50/50 hover:tw-border-purple-100 tw-transition-colors" v-if="!course.is_free">
+                  <div class="tw-w-10 tw-h-10 tw-rounded-lg tw-bg-purple-100 tw-text-purple-600 tw-flex tw-items-center tw-justify-center tw-shrink-0">
+                    <i class="fas fa-tag"></i>
+                  </div>
+                  <div>
+                    <span class="tw-block tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-wide">Price</span>
+                    <span class="tw-block tw-text-indigo-600 tw-font-extrabold tw-text-lg">{{ currencySymbol }}{{ formatAmount(course.price) }}</span>
+                  </div>
+                </div>
+
+                  <div class="tw-flex tw-items-center tw-gap-3 tw-p-3 tw-bg-slate-50 tw-rounded-xl tw-border tw-border-slate-100 hover:tw-bg-amber-50/50 hover:tw-border-amber-100 tw-transition-colors">
+                  <div class="tw-w-10 tw-h-10 tw-rounded-lg tw-bg-amber-100 tw-text-amber-600 tw-flex tw-items-center tw-justify-center tw-shrink-0">
+                    <i class="fas fa-box"></i>
+                  </div>
+                  <div>
+                    <span class="tw-block tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-wide">Course Plan</span>
+                    <span class="tw-block tw-text-slate-900 tw-font-bold tw-text-sm">
+                      <template v-if="course.is_free">Free</template>
+                      <template v-else>{{ getRequiredPlanLabel(course.required_course_plan_id) }}</template>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Course Info -->
-        <div class="card custom--card mt-4" style="border-radius: 12px;">
-          <div class="card-body">
-            <div class="d-flex align-items-start justify-content-between mb-3">
-              <div>
-                <h3 class="mb-2 fw-bold">{{ course.title }}</h3>
-                <span class="badge" :class="getCategoryBadgeClass(course.category)" style="font-size: 0.9rem; padding: 8px 16px;">
+        <!-- Right Sidebar -->
+        <div class="lg:tw-col-span-1">
+          <!-- Course Info Card -->
+          <div class="tw-bg-white/95 tw-backdrop-blur-xl tw-rounded-2xl tw-shadow-lg tw-border tw-border-slate-200/70 tw-overflow-hidden tw-mb-6">
+            <div class="tw-bg-slate-50 tw-p-4 tw-border-b tw-border-slate-200 tw-flex tw-items-center tw-gap-2">
+              <i class="fas fa-info-circle tw-text-indigo-600"></i>
+              <h5 class="tw-text-slate-900 tw-font-bold tw-text-base tw-m-0">Course Information</h5>
+            </div>
+            <div class="tw-p-5">
+              <div class="tw-flex tw-justify-between tw-items-center tw-py-3 tw-border-b tw-border-slate-100 first:tw-pt-0 last:tw-border-0 last:tw-pb-0">
+                <span class="tw-text-slate-500 tw-text-sm tw-font-bold">Category</span>
+                <span class="tw-inline-flex tw-items-center tw-px-2 tw-py-1 tw-rounded-md tw-text-xs tw-font-bold tw-text-white" :class="getCategoryBadgeClass(course.category)">
                   {{ course.category }}
                 </span>
               </div>
-              <div class="text-end">
-                <span class="badge badge--success" v-if="course.is_free" style="font-size: 1rem; padding: 8px 16px;">
-                  <i class="fas fa-check-circle me-1"></i>Free Access
+              <div class="tw-flex tw-justify-between tw-items-center tw-py-3 tw-border-b tw-border-slate-100 last:tw-border-0 last:tw-pb-0">
+                <span class="tw-text-slate-500 tw-text-sm tw-font-bold">Course Plan Required</span>
+                <span class="tw-bg-blue-100 tw-text-blue-700 tw-px-2.5 tw-py-1 tw-rounded-md tw-text-xs tw-font-bold">
+                  <template v-if="course.is_free">Free</template>
+                  <template v-else>{{ getRequiredPlanLabel(course.required_course_plan_id) }}</template>
                 </span>
               </div>
-            </div>
-            <p class="text-muted mb-4" style="font-size: 1rem; line-height: 1.6;">{{ course.description }}</p>
-            
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <div class="d-flex align-items-center">
-                  <i class="fas fa-clock text-primary me-2" style="font-size: 1.2rem;"></i>
-                  <div>
-                    <strong>Duration</strong>
-                    <p class="mb-0 text-muted">{{ course.duration }}</p>
-                  </div>
-                </div>
+              <div class="tw-flex tw-justify-between tw-items-center tw-py-3 tw-border-b tw-border-slate-100 last:tw-border-0 last:tw-pb-0" v-if="!course.is_free">
+                <span class="tw-text-slate-500 tw-text-sm tw-font-bold">Price</span>
+                <span class="tw-text-indigo-600 tw-font-extrabold tw-text-base">{{ currencySymbol }}{{ formatAmount(course.price) }}</span>
               </div>
-              <div class="col-md-6 mb-3">
-                <div class="d-flex align-items-center">
-                  <i class="fas fa-users text-primary me-2" style="font-size: 1.2rem;"></i>
-                  <div>
-                    <strong>Students</strong>
-                    <p class="mb-0 text-muted">{{ course.students_count }} enrolled</p>
-                  </div>
-                </div>
+              <div class="tw-flex tw-justify-between tw-items-center tw-py-3 tw-border-b tw-border-slate-100 last:tw-border-0 last:tw-pb-0" v-if="course.duration">
+                <span class="tw-text-slate-500 tw-text-sm tw-font-bold">Duration</span>
+                <span class="tw-text-slate-900 tw-font-bold tw-text-sm">{{ course.duration }}</span>
+              </div>
+              <div class="tw-flex tw-justify-between tw-items-center tw-py-3 tw-border-b tw-border-slate-100 last:tw-border-0 last:tw-pb-0" v-if="course.students_count">
+                <span class="tw-text-slate-500 tw-text-sm tw-font-bold">Students</span>
+                <span class="tw-text-slate-900 tw-font-bold tw-text-sm">{{ course.students_count }}</span>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Sidebar -->
-      <div class="col-lg-4">
-        <!-- Course Actions -->
-        <div class="card custom--card mb-4" style="border-radius: 12px;">
-          <div class="card-body">
-            <h5 class="mb-3">Course Information</h5>
-            <div class="mb-3">
-              <strong>Category:</strong>
-              <p class="mb-0 text-muted">{{ course.category }}</p>
+          <!-- Navigation -->
+          <div class="tw-bg-white/95 tw-backdrop-blur-xl tw-rounded-2xl tw-shadow-lg tw-border tw-border-slate-200/70 tw-overflow-hidden">
+            <div class="tw-p-5 tw-flex tw-flex-col tw-gap-3">
+              <router-link to="/user/courses" class="tw-flex tw-items-center tw-justify-center tw-w-full tw-py-3 tw-px-4 tw-rounded-xl tw-font-bold tw-text-sm tw-bg-slate-50 hover:tw-bg-indigo-50 tw-text-slate-700 hover:tw-text-indigo-600 tw-border tw-border-slate-200 hover:tw-border-indigo-200 tw-transition-all tw-no-underline">
+                <i class="fas fa-arrow-left tw-mr-2"></i> Back to Courses
+              </router-link>
+              <router-link to="/user/packages" class="tw-flex tw-items-center tw-justify-center tw-w-full tw-py-3 tw-px-4 tw-rounded-xl tw-font-bold tw-text-sm tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-shadow-lg tw-shadow-indigo-500/20 tw-transition-all tw-no-underline hover:tw-translate-y-px">
+                <i class="fas fa-graduation-cap tw-mr-2"></i> View Packages
+              </router-link>
             </div>
-            <div class="mb-3">
-              <strong>Required Package:</strong>
-              <p class="mb-0">
-                <span class="badge bg-info">{{ getPackageName(course.required_package) }}</span>
-              </p>
-            </div>
-            <div v-if="!course.is_free" class="mb-3">
-              <strong>Price:</strong>
-              <p class="mb-0 text-primary fw-bold">{{ currencySymbol }}{{ formatAmount(course.price) }}</p>
-            </div>
-            <router-link to="/user/courses" class="btn btn-outline-primary w-100">
-              <i class="fas fa-arrow-left me-2"></i>Back to Courses
-            </router-link>
-          </div>
-        </div>
-
-        <!-- Related Courses -->
-        <div class="card custom--card" style="border-radius: 12px;">
-          <div class="card-body">
-            <h5 class="mb-3">All Courses</h5>
-            <router-link to="/user/courses" class="btn btn--base w-100">
-              <i class="fas fa-list me-2"></i>View All Courses
-            </router-link>
           </div>
         </div>
       </div>
     </div>
 
-    <div v-else class="text-center py-5">
-      <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
-      <h4>Course Not Found</h4>
-      <p class="text-muted">The course you're looking for doesn't exist or you don't have access to it.</p>
-      <router-link to="/user/courses" class="btn btn--base mt-3">
-        <i class="fas fa-arrow-left me-2"></i>Back to Courses
+    <!-- Not Found -->
+    <div v-else class="tw-text-center tw-py-16">
+      <div class="tw-text-amber-500 tw-text-6xl tw-mb-4">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h4 class="tw-text-white tw-font-bold tw-text-2xl tw-mb-2">Course Not Found</h4>
+      <p class="tw-text-white/60 tw-text-base tw-mb-6">The course you're looking for doesn't exist or you don't have access.</p>
+      <router-link to="/user/courses" class="tw-inline-flex tw-items-center tw-px-6 tw-py-3 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-transition-all tw-no-underline">
+        <i class="fas fa-arrow-left tw-mr-2"></i> Back to Courses
       </router-link>
     </div>
   </DashboardLayout>
@@ -150,6 +212,7 @@ export default {
     const loading = ref(true)
     const currencySymbol = ref('₹')
     const videoPlayer = ref(null)
+    const markingComplete = ref(false)
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
@@ -158,25 +221,20 @@ export default {
 
     const getCategoryBadgeClass = (category) => {
       const categoryMap = {
-        'Video Editing': 'bg-danger',
-        'Graphic Design': 'bg-primary',
-        'Digital Marketing': 'bg-success',
-        'Content Writing': 'bg-info',
-        'UI/UX Design': 'bg-warning',
-        'Web Development': 'bg-dark'
+        'Video Editing': 'tw-bg-red-500',
+        'Graphic Design': 'tw-bg-indigo-500',
+        'Digital Marketing': 'tw-bg-emerald-500',
+        'Content Writing': 'tw-bg-sky-500',
+        'UI/UX Design': 'tw-bg-amber-500',
+        'Web Development': 'tw-bg-slate-700'
       }
-      return categoryMap[category] || 'bg-secondary'
+      return categoryMap[category] || 'tw-bg-slate-500'
     }
 
-    const getPackageName = (packageId) => {
-      const packageNames = {
-        1: 'AdsLite',
-        2: 'AdsPro',
-        3: 'AdsSupreme',
-        4: 'AdsPremium',
-        5: 'AdsPremium+'
-      }
-      return packageNames[packageId] || 'Unknown'
+    const getRequiredPlanLabel = (level) => {
+      const lv = Number(level || 0)
+      if (!lv || Number.isNaN(lv)) return 'N/A'
+      return `Course Plan Level ${lv}`
     }
 
     const isYoutubeOrVimeoUrl = (url) => {
@@ -205,13 +263,44 @@ export default {
 
     const handleVideoError = (event) => {
       console.error('Video error:', event)
-      if (window.notify) {
-        window.notify('error', 'Failed to load video. Please try again later.')
-      }
+      if (window.notify) window.notify('error', 'Failed to load video.')
     }
 
     const handleVideoLoaded = () => {
       console.log('Video loaded successfully')
+    }
+
+    /** Call API to mark course as complete (tracks video watched + issues certificate) */
+    const markCourseComplete = async () => {
+      if (!course.value?.id || markingComplete.value) return
+      markingComplete.value = true
+      try {
+        const res = await api.post('/courses/complete', { course_id: course.value.id })
+        if (res.data?.status === 'success') {
+          course.value = { ...course.value, is_completed: true }
+          if (window.iziToast) {
+            window.iziToast.success({
+              title: 'Done',
+              message: res.data?.message?.[0] || 'Course marked as complete. Certificate issued.',
+              position: 'topRight'
+            })
+          }
+        }
+      } catch (err) {
+        const msg = err.response?.data?.message?.[0] || err.message || 'Failed to mark complete'
+        if (window.iziToast) {
+          window.iziToast.error({ title: 'Error', message: msg, position: 'topRight' })
+        }
+      } finally {
+        markingComplete.value = false
+      }
+    }
+
+    /** When native video ends, auto-track watch and mark course complete */
+    const onVideoEnded = () => {
+      if (course.value?.id && !course.value?.is_completed) {
+        markCourseComplete()
+      }
     }
 
     const fetchCourse = async () => {
@@ -219,15 +308,25 @@ export default {
       try {
         const courseId = route.params.id
         const response = await api.get('/courses')
-        
         if (response.data.status === 'success') {
           const responseData = response.data.data
           const courses = Array.isArray(responseData) ? responseData : (responseData?.data || [])
-          
-          // Find the specific course
           const foundCourse = courses.find(c => c.id == courseId)
-          
           if (foundCourse) {
+            // Prevent direct access to locked courses
+            if (foundCourse.unlocked === false || foundCourse.unlocked === 0 || foundCourse.unlocked === '0') {
+              if (window.iziToast) {
+                window.iziToast.error({
+                  title: 'Locked',
+                  message: 'This course is locked. Please purchase/renew a course package to unlock it.',
+                  position: 'topRight'
+                })
+              }
+              router.push('/user/packages')
+              course.value = null
+              return
+            }
+
             course.value = foundCourse
             currencySymbol.value = responseData?.currency_symbol || response.data.data?.currency_symbol || '₹'
           } else {
@@ -247,35 +346,12 @@ export default {
     })
 
     return {
-      course,
-      loading,
-      currencySymbol,
-      videoPlayer,
-      formatAmount,
-      getCategoryBadgeClass,
-      getPackageName,
-      isYoutubeOrVimeoUrl,
-      embedVideoUrl,
-      handleVideoError,
-      handleVideoLoaded
+      course, loading, currencySymbol, videoPlayer, markingComplete,
+      formatAmount, getCategoryBadgeClass, getRequiredPlanLabel,
+      isYoutubeOrVimeoUrl, embedVideoUrl,
+      handleVideoError, handleVideoLoaded,
+      onVideoEnded, markCourseComplete
     }
   }
 }
 </script>
-
-<style scoped>
-.video-container {
-  position: relative;
-  width: 100%;
-  padding-top: 56.25%; /* 16:9 aspect ratio */
-  background: #000;
-}
-
-.video-container video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-</style>

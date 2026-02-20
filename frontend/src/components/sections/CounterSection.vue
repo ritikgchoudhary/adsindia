@@ -1,19 +1,19 @@
 <template>
-  <div class="counter-section my-120" v-if="counters.length">
+  <div class="counter-section my-120">
     <div class="container">
       <div class="row g-4 justify-content-center counter-wrapper">
         <div class="col-xl-3 col-lg-4 col-sm-6 col-xsm-6" v-for="(counter, index) in counters" :key="index">
           <div class="counter-item">
             <div class="counter-item__number">
               <h3 class="counter-item__title">
-                <span class="odometer" :data-odometer-final="counter.counter_value || 0">
+                <span class="odometer" :data-odometer-final="(counter && (counter.data_values && counter.data_values.counter_value !== undefined ? counter.data_values.counter_value : counter.counter_value)) || 0">
                   0
                 </span>
-                {{ counter.counter_suffix || '' }}
+                {{ (counter && counter.data_values) ? counter.data_values.counter_suffix : (counter ? counter.counter_suffix : '') }}
               </h3>
             </div>
             <span class="counter-item__text">
-              {{ counter.counter_title || '' }}
+              {{ counter?.data_values?.counter_title ?? counter?.counter_title ?? '' }}
             </span>
           </div>
         </div>

@@ -111,42 +111,83 @@ class PaymentController extends Controller {
             $deposit->status = Status::PAYMENT_SUCCESS;
             $deposit->save();
 
-            $advertiser = Advertiser::find($deposit->advertiser_id);
-            $advertiser->balance += $deposit->amount;
-            $advertiser->save();
-
             $methodName = $deposit->methodName();
+            // Support both advertiser deposits and user deposits
+            if (!empty($deposit->advertiser_id)) {
+                $advertiser = Advertiser::find($deposit->advertiser_id);
+                if (!$advertiser) {
+                    return;
+                }
+                $advertiser->balance += $deposit->amount;
+                $advertiser->save();
 
-            $transaction                = new Transaction();
-            $transaction->advertiser_id = $deposit->advertiser_id;
-            $transaction->amount        = $deposit->amount;
-            $transaction->post_balance  = $advertiser->balance;
-            $transaction->charge        = $deposit->charge;
-            $transaction->trx_type      = '+';
-            $transaction->details       = 'Deposit Via ' . $methodName;
+                $transaction                = new Transaction();
+                $transaction->advertiser_id = $deposit->advertiser_id;
+                $transaction->amount        = $deposit->amount;
+                $transaction->post_balance  = $advertiser->balance;
+                $transaction->charge        = $deposit->charge;
+                $transaction->trx_type      = '+';
+                $transaction->details       = 'Deposit Via ' . $methodName;
+                $transaction->trx           = $deposit->trx;
+                $transaction->remark        = 'deposit';
+                $transaction->save();
 
-            $transaction->trx    = $deposit->trx;
-            $transaction->remark = 'deposit';
-            $transaction->save();
+                if (!$isManual) {
+                    $adminNotification                = new AdminNotification();
+                    $adminNotification->advertiser_id = $advertiser->id;
+                    $adminNotification->title         = 'Deposit successful via ' . $methodName;
+                    $adminNotification->click_url     = urlPath('admin.deposit.successful');
+                    $adminNotification->save();
+                }
 
-            if (!$isManual) {
-                $adminNotification                = new AdminNotification();
-                $adminNotification->advertiser_id = $advertiser->id;
-                $adminNotification->title         = 'Deposit successful via ' . $methodName;
-                $adminNotification->click_url     = urlPath('admin.deposit.successful');
-                $adminNotification->save();
+                notify($advertiser, $isManual ? 'DEPOSIT_APPROVE' : 'DEPOSIT_COMPLETE', [
+                    'method_name'     => $methodName,
+                    'method_currency' => $deposit->method_currency,
+                    'method_amount'   => showAmount($deposit->final_amount, currencyFormat: false),
+                    'amount'          => showAmount($deposit->amount, currencyFormat: false),
+                    'charge'          => showAmount($deposit->charge, currencyFormat: false),
+                    'rate'            => showAmount($deposit->rate, currencyFormat: false),
+                    'trx'             => $deposit->trx,
+                    'post_balance'    => showAmount($advertiser->balance),
+                ]);
+            } elseif (!empty($deposit->user_id)) {
+                $user = \App\Models\User::find($deposit->user_id);
+                if (!$user) {
+                    return;
+                }
+                $user->balance = (float) ($user->balance ?? 0) + (float) $deposit->amount;
+                $user->save();
+
+                $transaction               = new Transaction();
+                $transaction->user_id      = $deposit->user_id;
+                $transaction->amount       = $deposit->amount;
+                $transaction->post_balance = $user->balance;
+                $transaction->charge       = $deposit->charge;
+                $transaction->trx_type     = '+';
+                $transaction->details      = 'Deposit Via ' . $methodName;
+                $transaction->trx          = $deposit->trx;
+                $transaction->remark       = 'deposit';
+                $transaction->save();
+
+                if (!$isManual) {
+                    $adminNotification            = new AdminNotification();
+                    $adminNotification->user_id   = $user->id;
+                    $adminNotification->title     = 'Deposit successful via ' . $methodName;
+                    $adminNotification->click_url = urlPath('admin.deposit.successful');
+                    $adminNotification->save();
+                }
+
+                notify($user, $isManual ? 'DEPOSIT_APPROVE' : 'DEPOSIT_COMPLETE', [
+                    'method_name'     => $methodName,
+                    'method_currency' => $deposit->method_currency,
+                    'method_amount'   => showAmount($deposit->final_amount, currencyFormat: false),
+                    'amount'          => showAmount($deposit->amount, currencyFormat: false),
+                    'charge'          => showAmount($deposit->charge, currencyFormat: false),
+                    'rate'            => showAmount($deposit->rate, currencyFormat: false),
+                    'trx'             => $deposit->trx,
+                    'post_balance'    => showAmount($user->balance),
+                ]);
             }
-
-            notify($advertiser, $isManual ? 'DEPOSIT_APPROVE' : 'DEPOSIT_COMPLETE', [
-                'method_name'     => $methodName,
-                'method_currency' => $deposit->method_currency,
-                'method_amount'   => showAmount($deposit->final_amount, currencyFormat: false),
-                'amount'          => showAmount($deposit->amount, currencyFormat: false),
-                'charge'          => showAmount($deposit->charge, currencyFormat: false),
-                'rate'            => showAmount($deposit->rate, currencyFormat: false),
-                'trx'             => $deposit->trx,
-                'post_balance'    => showAmount($advertiser->balance),
-            ]);
 
             // Subtract balance and confirm campaign
             if ($deposit->campaign_id != 0) {

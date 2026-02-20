@@ -109,39 +109,66 @@ class DepositController extends Controller {
     }
 
     public function approve($id) {
-        $deposit = Deposit::where('id', $id)->where('status', Status::PAYMENT_PENDING)->firstOrFail();
+        try {
+            $deposit = Deposit::where('id', $id)->where('status', Status::PAYMENT_PENDING)->firstOrFail();
 
-        PaymentController::userDataUpdate($deposit, true);
+            PaymentController::userDataUpdate($deposit, true);
 
-        $notify[] = ['success', 'Deposit request approved successfully'];
+            // Return JSON for API requests
+            if (request()->expectsJson() || request()->is('api/*')) {
+                return responseSuccess('deposit_approved', ['Deposit request approved successfully']);
+            }
 
-        return to_route('admin.deposit.pending')->withNotify($notify);
+            $notify[] = ['success', 'Deposit request approved successfully'];
+            return to_route('admin.deposit.pending')->withNotify($notify);
+        } catch (\Exception $e) {
+            if (request()->expectsJson() || request()->is('api/*')) {
+                return responseError('error', ['Failed to approve deposit: ' . $e->getMessage()]);
+            }
+            throw $e;
+        }
     }
 
     public function reject(Request $request) {
-        $request->validate([
-            'id'      => 'required|integer',
-            'message' => 'required|string|max:255',
-        ]);
-        $deposit = Deposit::where('id', $request->id)->where('status', Status::PAYMENT_PENDING)->firstOrFail();
+        try {
+            $request->validate([
+                'id'      => 'required|integer',
+                'message' => 'required|string|max:255',
+            ]);
+            $deposit = Deposit::where('id', $request->id)->where('status', Status::PAYMENT_PENDING)->firstOrFail();
 
-        $deposit->admin_feedback = $request->message;
-        $deposit->status         = Status::PAYMENT_REJECT;
-        $deposit->save();
+            $deposit->admin_feedback = $request->message;
+            $deposit->status         = Status::PAYMENT_REJECT;
+            $deposit->save();
 
-        notify($deposit->user, 'DEPOSIT_REJECT', [
-            'method_name'       => $deposit->methodName(),
-            'method_currency'   => $deposit->method_currency,
-            'method_amount'     => showAmount($deposit->final_amount, currencyFormat: false),
-            'amount'            => showAmount($deposit->amount, currencyFormat: false),
-            'charge'            => showAmount($deposit->charge, currencyFormat: false),
-            'rate'              => showAmount($deposit->rate, currencyFormat: false),
-            'trx'               => $deposit->trx,
-            'rejection_message' => $request->message,
-        ]);
+            notify($deposit->user, 'DEPOSIT_REJECT', [
+                'method_name'       => $deposit->methodName(),
+                'method_currency'   => $deposit->method_currency,
+                'method_amount'     => showAmount($deposit->final_amount, currencyFormat: false),
+                'amount'            => showAmount($deposit->amount, currencyFormat: false),
+                'charge'            => showAmount($deposit->charge, currencyFormat: false),
+                'rate'              => showAmount($deposit->rate, currencyFormat: false),
+                'trx'               => $deposit->trx,
+                'rejection_message' => $request->message,
+            ]);
 
-        $notify[] = ['success', 'Deposit request rejected successfully'];
-        return to_route('admin.deposit.pending')->withNotify($notify);
+            // Return JSON for API requests
+            if (request()->expectsJson() || request()->is('api/*')) {
+                return responseSuccess('deposit_rejected', ['Deposit request rejected successfully']);
+            }
 
+            $notify[] = ['success', 'Deposit request rejected successfully'];
+            return to_route('admin.deposit.pending')->withNotify($notify);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if (request()->expectsJson() || request()->is('api/*')) {
+                return responseError('validation_error', $e->errors());
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            if (request()->expectsJson() || request()->is('api/*')) {
+                return responseError('error', ['Failed to reject deposit: ' . $e->getMessage()]);
+            }
+            throw $e;
+        }
     }
 }

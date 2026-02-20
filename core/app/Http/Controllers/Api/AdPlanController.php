@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Lib\AgentCommission;
 use App\Models\AdPackage;
 use App\Models\AdPackageOrder;
 use App\Models\Transaction;
@@ -14,6 +15,25 @@ class AdPlanController extends Controller
     {
         $general = gs();
 
+        // Earning range per ad (shown in UI). Actual earning is generated when completing each ad.
+        $mode = (string) ($general->ads_reward_mode ?? 'random'); // random|fixed
+        $mult = (float) ($general->ads_reward_multiplier ?? 1);
+        $min = (float) ($general->ads_reward_min ?? 1000);
+        $max = (float) ($general->ads_reward_max ?? 5000);
+        $fixed = (float) ($general->ads_reward_fixed ?? 0);
+
+        if ($min > $max) {
+            [$min, $max] = [$max, $min];
+        }
+
+        $rewardMin = $mode === 'fixed' ? $fixed : $min;
+        $rewardMax = $mode === 'fixed' ? $fixed : $max;
+        $rewardMin = (float) ($rewardMin * $mult);
+        $rewardMax = (float) ($rewardMax * $mult);
+        if ($rewardMin > $rewardMax) {
+            [$rewardMin, $rewardMax] = [$rewardMax, $rewardMin];
+        }
+
         // Define 4 specific ad plans as per requirements
         $plansData = [
             [
@@ -23,7 +43,8 @@ class AdPlanController extends Controller
                 'ads_count' => 10,
                 'validity_days' => 7,
                 'daily_ad_limit' => 20,
-                'reward_per_ad' => 5000,
+                // Keep a representative value; actual earning per ad is random (min/max used in UI)
+                'reward_per_ad' => $rewardMax,
                 'duration_minutes' => 1,
                 'is_recommended' => false,
             ],
@@ -34,7 +55,7 @@ class AdPlanController extends Controller
                 'ads_count' => 25,
                 'validity_days' => 15,
                 'daily_ad_limit' => 30,
-                'reward_per_ad' => 5000,
+                'reward_per_ad' => $rewardMax,
                 'duration_minutes' => 1,
                 'is_recommended' => true,
             ],
@@ -45,7 +66,7 @@ class AdPlanController extends Controller
                 'ads_count' => 50,
                 'validity_days' => 30,
                 'daily_ad_limit' => 50,
-                'reward_per_ad' => 5000,
+                'reward_per_ad' => $rewardMax,
                 'duration_minutes' => 1,
                 'is_recommended' => false,
             ],
@@ -56,7 +77,7 @@ class AdPlanController extends Controller
                 'ads_count' => 100,
                 'validity_days' => 60,
                 'daily_ad_limit' => 100,
-                'reward_per_ad' => 5000,
+                'reward_per_ad' => $rewardMax,
                 'duration_minutes' => 1,
                 'is_recommended' => false,
             ],
@@ -100,9 +121,15 @@ class AdPlanController extends Controller
                     'price' => (float)$adPackage->price,
                     'ads_count' => $planData['ads_count'],
                     'validity_days' => $planData['validity_days'],
-                    'total_earning' => $planData['ads_count'] * $planData['reward_per_ad'],
+                    'reward_per_ad_min' => (float) $rewardMin,
+                    'reward_per_ad_max' => (float) $rewardMax,
+                    'total_earning_min' => (float) ($planData['ads_count'] * (float) $rewardMin),
+                    'total_earning_max' => (float) ($planData['ads_count'] * (float) $rewardMax),
+                    // Backward compatibility (some UI might still read total_earning)
+                    'total_earning' => (float) ($planData['ads_count'] * (float) $rewardMax),
                     'daily_ad_limit' => $adPackage->daily_ad_limit,
-                    'reward_per_ad' => (float)$adPackage->reward_per_ad,
+                    // Backward compatibility (some UI might still read reward_per_ad)
+                    'reward_per_ad' => (float) $rewardMax,
                     'duration_minutes' => $planData['duration_minutes'],
                     'is_recommended' => $adPackage->is_recommended,
                 ];
@@ -115,18 +142,42 @@ class AdPlanController extends Controller
                     'price' => (float)$planData['price'],
                     'ads_count' => $planData['ads_count'],
                     'validity_days' => $planData['validity_days'],
-                    'total_earning' => $planData['ads_count'] * $planData['reward_per_ad'],
+                    'reward_per_ad_min' => (float) $rewardMin,
+                    'reward_per_ad_max' => (float) $rewardMax,
+                    'total_earning_min' => (float) ($planData['ads_count'] * (float) $rewardMin),
+                    'total_earning_max' => (float) ($planData['ads_count'] * (float) $rewardMax),
+                    'total_earning' => (float) ($planData['ads_count'] * (float) $rewardMax),
                     'daily_ad_limit' => $planData['daily_ad_limit'],
-                    'reward_per_ad' => (float)$planData['reward_per_ad'],
+                    'reward_per_ad' => (float) $rewardMax,
                     'duration_minutes' => $planData['duration_minutes'],
                     'is_recommended' => $planData['is_recommended'],
                 ];
             }
         }
 
+        // UI text (editable from Master Admin)
+        $uiTitle = (string) ($general->ad_plans_info_title ?? '');
+        $uiDesc = (string) ($general->ad_plans_info_description ?? '');
+        $uiBullets = [];
+        try {
+            $raw = $general->ad_plans_info_bullets ?? null;
+            if ($raw) {
+                $decoded = json_decode((string) $raw, true);
+                if (is_array($decoded)) $uiBullets = array_values(array_filter($decoded, fn($v) => is_string($v) && trim($v) !== ''));
+            }
+        } catch (\Throwable $e) {}
+
         return responseSuccess('ad_plans', ['Ad plans retrieved successfully'], [
             'data' => $adPlans,
             'currency_symbol' => $general->cur_sym ?? '₹',
+            'ui' => [
+                'info_title' => $uiTitle,
+                'info_description' => $uiDesc,
+                'info_bullets' => $uiBullets,
+                'reward_mode' => $mode,
+                'reward_min' => (float) $rewardMin,
+                'reward_max' => (float) $rewardMax,
+            ],
         ]);
     }
 
@@ -136,6 +187,7 @@ class AdPlanController extends Controller
         $request->validate([
             'plan_id' => 'required|integer',
             'payment_method' => 'required|in:gateway', // Only gateway payment
+            'gateway' => 'nullable|string|in:watchpay,simplypay',
         ]);
 
         // Get the AdPackage by ID
@@ -148,13 +200,13 @@ class AdPlanController extends Controller
         }
 
         // Only gateway payment is allowed
-        return $this->initiateGatewayPayment($user, $adPackage);
+        return $this->initiateGatewayPayment($user, $adPackage, $request->input('gateway', 'watchpay'));
     }
 
     /**
      * Process the purchase after payment (balance or gateway success)
      */
-    private function processPurchase($user, $adPackage)
+    private function processPurchase($user, $adPackage, ?string $gatewayTrx = null)
     {
         // Calculate validity days based on plan price
         $validityDays = 7; // Default
@@ -173,17 +225,34 @@ class AdPlanController extends Controller
         ]);
 
         // Create transaction
-        $trx = getTrx();
+        $trx = $gatewayTrx ?: getTrx();
         $transaction = new Transaction();
         $transaction->user_id = $user->id;
         $transaction->amount = $adPackage->price;
         $transaction->post_balance = $user->balance;
         $transaction->charge = 0;
         $transaction->trx_type = '-';
-        $transaction->details = 'Purchase ad plan: ' . $adPackage->name;
+        $transaction->details = 'Purchase ad plan via WatchPay: ' . $adPackage->name;
         $transaction->trx = $trx;
         $transaction->remark = 'ad_plan_purchase';
         $transaction->save();
+
+        // Agent commission (only if sponsor is Agent) – per-plan override supported via rules table
+        try {
+            $agentId = (int) ($user->ref_by ?? 0);
+            if ($agentId > 0) {
+                AgentCommission::process(
+                    $agentId,
+                    'upgrade',
+                    (float) ($adPackage->price ?? 0),
+                    (string) $trx,
+                    'Agent commission from User#' . (int) $user->id . ' – Ad Plan: ' . (string) ($adPackage->name ?? '') . ' | Base: ₹' . (float) ($adPackage->price ?? 0),
+                    ['plan_type' => 'ad_plan', 'plan_id' => (int) ($adPackage->id ?? 0)]
+                );
+            }
+        } catch (\Throwable $e) {
+            // non-blocking
+        }
 
         return responseSuccess('ad_plan_purchased', ['Ad plan purchased successfully! You can now watch ads and earn.'], [
             'order_id' => $order->id,
@@ -197,30 +266,58 @@ class AdPlanController extends Controller
     /**
      * Initiate dummy gateway payment
      */
-    private function initiateGatewayPayment($user, $adPackage)
+    private function initiateGatewayPayment($user, $adPackage, string $gateway = 'watchpay')
     {
-        // Create a temporary payment session/order
         $trx = getTrx();
-        
-        // Store payment data in session or create a temporary record
-        // For now, we'll return payment URL directly
-        $paymentData = [
+
+        // Create a payment session for gateway IPN to update
+        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        cache()->put($cacheKey, [
+            'type' => 'ad_plan',
             'user_id' => $user->id,
             'plan_id' => $adPackage->id,
-            'amount' => $adPackage->price,
-            'trx' => $trx,
-            'created_at' => now(),
-        ];
+            'amount' => (float) $adPackage->price,
+            'status' => 'pending',
+            'created_at' => now()->format('Y-m-d H:i:s'),
+        ], now()->addHours(2));
 
-        // In production, store this in database/cache
-        // For dummy gateway, we'll return a payment URL
-        $paymentUrl = url('/api/ad-plans/payment/dummy?trx=' . $trx . '&amount=' . $adPackage->price . '&plan_id=' . $adPackage->id);
+        // Page return to SPA payment screen to confirm
+        $base = request()->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
+        $pageUrl = $base . '/user/ad-plans/payment?' . ($gateway === 'simplypay' ? 'simplypay_trx=' : 'watchpay_trx=') . urlencode($trx) . '&plan_id=' . $adPackage->id . '&amount=' . $adPackage->price . '&plan_name=' . urlencode($adPackage->name);
+        $notifyUrl = $base . '/ipn/' . $gateway;
+        try {
+            if ($gateway === 'simplypay') {
+                $sp = \App\Lib\SimplyPayGateway::createPayment([
+                    'merOrderNo' => $trx,
+                    'amount' => $adPackage->price,
+                    'notifyUrl' => $notifyUrl,
+                    'returnUrl' => $pageUrl,
+                    'name' => $user->fullname ?: $user->username,
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'attach' => 'Ad Plan: ' . $adPackage->name,
+                ]);
+                $paymentUrl = $sp['pay_link'];
+            } else {
+                $wp = \App\Lib\WatchPayGateway::createWebPayment(
+                    $trx,
+                    (float) $adPackage->price,
+                    'Ad Plan: ' . $adPackage->name,
+                    $pageUrl,
+                    $notifyUrl
+                );
+                $paymentUrl = $wp['pay_link'];
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Payment gateway error: ' . $e->getMessage());
+            return responseError('payment_gateway_error', [$e->getMessage()]);
+        }
 
         return responseSuccess('payment_initiated', ['Payment gateway initialized'], [
             'payment_url' => $paymentUrl,
             'trx' => $trx,
             'amount' => $adPackage->price,
-            'gateway_name' => 'Dummy Gateway',
+            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : 'WatchPay'),
         ]);
     }
 
@@ -233,12 +330,12 @@ class AdPlanController extends Controller
         $request->validate([
             'trx' => 'required|string',
             'plan_id' => 'required|integer',
-            'status' => 'required|in:success,failed', // For testing
+            'gateway' => 'nullable|string|in:watchpay,simplypay',
         ]);
 
         $user = auth()->user();
         $planId = $request->plan_id;
-        $status = $request->status;
+        $gateway = $request->input('gateway', 'watchpay');
 
         // Get the AdPackage
         $adPackage = AdPackage::where('id', $planId)
@@ -249,14 +346,17 @@ class AdPlanController extends Controller
             return responseError('plan_not_found', ['Ad plan not found']);
         }
 
-        // Simulate payment processing delay
-        sleep(2);
-
-        if ($status === 'success') {
-            // Process purchase after successful payment
-            return $this->processPurchase($user, $adPackage);
-        } else {
-            return responseError('payment_failed', ['Payment failed. Please try again.']);
+        // Gateway verification
+        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $request->trx;
+        $session = cache()->get($cacheKey);
+        if (!is_array($session) || ($session['type'] ?? '') !== 'ad_plan' || (int)($session['user_id'] ?? 0) !== (int)$user->id) {
+            return responseError('payment_not_found', ['Payment session not found. Please initiate payment again.']);
         }
+        if (($session['status'] ?? '') !== 'success') {
+            return responseError('payment_pending', ['Payment not verified yet. Please complete payment and try again.']);
+        }
+
+        // Gateway verified: activate plan without using wallet
+        return $this->processPurchase($user, $adPackage, (string) $request->trx);
     }
 }

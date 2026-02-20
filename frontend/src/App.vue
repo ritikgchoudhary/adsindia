@@ -14,7 +14,3 @@ export default {
   }
 }
 </script>
-
-<style>
-/* All styles are loaded from external CSS files in index.html */
-</style>

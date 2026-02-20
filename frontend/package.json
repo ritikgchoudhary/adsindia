@@ -3,20 +3,24 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vite --host",
+    "build": "vite build && node copy-landing-assets.js",
+    "build:watch": "node watch-and-build.js",
     "deploy": "npm run build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.4.0",
-    "vue-router": "^4.2.5",
     "axios": "^1.6.4",
+    "jquery": "^3.7.1",
     "pinia": "^2.1.7",
-    "jquery": "^3.7.1"
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
+    "autoprefixer": "^10.4.24",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
     "vite": "^5.0.0"
   }
 }

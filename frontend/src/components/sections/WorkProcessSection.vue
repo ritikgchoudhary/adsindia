@@ -1,15 +1,15 @@
 <template>
-  <div class="how-work-section my-120" v-if="workProcess">
+  <div class="how-work-section my-120">
     <div class="container">
       <div class="section-heading text-center">
         <span class="section-heading__subtitle">
-          {{ workProcess.subtitle }}
+          {{ workProcess?.subtitle ?? '' }}
         </span>
         <h3 class="section-heading__title">
-          {{ workProcess.heading }}
+          {{ workProcess?.heading ?? '' }}
         </h3>
         <p class="section-heading__desc">
-          {{ workProcess.description }}
+          {{ workProcess?.description ?? '' }}
         </p>
       </div>
 
@@ -24,7 +24,7 @@
           >
             <div class="how-work-item">
               <span class="how-work-item__icon">
-                <span v-html="step.icon"></span>
+                <span v-html="step?.data_values?.icon ?? step?.icon ?? ''"></span>
                 <span class="how-work-item__number">{{ index + 1 }}</span>
               </span>
 
@@ -63,8 +63,8 @@ export default {
           appService.getSections('work_process'),
           appService.getSections('work_process.element')
         ])
-        workProcess.value = contentRes.data?.content?.data_values || null
-        workSteps.value = elementsRes.data || []
+        workProcess.value = appService.getSectionContent(contentRes)
+        workSteps.value = elementsRes?.data ?? []
       } catch (error) {
         console.error('Error loading work process:', error)
       }

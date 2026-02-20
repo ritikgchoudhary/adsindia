@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { routeLoaderStart, routeLoaderStop, routeLoaderReset, loaderReset } from '../services/loader'
+import { getStoredRef, setStoredRef } from '../services/referralStore'
 import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
@@ -8,6 +10,7 @@ import CampaignDetails from '../views/CampaignDetails.vue'
 import Contact from '../views/Contact.vue'
 import Blogs from '../views/Blogs.vue'
 import BlogDetails from '../views/BlogDetails.vue'
+import AllCourses from '../views/AllCourses.vue'
 
 const routes = [
   {
@@ -66,7 +69,7 @@ const routes = [
   {
     path: '/contact',
     name: 'Contact',
-    component: Contact
+    redirect: '/#contact'
   },
   {
     path: '/blogs',
@@ -77,6 +80,16 @@ const routes = [
     path: '/blog/:slug',
     name: 'BlogDetails',
     component: BlogDetails
+  },
+  {
+    path: '/courses',
+    name: 'AllCourses',
+    component: AllCourses
+  },
+  {
+    path: '/policy/:slug',
+    name: 'Policy',
+    component: () => import('../views/Policy.vue')
   },
   {
     path: '/user/password/reset',
@@ -119,12 +132,6 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/user/transactions',
-    name: 'Transactions',
-    component: () => import('../views/user/Transactions.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
     path: '/user/profile-setting',
     name: 'ProfileSetting',
     component: () => import('../views/user/ProfileSetting.vue'),
@@ -152,24 +159,6 @@ const routes = [
     path: '/user/withdraw/history',
     name: 'WithdrawHistory',
     component: () => import('../views/user/WithdrawHistory.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/user/ticket',
-    name: 'SupportTickets',
-    component: () => import('../views/user/SupportTickets.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/user/ticket/open',
-    name: 'OpenTicket',
-    component: () => import('../views/user/OpenTicket.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/user/ticket/:ticket',
-    name: 'ViewTicket',
-    component: () => import('../views/user/ViewTicket.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -203,6 +192,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/user/payment-redirect',
+    name: 'PaymentRedirect',
+    component: () => import('../views/user/PaymentRedirect.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/user/package-payment',
     redirect: '/user/packages'
   },
@@ -210,18 +205,26 @@ const routes = [
     path: '/user/upgrade-package',
     redirect: '/user/packages'
   },
-        {
-          path: '/user/ad-plans',
-          name: 'AdPlans',
-          component: () => import('../views/user/AdPlans.vue'),
-          meta: { requiresAuth: true }
-        },
-        {
-          path: '/user/ad-plans/payment',
-          name: 'AdPlanPayment',
-          component: () => import('../views/user/AdPlanPayment.vue'),
-          meta: { requiresAuth: true }
-        },
+  {
+    path: '/user/ad-plans',
+    name: 'AdPlans',
+    component: () => import('../views/user/AdPlans.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/ad-plans/payment',
+    redirect: (to) => ({
+      path: '/user/payment-redirect',
+      query: { ...to.query, flow: 'ad_plan' }
+    })
+  },
+  {
+    path: '/register/payment',
+    redirect: (to) => ({
+      path: '/user/payment-redirect',
+      query: { ...to.query, flow: 'registration' }
+    })
+  },
   {
     path: '/user/courses',
     name: 'Courses',
@@ -247,6 +250,18 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/user/affiliate-withdraw',
+    name: 'AffiliateWithdraw',
+    component: () => import('../views/user/AffiliateWithdraw.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/affiliate-withdraw/history',
+    name: 'AffiliateWithdrawHistory',
+    component: () => import('../views/user/AffiliateWithdrawHistory.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/user/partner-program',
     name: 'PartnerProgram',
     component: () => import('../views/user/PartnerProgram.vue'),
@@ -258,18 +273,18 @@ const routes = [
     component: () => import('../views/user/Certificates.vue'),
     meta: { requiresAuth: true }
   },
-        {
-          path: '/user/customer-support',
-          name: 'CustomerSupport',
-          component: () => import('../views/user/CustomerSupport.vue'),
-          meta: { requiresAuth: true }
-        },
-        {
-          path: '/user/leaderboard',
-          name: 'Leaderboard',
-          component: () => import('../views/user/Leaderboard.vue'),
-          meta: { requiresAuth: true }
-        },
+  {
+    path: '/user/customer-support',
+    name: 'CustomerSupport',
+    component: () => import('../views/user/CustomerSupport.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user/leaderboard',
+    name: 'Leaderboard',
+    component: () => import('../views/user/Leaderboard.vue'),
+    meta: { requiresAuth: true }
+  },
   // Admin Routes
   {
     path: '/admin/login',
@@ -290,6 +305,24 @@ const routes = [
     meta: { requiresAdminAuth: true }
   },
   {
+    path: '/admin/packages',
+    name: 'AdminPackages',
+    component: () => import('../views/admin/packages/Packages.vue'),
+    meta: { requiresAdminAuth: true }
+  },
+  {
+    path: '/admin/packages/create',
+    name: 'AdminPackageCreate',
+    component: () => import('../views/admin/packages/CreatePackage.vue'),
+    meta: { requiresAdminAuth: true }
+  },
+  {
+    path: '/admin/packages/edit/:id',
+    name: 'AdminPackageEdit',
+    component: () => import('../views/admin/packages/EditPackage.vue'),
+    meta: { requiresAdminAuth: true }
+  },
+  {
     path: '/admin/courses/create',
     name: 'AdminCourseCreate',
     component: () => import('../views/admin/CourseCreate.vue'),
@@ -300,18 +333,79 @@ const routes = [
     name: 'AdminCourseEdit',
     component: () => import('../views/admin/CourseEdit.vue'),
     meta: { requiresAdminAuth: true }
-  }
+  },
+  { path: '/master_admin', redirect: '/master_admin/dashboard' },
+  { path: '/master_admin/login', name: 'MasterAdminLogin', component: () => import('../views/master_admin/MasterAdminLogin.vue'), meta: { requiresMasterAdminAuth: false } },
+  { path: '/master_admin/dashboard', name: 'MasterAdminDashboard', component: () => import('../views/master_admin/Dashboard.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/users', name: 'MasterAdminUsers', component: () => import('../views/master_admin/Users.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/orders', name: 'MasterAdminOrders', component: () => import('../views/master_admin/Orders.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/deposits', name: 'MasterAdminDeposits', component: () => import('../views/master_admin/Deposits.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/withdrawals', name: 'MasterAdminWithdrawals', component: () => import('../views/master_admin/Withdrawals.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/transactions', name: 'MasterAdminTransactions', component: () => import('../views/master_admin/Transactions.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/commissions', name: 'MasterAdminCommissions', component: () => import('../views/master_admin/CommissionManagement.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/special-links', name: 'MasterAdminSpecialLinks', component: () => import('../views/master_admin/SpecialLinks.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/kyc', name: 'MasterAdminKYC', component: () => import('../views/master_admin/KYC.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/reports', name: 'MasterAdminReports', component: () => import('../views/master_admin/Reports.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/admins', name: 'MasterAdminAdmins', component: () => import('../views/master_admin/Admins.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/settings', name: 'MasterAdminSettings', component: () => import('../views/master_admin/Settings.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/courses', name: 'MasterAdminCourses', component: () => import('../views/master_admin/Courses.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/customer-support', name: 'MasterAdminCustomerSupport', component: () => import('../views/master_admin/CustomerSupport.vue'), meta: { requiresMasterAdminAuth: true } }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (to.hash) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({ el: to.hash, behavior: 'smooth', top: 80 })
+        }, 350)
+      })
+    }
+    if (savedPosition) return savedPosition
+    return { top: 0 }
+  }
 })
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   const adminToken = localStorage.getItem('admin_token')
-  
+
+  // Persist referral code from URL anywhere in the site.
+  // (So user can browse and later register with ref attached automatically.)
+  try {
+    const ref = to?.query?.ref
+    if (ref) setStoredRef(ref)
+  } catch (_) { }
+
+  // Auto-attach stored ref on register routes if missing
+  try {
+    const storedRef = getStoredRef()
+    const isRegister = to?.path === '/register' || to?.path === '/user/register'
+    if (isRegister && storedRef && !to?.query?.ref) {
+      next({
+        path: to.path,
+        query: { ...(to.query || {}), ref: storedRef },
+        hash: to.hash,
+      })
+      return
+    }
+  } catch (_) { }
+
+  // Master Admin routes (same token as admin)
+  if (to.meta.requiresMasterAdminAuth) {
+    if (!adminToken) {
+      next({ name: 'MasterAdminLogin' })
+    } else {
+      next()
+    }
+    return
+  }
+  if (to.name === 'MasterAdminLogin' && adminToken) {
+    next({ name: 'MasterAdminDashboard' })
+    return
+  }
   // Admin routes
   if (to.meta.requiresAdminAuth) {
     if (!adminToken) {
@@ -319,17 +413,37 @@ router.beforeEach((to, from, next) => {
     } else {
       next()
     }
+    return
   }
-  // If admin is logged in and tries to access login page, redirect to dashboard
-  else if (to.name === 'AdminLogin' && adminToken) {
+  if (to.name === 'AdminLogin' && adminToken) {
     next({ name: 'AdminDashboard' })
+    return
   }
   // User routes
-  else if (to.meta.requiresAuth && !token) {
+  if (to.meta.requiresAuth && !token) {
     next({ name: 'Login' })
   } else {
     next()
   }
+})
+
+// Show loader only when navigation is resolving (avoids redirect-stuck)
+router.beforeResolve((to, from, next) => {
+  if (to.fullPath !== from.fullPath) {
+    routeLoaderReset()
+    routeLoaderStart()
+  }
+  next()
+})
+
+router.afterEach(() => {
+  routeLoaderStop()
+})
+
+router.onError(() => {
+  // ensure loader isn't stuck
+  routeLoaderReset()
+  loaderReset()
 })
 
 export default router

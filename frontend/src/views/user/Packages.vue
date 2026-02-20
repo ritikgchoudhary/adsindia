@@ -1,88 +1,157 @@
 <template>
-  <DashboardLayout page-title="Courses Packages">
-    <!-- Current Course Plan -->
-    <div v-if="currentPlan" class="row mb-4">
-      <div class="col-12">
-        <div class="card custom--card" style="border: 3px solid #0d6efd; border-radius: 12px; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);">
-          <div class="card-header" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: #fff; padding: 16px 24px; border-radius: 12px 12px 0 0;">
-            <h5 class="mb-0 fw-bold"><i class="fas fa-graduation-cap me-2"></i>Your Current Course Plan</h5>
-          </div>
-          <div class="card-body" style="background: linear-gradient(to bottom, #e7f1ff 0%, #fff 100%); padding: 24px;">
-            <div class="d-flex align-items-center mb-3">
-              <div class="me-4">
-                <i class="fas fa-book-open fa-3x" style="color: #0d6efd;"></i>
-              </div>
-              <div>
-                <h4 class="mb-1 fw-bold" style="color: #0d6efd;">{{ currentPlan.name }}</h4>
-                <p class="mb-0 text-muted" v-if="currentPlan.expires_at">Valid until: {{ formatDate(currentPlan.expires_at) }}</p>
-                <p class="mb-0 text-muted" v-else>Lifetime access</p>
-              </div>
+  <DashboardLayout page-title="Courses Packages" :dark-theme="true">
+    <!-- Current Course Plan - always show this section (with plan or "no plan" message) -->
+      <div v-if="currentPlan" class="tw-bg-white tw-rounded-2xl tw-shadow-lg tw-overflow-hidden tw-border-2 tw-transition-all" :class="currentPlan.is_active === false ? 'tw-border-amber-300 tw-shadow-amber-500/10' : 'tw-border-indigo-300 tw-shadow-indigo-500/10'">
+        <div class="tw-p-5 tw-text-white tw-flex tw-items-center tw-justify-between tw-flex-wrap tw-gap-2" :class="currentPlan.is_active === false ? 'tw-bg-gradient-to-r tw-from-amber-500 tw-to-orange-500' : 'tw-bg-gradient-to-r tw-from-indigo-600 tw-to-violet-600'">
+          <h5 class="tw-font-bold tw-text-lg tw-m-0 tw-flex tw-items-center">
+            <i class="fas fa-graduation-cap tw-mr-2"></i>Your Current Course Plan
+          </h5>
+          <span v-if="currentPlan.is_active === false" class="tw-bg-white/20 tw-px-3 tw-py-1 tw-rounded-lg tw-text-sm tw-font-bold">Expired</span>
+          <span v-else class="tw-bg-green-500/90 tw-px-3 tw-py-1.5 tw-rounded-lg tw-text-sm tw-font-bold tw-shadow-sm">Active</span>
+        </div>
+        <div class="tw-p-6 tw-bg-gradient-to-b tw-from-indigo-50 tw-to-white">
+          <div class="tw-flex tw-items-start md:tw-items-center tw-gap-4 tw-mb-4">
+            <div class="tw-w-14 tw-h-14 tw-rounded-xl tw-bg-indigo-100 tw-text-indigo-600 tw-flex tw-items-center tw-justify-center tw-shrink-0">
+              <i class="fas fa-book-open tw-text-2xl"></i>
             </div>
-            <p class="mb-0"><strong>Courses unlocked:</strong> {{ currentPlan.courses_count }} courses. Complete them to earn certificates.</p>
-            <router-link to="/user/courses" class="btn btn-primary mt-3">
-              <i class="fas fa-play me-2"></i>View Courses
-            </router-link>
+            <div>
+              <h4 class="tw-text-xl tw-font-bold tw-text-indigo-700 tw-mb-1">{{ currentPlan.name }}</h4>
+              <p class="tw-text-slate-500 tw-text-sm tw-m-0" v-if="currentPlan.expires_at">
+                <template v-if="currentPlan.is_active === false">Expired on: </template>
+                <template v-else>Valid until: </template>
+                <span class="tw-font-semibold tw-text-slate-700">{{ formatDate(currentPlan.expires_at) }}</span>
+              </p>
+              <p class="tw-text-slate-500 tw-text-sm tw-m-0" v-else>Lifetime access</p>
+            </div>
           </div>
+          
+          <p class="tw-text-slate-700 tw-mb-6">
+            <strong>Courses unlocked:</strong> {{ currentPlanDisplayCount }} courses. Complete them to earn certificates.
+          </p>
+          <ul v-if="currentPlanCourseList.length > 0" class="tw-text-slate-600 tw-text-sm tw-space-y-2 tw-mb-6 tw-ml-1 tw-pl-4 tw-border-l-2 tw-border-indigo-200">
+            <li v-for="(courseName, idx) in currentPlanCourseList" :key="idx" class="tw-flex tw-items-center tw-gap-2">
+              <i class="fas fa-check tw-text-green-500 tw-text-xs tw-shrink-0"></i>
+              <span>{{ courseName }}</span>
+            </li>
+          </ul>
+          
+          <router-link v-if="currentPlan.is_active !== false" to="/user/courses" class="tw-inline-flex tw-items-center tw-px-6 tw-py-2.5 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-indigo-500/20 tw-transition-all tw-no-underline">
+            <i class="fas fa-play tw-mr-2"></i>View Courses
+          </router-link>
+          <p v-else class="tw-text-amber-700 tw-font-medium tw-m-0">Renew or buy a new package below to access courses again.</p>
         </div>
       </div>
-    </div>
+      <div v-else class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-overflow-hidden">
+        <div class="tw-bg-gradient-to-r tw-from-slate-500 tw-to-slate-600 tw-p-5 tw-text-white">
+          <h5 class="tw-font-bold tw-text-lg tw-m-0 tw-flex tw-items-center">
+            <i class="fas fa-graduation-cap tw-mr-2"></i>Your Current Course Plan
+          </h5>
+        </div>
+        <div class="tw-p-6 tw-bg-slate-50">
+          <p class="tw-text-slate-600 tw-m-0">You don't have an active course plan. Choose a package below to access courses and earn certificates.</p>
+        </div>
+      </div>
 
     <!-- Course Plans (Learning) -->
-    <div class="row">
-      <div class="col-12 mb-3">
-        <h4><i class="fas fa-graduation-cap me-2"></i>Courses Packages</h4>
-        <p class="text-muted mb-0">Buy a package to access courses. Complete courses to learn and get certificates.</p>
+    <div class="tw-mb-8">
+      <div class="tw-mb-6">
+        <h4 class="tw-text-xl tw-font-bold tw-text-slate-900 tw-mb-1 flex tw-items-center">
+          <i class="fas fa-graduation-cap tw-mr-2 tw-text-indigo-600"></i>Courses Packages
+        </h4>
+        <p class="tw-text-slate-500 tw-m-0">Buy a package to access courses. Complete courses to learn and get certificates.</p>
       </div>
-      <div v-if="isLoading" class="col-12">
-        <div class="alert alert-info text-center">
-          <i class="fas fa-spinner fa-spin me-2"></i>Loading courses packages...
+
+      <!-- Terms/Privacy checkbox only when coming from Home initial purchase -->
+      <div
+        v-if="requiresHomeBuyAgree"
+        class="tw-mb-5 tw-bg-amber-50 tw-border tw-border-amber-200 tw-rounded-2xl tw-p-4"
+      >
+        <div class="tw-flex tw-items-start tw-gap-3">
+          <input
+            id="home_buy_agree"
+            type="checkbox"
+            class="tw-mt-1"
+            v-model="homeBuyAgree"
+          >
+          <label for="home_buy_agree" class="tw-text-sm tw-text-amber-900 tw-leading-relaxed tw-m-0">
+            <strong>I agree to the</strong>
+            <a href="/policy/terms-of-service" target="_blank" class="tw-text-indigo-700 tw-font-bold hover:tw-underline">Terms of Service</a>
+            and
+            <a href="/policy/privacy-policy" target="_blank" class="tw-text-indigo-700 tw-font-bold hover:tw-underline">Privacy Policy</a>.
+            <div class="tw-text-xs tw-text-amber-700 tw-mt-1">Required to buy your first package from the Home page.</div>
+          </label>
         </div>
       </div>
-      <div v-else-if="plans.length === 0" class="col-12">
-        <div class="alert alert-warning text-center">
-          <i class="fas fa-exclamation-triangle me-2"></i>No courses packages available. Please contact support.
-        </div>
+
+
+      <div v-else-if="plans.length === 0" class="tw-bg-amber-50 tw-text-amber-700 tw-p-4 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
+        <i class="fas fa-exclamation-triangle tw-mr-2"></i>No courses packages available. Please contact support.
       </div>
-      <template v-for="plan in plans" :key="plan?.id">
-        <div v-if="plan && plan.id" class="col-lg-4 col-md-6 mb-4">
-          <div class="card custom--card" :class="{ 'border-primary': currentPlan && plan.id === currentPlan.plan_id }" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 100%;">
-            <div v-if="currentPlan && plan.id === currentPlan.plan_id" class="card-header bg-primary text-white" style="border-radius: 12px 12px 0 0;">
-              <h5 class="mb-0 fw-bold"><i class="fas fa-check-circle me-2"></i>Current Plan</h5>
+
+      <div v-else class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-6">
+        <template v-for="plan in plans" :key="plan?.id">
+          <div v-if="plan && plan.id" 
+            class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-transition-all tw-duration-300 tw-flex tw-flex-col hover:-tw-translate-y-1 hover:tw-shadow-xl"
+            :class="currentPlan && plan.id === currentPlan.plan_id ? (currentPlan.is_active !== false ? 'tw-border-indigo-500 tw-ring-2 tw-ring-indigo-500/20' : 'tw-border-amber-400 tw-ring-2 tw-ring-amber-400/20') : 'tw-border-slate-200'"
+          >
+            <div v-if="currentPlan && plan.id === currentPlan.plan_id && currentPlan.is_active !== false" class="tw-bg-green-600 tw-text-white tw-py-2 tw-px-4 tw-text-center tw-font-bold tw-text-sm uppercase tracking-wide">
+              <i class="fas fa-check-circle tw-mr-1"></i>Activated
             </div>
-            <div class="card-body">
-              <h4 class="text-center mb-3 fw-bold">{{ plan.name }}</h4>
-              <div class="text-center mb-3">
-                <h2 class="mb-2 fw-bold text-primary" style="font-size: 2rem;">{{ currencySymbol }}{{ formatAmount(plan.price) }}</h2>
-                <p class="mb-0 text-muted">{{ plan.validity_days }} days access</p>
+            <div v-else-if="currentPlan && plan.id === currentPlan.plan_id && currentPlan.is_active === false" class="tw-bg-amber-500 tw-text-white tw-py-2 tw-px-4 tw-text-center tw-font-bold tw-text-sm uppercase tracking-wide">
+              <i class="fas fa-clock tw-mr-1"></i>Expired
+            </div>
+
+            <div class="tw-p-6 tw-flex-1 tw-flex tw-flex-col">
+              <h4 class="tw-text-xl tw-font-bold tw-text-slate-800 tw-text-center tw-mb-4">{{ plan.name }}</h4>
+              
+              <div class="tw-text-center tw-mb-6">
+                <h2 class="tw-text-3xl tw-font-extrabold tw-text-indigo-600 tw-mb-1">{{ currencySymbol }}{{ formatAmount(plan.price) }}</h2>
+                <p class="tw-text-slate-400 tw-text-sm tw-m-0">Lifetime access</p>
               </div>
-              <p v-if="plan.description" class="text-muted small mb-3">{{ plan.description }}</p>
-              <ul class="list-unstyled mb-4">
-                <li class="mb-2"><i class="fas fa-check text-success me-2"></i><strong>{{ plan.courses_count }}</strong> courses included</li>
-                <li class="mb-2"><i class="fas fa-certificate text-success me-2"></i>Certificate on each course completion</li>
-              </ul>
+
+              <p v-if="plan.description" class="tw-text-slate-500 tw-text-sm tw-mb-4 tw-text-center">{{ plan.description }}</p>
+              
+              <div class="tw-mb-6 tw-flex-1">
+                <div class="tw-flex tw-items-center tw-justify-center tw-mb-3">
+                   <span class="tw-bg-indigo-50 tw-text-indigo-700 tw-px-3 tw-py-1 tw-rounded-lg tw-text-sm tw-font-semibold">
+                     {{ plan.displayCount || plan.courses_count }} Courses Included
+                   </span>
+                </div>
+                <ul class="tw-space-y-2">
+                  <li v-for="(course, idx) in plan.courseList" :key="idx" class="tw-flex tw-items-start tw-gap-2">
+                    <i class="fas fa-check tw-text-green-500 tw-mt-1 tw-text-xs"></i>
+                    <span class="tw-text-slate-600 tw-text-sm">{{ course }}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="tw-flex tw-items-center tw-justify-center tw-mb-4" v-if="!plan.courseList || plan.courseList.length === 0">
+                 <span class="tw-text-slate-400 tw-text-xs">Course list updating...</span>
+              </div>
+
               <button
-                class="btn w-100 fw-bold"
-                :class="currentPlan && plan.id === currentPlan.plan_id ? 'btn-secondary' : 'btn-primary'"
-                :disabled="currentPlan && plan.id === currentPlan.plan_id"
-                @click="purchasePlan(plan)"
-                style="border-radius: 8px; padding: 12px;">
-                <span v-if="currentPlan && plan.id === currentPlan.plan_id">
-                  <i class="fas fa-check-circle me-2"></i>Current Package
+                type="button"
+                class="tw-w-full tw-py-3 tw-font-bold tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-gap-2 tw-transition-all tw-border-0 tw-cursor-pointer"
+                :class="(currentPlan && plan.id === currentPlan.plan_id && currentPlan.is_active !== false) ? 'tw-bg-green-600 tw-text-white tw-cursor-default' : 'tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-shadow-lg tw-shadow-indigo-500/20'"
+                :disabled="(currentPlan && plan.id === currentPlan.plan_id && currentPlan.is_active !== false)"
+                @click="purchasePlan(plan)">
+                <span v-if="currentPlan && plan.id === currentPlan.plan_id && currentPlan.is_active !== false">
+                  <i class="fas fa-check-circle"></i> Activated
                 </span>
                 <span v-else>
-                  <i class="fas fa-shopping-cart me-2"></i>Buy Package – {{ currencySymbol }}{{ formatAmount(plan.price) }}
+                  <i class="fas fa-shopping-cart"></i> {{ (currentPlan && plan.id === currentPlan.plan_id && currentPlan.is_active === false) ? 'Renew' : 'Buy' }} Package – {{ currencySymbol }}{{ formatAmount(plan.price) }}
                 </span>
               </button>
             </div>
           </div>
-        </div>
-      </template>
+        </template>
+      </div>
     </div>
 
-    <div v-if="!currentPlan && plans.length > 0" class="row mt-3">
-      <div class="col-12">
-        <div class="alert alert-info">
-          <i class="fas fa-info-circle me-2"></i>
+    <div v-if="!currentPlan && plans.length > 0">
+      <div class="tw-bg-sky-50 tw-border tw-border-sky-100 tw-rounded-xl tw-p-4 tw-flex tw-items-start tw-gap-3">
+        <i class="fas fa-info-circle tw-text-sky-500 tw-mt-1"></i>
+        <div class="tw-text-sky-800 tw-text-sm">
           <strong>Step:</strong> Choose a courses package → Access courses → Complete courses → Get certificates.
         </div>
       </div>
@@ -91,9 +160,22 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import DashboardLayout from '../../components/DashboardLayout.vue'
 import api from '../../services/api'
+import { openPaymentInNewTab } from '../../services/paymentWindow'
+
+// Same course count & list by plan name as used in plan cards (LEARN Lite, Pro, Supreme, Premium, Premium+)
+function getPlanDisplayInfo(planName) {
+  const name = (planName || '').toLowerCase()
+  if (name.includes('lite')) return { count: 4, list: ['Affiliate Marketing Mastery', 'Social Media Optimization', 'Canva Designing', 'Communication Skills'] }
+  if (name.includes('pro')) return { count: 6, list: ['All Lite Courses', 'Facebook Ads Mastery', 'Instagram Growth Secrets'] }
+  if (name.includes('supreme')) return { count: 9, list: ['All Pro Courses', 'Google Ads Mastery', 'YouTube Domination', 'Video Editing Mastery'] }
+  if (name.includes('premium') && !name.includes('plus') && !name.includes('+')) return { count: 12, list: ['All Supreme Courses', 'Stock Market Basics', 'Crypto Currency Trading', 'Public Speaking Mastery'] }
+  if (name.includes('premium') && (name.includes('plus') || name.includes('+'))) return { count: 15, list: ['All Premium Courses', 'Advanced Digital Marketing', 'Website Development', 'Freelancing Mastery'] }
+  return { count: 0, list: [] }
+}
 
 export default {
   name: 'Packages',
@@ -101,10 +183,41 @@ export default {
     DashboardLayout
   },
   setup() {
+    const route = useRoute()
+    const router = useRouter()
     const plans = ref([])
     const currentPlan = ref(null)
     const currencySymbol = ref('₹')
     const isLoading = ref(true)
+    const homeBuyAgree = ref(false)
+
+    const requiresHomeBuyAgree = computed(() => {
+      const fromHome = String(route.query?.from_home_buy ?? '') === '1'
+      // "Initial purchase": user doesn't have any plan yet
+      return fromHome && !currentPlan.value
+    })
+
+    onMounted(() => {
+      try {
+        homeBuyAgree.value = sessionStorage.getItem('home_buy_agree') === '1'
+      } catch (_) {}
+    })
+
+    watch(homeBuyAgree, (v) => {
+      try {
+        sessionStorage.setItem('home_buy_agree', v ? '1' : '0')
+      } catch (_) {}
+    })
+
+    const currentPlanDisplayCount = computed(() => {
+      if (!currentPlan.value || !currentPlan.value.name) return currentPlan.value?.courses_count ?? 0
+      const info = getPlanDisplayInfo(currentPlan.value.name)
+      return info.count || currentPlan.value.courses_count || 0
+    })
+    const currentPlanCourseList = computed(() => {
+      if (!currentPlan.value || !currentPlan.value.name) return []
+      return getPlanDisplayInfo(currentPlan.value.name).list
+    })
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
@@ -122,71 +235,117 @@ export default {
 
     const purchasePlan = async (plan) => {
       if (!plan || !plan.id || (currentPlan.value && plan.id === currentPlan.value.plan_id)) return
-      if (!confirm(`Buy "${plan.name}" for ${currencySymbol.value}${formatAmount(plan.price)}? Amount will be deducted from your balance.`)) return
-
-      try {
-        const response = await api.post('/course-plans/purchase', { plan_id: plan.id })
-        if (response.data.status === 'success') {
-          if (window.notify) {
-            window.notify('success', 'Courses package purchased! You can now access courses.')
-          }
-          fetchPlans()
-        }
-      } catch (error) {
-        const msg = error.response?.data?.message?.error?.[0] || error.response?.data?.message || 'Purchase failed'
-        if (window.notify) window.notify('error', Array.isArray(msg) ? msg[0] : msg)
+      if (requiresHomeBuyAgree.value && !homeBuyAgree.value) {
+        if (window.notify) window.notify('error', 'Please accept the Terms of Service and Privacy Policy to continue.')
+        return
       }
+      if (!confirm(`Buy "${plan.name}" for ${currencySymbol.value}${formatAmount(plan.price)}? You will be redirected to the payment gateway.`)) return
+
+      // Open same-site redirect page in new tab (reliable in all browsers)
+      const redirectUrl = `/user/payment-redirect?flow=course_plan&plan_id=${encodeURIComponent(plan.id)}&amount=${plan.price}&plan_name=${encodeURIComponent(plan.name)}&back=${encodeURIComponent('/user/packages')}`
+      const w = window.open(redirectUrl, '_blank')
+      if (!w) {
+        // Popup blocked: fallback to same tab
+        router.push(redirectUrl)
+      } else if (window.notify) {
+        window.notify('info', 'Payment tab opened. Complete payment to activate your package.')
+      }
+    }
+
+    function parseCurrentPlanFromResponse(res) {
+      if (!res || res.status !== 'success') return null
+      const d = res.data
+      if (!d) return null
+      // Shape 1: { data: { has_plan, data: { plan_id, name, ... } } }
+      if (d.data && typeof d.data === 'object' && (d.data.plan_id != null || d.data.name)) {
+        const p = d.data
+        if (p.is_active === undefined) p.is_active = true
+        return p
+      }
+      // Shape 2: { data: { plan_id, name, ... } } (flat)
+      if (d.plan_id != null && d.name) {
+        if (d.is_active === undefined) d.is_active = true
+        return d
+      }
+      return null
     }
 
     const fetchPlans = async () => {
       isLoading.value = true
+      currentPlan.value = null
       try {
-        const [plansRes, currentRes] = await Promise.all([
-          api.get('/course-plans'),
-          api.get('/course-plans/current')
-        ])
-
-        if (plansRes.data.status === 'success') {
+        const plansRes = await api.get('/course-plans')
+        if (plansRes.data?.status === 'success') {
           const d = plansRes.data.data
-          plans.value = d?.data || d || []
+          let fetchedPlans = d?.data ?? d ?? []
+          if (!Array.isArray(fetchedPlans)) fetchedPlans = []
+
+          fetchedPlans = fetchedPlans.map(p => {
+            const info = getPlanDisplayInfo(p.name)
+            const count = info.count || p.courses_count
+            const courseList = info.list.length ? info.list : []
+            return { ...p, displayCount: count, courseList }
+          })
+          plans.value = fetchedPlans
           if (d?.currency_symbol) currencySymbol.value = d.currency_symbol
         } else {
           plans.value = []
         }
-
-        if (currentRes.data.status === 'success' && currentRes.data.data?.has_plan && currentRes.data.data?.data) {
-          currentPlan.value = currentRes.data.data.data
-        } else {
-          currentPlan.value = null
-        }
-      } catch (error) {
+      } catch (err) {
         plans.value = []
+        if (window.notify) window.notify('error', 'Failed to load packages')
+      }
+
+      try {
+        const currentRes = await api.get('/course-plans/current')
+        currentPlan.value = parseCurrentPlanFromResponse(currentRes.data)
+      } catch (_) {
         currentPlan.value = null
-        if (window.notify) window.notify('error', 'Failed to load courses packages')
       } finally {
         isLoading.value = false
       }
     }
 
     onMounted(() => {
-      fetchPlans()
+      ;(async () => {
+        const trx = route.query.watchpay_trx || route.query.simplypay_trx
+        const coursePlanId = route.query.course_plan_id
+        if (trx && coursePlanId) {
+          try {
+            const gateway = route.query.simplypay_trx ? 'simplypay' : 'watchpay'
+            const confirmRes = await api.post('/course-plans/payment/confirm', {
+              trx,
+              plan_id: parseInt(coursePlanId),
+              gateway: gateway
+            })
+            if (confirmRes.data.status === 'success') {
+              if (window.notify) window.notify('success', 'Courses package purchased! You can now access courses.')
+              // Avoid back-button confusion by redirecting to Courses
+              setTimeout(() => {
+                router.replace('/user/courses')
+              }, 600)
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+        fetchPlans()
+      })()
     })
 
     return {
       plans,
       currentPlan,
+      currentPlanDisplayCount,
+      currentPlanCourseList,
       currencySymbol,
       isLoading,
       formatAmount,
       formatDate,
-      purchasePlan
+      purchasePlan,
+      requiresHomeBuyAgree,
+      homeBuyAgree
     }
   }
 }
 </script>
-
-<style scoped>
-.card:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-}
-</style>

@@ -1,17 +1,17 @@
 <template>
-  <div class="partner-section my-120" v-if="partnerContent">
+  <div class="partner-section my-120" >
     <div class="container">
       <div class="section-heading text-center">
-        <span class="section-heading__subtitle">{{ partnerContent.heading }}</span>
-        <h3 class="section-heading__title">{{ partnerContent.subheading }}</h3>
-        <p class="section-heading__desc">{{ partnerContent.description }}</p>
+        <span class="section-heading__subtitle">{{ (partnerContent && partnerContent.heading) || '' }}</span>
+        <h3 class="section-heading__title">{{ (partnerContent && partnerContent.subheading) || '' }}</h3>
+        <p class="section-heading__desc">{{ (partnerContent && partnerContent.description) || '' }}</p>
       </div>
 
       <div class="partner-wrapper">
         <div class="company-list">
           <div v-for="(partner, index) in partners" :key="index" class="company-name">
             <div class="thumb">
-              <img :src="$getImage('partner_section', partner.logo)" alt="Partner Logo">
+              <img :src="$getImage('partner_section', partner?.data_values?.logo ?? partner?.logo)" alt="Partner Logo">
             </div>
           </div>
         </div>
@@ -36,8 +36,8 @@ export default {
           appService.getSections('partner_section'),
           appService.getSections('partner_section.element')
         ])
-        partnerContent.value = contentRes.data?.content?.data_values || null
-        partners.value = elementsRes.data || []
+        partnerContent.value = appService.getSectionContent(contentRes)
+        partners.value = elementsRes?.data ?? []
       } catch (error) {
         console.error('Error loading partner section:', error)
       }

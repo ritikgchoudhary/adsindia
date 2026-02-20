@@ -1,5 +1,5 @@
 <template>
-  <section class="testimonials my-120" v-if="testimonialContent">
+  <section class="testimonials my-120">
     <div class="testimonial-shape">
       <img :src="'/assets/templates/basic/images/shapes/ts-2.png'" alt="Shape">
     </div>
@@ -9,10 +9,10 @@
         <div class="col-lg-5">
           <div class="section-heading style-left">
             <span class="section-heading__subtitle">
-              {{ testimonialContent.heading }}
+              {{ testimonialContent?.heading ?? '' }}
             </span>
             <h3 class="section-heading__title">
-              {{ testimonialContent.subheading }}
+              {{ testimonialContent?.subheading ?? '' }}
             </h3>
           </div>
         </div>
@@ -23,21 +23,21 @@
               <div class="testimonial-item">
                 <div class="testimonial-item__content">
                   <h4 class="testimonial-item__name">
-                    {{ testimonial.name }}
+                    {{ testimonial?.data_values?.name ?? testimonial?.name ?? '' }}
                   </h4>
                   <p class="testimonial-item__designation">
-                    {{ testimonial.designation }}
+                    {{ testimonial?.data_values?.designation ?? testimonial?.designation ?? '' }}
                   </p>
                   <div class="testimonial-item__rating">
                     <ul class="rating-list">
-                      <li v-for="star in (testimonial.rating || 5)" :key="star" class="rating-list__item">
+                      <li v-for="star in (testimonial?.data_values?.rating ?? testimonial?.rating ?? 5)" :key="star" class="rating-list__item">
                         <i class="fas fa-star"></i>
                       </li>
                     </ul>
                   </div>
                 </div>
                 <p class="testimonial-item__desc">
-                  {{ testimonial.comment }}
+                  {{ testimonial?.data_values?.comment ?? testimonial?.comment ?? '' }}
                 </p>
               </div>
             </div>
@@ -65,8 +65,8 @@ export default {
           appService.getSections('testimonials'),
           appService.getSections('testimonials.element')
         ])
-        testimonialContent.value = contentRes.data?.content?.data_values || null
-        testimonials.value = elementsRes.data || []
+        testimonialContent.value = appService.getSectionContent(contentRes)
+        testimonials.value = elementsRes?.data ?? []
 
         await nextTick()
 
