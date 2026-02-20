@@ -289,8 +289,8 @@
               </div>
               <p class="tw-text-xs tw-font-bold tw-uppercase tw-opacity-90 tw-tracking-wide tw-mb-2">Available Balance</p>
               <h2 class="tw-text-3xl tw-font-extrabold tw-mb-5">{{ currencySymbol }}{{ formatAmount(widgetBalanceAnim) }}</h2>
-              <router-link to="/user/withdraw" class="tw-inline-flex tw-items-center tw-gap-2 tw-px-5 tw-py-2.5 tw-bg-white tw-text-indigo-600 tw-font-bold tw-rounded-xl tw-no-underline hover:tw-bg-white/90 tw-transition-colors">
-                <i class="fas fa-hand-holding-usd"></i> Withdraw Money
+              <router-link to="/user/withdraw" class="tw-w-full tw-py-4 tw-bg-gradient-to-r tw-from-amber-400 tw-to-orange-500 tw-text-black tw-font-extrabold tw-rounded-xl tw-no-underline hover:tw-shadow-xl hover:tw-brightness-110 tw-transition-all tw-duration-200 tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0">
+                <i class="fas fa-hand-holding-usd"></i> Withdraw Money <i class="fas fa-arrow-right tw-text-xs"></i>
               </router-link>
             </div>
 
@@ -363,9 +363,8 @@ export default {
     const earnTotalAnim = ref(0)
 
     // Track animation sequences per ref so multiple widgets can animate simultaneously.
-    // Also add a fail-safe so values never stay stuck at 0.
     const animSeqMap = new WeakMap()
-    const animateTo = (targetRef, to, duration = 900) => {
+    const animateTo = (targetRef, to, duration = 300) => {
       const seq = (animSeqMap.get(targetRef) || 0) + 1
       animSeqMap.set(targetRef, seq)
       const toNum = Number(to) || 0
@@ -378,8 +377,8 @@ export default {
         const eased = 1 - Math.pow(1 - p, 3)
         targetRef.value = toNum * eased
         if (p < 1) requestAnimationFrame(step)
+        else targetRef.value = toNum // Ensure exact final value
       }
-      targetRef.value = 0
       requestAnimationFrame(step)
 
       // Fail-safe: if something cancels the animation and it stays at 0, force final value.
@@ -390,6 +389,7 @@ export default {
         }
       }, Math.max(0, duration) + 150)
     }
+
     const widget = ref({
       balance: 0,
       total_earning: 0,
@@ -407,6 +407,32 @@ export default {
     const kycContent = ref(null)
     const currencySymbol = ref('₹')
     const showKYCRejectionModal = ref(false)
+
+    // Load cached data immediately
+    try {
+      const cached = localStorage.getItem('dashboard_data_cache')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        widget.value = parsed.widget || widget.value
+        earnings.value = parsed.earnings || earnings.value
+        transactions.value = parsed.transactions || transactions.value
+        user.value = parsed.user || user.value
+        kycContent.value = parsed.kyc_content || kycContent.value
+        currencySymbol.value = parsed.currency_symbol || '₹'
+        
+        // Show initial values without animation for instant feel
+        widgetBalanceAnim.value = widget.value.balance
+        widgetTotalEarningAnim.value = widget.value.total_earning
+        widgetAdsIncomeAnim.value = widget.value.ads_income || 0
+        widgetTotalWithdrawAnim.value = widget.value.total_withdraw
+        earnTodayAnim.value = earnings.value.today
+        earnLast7DaysAnim.value = earnings.value.last7Days
+        earnLast30DaysAnim.value = earnings.value.last30Days
+        earnTotalAnim.value = earnings.value.total
+      }
+    } catch (e) {
+      console.warn('Dashboard cache load failed', e)
+    }
 
     const referralCode = computed(() => {
       const id = Number(user.value?.id)
@@ -447,12 +473,14 @@ export default {
     })
 
     // Avatar: user image else cartoon PNG
+    const avatarTs = Date.now()
     const profileAvatarUrl = computed(() => {
       const u = user.value || {}
       if (u.image) return u.image
-      // Served from /assets/images/ (copied to public on build)
-      return `/assets/images/cartoon-avatar.png?v=${Date.now()}`
+      // Use stable timestamp per session
+      return `/assets/images/cartoon-avatar.png?v=${avatarTs}`
     })
+    
     const displayUsername = computed(() => {
       const u = user.value
       if (u.username) return `@${u.username}`
@@ -487,12 +515,8 @@ export default {
     }
 
     const fetchDashboardData = async () => {
-      // loading.value = true // Disabled to remove loader system
       try {
         const response = await userService.getDashboard()
-        // `userService.getDashboard()` returns API JSON:
-        // { status: "success", data: {...} }
-        // Keep resilient if we ever return the raw axios response instead.
         const wrapper =
           (response && typeof response === 'object' && 'status' in response && 'data' in response)
             ? response
@@ -504,6 +528,9 @@ export default {
         const finalPayload = wrapper ? wrapper.data : (response?.data ?? response)
 
         if (isSuccess && finalPayload) {
+          // Save to cache
+          localStorage.setItem('dashboard_data_cache', JSON.stringify(finalPayload))
+
           widget.value = finalPayload.widget || {}
           const w = finalPayload.widget || {}
           const defaultEarnings = {
@@ -519,7 +546,7 @@ export default {
           const symbol = finalPayload.currency_symbol || '₹'
           currencySymbol.value = symbol === 'Rs' ? '₹' : symbol
 
-          // Run count-up animations (always from 0 as requested)
+          // Run count-up animations
           animateTo(widgetBalanceAnim, widget.value?.balance ?? 0)
           animateTo(widgetTotalEarningAnim, widget.value?.total_earning ?? 0)
           animateTo(widgetAdsIncomeAnim, widget.value?.ads_income ?? 0)
@@ -541,8 +568,6 @@ export default {
 
     onMounted(() => {
       fetchDashboardData()
-      
-      // Removed complex scroll fix since we are using Tailwind layout now
       document.body.style.overflow = 'auto'
     })
 

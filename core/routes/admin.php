@@ -79,6 +79,13 @@ Route::middleware('admin')->group(function () {
         Route::get('send-notification', 'showNotificationAllForm')->name('notification.all');
         Route::post('send-notification', 'sendNotificationAll')->name('notification.all.send');
         Route::get('list', 'list')->name('list');
+
+        Route::post('reset-data/{id}', 'resetData')->name('reset.data');
+        Route::post('delete/{id}', 'deleteUser')->name('delete');
+        Route::post('delete-bank/{id}', 'deleteBankDetails')->name('delete.bank');
+        Route::post('update-course-package/{id}', 'updateCoursePackage')->name('update.course.package');
+        Route::post('update-ads-plan/{id}', 'updateAdsPlan')->name('update.ads.plan');
+
         Route::get('count-by-segment/{methodName}', 'countBySegment')->name('segment.count');
         Route::get('notification-log/{id}', 'notificationLog')->name('notification.log');
     });
@@ -183,6 +190,14 @@ Route::middleware('admin')->group(function () {
             Route::get('edit/{alias}', 'edit')->name('edit');
             Route::post('update/{id}', 'update')->name('update');
             Route::post('status/{id}', 'status')->name('status');
+        });
+
+        // Gateway Management (WatchPay, SimplyPay, Custom QR)
+        Route::controller('GatewayManagementController')->prefix('management')->name('management.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('toggle/{id}', 'toggleStatus')->name('toggle');
+            Route::post('upload-qr', 'uploadQr')->name('upload.qr');
+            Route::post('remove-qr/{index}', 'removeQr')->name('remove.qr');
         });
     });
 

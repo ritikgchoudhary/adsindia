@@ -22,7 +22,9 @@
       <li :class="{ active: isActive('/master_admin/deposits') }"><router-link to="/master_admin/deposits"><i class="fas fa-arrow-down"></i><span>Deposits</span></router-link></li>
       <li :class="{ active: isActive('/master_admin/withdrawals') }"><router-link to="/master_admin/withdrawals"><i class="fas fa-arrow-up"></i><span>Withdrawals</span></router-link></li>
       <li :class="{ active: isActive('/master_admin/transactions') }"><router-link to="/master_admin/transactions"><i class="fas fa-exchange-alt"></i><span>Transactions</span></router-link></li>
+      <li :class="{ active: isActive('/master_admin/gateways') }"><router-link to="/master_admin/gateways"><i class="fas fa-credit-card"></i><span>Gateway Management</span></router-link></li>
       <li :class="{ active: isActive('/master_admin/commissions') }"><router-link to="/master_admin/commissions"><i class="fas fa-coins"></i><span>Commission Management</span></router-link></li>
+      <li :class="{ active: route.query.tab === 'agent_defaults' }"><router-link to="/master_admin/commissions?tab=agent_defaults"><i class="fas fa-user-shield"></i><span>Agent Commissions</span></router-link></li>
       <li :class="{ active: isActive('/master_admin/special-links') }"><router-link to="/master_admin/special-links"><i class="fas fa-tag"></i><span>Special Discount Links</span></router-link></li>
       <li :class="{ active: isActive('/master_admin/kyc') }"><router-link to="/master_admin/kyc"><i class="fas fa-id-card"></i><span>KYC Management</span></router-link></li>
       <li :class="{ active: isActive('/master_admin/reports') }"><router-link to="/master_admin/reports"><i class="fas fa-chart-bar"></i><span>Reports</span></router-link></li>
@@ -64,7 +66,7 @@ export default {
       router.push('/master_admin/login')
     }
     
-    return { isActive, handleLogout, logoUrl, onLogoError }
+    return { isActive, handleLogout, logoUrl, onLogoError, route }
   }
 }
 </script>

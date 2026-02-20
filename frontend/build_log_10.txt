@@ -1,0 +1,126 @@
+
+> a22-com-frontend@1.0.0 build
+> vite build && node copy-landing-assets.js
+
+vite v5.4.21 building for production...
+<script src="/assets/global/js/jquery-3.7.1.min.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/assets/global/js/bootstrap.bundle.min.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/assets/global/js/select2.min.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/assets/templates/basic/js/slick.min.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/assets/templates/basic/js/main.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/assets/global/js/iziToast.min.js"> in "/index.html" can't be bundled without type="module" attribute
+
+/assets/global/css/bootstrap.min.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/global/css/all.min.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/global/css/line-awesome.min.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/global/css/select2.min.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/templates/basic/css/slick.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/templates/basic/css/custom.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/templates/basic/css/main.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/global/css/iziToast.min.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+
+/assets/global/css/iziToast_custom.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+transforming...
+✓ 226 modules transformed.
+rendering chunks...
+computing gzip size...
+../public/index.html                                      2.28 kB │ gzip:  0.79 kB
+../public/assets/ForgotPassword-tn0RQdqM.css              0.00 kB │ gzip:  0.02 kB
+../public/assets/PaymentRedirect-Dkb4ePb5.css             0.06 kB │ gzip:  0.07 kB
+../public/assets/Packages-DYok2HL8.css                    0.13 kB │ gzip:  0.13 kB
+../public/assets/Reports-D00S9HgJ.css                     0.17 kB │ gzip:  0.14 kB
+../public/assets/CustomerSupport-CjJaW5Ac.css             0.19 kB │ gzip:  0.12 kB
+../public/assets/Admins-BHyiQEhR.css                      0.25 kB │ gzip:  0.18 kB
+../public/assets/ConversionLog-C1QPJrcM.css               0.32 kB │ gzip:  0.22 kB
+../public/assets/Withdraw-7xn5Qduk.css                    0.33 kB │ gzip:  0.15 kB
+../public/assets/AffiliateWithdraw-CH6URuN7.css           0.33 kB │ gzip:  0.15 kB
+../public/assets/CreatePackage-CaFpFZc9.css               0.34 kB │ gzip:  0.23 kB
+../public/assets/EditPackage-DfPj-3mm.css                 0.34 kB │ gzip:  0.23 kB
+../public/assets/SpecialLinks-CuUt0PXU.css                0.35 kB │ gzip:  0.23 kB
+../public/assets/Certificates-DP99g02l.css                0.40 kB │ gzip:  0.26 kB
+../public/assets/Dashboard-BgWFydZS.css                   0.60 kB │ gzip:  0.31 kB
+../public/assets/KYC-Jc54zeqa.css                         0.61 kB │ gzip:  0.27 kB
+../public/assets/CustomerSupport-B2ufSAaQ.css             0.69 kB │ gzip:  0.34 kB
+../public/assets/CourseCreate-Bk6GY9ry.css                0.78 kB │ gzip:  0.36 kB
+../public/assets/CourseEdit-GavBvOBH.css                  0.78 kB │ gzip:  0.36 kB
+../public/assets/AffiliateWithdrawHistory-BLHFI6MF.css    0.92 kB │ gzip:  0.29 kB
+../public/assets/Courses-IGbJ2mio.css                     1.12 kB │ gzip:  0.47 kB
+../public/assets/AdminLogin-CEdArBTB.css                  1.26 kB │ gzip:  0.53 kB
+../public/assets/WithdrawHistory-xQSsepMV.css             1.29 kB │ gzip:  0.37 kB
+../public/assets/MasterAdminLogin-CCWLUb5z.css            1.36 kB │ gzip:  0.57 kB
+../public/assets/Settings-BD93Td_-.css                    1.49 kB │ gzip:  0.57 kB
+../public/assets/KYCForm-D2KlOV_B.css                     1.80 kB │ gzip:  0.38 kB
+../public/assets/Dashboard-CFaIsRUM.css                   2.55 kB │ gzip:  0.86 kB
+../public/assets/AdminLayout-Dib2PImV.css                 3.16 kB │ gzip:  0.97 kB
+../public/assets/Withdrawals-C5nhuCRG.css                 3.73 kB │ gzip:  1.04 kB
+../public/assets/CommissionManagement-CwogUjmB.css        4.57 kB │ gzip:  1.28 kB
+../public/assets/MasterAdminLayout-DmHqhbVX.css           5.34 kB │ gzip:  1.35 kB
+../public/assets/Courses-F3Ug8cMB.css                     5.91 kB │ gzip:  1.57 kB
+../public/assets/Policy-DbXvdvTG.css                      6.56 kB │ gzip:  1.60 kB
+../public/assets/Orders-Bcr3TdnH.css                     10.30 kB │ gzip:  2.27 kB
+../public/assets/Deposits-Cc51v0nD.css                   11.52 kB │ gzip:  2.50 kB
+../public/assets/Leaderboard-DgWWLWnX.css                12.02 kB │ gzip:  2.47 kB
+../public/assets/Users-B1siCPEb.css                      19.36 kB │ gzip:  3.79 kB
+../public/assets/index-iLDgHXvU.css                     118.93 kB │ gzip: 17.92 kB
+../public/assets/Admins-Bt_X35cP.js                       0.59 kB │ gzip:  0.40 kB
+../public/assets/Reports-CjQJ0m0y.js                      0.83 kB │ gzip:  0.46 kB
+../public/assets/KYCData-Cs38OzYj.js                      1.50 kB │ gzip:  0.87 kB
+../public/assets/Policy-B8yb0PZn.js                       1.56 kB │ gzip:  0.77 kB
+../public/assets/Dashboard-BEc2eeSK.js                    2.26 kB │ gzip:  0.95 kB
+../public/assets/AdminLogin-DYUvjXVZ.js                   2.33 kB │ gzip:  1.14 kB
+../public/assets/Dashboard-BqJyWTgr.js                    2.68 kB │ gzip:  1.15 kB
+../public/assets/MasterAdminLogin-dtPDaSbJ.js             2.83 kB │ gzip:  1.35 kB
+../public/assets/Packages-CxzjUvCj.js                     3.79 kB │ gzip:  1.65 kB
+../public/assets/CreatePackage-DCvHnkpE.js                3.90 kB │ gzip:  1.60 kB
+../public/assets/Courses-BPfI8S5C.js                      3.96 kB │ gzip:  1.81 kB
+../public/assets/EditPackage-DsDS6HUJ.js                  4.53 kB │ gzip:  1.78 kB
+../public/assets/CustomerSupport-Bu7yVqoA.js              4.73 kB │ gzip:  1.84 kB
+../public/assets/ForgotPassword-CCkWAEbX.js               5.13 kB │ gzip:  1.68 kB
+../public/assets/AdminLayout-DAEdwmLA.js                  5.92 kB │ gzip:  2.09 kB
+../public/assets/ConversionLog-BcODSf9a.js                6.01 kB │ gzip:  2.37 kB
+../public/assets/ChangePassword-CJ7DKc75.js               6.07 kB │ gzip:  1.81 kB
+../public/assets/Leaderboard-BOwyDK9_.js                  6.33 kB │ gzip:  2.41 kB
+../public/assets/KYCForm-CGGA7i_c.js                      6.74 kB │ gzip:  2.55 kB
+../public/assets/TwoFactor-C7Sk2gmC.js                    6.81 kB │ gzip:  2.65 kB
+../public/assets/PartnerProgram-BhJ6XeMK.js               6.83 kB │ gzip:  2.78 kB
+../public/assets/MasterAdminLayout-D9P4Q37s.js            6.98 kB │ gzip:  2.18 kB
+../public/assets/CourseCreate-Bq2RwZKa.js                 7.62 kB │ gzip:  2.51 kB
+../public/assets/Transactions-Cs_oM08Y.js                 8.26 kB │ gzip:  3.16 kB
+../public/assets/WithdrawHistory-C8LPZmpl.js              8.75 kB │ gzip:  3.18 kB
+../public/assets/CourseEdit-Ct3o3Yky.js                   8.99 kB │ gzip:  2.85 kB
+../public/assets/AffiliateWithdrawHistory-DTaCINnn.js     9.63 kB │ gzip:  3.30 kB
+../public/assets/ProfileSetting-RgMEEenO.js               9.95 kB │ gzip:  2.68 kB
+../public/assets/SpecialLinks-DEZE7Dm5.js                10.49 kB │ gzip:  3.43 kB
+../public/assets/AdPlans-BqNqZ1Ir.js                     10.63 kB │ gzip:  3.59 kB
+../public/assets/PaymentRedirect-DivNypxC.js             10.75 kB │ gzip:  3.30 kB
+../public/assets/AffiliateWithdraw-Dfz9sn-k.js           11.55 kB │ gzip:  4.15 kB
+../public/assets/CommissionManagement-CCyHQUJN.js        12.73 kB │ gzip:  3.53 kB
+../public/assets/Deposits-D9CUnsVV.js                    12.85 kB │ gzip:  4.25 kB
+../public/assets/Orders-Btfe8Jp2.js                      13.05 kB │ gzip:  4.32 kB
+../public/assets/Packages-Bhfc8Z3q.js                    13.31 kB │ gzip:  4.52 kB
+../public/assets/CustomerSupport-CuXPyFPZ.js             13.35 kB │ gzip:  3.88 kB
+../public/assets/Withdrawals-CPsu5dV2.js                 13.84 kB │ gzip:  4.44 kB
+../public/assets/Courses-BQwuYtYf.js                     14.45 kB │ gzip:  4.57 kB
+../public/assets/Withdraw-Cdb0gCJi.js                    14.57 kB │ gzip:  4.96 kB
+../public/assets/CourseDetail-Bao9Jfsu.js                14.98 kB │ gzip:  4.33 kB
+../public/assets/Referral-B_sRfoLw.js                    15.71 kB │ gzip:  3.89 kB
+../public/assets/AffiliateIncome-B-wFzbPL.js             15.74 kB │ gzip:  3.32 kB
+../public/assets/Certificates-wmM3V-Ly.js                19.04 kB │ gzip:  5.75 kB
+../public/assets/Settings-DWvCN53j.js                    21.19 kB │ gzip:  5.64 kB
+../public/assets/AdsWork-CHELUh7H.js                     22.04 kB │ gzip:  6.76 kB
+../public/assets/Courses-CaYbQa6K.js                     23.78 kB │ gzip:  6.26 kB
+../public/assets/KYC-ChOOKfb9.js                         29.16 kB │ gzip:  6.56 kB
+../public/assets/AccountKYC-vXs3ezVX.js                  36.35 kB │ gzip:  8.31 kB
+../public/assets/Users-Bf_Xd_hL.js                       52.40 kB │ gzip: 12.70 kB
+../public/assets/index-DGoke2oC.js                      301.90 kB │ gzip: 95.30 kB
+✓ built in 7.68s
+Copied: /www/wwwroot/a22-com.site/assets/templates -> /www/wwwroot/a22-com.site/public/assets/templates
+Copied: /www/wwwroot/a22-com.site/assets/images -> /www/wwwroot/a22-com.site/public/assets/images
+Updated: /www/wwwroot/a22-com.site/version.txt

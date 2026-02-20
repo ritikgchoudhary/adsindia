@@ -21,6 +21,9 @@ use App\Models\AdPackage;
 use App\Models\User;
 use App\Models\UserLogin;
 use App\Models\Withdrawal;
+use App\Models\Gateway;
+use App\Models\UserCertificate;
+use App\Models\NotificationLog;
 use App\Rules\FileTypeValidate;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -143,7 +146,7 @@ class AdminController extends Controller {
         // Get all user IDs for this page
         $userIds = $users->pluck('id')->toArray();
 
-        // Calculate total deposits for all users in a single query (optimization)
+        // Calculate total deposits (batch)
         $totalDeposits = Deposit::whereIn('user_id', $userIds)
             ->successful()
             ->groupBy('user_id')
@@ -151,39 +154,70 @@ class AdminController extends Controller {
             ->pluck('total_deposit', 'user_id')
             ->toArray();
 
-        $users->getCollection()->transform(function ($user) use ($totalDeposits) {
-            // Get total deposit from pre-calculated array
+        // Active course plans (batch) – pick the most recent active order per user
+        $activeCourseOrders = \App\Models\CoursePlanOrder::whereIn('user_id', $userIds)
+            ->where('status', 1)
+            ->with('plan:id,name,price')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->unique('user_id')
+            ->keyBy('user_id');
+
+        // Active ads plans (batch)
+        $activeAdsOrders = \App\Models\AdPackageOrder::whereIn('user_id', $userIds)
+            ->where('status', 1)
+            ->with('package:id,name,price')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->unique('user_id')
+            ->keyBy('user_id');
+
+        $users->getCollection()->transform(function ($user) use ($totalDeposits, $activeCourseOrders, $activeAdsOrders) {
             $totalDeposit = $totalDeposits[$user->id] ?? 0;
+            $courseOrder = $activeCourseOrders[$user->id] ?? null;
+            $adsOrder    = $activeAdsOrders[$user->id] ?? null;
 
             return [
-                'id' => $user->id,
-                'username' => $user->username,
-                'email' => $user->email,
-                'firstname' => $user->firstname,
-                'lastname' => $user->lastname,
-                'mobile' => $user->mobile ?? '',
-                'password' => $user->password, // Include password (will be shown as masked in frontend)
-                'balance' => $user->balance,
+                'id'         => $user->id,
+                'username'   => $user->username,
+                'email'      => $user->email,
+                'firstname'  => $user->firstname,
+                'lastname'   => $user->lastname,
+                'mobile'     => $user->mobile ?? '',
+                'password'   => $user->password,
+                'balance'    => $user->balance,
                 'total_deposit' => $totalDeposit,
-                'status' => $user->status == 1 ? 'active' : 'banned',
-                'is_agent' => (bool) ($user->is_agent ?? false),
+                'status'     => $user->status == 1 ? 'active' : 'banned',
+                'is_agent'   => (bool) ($user->is_agent ?? false),
                 'ev' => $user->ev,
                 'sv' => $user->sv,
                 'kv' => $user->kv,
-                'kyc_data' => $this->normalizeKycData($user->kyc_data ?? null),
+                'kyc_data'   => $this->normalizeKycData($user->kyc_data ?? null),
                 'kyc_rejection_reason' => $user->kyc_rejection_reason ?? null,
                 'referral_code' => $user->referral_code ?? '',
-                'referred_by' => $user->ref_by ?? null,
+                'referred_by'   => $user->ref_by ?? null,
                 'created_at' => $user->created_at->format('Y-m-d H:i:s'),
                 'updated_at' => $user->updated_at->format('Y-m-d H:i:s'),
                 'last_login' => $user->login_at ?? null,
+                'active_course_plan' => $courseOrder ? [
+                    'id'    => $courseOrder->plan?->id,
+                    'name'  => $courseOrder->plan?->name ?? 'Unknown',
+                    'price' => $courseOrder->plan?->price ?? 0,
+                ] : null,
+                'active_course_plan_id' => $courseOrder?->course_plan_id,
+                'active_ads_plan' => $adsOrder ? [
+                    'id'    => $adsOrder->package?->id,
+                    'name'  => $adsOrder->package?->name ?? 'Unknown',
+                    'price' => $adsOrder->package?->price ?? 0,
+                ] : null,
+                'active_ads_plan_id' => $adsOrder?->package_id,
                 'bank_details' => [
                     'account_holder_name' => $user->account_holder_name ?? '',
-                    'account_number' => $user->account_number ?? '',
-                    'ifsc_code' => $user->ifsc_code ?? '',
-                    'bank_name' => $user->bank_name ?? '',
-                    'bank_registered_no' => $user->bank_registered_no ?? '',
-                    'branch_name' => $user->branch_name ?? '',
+                    'account_number'      => $user->account_number ?? '',
+                    'ifsc_code'           => $user->ifsc_code ?? '',
+                    'bank_name'           => $user->bank_name ?? '',
+                    'bank_registered_no'  => $user->bank_registered_no ?? '',
+                    'branch_name'         => $user->branch_name ?? '',
                 ],
             ];
         });
@@ -531,12 +565,12 @@ class AdminController extends Controller {
     public function getAgentCommissionSettings($id)
     {
         $user = User::findOrFail($id);
-        $row = \DB::table('agent_commission_settings')->where('user_id', $user->id)->first();
+        $settings = \App\Models\AgentCommissionSetting::where('user_id', $user->id)->first();
 
         return responseSuccess('agent_commissions', ['Agent commission settings retrieved'], [
             'user_id' => $user->id,
             'is_agent' => (bool) ($user->is_agent ?? false),
-            'settings' => $row ? (array) $row : null,
+            'settings' => $settings,
         ]);
     }
 
@@ -566,43 +600,45 @@ class AdminController extends Controller {
 
             'partner_override_enabled' => 'nullable|boolean',
             'partner_override_percent' => 'nullable|numeric|min:0|max:100',
+
+            'adplan_enabled' => 'nullable|boolean',
+            'adplan_mode' => 'nullable|in:percent,fixed',
+            'adplan_value' => 'nullable|numeric|min:0',
+
+            'course_enabled' => 'nullable|boolean',
+            'course_mode' => 'nullable|in:percent,fixed',
+            'course_value' => 'nullable|numeric|min:0',
+
+            'partner_enabled' => 'nullable|boolean',
+            'partner_mode' => 'nullable|in:percent,fixed',
+            'partner_value' => 'nullable|numeric|min:0',
+
+            'certificate_enabled' => 'nullable|boolean',
+            'certificate_mode' => 'nullable|in:percent,fixed',
+            'certificate_value' => 'nullable|numeric|min:0',
+
+            'granular_settings' => 'nullable|array',
         ]);
 
-        // Create row if missing
-        $existing = \DB::table('agent_commission_settings')->where('user_id', $user->id)->first();
-        if (!$existing) {
-            \DB::table('agent_commission_settings')->insert([
-                'user_id' => $user->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+        $settings = \App\Models\AgentCommissionSetting::updateOrCreate(
+            ['user_id' => $user->id],
+            $request->only([
+                'registration_enabled','registration_mode','registration_value',
+                'kyc_enabled','kyc_mode','kyc_value',
+                'withdraw_fee_enabled','withdraw_fee_mode','withdraw_fee_value',
+                'upgrade_enabled','upgrade_mode','upgrade_value',
+                'partner_override_enabled','partner_override_percent',
+                'adplan_enabled','adplan_mode','adplan_value',
+                'course_enabled','course_mode','course_value',
+                'partner_enabled','partner_mode','partner_value',
+                'certificate_enabled','certificate_mode','certificate_value',
+                'granular_settings'
+            ])
+        );
 
-        $payload = [
-            'updated_at' => now(),
-        ];
-
-        $fields = [
-            'registration_enabled','registration_mode','registration_value',
-            'kyc_enabled','kyc_mode','kyc_value',
-            'withdraw_fee_enabled','withdraw_fee_mode','withdraw_fee_value',
-            'upgrade_enabled','upgrade_mode','upgrade_value',
-            'partner_override_enabled','partner_override_percent',
-        ];
-        foreach ($fields as $f) {
-            if ($request->has($f)) {
-                $payload[$f] = $request->input($f);
-            }
-        }
-
-        \DB::table('agent_commission_settings')->where('user_id', $user->id)->update($payload);
-        $row = \DB::table('agent_commission_settings')->where('user_id', $user->id)->first();
-
-        return responseSuccess('agent_commissions_updated', ['Agent commission settings updated'], [
-            'user_id' => $user->id,
-            'settings' => $row ? (array) $row : null,
-        ]);
+        return responseSuccess('agent_commissions_updated', ['Agent commission settings updated'], ['settings' => $settings]);
     }
+
 
     /**
      * Direct Affiliate Commission rules (Master Admin API)
@@ -1434,10 +1470,10 @@ class AdminController extends Controller {
         $reject = (int) Status::PAYMENT_REJECT;
         $init = (int) Status::PAYMENT_INITIATE;
 
-        // Gateway deposits: method_code 1000-4999
+        // Gateway deposits: include all method codes (custom QR is 999)
         $depositQ = DB::table('deposits as d')
             ->leftJoin('users as u', 'u.id', '=', 'd.user_id')
-            ->where('d.method_code', '>=', 1000)
+            ->where('d.method_code', '>=', 500) // Lowered to include Custom QR and others
             ->where('d.method_code', '<', 5000)
             ->select([
                 DB::raw("'deposit' as source"),
@@ -1966,16 +2002,17 @@ class AdminController extends Controller {
         // Check if API request
         if (request()->expectsJson() || request()->is('api/*')) {
             $widget = [
-                'total_users' => User::count(),
-                'verified_users' => User::active()->count(),
+                'total_users'        => User::count(),
+                'verified_users'     => User::active()->count(),
                 'email_unverified_users' => User::emailUnverified()->count(),
                 'mobile_unverified_users' => User::mobileUnverified()->count(),
-                'total_campaigns' => Campaign::count(),
-                'pending_campaigns' => Campaign::pending()->count(),
+                'total_campaigns'    => Campaign::count(),
+                'pending_campaigns'  => Campaign::pending()->count(),
                 'approved_campaigns' => Campaign::approved()->count(),
                 'rejected_campaigns' => Campaign::rejected()->count(),
-                'total_courses' => \App\Models\Course::count(),
-                'total_revenue' => Deposit::successful()->sum('amount') - Withdrawal::approved()->sum('amount'),
+                'total_courses'      => \App\Models\Course::count(),
+                'total_revenue'      => Deposit::successful()->sum('amount') - Withdrawal::approved()->sum('amount'),
+                'kyc_pending_users'  => User::where('kv', \App\Constants\Status::KYC_PENDING)->count(),
             ];
 
             return responseSuccess('dashboard', ['Dashboard data retrieved successfully'], $widget);
@@ -2352,7 +2389,418 @@ class AdminController extends Controller {
         $pageTitle      = 'Commission Log';
         $conversionData = Conversion::searchable(['campaign:title', 'user:firstname,lastname,username', 'campaign.advertiser:firstname,lastname,username'])->with(['campaign.advertiser', 'user'])->latest()->paginate(getPaginate());
         return view('admin.commission.log', compact('pageTitle', 'conversionData'));
-
     }
 
+    public function resetUserData($id) {
+        $user = User::findOrFail($id);
+        
+        DB::transaction(function () use ($user) {
+            Transaction::where('user_id', $user->id)->delete();
+            Deposit::where('user_id', $user->id)->delete();
+            Withdrawal::where('user_id', $user->id)->delete();
+            AdPackageOrder::where('user_id', $user->id)->delete();
+            CoursePlanOrder::where('user_id', $user->id)->delete();
+            UserCertificate::where('user_id', $user->id)->delete();
+            NotificationLog::where('user_id', $user->id)->delete();
+            
+            // Also delete agent settings if any
+            DB::table('agent_commission_settings')->where('user_id', $user->id)->delete();
+            
+            $user->balance = 0;
+            $user->affiliate_balance = 0;
+            $user->new_user_ads_watched = 0;
+            $user->kv = Status::KYC_UNVERIFIED;
+            $user->kyc_data = null;
+            $user->profile_complete = 0;
+            $user->is_agent = 0;
+            $user->save();
+        });
+
+        return responseSuccess('user_reset', ['User data reset successfully']);
+    }
+
+    public function adjustBalance(Request $request, $id) {
+        $request->validate([
+            'amount' => 'required|numeric',
+            'type' => 'required|in:add,subtract',
+            'reason' => 'required|string|max:255',
+        ]);
+
+        $user = User::findOrFail($id);
+        $amount = abs($request->amount);
+        $reason = $request->reason;
+
+        if ($request->type == 'add') {
+            $user->balance += $amount;
+            $trx_type = '+';
+        } else {
+            if ($user->balance < $amount) {
+                return responseError('insufficient_balance', ['User does not have enough balance to subtract this amount']);
+            }
+            $user->balance -= $amount;
+            $trx_type = '-';
+        }
+
+        $user->save();
+
+        $transaction = new Transaction();
+        $transaction->user_id = $user->id;
+        $transaction->amount = $amount;
+        $transaction->post_balance = $user->balance;
+        $transaction->charge = 0;
+        $transaction->trx_type = $trx_type;
+        $transaction->details = "Admin adjustment: " . $reason;
+        $transaction->trx = getTrx();
+        $transaction->remark = 'admin_adjustment';
+        $transaction->save();
+
+        return responseSuccess('balance_adjusted', ['User balance adjusted successfully']);
+    }
+
+    public function deleteBankDetails($id) {
+        $user = User::findOrFail($id);
+        
+        $user->account_holder_name = null;
+        $user->account_number = null;
+        $user->ifsc_code = null;
+        $user->bank_name = null;
+        $user->bank_registered_no = null;
+        $user->branch_name = null;
+        $user->upi_id = null;
+        $user->kv = Status::KYC_UNVERIFIED;
+        $user->kyc_data = null;
+        $user->save();
+
+        return responseSuccess('bank_deleted', ['Bank details deleted successfully. User must re-KYC.']);
+    }
+
+    public function deleteUser($id) {
+        $user = User::findOrFail($id);
+        
+        DB::transaction(function () use ($user) {
+            Transaction::where('user_id', $user->id)->delete();
+            Deposit::where('user_id', $user->id)->delete();
+            Withdrawal::where('user_id', $user->id)->delete();
+            AdPackageOrder::where('user_id', $user->id)->delete();
+            CoursePlanOrder::where('user_id', $user->id)->delete();
+            UserCertificate::where('user_id', $user->id)->delete();
+            NotificationLog::where('user_id', $user->id)->delete();
+            
+            $user->delete();
+        });
+
+        return responseSuccess('user_deleted', ['User deleted permanently']);
+    }
+
+    public function updateCoursePackage(Request $request, $id) {
+        $request->validate([
+            'course_plan_id' => 'nullable|exists:course_plans,id',
+        ]);
+
+        $user = User::findOrFail($id);
+        CoursePlanOrder::where('user_id', $user->id)->update(['status' => 0]);
+
+        if ($request->course_plan_id) {
+            CoursePlanOrder::create([
+                'user_id' => $user->id,
+                'course_plan_id' => $request->course_plan_id,
+                'amount' => 0,
+                'status' => 1,
+            ]);
+        }
+
+        return responseSuccess('package_updated', ['Course package updated']);
+    }
+
+    public function updateAdsPlan(Request $request, $id) {
+        $request->validate([
+            'ads_plan_id' => 'nullable|exists:ad_packages,id',
+        ]);
+
+        $user = User::findOrFail($id);
+        AdPackageOrder::where('user_id', $user->id)->update(['status' => 0]);
+
+        if ($request->ads_plan_id) {
+            AdPackageOrder::create([
+                'user_id' => $user->id,
+                'package_id' => $request->ads_plan_id,
+                'amount' => 0,
+                'status' => 1,
+            ]);
+        }
+
+        return responseSuccess('ads_plan_updated', ['Ads plan updated']);
+    }
+
+    public function allGateways() {
+        $allowedAliases = ['SimplyPay', 'simplypay', 'watchpay', 'WatchPay', 'custom_qr', 'CustomQR'];
+        $gateways = Gateway::whereIn('alias', $allowedAliases)->orderBy('id', 'desc')->get()->makeVisible('extra');
+        foreach ($gateways as $gateway) {
+            if ($gateway->alias == 'custom_qr' && $gateway->extra) {
+                $images = is_string($gateway->extra) ? json_decode($gateway->extra, true) : (array) $gateway->extra;
+                $formattedImages = [];
+                foreach ($images as $img) {
+                    $formattedImages[] = [
+                        'name' => $img,
+                        'url' => asset(getFilePath('gateway') . '/' . $img)
+                    ];
+                }
+                $gateway->qr_images = $formattedImages;
+            }
+        }
+        return responseSuccess('gateways', ['Gateways retrieved successfully'], ['gateways' => $gateways]);
+    }
+
+    public function toggleGateway($id) {
+        $gateway = Gateway::findOrFail($id);
+        $gateway->status = $gateway->status == 1 ? 0 : 1;
+        $gateway->save();
+
+        return responseSuccess('gateway_toggled', ['Gateway status updated']);
+    }
+
+    public function uploadGatewayQr(Request $request) {
+        $request->validate([
+            'qr_images.*' => ['nullable', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png', 'webp'])]
+        ]);
+
+        $gateway = Gateway::where('alias', 'custom_qr')->first();
+        if (!$gateway) {
+            $gateway = new Gateway();
+            $gateway->name = 'Custom QR System';
+            $gateway->alias = 'custom_qr';
+            $gateway->status = 1;
+            $gateway->code = 999;
+            $gateway->gateway_parameters = json_encode([]);
+            $gateway->supported_currencies = [];
+            $gateway->save();
+        }
+
+        $qrImages = json_decode($gateway->extra, true) ?? [];
+
+        if ($request->hasFile('qr_images')) {
+            foreach ($request->file('qr_images') as $image) {
+                $filename = fileUploader($image, getFilePath('gateway'));
+                $qrImages[] = $filename;
+            }
+        }
+
+        $gateway->extra = $qrImages; // Eloquent handles the cast
+        $gateway->save();
+
+        return responseSuccess('qr_uploaded', ['QR images uploaded']);
+    }
+
+    public function removeGatewayQr($index) {
+        $gateway = Gateway::where('alias', 'custom_qr')->firstOrFail();
+        $qrImages = json_decode($gateway->extra, true) ?? [];
+
+        if (isset($qrImages[$index])) {
+            fileManager()->removeFile(getFilePath('gateway') . '/' . $qrImages[$index]);
+            unset($qrImages[$index]);
+            $qrImages = array_values($qrImages);
+            $gateway->extra = $qrImages;
+            $gateway->save();
+        }
+
+        return responseSuccess('qr_removed', ['QR image removed']);
+    }
+
+    public function approveOrder($id) {
+        $deposit = Deposit::where('id', $id)->where('status', Status::PAYMENT_PENDING)->firstOrFail();
+        \App\Http\Controllers\Gateway\PaymentController::userDataUpdate($deposit, true);
+        return responseSuccess('order_approved', ['Order approved successfully']);
+    }
+
+    public function rejectOrder(Request $request, $id) {
+        $request->validate(['reason' => 'required|string|max:255']);
+        $deposit = Deposit::where('id', $id)->where('status', Status::PAYMENT_PENDING)->firstOrFail();
+
+        $deposit->admin_feedback = $request->reason;
+        $deposit->status = Status::PAYMENT_REJECT;
+        $deposit->save();
+
+        notify($deposit->user, 'DEPOSIT_REJECT', [
+            'method_name' => $deposit->methodName(),
+            'method_currency' => $deposit->method_currency,
+            'method_amount' => showAmount($deposit->final_amount, currencyFormat: false),
+            'amount' => showAmount($deposit->amount, currencyFormat: false),
+            'charge' => showAmount($deposit->charge, currencyFormat: false),
+            'rate' => showAmount($deposit->rate, currencyFormat: false),
+            'trx' => $deposit->trx,
+            'rejection_message' => $request->reason,
+        ]);
+
+        return responseSuccess('order_rejected', ['Order rejected successfully']);
+    }
+
+    public function deleteOrder($id) {
+        $deposit = Deposit::findOrFail($id);
+        $deposit->delete();
+        return responseSuccess('order_deleted', ['Order deleted successfully']);
+    }
+
+    // ─── Admin Management (Master Admin) ───────────────────────────────────────
+
+    /** List all admin accounts */
+    public function listAdmins()
+    {
+        $admins = \App\Models\Admin::orderBy('id', 'desc')->get()->map(function($a) {
+            return [
+                'id'         => $a->id,
+                'name'       => $a->name,
+                'username'   => $a->username,
+                'email'      => $a->email,
+                'status'     => $a->status ?? 1,
+                'created_at' => $a->created_at ? $a->created_at->format('Y-m-d H:i:s') : null,
+            ];
+        });
+
+        return responseSuccess('admins', ['Admins retrieved'], ['admins' => $admins]);
+    }
+
+    /** Create a new admin account */
+    public function createAdmin(Request $request)
+    {
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:admins,username',
+            'email'    => 'required|email|max:255|unique:admins,email',
+            'password' => 'required|string|min:6|max:255',
+        ]);
+
+        $admin = new \App\Models\Admin();
+        $admin->name     = trim($request->name);
+        $admin->username = trim($request->username);
+        $admin->email    = strtolower(trim($request->email));
+        $admin->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        if (\Illuminate\Support\Facades\Schema::hasColumn('admins', 'status')) {
+            $admin->status = 1;
+        }
+        $admin->save();
+
+        return responseSuccess('admin_created', ['Admin created successfully'], [
+            'admin' => [
+                'id'       => $admin->id,
+                'name'     => $admin->name,
+                'username' => $admin->username,
+                'email'    => $admin->email,
+                'status'   => 1,
+            ]
+        ]);
+    }
+
+    /** Toggle admin active/inactive status */
+    public function toggleAdmin(Request $request, $id)
+    {
+        $admin = \App\Models\Admin::findOrFail($id);
+        
+        // Safety: ID 1 is the Master Admin and cannot be deactivated or deleted
+        if ($admin->id == 1) {
+            return responseError('cannot_deactivate_super', ['Master Admin account cannot be restricted.']);
+        }
+
+        if ($request->user() && $request->user()->id == $id) {
+            return responseError('cannot_deactivate_self', ['You cannot deactivate your own access.']);
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('admins', 'status')) {
+            $admin->status = $admin->status ? 0 : 1;
+            $admin->save();
+        }
+        return responseSuccess('admin_toggled', ['Admin status updated'], ['status' => $admin->status ?? 1]);
+    }
+
+    /** Reset admin password */
+    public function resetAdminPassword(Request $request, $id)
+    {
+        $request->validate(['password' => 'required|string|min:6|max:255']);
+        $admin = \App\Models\Admin::findOrFail($id);
+        $admin->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        $admin->save();
+        return responseSuccess('admin_password_reset', ['Admin password reset successfully']);
+    }
+
+    /** Delete an admin account (cannot delete the currently logged-in admin) */
+    public function deleteAdmin(Request $request, $id)
+    {
+        $currentAdmin = $request->user();
+        if ($currentAdmin && $currentAdmin->id == $id) {
+            return responseError('cannot_delete_self', ['You cannot delete your own account.']);
+        }
+        $admin = \App\Models\Admin::findOrFail($id);
+        $admin->delete();
+        return responseSuccess('admin_deleted', ['Admin deleted successfully']);
+    }
+
+    // ─── Reports & Analytics (Master Admin) ────────────────────────────────────
+
+    /** Get comprehensive reports / analytics stats */
+    public function reports(Request $request)
+    {
+        $range = (int) $request->get('range', 30); // days
+        $from  = Carbon::now()->subDays($range)->startOfDay();
+        $to    = Carbon::now()->endOfDay();
+
+        // User growth (daily new registrations last N days)
+        $userGrowth = User::whereBetween('created_at', [$from, $to])
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->map(fn($r) => ['date' => $r->date, 'count' => (int)$r->count]);
+
+        // Revenue chart
+        $revenueChart = Deposit::successful()
+            ->whereBetween('created_at', [$from, $to])
+            ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->map(fn($r) => ['date' => $r->date, 'total' => (float)$r->total]);
+
+        // Withdrawal chart
+        $withdrawChart = Withdrawal::approved()
+            ->whereBetween('created_at', [$from, $to])
+            ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->map(fn($r) => ['date' => $r->date, 'total' => (float)$r->total]);
+
+        // Summary stats
+        $totalDeposits      = Deposit::successful()->sum('amount');
+        $totalWithdrawals   = Withdrawal::approved()->sum('amount');
+        $pendingDeposits    = Deposit::pending()->count();
+        $pendingWithdrawals = Withdrawal::pending()->count();
+        $totalUsers         = User::count();
+        $activeUsers        = User::where('status', 1)->count();
+        $bannedUsers        = User::where('status', 0)->count();
+        $kycPending         = User::where('kv', \App\Constants\Status::KYC_PENDING)->count();
+        $kycVerified        = User::where('kv', \App\Constants\Status::KYC_VERIFIED)->count();
+        $totalTransactions  = Transaction::count();
+        $newUsersToday      = User::whereDate('created_at', Carbon::today())->count();
+        $depositsToday      = Deposit::successful()->whereDate('created_at', Carbon::today())->sum('amount');
+
+        return responseSuccess('reports', ['Reports retrieved'], [
+            'summary' => [
+                'total_deposits'       => (float) $totalDeposits,
+                'total_withdrawals'    => (float) $totalWithdrawals,
+                'net_revenue'          => (float) ($totalDeposits - $totalWithdrawals),
+                'pending_deposits'     => (int) $pendingDeposits,
+                'pending_withdrawals'  => (int) $pendingWithdrawals,
+                'total_users'          => (int) $totalUsers,
+                'active_users'         => (int) $activeUsers,
+                'banned_users'         => (int) $bannedUsers,
+                'kyc_pending'          => (int) $kycPending,
+                'kyc_verified'         => (int) $kycVerified,
+                'total_transactions'   => (int) $totalTransactions,
+                'new_users_today'      => (int) $newUsersToday,
+                'deposits_today'       => (float) $depositsToday,
+            ],
+            'user_growth'    => $userGrowth,
+            'revenue_chart'  => $revenueChart,
+            'withdraw_chart' => $withdrawChart,
+        ]);
+    }
 }
+

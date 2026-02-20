@@ -4,14 +4,21 @@ namespace App\Http\Controllers\Admin;
 use App\Constants\Status;
 use App\Http\Controllers\Controller;
 use App\Lib\UserNotificationSender;
-use App\Models\Conversion;
+use App\Models\AdPackage;
+use App\Models\AdPackageOrder;
+use App\Models\CoursePlan;
+use App\Models\CoursePlanOrder;
+use App\Models\Deposit;
+use App\Models\Gateway;
 use App\Models\NotificationLog;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\UserCertificate;
 use App\Models\Withdrawal;
 use App\Rules\FileTypeValidate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ManageUsersController extends Controller {
     public function allUsers() {
@@ -87,11 +94,17 @@ class ManageUsersController extends Controller {
         $user      = User::findOrFail($id);
         $pageTitle = 'User Detail - ' . $user->username;
 
-        $totalCommission  = Conversion::where('user_id', $user->id)->where('is_paid', Status::PAID)->sum('user_payout');
         $totalWithdrawals = Withdrawal::where('user_id', $user->id)->approved()->sum('amount');
         $totalTransaction = Transaction::where('user_id', $user->id)->count();
         $countries        = json_decode(file_get_contents(resource_path('views/partials/country.json')));
-        return view('admin.users.detail', compact('pageTitle', 'user', 'totalCommission', 'totalWithdrawals', 'totalTransaction', 'countries'));
+        
+        $coursePackages = CoursePlan::active()->get();
+        $adsPlans = AdPackage::active()->whereIn('id', [4, 5, 6, 7])->get(); // Assuming these are the 4 Ads Plans based on logic
+
+        $activeCourseOrder = CoursePlanOrder::where('user_id', $user->id)->where('status', 1)->first();
+        $activeAdsOrder = AdPackageOrder::where('user_id', $user->id)->where('status', 1)->first();
+
+        return view('admin.users.detail', compact('pageTitle', 'user', 'totalWithdrawals', 'totalTransaction', 'countries', 'coursePackages', 'adsPlans', 'activeCourseOrder', 'activeAdsOrder'));
     }
 
     public function kycDetails($id) {
@@ -358,11 +371,119 @@ class ManageUsersController extends Controller {
         ]);
     }
 
-    public function notificationLog($id) {
-        $user      = User::findOrFail($id);
-        $pageTitle = 'Notifications Sent to ' . $user->username;
-        $logs      = NotificationLog::where('user_id', $id)->with('user')->orderBy('id', 'desc')->paginate(getPaginate());
-        return view('admin.reports.notification_history', compact('pageTitle', 'logs', 'user'));
+    public function resetData($id) {
+        $user = User::findOrFail($id);
+        
+        DB::transaction(function () use ($user) {
+            // Delete all user related data
+            Transaction::where('user_id', $user->id)->delete();
+            Deposit::where('user_id', $user->id)->delete();
+            Withdrawal::where('user_id', $user->id)->delete();
+            AdPackageOrder::where('user_id', $user->id)->delete();
+            CoursePlanOrder::where('user_id', $user->id)->delete();
+            UserCertificate::where('user_id', $user->id)->delete();
+            NotificationLog::where('user_id', $user->id)->delete();
+            
+            // Reset user attributes
+            $user->balance = 0;
+            $user->affiliate_balance = 0;
+            $user->new_user_ads_watched = 0;
+            $user->kv = Status::KYC_UNVERIFIED;
+            $user->kyc_data = null;
+            $user->profile_complete = 0;
+            $user->save();
+        });
+
+        $notify[] = ['success', 'User data reset successfully. User is now fresh.'];
+        return back()->withNotify($notify);
     }
 
+    public function deleteUser($id) {
+        $user = User::findOrFail($id);
+        
+        DB::transaction(function () use ($user) {
+            // Delete all related data first
+            Transaction::where('user_id', $user->id)->delete();
+            Deposit::where('user_id', $user->id)->delete();
+            Withdrawal::where('user_id', $user->id)->delete();
+            AdPackageOrder::where('user_id', $user->id)->delete();
+            CoursePlanOrder::where('user_id', $user->id)->delete();
+            UserCertificate::where('user_id', $user->id)->delete();
+            NotificationLog::where('user_id', $user->id)->delete();
+            
+            $user->delete();
+        });
+
+        $notify[] = ['success', 'User deleted permanently.'];
+        return to_route('admin.users.all')->withNotify($notify);
+    }
+
+    public function deleteBankDetails($id) {
+        $user = User::findOrFail($id);
+        
+        $user->account_holder_name = null;
+        $user->account_number = null;
+        $user->ifsc_code = null;
+        $user->bank_name = null;
+        $user->bank_registered_no = null;
+        $user->branch_name = null;
+        $user->upi_id = null;
+        $user->kv = Status::KYC_UNVERIFIED; // Force re-KYC
+        $user->save();
+
+        $notify[] = ['success', 'Bank details deleted. User must complete KYC again.'];
+        return back()->withNotify($notify);
+    }
+
+    public function updateCoursePackage(Request $request, $id) {
+        $request->validate([
+            'course_plan_id' => 'nullable|exists:course_plans,id',
+        ]);
+
+        $user = User::findOrFail($id);
+        
+        // Deactivate old plans
+        CoursePlanOrder::where('user_id', $user->id)->update(['status' => 0]);
+
+        if ($request->course_plan_id) {
+            $plan = CoursePlan::findOrFail($request->course_plan_id);
+            $order = new CoursePlanOrder();
+            $order->user_id = $user->id;
+            $order->course_plan_id = $plan->id;
+            $order->amount = 0; // Admin set
+            $order->status = 1;
+            $order->save();
+            $notify[] = ['success', 'Course package updated to ' . $plan->name];
+        } else {
+            $notify[] = ['success', 'Course package removed.'];
+        }
+
+        return back()->withNotify($notify);
+    }
+
+    public function updateAdsPlan(Request $request, $id) {
+        $request->validate([
+            'ads_plan_id' => 'nullable|exists:ad_packages,id',
+        ]);
+
+        $user = User::findOrFail($id);
+        
+        // Deactivate old plans
+        AdPackageOrder::where('user_id', $user->id)->update(['status' => 0]);
+
+        if ($request->ads_plan_id) {
+            $plan = AdPackage::findOrFail($request->ads_plan_id);
+            $order = new AdPackageOrder();
+            $order->user_id = $user->id;
+            $order->package_id = $plan->id;
+            $order->amount = 0; // Admin set
+            $order->status = 1;
+            $order->save();
+            $notify[] = ['success', 'Ads plan updated to ' . $plan->name];
+        } else {
+            $notify[] = ['success', 'Ads plan removed.'];
+        }
+
+        return back()->withNotify($notify);
+    }
 }

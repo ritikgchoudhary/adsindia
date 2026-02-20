@@ -27,27 +27,35 @@ class PartnerController extends Controller
         $plans = [
             [
                 'id' => 1,
-                'name' => 'Basic Partner',
-                'price' => 2000,
+                'name' => 'Associate Partner',
+                'price' => 1999,
                 'referral_commission' => 1000,
                 'downline_commission' => 0,
-                'description' => 'Get ₹1,000 per referral',
+                'description' => 'Perfect for beginners to start earning referral income.',
             ],
             [
                 'id' => 2,
-                'name' => 'Premium Partner',
-                'price' => 4000,
+                'name' => 'Executive Partner',
+                'price' => 3999,
                 'referral_commission' => 1500,
-                'downline_commission' => 20,
-                'description' => 'Get ₹1,500 per referral + 20% of downline earnings',
+                'downline_commission' => 10,
+                'description' => 'Unlock downline income and boost your monthly earnings.',
             ],
             [
                 'id' => 3,
-                'name' => 'Elite Partner',
-                'price' => 6000,
+                'name' => 'Master Partner',
+                'price' => 5999,
                 'referral_commission' => 2500,
+                'downline_commission' => 20,
+                'description' => 'Professional level with high referral and team commissions.',
+            ],
+            [
+                'id' => 4,
+                'name' => 'Elite Partner',
+                'price' => 9999,
+                'referral_commission' => 5000,
                 'downline_commission' => 30,
-                'description' => 'Get ₹2,500 per referral + 30% of downline earnings',
+                'description' => 'The ultimate partnership with maximum earning potential.',
             ],
         ];
 
@@ -61,11 +69,11 @@ class PartnerController extends Controller
     {
         $user = auth()->user();
         $request->validate([
-            'plan_id' => 'required|integer|in:1,2,3',
+            'plan_id' => 'required|integer|in:1,2,3,4',
             'gateway' => 'nullable|string|in:watchpay,simplypay',
         ]);
 
-        $planPrices = [1 => 2000, 2 => 4000, 3 => 6000];
+        $planPrices = [1 => 1999, 2 => 3999, 3 => 5999, 4 => 9999];
         $planPrice = $planPrices[$request->plan_id];
 
         $trx = getTrx();
@@ -126,7 +134,7 @@ class PartnerController extends Controller
         $user = auth()->user();
         $request->validate([
             'trx' => 'required|string',
-            'plan_id' => 'required|integer|in:1,2,3',
+            'plan_id' => 'required|integer|in:1,2,3,4',
             'gateway' => 'nullable|string|in:watchpay,simplypay',
         ]);
 
@@ -143,7 +151,7 @@ class PartnerController extends Controller
         }
 
         $planId = (int) $request->plan_id;
-        $planPrices = [1 => 2000, 2 => 4000, 3 => 6000];
+        $planPrices = [1 => 1999, 2 => 3999, 3 => 5999, 4 => 9999];
         $planPrice = (float) $planPrices[$planId];
 
         // Idempotent: if already active, return ok

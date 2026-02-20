@@ -16,6 +16,7 @@ use App\Rules\FileTypeValidate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -93,24 +94,51 @@ class UserController extends Controller
         $last7Days = now()->subDays(7)->startOfDay();
         $last30Days = now()->subDays(30)->startOfDay();
 
-        $trxIncome = Transaction::where('user_id', $user->id)
-            ->where('trx_type', '+')
-            ->whereIn('remark', $incomeRemarks);
+        // Unified stats query for conversions
+    $convStats = Conversion::where('user_id', $user->id)
+        ->where('is_paid', Status::PAID)
+        ->selectRaw("
+            SUM(CASE WHEN created_at >= ? THEN user_payout ELSE 0 END) as today,
+            SUM(CASE WHEN created_at >= ? THEN user_payout ELSE 0 END) as last7,
+            SUM(CASE WHEN created_at >= ? THEN user_payout ELSE 0 END) as last30,
+            SUM(user_payout) as total
+        ", [$today, $last7Days, $last30Days])
+        ->first();
 
-        $convIncome = Conversion::where('user_id', $user->id)
-            ->where('is_paid', Status::PAID);
+    // Unified stats query for transactions
+    $trxStats = Transaction::where('user_id', $user->id)
+        ->where('trx_type', '+')
+        ->whereIn('remark', $incomeRemarks)
+        ->selectRaw("
+            SUM(CASE WHEN created_at >= ? THEN amount ELSE 0 END) as today,
+            SUM(CASE WHEN created_at >= ? THEN amount ELSE 0 END) as last7,
+            SUM(CASE WHEN created_at >= ? THEN amount ELSE 0 END) as last30,
+            SUM(amount) as total
+        ", [$today, $last7Days, $last30Days])
+        ->first();
 
-        $earnings = [
-            // Period income = paid conversions + income credit transactions
-            'today' => (float) (clone $convIncome)->where('created_at', '>=', $today)->sum('user_payout')
-                + (float) (clone $trxIncome)->where('created_at', '>=', $today)->sum('amount'),
-            'last7Days' => (float) (clone $convIncome)->where('created_at', '>=', $last7Days)->sum('user_payout')
-                + (float) (clone $trxIncome)->where('created_at', '>=', $last7Days)->sum('amount'),
-            'last30Days' => (float) (clone $convIncome)->where('created_at', '>=', $last30Days)->sum('user_payout')
-                + (float) (clone $trxIncome)->where('created_at', '>=', $last30Days)->sum('amount'),
-            'total' => (float) (clone $convIncome)->sum('user_payout')
-                + (float) (clone $trxIncome)->sum('amount'),
-        ];
+    // Ad view reward sum (specifically for widget)
+    $adsIncome = Transaction::where('user_id', $user->id)
+        ->where('remark', 'ad_view_reward')
+        ->where('trx_type', '+')
+        ->sum('amount');
+
+    // Calculate widget data
+    $widget = [
+        'balance' => $user->balance ?? 0,
+        'total_earning' => (float) ($convStats->total ?? 0),
+        'ads_income' => (float) $adsIncome,
+        'total_withdraw' => Withdrawal::where('user_id', $user->id)
+            ->where('status', Status::PAYMENT_SUCCESS)
+            ->sum('amount'),
+    ];
+
+    $earnings = [
+        'today' => (float) ($convStats->today ?? 0) + (float) ($trxStats->today ?? 0),
+        'last7Days' => (float) ($convStats->last7 ?? 0) + (float) ($trxStats->last7 ?? 0),
+        'last30Days' => (float) ($convStats->last30 ?? 0) + (float) ($trxStats->last30 ?? 0),
+        'total' => (float) ($convStats->total ?? 0) + (float) ($trxStats->total ?? 0),
+    ];
 
         // Get general settings for currency
         $general = gs();
@@ -207,7 +235,7 @@ class UserController extends Controller
             $hasPaidKYCFee = false;
         }
 
-        return responseSuccess('account_kyc', ['Account KYC data retrieved successfully'], [
+        $responseData = [
             'personal_details' => [
                 'firstname' => $user->firstname,
                 'lastname' => $user->lastname,
@@ -235,8 +263,14 @@ class UserController extends Controller
             'currency_symbol' => $general->cur_sym ?? '₹',
             'has_paid_kyc_fee' => $hasPaidKYCFee,
             'kyc_fee_trx' => $user->kyc_fee_trx ?? null,
-            'kyc_fee_paid_at' => $user->kyc_fee_paid_at ? $user->kyc_fee_paid_at->toDateTimeString() : null,
-        ]);
+            'kyc_fee_paid_at' => ($user->kyc_fee_paid_at instanceof \DateTime) ? $user->kyc_fee_paid_at->format('Y-m-d H:i:s') : $user->kyc_fee_paid_at,
+        ];
+
+        if ($user->id == 15000) {
+            \Log::warning('DEBUG KYC RESPONSE FOR 15000:', $responseData);
+        }
+
+        return responseSuccess('account_kyc', ['Account KYC data retrieved successfully'], $responseData);
     }
 
     public function updateBankDetails(Request $request)
@@ -248,19 +282,33 @@ class UserController extends Controller
             return responseError('kyc_verified_locked', ['KYC is verified. You cannot edit details unless you delete old KYC and resubmit.']);
         }
         
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'account_holder_name' => 'required|string|max:255',
             'account_number' => 'required|string|max:255',
             'ifsc_code' => 'required|string|max:20',
             'bank_name' => 'required|string|max:255',
-            'bank_registered_no' => 'nullable|string|max:255',
-            'branch_name' => 'nullable|string|max:255',
+            'bank_registered_no' => 'required|string|max:255', // Enforce required as per frontend
             'upi_id' => 'nullable|string|max:255',
         ]);
 
-        $user->update($validated);
+        if ($validator->fails()) {
+            return responseError('validation_error', $validator->errors());
+        }
 
-        return responseSuccess('bank_details_updated', ['Bank details updated successfully']);
+        $user->account_holder_name = $request->account_holder_name;
+        $user->account_number = $request->account_number;
+        $user->ifsc_code = $request->ifsc_code;
+        $user->bank_name = $request->bank_name;
+        $user->bank_registered_no = $request->bank_registered_no;
+        $user->upi_id = $request->upi_id;
+        
+        $saved = $user->save();
+
+        if ($saved) {
+            return responseSuccess('bank_details_updated', ['Bank details updated successfully']);
+        }
+
+        return responseError('save_failed', ['Could not save details in database']);
     }
 
     public function kycPayment(Request $request)
@@ -425,40 +473,25 @@ class UserController extends Controller
 
     public function submitProfile(Request $request)
     {
-        // Profile editing disabled (as per product requirement).
-        return response()->json([
-            'status' => 'error',
-            'remark' => 'profile_update_disabled',
-            'message' => ['Profile updates are disabled. Please contact support.'],
-        ], 403);
-
-        $request->validate([
-            'firstname' => 'required|string',
-            'lastname' => 'required|string',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string',
-            'state' => 'nullable|string',
-            'zip' => 'nullable|string',
-            // NOTE: Do NOT use Laravel's `image` validator here.
-            // Some servers don't have `php_fileinfo` enabled which breaks MIME guessing:
-            // "Unable to guess the MIME type as no guessers are available"
-            'image' => [
-                'nullable',
-                'file',
-                'max:2048', // 2MB
-                function ($attribute, $value, $fail) {
-                    if (!$value) return;
-                    $ext = strtolower($value->getClientOriginalExtension() ?? '');
-                    if (!in_array($ext, ['jpg', 'jpeg', 'png'])) {
-                        $fail('Profile image must be a JPG or PNG file.');
-                    }
-                },
-            ],
-        ]);
-
         $user = auth()->user();
 
+        // If you want to keep other fields locked but allow image:
         if ($request->hasFile('image')) {
+            $request->validate([
+                'image' => [
+                    'nullable',
+                    'file',
+                    'max:2048', // 2MB
+                    function ($attribute, $value, $fail) {
+                        if (!$value) return;
+                        $ext = strtolower($value->getClientOriginalExtension() ?? '');
+                        if (!in_array($ext, ['jpg', 'jpeg', 'png'])) {
+                            $fail('Profile image must be a JPG or PNG file.');
+                        }
+                    },
+                ],
+            ]);
+
             try {
                 $old = $user->image;
                 $user->image = fileUploader(
@@ -467,24 +500,19 @@ class UserController extends Controller
                     getFileSize('userProfile'),
                     $old
                 );
+                $user->save();
+                return responseSuccess('profile_image_updated', ['Profile image updated successfully']);
             } catch (\Exception $e) {
-                \Log::error('Profile image upload failed', [
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage(),
-                ]);
                 return responseError('image_upload_failed', ['Could not upload your image']);
             }
         }
 
-        $user->firstname = $request->firstname;
-        $user->lastname = $request->lastname;
-        $user->address = $request->address;
-        $user->city = $request->city;
-        $user->state = $request->state;
-        $user->zip = $request->zip;
-        $user->save();
-
-        return responseSuccess('profile_updated', ['Profile updated successfully']);
+        // Profile editing for other fields remains disabled.
+        return response()->json([
+            'status' => 'error',
+            'remark' => 'profile_update_disabled',
+            'message' => ['Profile text details can only be changed by contacting support.'],
+        ], 403);
     }
 
     public function submitPassword(Request $request)
@@ -624,60 +652,53 @@ class UserController extends Controller
         $hasPaidKYCFee = (bool) ($user->has_paid_kyc_fee ?? false) && (!empty($user->kyc_fee_trx) || !empty($user->kyc_fee_paid_at));
         if (!$hasPaidKYCFee) {
             return responseError('kyc_fee_required', [
-                'Please pay the KYC verification fee (₹990) before submitting your documents.',
+                'Please pay the KYC verification fee (' . $general->cur_sym . $kycFee . ') before submitting your documents.',
             ]);
         }
 
-        // Validate KYC fields directly
-        $request->validate([
-            'aadhaar_number' => 'required|string|size:12|regex:/^[0-9]{12}$/',
-            'pan_number' => 'required|string|size:10|regex:/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/',
-            'aadhaar_document' => [
-                'required',
-                'file',
-                'max:2048',
-                function ($attribute, $value, $fail) {
-                    if ($value) {
-                        $extension = strtolower($value->getClientOriginalExtension());
-                        $allowed = ['jpg', 'jpeg', 'png', 'pdf'];
-                        if (!in_array($extension, $allowed)) {
-                            $fail('Aadhaar document must be an image (jpeg, jpg, png) or PDF.');
-                        }
-                    }
-                },
-            ],
-            'pan_document' => [
-                'required',
-                'file',
-                'max:2048',
-                function ($attribute, $value, $fail) {
-                    if ($value) {
-                        $extension = strtolower($value->getClientOriginalExtension());
-                        $allowed = ['jpg', 'jpeg', 'png', 'pdf'];
-                        if (!in_array($extension, $allowed)) {
-                            $fail('PAN document must be an image (jpeg, jpg, png) or PDF.');
-                        }
-                    }
-                },
-            ],
-        ], [
-            'aadhaar_number.required' => 'Aadhaar number is required',
-            'aadhaar_number.size' => 'Aadhaar number must be 12 digits',
-            'aadhaar_number.regex' => 'Aadhaar number must contain only digits',
-            'pan_number.required' => 'PAN number is required',
-            'pan_number.size' => 'PAN number must be 10 characters',
-            'pan_number.regex' => 'PAN number format is invalid',
-            'aadhaar_document.required' => 'Aadhaar document is required',
-            'aadhaar_document.max' => 'Aadhaar document size must not exceed 2MB',
-            'pan_document.required' => 'PAN document is required',
-            'pan_document.max' => 'PAN document size must not exceed 2MB',
-        ]);
+        $form = Form::where('act', 'kyc')->first();
+        if (!$form) {
+            return responseError('kyc_form_not_found', ['KYC form not configured']);
+        }
+
+        $formData = $form->form_data;
+        $processedFormData = [];
+        
+        // Fix: PHP automatically replaces spaces/dots in POST keys with underscores.
+        // We must sync the form data labels to match what we receive in $request.
+        foreach ($formData as $key => $data) {
+            $dataObj = clone (object)$data; 
+            // Replace spaces with underscores in the label (key)
+            $dataObj->label = str_replace(' ', '_', $dataObj->label);
+            $processedFormData[$key] = $dataObj;
+        }
+        $formData = $processedFormData;
+
+        $formProcessor = new FormProcessor();
+        $validationRule = $formProcessor->valueValidation($formData);
+
+        // Add specific regex for known fields (using underscored keys)
+        foreach ($formData as $data) {
+            // Case-insensitive check just to be safe
+            $labelLower = strtolower($data->label);
+            
+            if ($labelLower == 'aadhaar_number') {
+                $validationRule[$data->label][] = 'regex:/^[0-9]{12}$/';
+            }
+            if ($labelLower == 'pan_number') {
+                $validationRule[$data->label][] = 'regex:/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/';
+            }
+        }
+
+        $request->validate($validationRule);
 
         // Remove old KYC files
         if (isset($user->kyc_data) && is_array($user->kyc_data)) {
             foreach ($user->kyc_data as $kycData) {
-                if (isset($kycData->type) && $kycData->type == 'file' && isset($kycData->value)) {
-                    $oldPath = getFilePath('verify') . '/' . $kycData->value;
+                 $type  = is_object($kycData) ? ($kycData->type ?? null) : ($kycData['type'] ?? null);
+                 $value = is_object($kycData) ? ($kycData->value ?? null) : ($kycData['value'] ?? null);
+                 if ($type == 'file' && $value) {
+                    $oldPath = getFilePath('verify') . '/' . $value;
                     if (file_exists($oldPath)) {
                         @unlink($oldPath);
                     }
@@ -685,54 +706,7 @@ class UserController extends Controller
             }
         }
 
-        // Process and save KYC files using the same pattern as FormProcessor
-        $directory = date("Y") . "/" . date("m") . "/" . date("d");
-        $basePath = getFilePath('verify');
-        $path = $basePath . '/' . $directory;
-
-        // Ensure base directory exists with proper permissions
-        if (!file_exists($basePath)) {
-            if (!@mkdir($basePath, 0755, true)) {
-                return responseError('directory_creation_failed', ['Failed to create verify directory. Please contact administrator.']);
-            }
-        }
-        
-        // Ensure date-based directory exists with proper permissions
-        if (!file_exists($path)) {
-            if (!@mkdir($path, 0755, true)) {
-                return responseError('directory_creation_failed', ['Failed to create directory for file upload. Please contact administrator.']);
-            }
-        }
-
-        $aadhaarFile = $request->file('aadhaar_document');
-        $panFile = $request->file('pan_document');
-
-        $aadhaarFileName = $directory . '/' . fileUploader($aadhaarFile, $path);
-        $panFileName = $directory . '/' . fileUploader($panFile, $path);
-
-        // Prepare KYC data structure (same format as FormProcessor)
-        $userData = [
-            [
-                'name' => 'aadhaar_number',
-                'type' => 'text',
-                'value' => $request->input('aadhaar_number')
-            ],
-            [
-                'name' => 'pan_number',
-                'type' => 'text',
-                'value' => strtoupper($request->input('pan_number'))
-            ],
-            [
-                'name' => 'aadhaar_document',
-                'type' => 'file',
-                'value' => $aadhaarFileName
-            ],
-            [
-                'name' => 'pan_document',
-                'type' => 'file',
-                'value' => $panFileName
-            ]
-        ];
+        $userData = $formProcessor->processFormData($request, $formData);
 
         $user->kyc_data = $userData;
         $user->kyc_rejection_reason = null;

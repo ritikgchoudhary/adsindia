@@ -268,10 +268,22 @@ Route::namespace('Api')->name('api.')->group(function(){
             Route::post('user/{id}/agent', [\App\Http\Controllers\Admin\AdminController::class, 'setUserAgent']);
             Route::get('user/{id}/agent-commissions', [\App\Http\Controllers\Admin\AdminController::class, 'getAgentCommissionSettings']);
             Route::post('user/{id}/agent-commissions', [\App\Http\Controllers\Admin\AdminController::class, 'updateAgentCommissionSettings']);
+            Route::post('user/{id}/reset-data', [\App\Http\Controllers\Admin\AdminController::class, 'resetUserData']);
+            Route::post('user/{id}/adjust-balance', [\App\Http\Controllers\Admin\AdminController::class, 'adjustBalance']);
+            Route::post('user/{id}/delete', [\App\Http\Controllers\Admin\AdminController::class, 'deleteUser']);
+            Route::post('user/{id}/delete-bank', [\App\Http\Controllers\Admin\AdminController::class, 'deleteBankDetails']);
+            Route::post('user/{id}/update-course-package', [\App\Http\Controllers\Admin\AdminController::class, 'updateCoursePackage']);
+            Route::post('user/{id}/update-ads-plan', [\App\Http\Controllers\Admin\AdminController::class, 'updateAdsPlan']);
             Route::post('user/{id}/approve-kyc', [\App\Http\Controllers\Admin\AdminController::class, 'approveKyc']);
             Route::post('user/{id}/reject-kyc', [\App\Http\Controllers\Admin\AdminController::class, 'rejectKyc']);
             Route::post('user/{id}/unapprove-kyc', [\App\Http\Controllers\Admin\AdminController::class, 'unapproveKyc']);
             Route::post('user/{id}/bank-details', [\App\Http\Controllers\Admin\AdminController::class, 'updateUserBankDetails']);
+
+            // Gateway Management (API)
+            Route::get('gateways', [\App\Http\Controllers\Admin\AdminController::class, 'allGateways']);
+            Route::post('gateway/{id}/toggle', [\App\Http\Controllers\Admin\AdminController::class, 'toggleGateway']);
+            Route::post('gateway/upload-qr', [\App\Http\Controllers\Admin\AdminController::class, 'uploadGatewayQr']);
+            Route::post('gateway/remove-qr/{index}', [\App\Http\Controllers\Admin\AdminController::class, 'removeGatewayQr']);
             Route::get('transactions', [\App\Http\Controllers\Admin\AdminController::class, 'allTransactions']);
             Route::get('deposits', [\App\Http\Controllers\Admin\AdminController::class, 'allDeposits']);
             Route::get('withdrawals', [\App\Http\Controllers\Admin\AdminController::class, 'allWithdrawals']);
@@ -286,6 +298,9 @@ Route::namespace('Api')->name('api.')->group(function(){
             Route::get('gateway-orders', [\App\Http\Controllers\Admin\AdminController::class, 'gatewayOrders']);
             Route::get('gateway-deposit-orders', [\App\Http\Controllers\Admin\AdminController::class, 'gatewayDepositOrders']);
             Route::get('all-gateway-orders', [\App\Http\Controllers\Admin\AdminController::class, 'allGatewayOrders']);
+            Route::post('order/approve/{id}', [\App\Http\Controllers\Admin\AdminController::class, 'approveOrder']);
+            Route::post('order/reject/{id}', [\App\Http\Controllers\Admin\AdminController::class, 'rejectOrder']);
+            Route::post('order/delete/{id}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteOrder']);
             Route::get('ads-income/settings', [\App\Http\Controllers\Admin\AdsIncomeController::class, 'settings']);
             Route::post('ads-income/settings', [\App\Http\Controllers\Admin\AdsIncomeController::class, 'updateSettings']);
             Route::get('ads-income/liability', [\App\Http\Controllers\Admin\AdsIncomeController::class, 'liability']);
@@ -334,6 +349,16 @@ Route::namespace('Api')->name('api.')->group(function(){
                 Route::post('delete/{id}', [\App\Http\Controllers\Admin\CoursePlanController::class, 'delete']);
             });
             
+            // Admin Management (Master Admin)
+            Route::get('admins', [\App\Http\Controllers\Admin\AdminController::class, 'listAdmins']);
+            Route::post('admins/create', [\App\Http\Controllers\Admin\AdminController::class, 'createAdmin']);
+            Route::post('admins/{id}/toggle', [\App\Http\Controllers\Admin\AdminController::class, 'toggleAdmin']);
+            Route::post('admins/{id}/reset-password', [\App\Http\Controllers\Admin\AdminController::class, 'resetAdminPassword']);
+            Route::post('admins/{id}/delete', [\App\Http\Controllers\Admin\AdminController::class, 'deleteAdmin']);
+
+            // Reports & Analytics (Master Admin)
+            Route::get('reports', [\App\Http\Controllers\Admin\AdminController::class, 'reports']);
+
             // Admin Logout
             Route::post('logout', function (\Illuminate\Http\Request $request) {
                 $request->user()->currentAccessToken()->delete();

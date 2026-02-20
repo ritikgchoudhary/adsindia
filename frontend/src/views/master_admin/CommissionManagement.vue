@@ -229,7 +229,8 @@ export default {
   name: 'CommissionManagement',
   components: { MasterAdminLayout },
   setup() {
-    const activeTab = ref('direct')
+    const route = useRoute()
+    const activeTab = ref(route.query.tab || 'direct')
     const savingKey = ref('')
 
     // Direct affiliate

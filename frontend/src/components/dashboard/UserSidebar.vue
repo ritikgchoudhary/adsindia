@@ -60,6 +60,18 @@
         </div>
       </li>
 
+      <!-- Partner Program -->
+      <li class="tw-mb-1">
+        <router-link 
+          to="/user/partner-program" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline"
+          :class="isActive('/user/partner-program') ? 'tw-bg-indigo-500/10 tw-text-indigo-400 tw-border-l-2 tw-border-indigo-500' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200 tw-border-l-2 tw-border-transparent'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-handshake"></i></span>
+          <span class="tw-flex-1">Partner Program</span>
+        </router-link>
+      </li>
+
       <!-- Account & KYC -->
       <li class="tw-mb-1">
         <router-link 
@@ -155,7 +167,7 @@
         <a 
           href="#" 
           class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-cursor-pointer tw-no-underline"
-          :class="isDropdownActive(['/user/withdraw', '/user/withdraw/history']) ? 'tw-bg-indigo-500/10 tw-text-indigo-400' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200'"
+          :class="isDropdownActive(['/user/withdraw', '/user/withdraw/history', '/user/deposit/history']) ? 'tw-bg-indigo-500/10 tw-text-indigo-400' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200'"
           @click.prevent="toggleSubmenu('withdraw')"
         >
           <div class="tw-flex tw-items-center tw-gap-3">
@@ -171,6 +183,9 @@
             </li>
             <li class="tw-mb-1">
               <router-link to="/user/withdraw/history" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Withdraw Log</router-link>
+            </li>
+            <li class="tw-mb-1">
+              <router-link to="/user/deposit/history" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/deposit/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Deposit History</router-link>
             </li>
           </ul>
         </div>
@@ -323,7 +338,7 @@ export default {
        if (isDropdownActive(['/user/ads-work', '/user/ad-plans'])) toggleSubmenu('ads')
        if (isDropdownActive(['/user/courses', '/user/packages'])) toggleSubmenu('courses')
        if (isDropdownActive(teamMenuPaths.value)) toggleSubmenu('team')
-       if (isDropdownActive(['/user/withdraw', '/user/withdraw/history'])) toggleSubmenu('withdraw')
+       if (isDropdownActive(['/user/withdraw', '/user/withdraw/history', '/user/deposit/history'])) toggleSubmenu('withdraw')
     })
 
     return {

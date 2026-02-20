@@ -39,7 +39,7 @@ class AdsController extends Controller
         ];
     }
 
-    private function computeEarning(array $settings, string $seedKey): float
+    private function computeEarning(array $settings, string $seedKey, ?float $packageMax = null): float
     {
         $mode = $settings['mode'] ?? 'random';
         $mult = (float) ($settings['mult'] ?? 1);
@@ -50,8 +50,9 @@ class AdsController extends Controller
         }
 
         $min = (float) ($settings['min'] ?? 0);
-        $max = (float) ($settings['max'] ?? 0);
+        $max = (float) ($packageMax ?: ($settings['max'] ?? 0));
         $step = (float) ($settings['step'] ?? 1);
+        
         if ($min > $max) [$min, $max] = [$max, $min];
         if ($step <= 0) $step = 1;
 
@@ -149,7 +150,8 @@ class AdsController extends Controller
 
         for ($i = 1; $i <= $dailyLimit; $i++) {
             $seed = $user->id . '|' . $activeOrder->id . '|' . $i . '|' . today()->toDateString();
-            $earning = $this->computeEarning($settings, $seed);
+            $packageRewardMax = (float)($activeOrder->package->reward_per_ad ?? 0);
+            $earning = $this->computeEarning($settings, $seed, $packageRewardMax ?: null);
             $adData = isset($realAds[$i - 1]) ? $realAds[$i - 1] : $this->getFallbackAd($i);
             $isWatched = in_array($i, $watchedAdIds);
             $isUnlocked = $i <= $expectedAdId;
@@ -163,7 +165,7 @@ class AdsController extends Controller
                 'duration_seconds' => $activeOrder->package->duration_seconds,
                 'earning' => (float)$earning,
                 'earning_min' => (float) ($settings['mode'] === 'fixed' ? ($settings['fixed'] * $settings['mult']) : ($settings['min'] * $settings['mult'])),
-                'earning_max' => (float) ($settings['mode'] === 'fixed' ? ($settings['fixed'] * $settings['mult']) : ($settings['max'] * $settings['mult'])),
+                'earning_max' => (float) ($packageRewardMax ?: ($settings['mode'] === 'fixed' ? ($settings['fixed'] * $settings['mult']) : ($settings['max'] * $settings['mult']))),
                 // Only next expected ad can be watched (sequence-based) and only if daily limit not reached
                 'is_active' => $canWatchMore && !$isWatched && $i === $expectedAdId,
                 'is_watched' => $isWatched,
@@ -326,7 +328,8 @@ class AdsController extends Controller
             return responseError('ads_disabled', ['Ads earning is temporarily disabled. Please try again later.']);
         }
         $seed = $user->id . '|' . $activeOrder->id . '|' . (int)$request->ad_id . '|' . today()->toDateString();
-        $earning = $this->computeEarning($settings, $seed);
+        $packageRewardMax = (float)($activeOrder->package->reward_per_ad ?? 0);
+        $earning = $this->computeEarning($settings, $seed, $packageRewardMax ?: null);
 
         // Store ad_id in ad_url field as JSON or prefix for tracking
         // Format: "ad_id:1|url:https://..."

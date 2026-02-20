@@ -144,6 +144,8 @@
                 <th><i class="fas fa-phone me-1"></i>Mobile</th>
                 <th><i class="fas fa-lock me-1"></i>Password</th>
                 <th><i class="fas fa-wallet me-1"></i>Balance</th>
+                <th><i class="fas fa-graduation-cap me-1"></i>Course Package</th>
+                <th><i class="fas fa-ad me-1"></i>Ads Plan</th>
                 <th><i class="fas fa-rupee-sign me-1"></i>Total Deposit</th>
                 <th><i class="fas fa-info-circle me-1"></i>Status</th>
                 <th><i class="fas fa-cog me-1"></i>Action</th>
@@ -151,10 +153,10 @@
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="9" class="ma-table__loading"><div class="ma-spinner"></div></td>
+                <td colspan="11" class="ma-table__loading"><div class="ma-spinner"></div></td>
               </tr>
               <tr v-else-if="users.length === 0">
-                <td colspan="9" class="ma-table__empty">
+                <td colspan="11" class="ma-table__empty">
                   <i class="fas fa-users-slash"></i>
                   <p>No users found</p>
                 </td>
@@ -219,6 +221,22 @@
                   </div>
                 </td>
                 <td>
+                  <div class="ma-package-cell">
+                    <span v-if="user.active_course_plan" class="ma-pkg-badge ma-pkg-badge--course">
+                      <i class="fas fa-graduation-cap me-1"></i>{{ user.active_course_plan.name }}
+                    </span>
+                    <span v-else class="ma-pkg-badge ma-pkg-badge--none">No Package</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="ma-package-cell">
+                    <span v-if="user.active_ads_plan" class="ma-pkg-badge ma-pkg-badge--ads">
+                      <i class="fas fa-ad me-1"></i>{{ user.active_ads_plan.name }}
+                    </span>
+                    <span v-else class="ma-pkg-badge ma-pkg-badge--none">No Plan</span>
+                  </div>
+                </td>
+                <td>
                   <div class="ma-deposit-cell">
                     <i class="fas fa-rupee-sign"></i>
                     <span class="ma-table__deposit">₹{{ formatAmount(user.total_deposit || 0) }}</span>
@@ -280,7 +298,11 @@
                       <i class="fas fa-university"></i>
                       <span class="ma-action-tooltip">Bank</span>
                     </button>
-                    <button 
+                    <button class="ma-action-btn ma-action-btn--bank" @click="deleteUserBankFromTable(user)" title="Delete Bank / KYC">
+                      <i class="fas fa-university"></i>
+                      <span class="ma-action-tooltip">Del Bank</span>
+                    </button>
+                    <button
                       class="ma-action-btn" 
                       :class="user.status === 'active' ? 'ma-action-btn--ban' : 'ma-action-btn--unban'"
                       @click="toggleUserStatus(user)"
@@ -326,6 +348,8 @@
           <div class="ma-modal__body">
             <div class="ma-tabs">
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'basic' }" @click="manageTab = 'basic'">Basic</button>
+              <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'packages' }" @click="manageTab = 'packages'">Packages</button>
+              <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'control' }" @click="manageTab = 'control'">Control</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'sponsor' }" @click="manageTab = 'sponsor'">Sponsor</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'agent' }" @click="manageTab = 'agent'; fetchAgentSettings()">Agent</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'password' }" @click="manageTab = 'password'">Password</button>
@@ -371,6 +395,111 @@
                   <i class="fas fa-spinner fa-spin me-1" v-if="savingBasic"></i>
                   {{ savingBasic ? 'Saving...' : 'Save Changes' }}
                 </button>
+              </div>
+            </div>
+
+            <!-- Packages -->
+            <div v-else-if="manageTab === 'packages'" class="ma-pane">
+              <div class="row g-4">
+                <div class="col-md-6">
+                  <div class="ma-soft-box h-100">
+                    <div class="fw-bold mb-3"><i class="fas fa-graduation-cap me-2 text-primary"></i>Course Package</div>
+                    <div class="mb-3">
+                      <div class="text-muted small mb-2">Current Active Package</div>
+                      <div class="ma-badge ma-badge--dark py-2 px-3 w-100 justify-content-start">
+                        <i class="fas fa-box-open me-2"></i>
+                        {{ manageUser?.active_course_plan?.name || 'No Active Package' }}
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-form-label">Switch To</label>
+                      <select v-model="userCoursePlanId" class="ma-form-input">
+                        <option :value="0">No Package (Clear Active)</option>
+                        <option v-for="p in coursePlans" :key="p.id" :value="p.id">{{ p.name }} (₹{{ Number(p.price).toFixed(0) }})</option>
+                      </select>
+                    </div>
+                    <button class="ma-btn ma-btn--primary w-100" :disabled="updatingPackage" @click="updateCoursePackage">
+                      {{ updatingPackage ? 'Updating...' : 'Update Package' }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="ma-soft-box h-100">
+                    <div class="fw-bold mb-3"><i class="fas fa-ad me-2 text-success"></i>Ads Plan</div>
+                    <div class="mb-3">
+                      <div class="text-muted small mb-2">Current Active Plan</div>
+                      <div class="ma-badge ma-badge--dark py-2 px-3 w-100 justify-content-start">
+                        <i class="fas fa-chart-line me-2"></i>
+                        {{ manageUser?.active_ads_plan?.name || 'No Active Plan' }}
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-form-label">Switch To</label>
+                      <select v-model="userAdsPlanId" class="ma-form-input">
+                        <option :value="0">No Plan (Clear Active)</option>
+                        <option v-for="p in adsPlans" :key="p.id" :value="p.id">{{ p.name }} (₹{{ Number(p.price).toFixed(0) }})</option>
+                      </select>
+                    </div>
+                    <button class="ma-btn ma-btn--success w-100" :disabled="updatingAdsPlan" @click="updateAdsPlan">
+                      {{ updatingAdsPlan ? 'Updating...' : 'Update Ads Plan' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Control & Financials -->
+            <div v-else-if="manageTab === 'control'" class="ma-pane">
+              <div class="row g-4">
+                <div class="col-12">
+                  <div class="ma-soft-box">
+                    <div class="fw-bold mb-3"><i class="fas fa-wallet me-2 text-warning"></i>Adjust Balance</div>
+                    <div class="row g-3 align-items-end">
+                      <div class="col-md-3">
+                        <label class="ma-form-label">Type</label>
+                        <select v-model="balanceForm.type" class="ma-form-input">
+                          <option value="add">Add (+)</option>
+                          <option value="subtract">Subtract (-)</option>
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="ma-form-label">Amount (₹)</label>
+                        <input v-model.number="balanceForm.amount" type="number" class="ma-form-input" placeholder="0.00">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="ma-form-label">Reason / Comment</label>
+                        <input v-model="balanceForm.reason" type="text" class="ma-form-input" placeholder="Reason for adjustment">
+                      </div>
+                      <div class="col-md-2">
+                        <button class="ma-btn ma-btn--primary w-100" :disabled="adjustingBalance || !balanceForm.amount || !balanceForm.reason" @click="adjustBalance">
+                          Submit
+                        </button>
+                      </div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">All adjustments are logged in transaction history with the provided reason.</small>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="ma-soft-box border-danger-subtle">
+                    <div class="fw-bold mb-2 text-danger"><i class="fas fa-undo me-2"></i>Reset User Data</div>
+                    <p class="text-muted small mb-3">Clears all earnings, history, packages, and resets user to a new registration state.</p>
+                    <button class="ma-btn ma-btn--outline-danger w-100" :disabled="resettingUser" @click="resetUserData">
+                      {{ resettingUser ? 'Resetting...' : 'Reset All Data' }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="ma-soft-box border-danger-subtle">
+                    <div class="fw-bold mb-2 text-danger"><i class="fas fa-user-slash me-2"></i>Delete Account</div>
+                    <p class="text-muted small mb-3">Permanently deletes this user ID and all associated data from the system.</p>
+                    <button class="ma-btn ma-btn--danger w-100" :disabled="deletingUser" @click="deleteUser">
+                      {{ deletingUser ? 'Deleting...' : 'Delete User ID' }}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -491,6 +620,52 @@
                       </div>
                     </div>
                   </div>
+
+                  <div class="ma-soft-box mt-3">
+                    <div class="fw-bold mb-3"><i class="fas fa-list-ul me-1"></i>Granular Package Commissions</div>
+                    <div class="row g-3">
+                      <div class="col-12">
+                        <div class="text-muted small mb-2">Configure specific commission values for each course package/ads plan.</div>
+                        <div class="table-responsive">
+                          <table class="ma-table ma-table--compact text-center">
+                            <thead>
+                              <tr>
+                                <th>Package / Plan</th>
+                                <th>Mode</th>
+                                <th>Value</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr v-for="p in coursePlans" :key="'cp'+p.id">
+                                <td class="text-start">{{ p.name }} (Course)</td>
+                                <td>
+                                  <select v-model="agentForm.granular_settings['course_'+p.id+'_mode']" class="ma-form-input ma-form-input--sm">
+                                    <option value="percent">Percent (%)</option>
+                                    <option value="fixed">Fixed (₹)</option>
+                                  </select>
+                                </td>
+                                <td>
+                                  <input v-model="agentForm.granular_settings['course_'+p.id+'_value']" type="number" class="ma-form-input ma-form-input--sm" placeholder="Default">
+                                </td>
+                              </tr>
+                              <tr v-for="p in adsPlans" :key="'ap'+p.id">
+                                <td class="text-start">{{ p.name }} (Ads Plan)</td>
+                                <td>
+                                  <select v-model="agentForm.granular_settings['adplan_'+p.id+'_mode']" class="ma-form-input ma-form-input--sm">
+                                    <option value="percent">Percent (%)</option>
+                                    <option value="fixed">Fixed (₹)</option>
+                                  </select>
+                                </td>
+                                <td>
+                                  <input v-model="agentForm.granular_settings['adplan_'+p.id+'_value']" type="number" class="ma-form-input ma-form-input--sm" placeholder="Default">
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="col-12">
@@ -600,6 +775,11 @@
                       <div class="col-md-4">
                         <div class="text-muted small mb-1">Bank Registered Number</div>
                         <div class="text-white fw-medium">{{ selectedUser?.bank_details?.bank_registered_no || 'N/A' }}</div>
+                      </div>
+                      <div class="col-12 text-end mt-2">
+                        <button class="ma-btn ma-btn--outline-danger ma-btn--sm" @click="deleteUserBank">
+                          <i class="fas fa-trash-alt me-1"></i>Delete Bank Details
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -847,8 +1027,34 @@ export default {
       upgrade_mode: 'percent',
       upgrade_value: 50,
       partner_override_enabled: false,
-      partner_override_percent: 0
+      partner_override_percent: 0,
+      adplan_enabled: true,
+      adplan_mode: 'percent',
+      adplan_value: 50,
+      course_enabled: true,
+      course_mode: 'percent',
+      course_value: 50,
+      partner_enabled: true,
+      partner_mode: 'percent',
+      partner_value: 50,
+      certificate_enabled: true,
+      certificate_mode: 'percent',
+      certificate_value: 50,
+      granular_settings: {}
     })
+    const adsPlans = ref([])
+    const adsPlansLoading = ref(false)
+    const activeAdsPlans = computed(() => (adsPlans.value || []).filter(p => Number(p?.status ?? 1) === 1))
+
+    const balanceForm = ref({ amount: 0, type: 'add', reason: '' })
+    const adjustingBalance = ref(false)
+    const resettingUser = ref(false)
+    const deletingUser = ref(false)
+
+    const userCoursePlanId = ref(0)
+    const userAdsPlanId = ref(0)
+    const updatingPackage = ref(false)
+    const updatingAdsPlan = ref(false)
     const userTransactions = ref([])
     const trxLoading = ref(false)
     const trxPage = ref(1)
@@ -985,6 +1191,13 @@ export default {
       agentLoading.value = false
       savingAgent.value = false
       agentForm.value = { ...agentForm.value, is_agent: !!(user.is_agent) }
+      
+      // Initialize package selections
+      userCoursePlanId.value = user.active_course_plan_id || 0
+      userAdsPlanId.value = user.active_ads_plan_id || 0
+      
+      balanceForm.value = { amount: 0, type: 'add', reason: '' }
+      
       await nextTick()
       showManageModal.value = true
     }
@@ -1025,8 +1238,8 @@ export default {
       agentLoading.value = true
       try {
         const res = await api.get(`/admin/user/${manageUser.value.id}/agent-commissions`, { __skipLoader: true })
-        const d = res?.data?.data || res?.data
-        if (d) {
+        if (res.data?.status === 'success' && res.data.data) {
+          const d = res.data.data
           const s = d.settings || null
           agentForm.value.is_agent = !!d.is_agent
           if (s) {
@@ -1044,6 +1257,21 @@ export default {
             agentForm.value.upgrade_value = Number(s.upgrade_value ?? 0)
             agentForm.value.partner_override_enabled = !!s.partner_override_enabled
             agentForm.value.partner_override_percent = Number(s.partner_override_percent ?? 0)
+            
+            agentForm.value.adplan_enabled = !!s.adplan_enabled
+            agentForm.value.adplan_mode = s.adplan_mode || 'percent'
+            agentForm.value.adplan_value = Number(s.adplan_value ?? 0)
+            agentForm.value.course_enabled = !!s.course_enabled
+            agentForm.value.course_mode = s.course_mode || 'percent'
+            agentForm.value.course_value = Number(s.course_value ?? 0)
+            agentForm.value.partner_enabled = !!s.partner_enabled
+            agentForm.value.partner_mode = s.partner_mode || 'percent'
+            agentForm.value.partner_value = Number(s.partner_value ?? 0)
+            agentForm.value.certificate_enabled = !!s.certificate_enabled
+            agentForm.value.certificate_mode = s.certificate_mode || 'percent'
+            agentForm.value.certificate_value = Number(s.certificate_value ?? 0)
+            
+            agentForm.value.granular_settings = s.granular_settings || {}
           }
         }
       } catch (e) {
@@ -1080,7 +1308,20 @@ export default {
             upgrade_mode: agentForm.value.upgrade_mode,
             upgrade_value: Number(agentForm.value.upgrade_value || 0),
             partner_override_enabled: !!agentForm.value.partner_override_enabled,
-            partner_override_percent: Number(agentForm.value.partner_override_percent || 0)
+            partner_override_percent: Number(agentForm.value.partner_override_percent || 0),
+            adplan_enabled: !!agentForm.value.adplan_enabled,
+            adplan_mode: agentForm.value.adplan_mode,
+            adplan_value: Number(agentForm.value.adplan_value || 0),
+            course_enabled: !!agentForm.value.course_enabled,
+            course_mode: agentForm.value.course_mode,
+            course_value: Number(agentForm.value.course_value || 0),
+            partner_enabled: !!agentForm.value.partner_enabled,
+            partner_mode: agentForm.value.partner_mode,
+            partner_value: Number(agentForm.value.partner_value || 0),
+            certificate_enabled: !!agentForm.value.certificate_enabled,
+            certificate_mode: agentForm.value.certificate_mode,
+            certificate_value: Number(agentForm.value.certificate_value || 0),
+            granular_settings: agentForm.value.granular_settings
           }
           const res = await api.post(`/admin/user/${manageUser.value.id}/agent-commissions`, payload)
           if (res.data?.status !== 'success') {
@@ -1097,6 +1338,127 @@ export default {
         if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Failed to save agent settings')
       } finally {
         savingAgent.value = false
+      }
+    }
+
+    const adjustBalance = async () => {
+      if (!manageUser.value || !balanceForm.value.amount) return
+      adjustingBalance.value = true
+      try {
+        const res = await api.post(`/admin/user/${manageUser.value.id}/adjust-balance`, balanceForm.value)
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', 'Balance adjusted successfully')
+          balanceForm.value = { amount: 0, type: 'add', reason: '' }
+          fetchUsers(currentPage.value)
+          // Update local balance
+          const change = Number(balanceForm.value.amount)
+          manageUser.value.balance = balanceForm.value.type === 'add' 
+            ? manageUser.value.balance + change 
+            : manageUser.value.balance - change
+        } else {
+          if (window.notify) window.notify('error', getApiErrorMessage(res) || 'Adjustment failed')
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Adjustment failed')
+      } finally {
+        adjustingBalance.value = false
+      }
+    }
+
+    const resetUserData = async () => {
+      if (!manageUser.value) return
+      if (!confirm(`Are you sure you want to RESET ALL DATA for ADS${manageUser.value.id}? This cannot be undone.`)) return
+      resettingUser.value = true
+      try {
+        const res = await api.post(`/admin/user/${manageUser.value.id}/reset-data`)
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', 'User data reset successfully')
+          fetchUsers(currentPage.value)
+          closeManageModal()
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Reset failed')
+      } finally {
+        resettingUser.value = false
+      }
+    }
+
+    const deleteUser = async () => {
+      if (!manageUser.value) return
+      if (!confirm(`Are you sure you want to PERMANENTLY DELETE user ADS${manageUser.value.id}? This cannot be undone.`)) return
+      deletingUser.value = true
+      try {
+        const res = await api.post(`/admin/user/${manageUser.value.id}/delete`)
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', 'User deleted successfully')
+          fetchUsers(currentPage.value)
+          closeManageModal()
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Delete failed')
+      } finally {
+        deletingUser.value = false
+      }
+    }
+
+    const deleteUserBank = async () => {
+      if (!manageUser.value) return
+      if (!confirm('Are you sure you want to DELETE bank details? User will need to re-complete KYC.')) return
+      try {
+        const res = await api.post(`/admin/user/${manageUser.value.id}/delete-bank`)
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', 'Bank details deleted')
+          manageUser.value.kv = 0
+          manageUser.value.bank_details = null
+          fetchUsers(currentPage.value)
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Action failed')
+      }
+    }
+
+    const deleteUserBankFromTable = async (user) => {
+      if (!confirm(`Are you sure you want to DELETE bank details for ADS${user.id}? User will need to re-complete KYC.`)) return
+      try {
+        const res = await api.post(`/admin/user/${user.id}/delete-bank`)
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', 'Bank details deleted')
+          fetchUsers(currentPage.value)
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Action failed')
+      }
+    }
+
+    const updateCoursePackage = async () => {
+      if (!manageUser.value) return
+      updatingPackage.value = true
+      try {
+        const res = await api.post(`/admin/user/${manageUser.value.id}/update-course-package`, { course_plan_id: userCoursePlanId.value || null })
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', 'Course package updated')
+          fetchUsers(currentPage.value)
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Update failed')
+      } finally {
+        updatingPackage.value = false
+      }
+    }
+
+    const updateAdsPlan = async () => {
+      if (!manageUser.value) return
+      updatingAdsPlan.value = true
+      try {
+        const res = await api.post(`/admin/user/${manageUser.value.id}/update-ads-plan`, { ads_plan_id: userAdsPlanId.value || null })
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', 'Ads plan updated')
+          fetchUsers(currentPage.value)
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Update failed')
+      } finally {
+        updatingAdsPlan.value = false
       }
     }
 
@@ -1377,26 +1739,28 @@ export default {
       }
     }
 
-    async function fetchCoursePlans () {
-      if (coursePlansLoading.value) return
-      coursePlansLoading.value = true
+    async function fetchAdsPlans () {
+      if (adsPlansLoading.value) return
+      adsPlansLoading.value = true
       try {
-        const res = await api.get('/admin/packages/all')
+        const res = await api.get('/admin/ad-plans')
         if (res.data?.status === 'success' && res.data.data) {
-          coursePlans.value = res.data.data.packages || []
+          adsPlans.value = res.data.data.plans || []
         } else {
-          coursePlans.value = []
+          adsPlans.value = []
         }
       } catch (e) {
-        coursePlans.value = []
+        adsPlans.value = []
       } finally {
-        coursePlansLoading.value = false
+        adsPlansLoading.value = false
       }
     }
 
     onMounted(() => {
       fetchUsers(1)
       fetchCounts()
+      fetchCoursePlans()
+      fetchAdsPlans()
     })
 
     return {
@@ -1416,7 +1780,14 @@ export default {
       coursePlansLoading, activeCoursePlans,
       showBankModal, selectedUser, bankForm, savingBank,
       editBankAccount, closeBankModal, saveBankDetails,
-      showKYCModal, showRejectForm, rejectionReason, viewKYC, closeKYCModal, approveKYC, rejectKYC
+      showKYCModal, showRejectForm, rejectionReason, viewKYC, closeKYCModal, approveKYC, rejectKYC,
+      adsPlans, adsPlansLoading, activeAdsPlans,
+      balanceForm, adjustingBalance, adjustBalance,
+      resettingUser, resetUserData,
+      deletingUser, deleteUser,
+      deleteUserBank, deleteUserBankFromTable,
+      userCoursePlanId, userAdsPlanId, updatingPackage, updatingAdsPlan,
+      updateCoursePackage, updateAdsPlan
     }
   }
 }

@@ -68,15 +68,7 @@
                   <i class="fas fa-check tw-text-xs"></i>
                 </div>
                 <span class="tw-text-slate-600 tw-text-sm">
-                  <strong class="tw-text-slate-800">{{ plan.ads_count }}</strong> Ads Available
-                </span>
-              </li>
-              <li class="tw-flex tw-items-start tw-gap-3">
-                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
-                  <i class="fas fa-check tw-text-xs"></i>
-                </div>
-                <span class="tw-text-slate-600 tw-text-sm">
-                  Valid for <strong class="tw-text-slate-800">{{ plan.validity_days }} days</strong>
+                  Valid for <strong class="tw-text-slate-800">{{ plan.validity_days }} days</strong> ({{ formatValidity(plan.validity_days) }})
                 </span>
               </li>
               <li class="tw-flex tw-items-start tw-gap-3">
@@ -92,7 +84,7 @@
                   <i class="fas fa-check tw-text-xs"></i>
                 </div>
                 <span class="tw-text-slate-600 tw-text-sm">
-                  Earnings are credited after each completed ad.
+                  Daily earning upto <strong class="tw-text-slate-800">{{ currencySymbol }}{{ formatAmount(Math.round(plan.daily_earning_max ?? 0)) }}</strong>
                 </span>
               </li>
               <li class="tw-flex tw-items-start tw-gap-3">
@@ -100,10 +92,15 @@
                   <i class="fas fa-check tw-text-xs"></i>
                 </div>
                 <span class="tw-text-slate-600 tw-text-sm">
-                  Total Potential:
-                  <strong class="tw-text-slate-800">
-                    {{ currencySymbol }}{{ formatAmount(plan.total_earning_min ?? 0) }} - {{ currencySymbol }}{{ formatAmount(plan.total_earning_max ?? plan.total_earning ?? 0) }}
-                  </strong>
+                  Instant reward after each ad
+                </span>
+              </li>
+              <li class="tw-flex tw-items-start tw-gap-3">
+                <div class="tw-bg-amber-100 tw-text-amber-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-star tw-text-xs"></i>
+                </div>
+                <span class="tw-text-slate-600 tw-text-sm">
+                  <strong class="tw-text-amber-600">{{ getPlanBenefit(plan) }}</strong>
                 </span>
               </li>
             </ul>
@@ -271,6 +268,23 @@ export default {
       await fetchActivePlan()
     })
 
+    const formatValidity = (days) => {
+      const d = Number(days) || 0
+      if (d <= 7) return '1 week'
+      if (d <= 15) return '15 days'
+      if (d <= 30) return '1 month'
+      const months = Math.round(d / 30)
+      return `${months} month${months > 1 ? 's' : ''}`
+    }
+
+    const getPlanBenefit = (plan) => {
+      const price = Number(plan.price) || 0
+      if (price <= 2999) return 'Standard Earning Plan'
+      if (price <= 4999) return 'Better ROI & Longer Validity'
+      if (price <= 7499) return 'High Profit & Half Yearly Access'
+      return 'Maximum Returns & Full Year VIP Access'
+    }
+
     return {
       adPlans,
       currencySymbol,
@@ -282,6 +296,8 @@ export default {
       infoDescription,
       infoBullets,
       renderBullet,
+      formatValidity,
+      getPlanBenefit,
     }
   }
 }

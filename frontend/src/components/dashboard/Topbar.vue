@@ -21,8 +21,7 @@
       <div class="tw-relative" ref="dropdownRef">
         <div class="tw-flex tw-items-center tw-gap-3 tw-cursor-pointer" @click="toggleDropdown">
           <div class="tw-text-right tw-hidden md:tw-block">
-            <p class="tw-text-white tw-font-medium tw-text-sm tw-mb-0.5 tw-leading-tight">Hello, {{ userFullname }}</p>
-            <p class="tw-text-slate-400 tw-text-xs tw-m-0">User Panel</p>
+            <p class="tw-text-white tw-font-medium tw-text-sm tw-m-0 tw-leading-tight">Hello, {{ userFullname }}</p>
           </div>
           <div class="tw-w-10 tw-h-10 tw-rounded-full tw-overflow-hidden tw-border-2 tw-border-slate-600 tw-transition-all hover:tw-border-indigo-500">
             <img :src="userImage" alt="User" class="tw-w-full tw-h-full tw-object-cover">

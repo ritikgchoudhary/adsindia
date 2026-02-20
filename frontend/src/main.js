@@ -50,40 +50,44 @@ app.config.globalProperties.$getImage = (path, filename) => {
 
 app.mount('#app')
 
-// Initialize notification system after DOM is ready
-document.addEventListener('DOMContentLoaded', function () {
-  // Make sure jQuery and iziToast are loaded
-  if (typeof window.jQuery !== 'undefined' && typeof window.iziToast !== 'undefined') {
-    window.notify = function (status, message) {
-      const colors = {
-        success: '#28c76f',
-        error: '#eb2222',
-        warning: '#ff9f43',
-        info: '#1e9ff2',
-      };
+// Initialize notification system
+window.notify = function (status, message) {
+  if (typeof window.iziToast !== 'undefined') {
+    const colors = {
+      success: '#28c76f',
+      error: '#eb2222',
+      warning: '#ff9f43',
+      info: '#1e9ff2',
+    };
 
-      const icons = {
-        success: 'fas fa-check-circle',
-        error: 'fas fa-times-circle',
-        warning: 'fas fa-exclamation-triangle',
-        info: 'fas fa-exclamation-circle',
-      };
+    const icons = {
+      success: 'fas fa-check-circle',
+      error: 'fas fa-times-circle',
+      warning: 'fas fa-exclamation-triangle',
+      info: 'fas fa-exclamation-circle',
+    };
 
-      window.iziToast[status]({
-        title: status.charAt(0).toUpperCase() + status.slice(1),
-        message: message,
-        position: "topRight",
-        backgroundColor: '#1e1e1e',
-        icon: icons[status],
-        iconColor: colors[status],
-        progressBarColor: colors[status],
-        titleSize: '1rem',
-        messageSize: '1rem',
-        titleColor: '#ffffff',
-        messageColor: '#cccccc',
-        transitionIn: 'bounceInLeft',
-        theme: 'dark'
-      });
-    }
+    // Prepare message as string if it's an array/object
+    const msg = Array.isArray(message) ? message[0] : (typeof message === 'object' ? message.message : message);
+
+    window.iziToast[status]({
+      title: status.charAt(0).toUpperCase() + status.slice(1),
+      message: msg || '',
+      position: "topRight",
+      backgroundColor: '#1e1e1e',
+      icon: icons[status] || icons['info'],
+      iconColor: colors[status] || colors['info'],
+      progressBarColor: colors[status] || colors['info'],
+      titleSize: '1rem',
+      messageSize: '1rem',
+      titleColor: '#ffffff',
+      messageColor: '#cccccc',
+      transitionIn: 'bounceInLeft',
+      theme: 'dark'
+    });
+  } else {
+    // Fallback if iziToast is missing
+    console.log(`[${status.toUpperCase()}] ${message}`);
+    // alert(`${status.toUpperCase()}: ${message}`); 
   }
-})
+}

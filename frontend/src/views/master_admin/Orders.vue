@@ -194,6 +194,15 @@
                       <i class="fas fa-eye"></i>
                       <span class="ma-action-tooltip">View</span>
                     </button>
+                    <button
+                      type="button"
+                      class="ma-action-btn ma-action-btn--delete"
+                      @click="deleteOrder(o)"
+                      title="Delete Order"
+                    >
+                      <i class="fas fa-trash-alt"></i>
+                      <span class="ma-action-tooltip">Delete</span>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -335,14 +344,16 @@ export default {
     }
 
     const approveOrder = async (o) => {
-      if (!isPending(o)) return
+      if (!isPending(o)) {
+        if (window.notify) window.notify('warning', 'Only pending orders can be approved')
+        return
+      }
       if (!confirm(`Approve order #${o.id} of ₹${formatAmount(o.amount)}?`)) return
       try {
-        const depositId = o.source === 'deposit' ? (o.source_id || o.id) : null
-        if (!depositId) return
-        const res = await api.post(`/admin/deposit/approve/${depositId}`)
+        const id = o.source_id || o.id
+        const res = await api.post(`/admin/order/approve/${id}`)
         if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'Order approved successfully')
+          if (window.notify) window.notify('success', res.data?.message || 'Order approved successfully')
           fetchOrders()
         } else {
           if (window.notify) window.notify('error', res.data?.message || 'Failed to approve')
@@ -353,21 +364,39 @@ export default {
     }
 
     const rejectOrder = async (o) => {
-      if (!isPending(o)) return
+      if (!isPending(o)) {
+        if (window.notify) window.notify('warning', 'Only pending orders can be rejected')
+        return
+      }
       const reason = prompt(`Enter rejection reason for order #${o.id}:`)
       if (!reason) return
       try {
-        const depositId = o.source === 'deposit' ? (o.source_id || o.id) : null
-        if (!depositId) return
-        const res = await api.post('/admin/deposit/reject', { id: depositId, message: reason })
+        const id = o.source_id || o.id
+        const res = await api.post(`/admin/order/reject/${id}`, { reason })
         if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'Order rejected successfully')
+          if (window.notify) window.notify('success', res.data?.message || 'Order rejected successfully')
           fetchOrders()
         } else {
           if (window.notify) window.notify('error', res.data?.message || 'Failed to reject')
         }
       } catch (e) {
         if (window.notify) window.notify('error', 'Failed to reject')
+      }
+    }
+
+    const deleteOrder = async (o) => {
+      if (!confirm(`Are you sure you want to PERMANENTLY delete order #${o.id}? This cannot be undone.`)) return
+      try {
+        const id = o.source_id || o.id
+        const res = await api.post(`/admin/order/delete/${id}`)
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', res.data?.message || 'Order deleted successfully')
+          fetchOrders()
+        } else {
+          if (window.notify) window.notify('error', res.data?.message || 'Failed to delete')
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', 'Failed to delete')
       }
     }
 
@@ -384,7 +413,7 @@ export default {
       totalOrders, currentPage, lastPage, paginationPages, summary,
       formatAmount, formatDateTime, getInitials, isPending,
       fetchOrders, debounceSearch, copyTrx,
-      approveOrder, rejectOrder, viewOrder
+      approveOrder, rejectOrder, deleteOrder, viewOrder
     }
   }
 }
@@ -491,6 +520,7 @@ export default {
 .ma-action-tooltip { position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.95); color: #f1f5f9; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.7rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; border: 1px solid rgba(255,255,255,0.1); z-index: 10; }
 .ma-action-btn:hover .ma-action-tooltip { opacity: 1; }
 .ma-action-btn--view { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.2); }
+.ma-action-btn--delete { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.2); }
 
 .ma-action-pill{
   height: 36px;

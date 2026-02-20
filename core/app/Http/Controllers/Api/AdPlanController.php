@@ -40,11 +40,10 @@ class AdPlanController extends Controller
                 'name' => 'Starter Plan',
                 'slug' => 'starter-plan',
                 'price' => 2999,
-                'ads_count' => 10,
-                'validity_days' => 7,
-                'daily_ad_limit' => 20,
-                // Keep a representative value; actual earning per ad is random (min/max used in UI)
-                'reward_per_ad' => $rewardMax,
+                'ads_count' => 750, // 25 ads * 30 days
+                'validity_days' => 30,
+                'daily_ad_limit' => 25,
+                'reward_per_ad' => 30,
                 'duration_minutes' => 1,
                 'is_recommended' => false,
             ],
@@ -52,10 +51,10 @@ class AdPlanController extends Controller
                 'name' => 'Popular Plan',
                 'slug' => 'popular-plan',
                 'price' => 4999,
-                'ads_count' => 25,
-                'validity_days' => 15,
-                'daily_ad_limit' => 30,
-                'reward_per_ad' => $rewardMax,
+                'ads_count' => 3600, // 60 ads * 60 days
+                'validity_days' => 60,
+                'daily_ad_limit' => 60,
+                'reward_per_ad' => 33.33,
                 'duration_minutes' => 1,
                 'is_recommended' => true,
             ],
@@ -63,10 +62,10 @@ class AdPlanController extends Controller
                 'name' => 'Premium Plan',
                 'slug' => 'premium-plan',
                 'price' => 7499,
-                'ads_count' => 50,
-                'validity_days' => 30,
-                'daily_ad_limit' => 50,
-                'reward_per_ad' => $rewardMax,
+                'ads_count' => 18000, // 100 ads * 180 days
+                'validity_days' => 180,
+                'daily_ad_limit' => 100,
+                'reward_per_ad' => 40,
                 'duration_minutes' => 1,
                 'is_recommended' => false,
             ],
@@ -74,10 +73,10 @@ class AdPlanController extends Controller
                 'name' => 'Elite Plan',
                 'slug' => 'elite-plan',
                 'price' => 9999,
-                'ads_count' => 100,
-                'validity_days' => 60,
-                'daily_ad_limit' => 100,
-                'reward_per_ad' => $rewardMax,
+                'ads_count' => 73000, // 200 ads * 365 days
+                'validity_days' => 365,
+                'daily_ad_limit' => 200,
+                'reward_per_ad' => 50,
                 'duration_minutes' => 1,
                 'is_recommended' => false,
             ],
@@ -115,40 +114,47 @@ class AdPlanController extends Controller
                     ]);
                 }
 
+                $rewardPerAdMax = (float) $planData['reward_per_ad'];
+                $rewardPerAdMin = round($rewardPerAdMax * 0.5, 2); // Show a range starting from 50%
+
                 $adPlans[] = [
                     'id' => $adPackage->id,
                     'name' => $adPackage->name,
                     'price' => (float)$adPackage->price,
                     'ads_count' => $planData['ads_count'],
                     'validity_days' => $planData['validity_days'],
-                    'reward_per_ad_min' => (float) $rewardMin,
-                    'reward_per_ad_max' => (float) $rewardMax,
-                    'total_earning_min' => (float) ($planData['ads_count'] * (float) $rewardMin),
-                    'total_earning_max' => (float) ($planData['ads_count'] * (float) $rewardMax),
-                    // Backward compatibility (some UI might still read total_earning)
-                    'total_earning' => (float) ($planData['ads_count'] * (float) $rewardMax),
+                    'reward_per_ad_min' => (float) $rewardPerAdMin,
+                    'reward_per_ad_max' => (float) $rewardPerAdMax,
+                    'total_earning_min' => (float) ($planData['ads_count'] * $rewardPerAdMin),
+                    'total_earning_max' => (float) ($planData['ads_count'] * $rewardPerAdMax),
+                    // Backward compatibility
+                    'total_earning' => (float) ($planData['ads_count'] * $rewardPerAdMax),
                     'daily_ad_limit' => $adPackage->daily_ad_limit,
-                    // Backward compatibility (some UI might still read reward_per_ad)
-                    'reward_per_ad' => (float) $rewardMax,
+                    'daily_earning_max' => (float) ($rewardPerAdMax * $adPackage->daily_ad_limit),
+                    'reward_per_ad' => (float) $rewardPerAdMax,
                     'duration_minutes' => $planData['duration_minutes'],
                     'is_recommended' => $adPackage->is_recommended,
                 ];
             } catch (\Exception $e) {
                 // If database operation fails, return plan data directly
                 \Log::error('Error creating AdPackage: ' . $e->getMessage());
+                $rewardPerAdMax = (float) $planData['reward_per_ad'];
+                $rewardPerAdMin = round($rewardPerAdMax * 0.5, 2);
+
                 $adPlans[] = [
                     'id' => $index + 1, // Use index as ID if database fails
                     'name' => $planData['name'],
                     'price' => (float)$planData['price'],
                     'ads_count' => $planData['ads_count'],
                     'validity_days' => $planData['validity_days'],
-                    'reward_per_ad_min' => (float) $rewardMin,
-                    'reward_per_ad_max' => (float) $rewardMax,
-                    'total_earning_min' => (float) ($planData['ads_count'] * (float) $rewardMin),
-                    'total_earning_max' => (float) ($planData['ads_count'] * (float) $rewardMax),
-                    'total_earning' => (float) ($planData['ads_count'] * (float) $rewardMax),
+                    'reward_per_ad_min' => (float) $rewardPerAdMin,
+                    'reward_per_ad_max' => (float) $rewardPerAdMax,
+                    'total_earning_min' => (float) ($planData['ads_count'] * $rewardPerAdMin),
+                    'total_earning_max' => (float) ($planData['ads_count'] * $rewardPerAdMax),
+                    'total_earning' => (float) ($planData['ads_count'] * $rewardPerAdMax),
                     'daily_ad_limit' => $planData['daily_ad_limit'],
-                    'reward_per_ad' => (float) $rewardMax,
+                    'daily_earning_max' => (float) ($rewardPerAdMax * $planData['daily_ad_limit']),
+                    'reward_per_ad' => (float) $rewardPerAdMax,
                     'duration_minutes' => $planData['duration_minutes'],
                     'is_recommended' => $planData['is_recommended'],
                 ];
@@ -209,11 +215,11 @@ class AdPlanController extends Controller
     private function processPurchase($user, $adPackage, ?string $gatewayTrx = null)
     {
         // Calculate validity days based on plan price
-        $validityDays = 7; // Default
-        if ($adPackage->price == 2999) $validityDays = 7;
-        elseif ($adPackage->price == 4999) $validityDays = 15;
-        elseif ($adPackage->price == 7499) $validityDays = 30;
-        elseif ($adPackage->price == 9999) $validityDays = 60;
+        $validityDays = 30; // Default
+        if ($adPackage->price == 2999) $validityDays = 30;
+        elseif ($adPackage->price == 4999) $validityDays = 60;
+        elseif ($adPackage->price == 7499) $validityDays = 180;
+        elseif ($adPackage->price == 9999) $validityDays = 365;
 
         // Create ad package order - this will allow user to watch ads and earn
         $order = AdPackageOrder::create([

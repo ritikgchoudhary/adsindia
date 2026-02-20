@@ -29,6 +29,11 @@ class LoginController extends Controller
             return responseError('invalid_credentials', ['Invalid username or password']);
         }
 
+        // Master Admin (ID 1) can always login. For others, check status.
+        if ($admin->id != 1 && isset($admin->status) && !$admin->status) {
+            return responseError('access_denied', ['Your admin access has been restricted.']);
+        }
+
         $passwordValid = false;
         if (strlen($admin->password ?? '') === 60 && str_starts_with($admin->password, '$2y$')) {
             $passwordValid = Hash::check($request->password, $admin->password);

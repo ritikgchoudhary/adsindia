@@ -794,6 +794,43 @@
         "route_name": "admin.subscriber.index",
         "menu_active": "admin.subscriber.*"
     },
+    "gateways": {
+        "title": "Payment Gateways",
+        "icon": "las la-credit-card",
+        "menu_active": "admin.gateway*",
+        "submenu": [
+            {
+                "keyword": [
+                    "Automatic Gateways",
+                    "Payment Gateways",
+                    "Automatic"
+                ],
+                "title": "Automatic Gateways",
+                "route_name": "admin.gateway.automatic.index",
+                "menu_active": "admin.gateway.automatic*"
+            },
+            {
+                "keyword": [
+                    "Manual Gateways",
+                    "Payment Gateways",
+                    "Manual"
+                ],
+                "title": "Manual Gateways",
+                "route_name": "admin.gateway.manual.index",
+                "menu_active": "admin.gateway.manual*"
+            },
+            {
+                "keyword": [
+                    "Gateway Management",
+                    "Payment Gateways",
+                    "Management"
+                ],
+                "title": "Gateway Management",
+                "route_name": "admin.gateway.management.index",
+                "menu_active": "admin.gateway.management.index"
+            }
+        ]
+    },
     "system_setting": {
         "keyword": [
             "System Setting",

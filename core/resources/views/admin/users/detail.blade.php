@@ -62,6 +62,65 @@
                         </button>
                     @endif
                 </div>
+
+                <div class="flex-fill">
+                    <button type="button" class="btn btn--info btn--shadow w-100 btn-lg" data-bs-toggle="modal" data-bs-target="#resetDataModal">
+                        <i class="las la-sync"></i>@lang('Reset Data')
+                    </button>
+                </div>
+
+                <div class="flex-fill">
+                    <button type="button" class="btn btn--danger btn--shadow w-100 btn-lg" data-bs-toggle="modal" data-bs-target="#deleteUserModal">
+                        <i class="las la-trash"></i>@lang('Delete User')
+                    </button>
+                </div>
+            </div>
+
+            <div class="row gy-4 mt-2">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg--primary">
+                            <h5 class="card-title text-white mb-0">@lang('Course Package Management')</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">@lang('Active Package'): <strong>{{ $activeCourseOrder ? $activeCourseOrder->plan->name : 'No Active Package' }}</strong></p>
+                            <form action="{{ route('admin.users.update.course.package', $user->id) }}" method="POST">
+                                @csrf
+                                <div class="form-group">
+                                    <label>@lang('Switch Package')</label>
+                                    <select name="course_plan_id" class="form-control" onchange="this.form.submit()">
+                                        <option value="">@lang('No Package')</option>
+                                        @foreach($coursePackages as $package)
+                                            <option value="{{ $package->id }}" @selected($activeCourseOrder && $activeCourseOrder->course_plan_id == $package->id)>{{ __($package->name) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg--info">
+                            <h5 class="card-title text-white mb-0">@lang('Ads Plan Management')</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">@lang('Active Ads Plan'): <strong>{{ $activeAdsOrder ? $activeAdsOrder->package->name : 'No Active Plan' }}</strong></p>
+                            <form action="{{ route('admin.users.update.ads.plan', $user->id) }}" method="POST">
+                                @csrf
+                                <div class="form-group">
+                                    <label>@lang('Switch Ads Plan')</label>
+                                    <select name="ads_plan_id" class="form-control" onchange="this.form.submit()">
+                                        <option value="">@lang('No Plan')</option>
+                                        @foreach($adsPlans as $plan)
+                                            <option value="{{ $plan->id }}" @selected($activeAdsOrder && $activeAdsOrder->package_id == $plan->id)>{{ __($plan->name) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="card mt-30">
@@ -173,12 +232,32 @@
                                     <input type="checkbox" data-width="100%" data-height="50" data-onstyle="-success" data-offstyle="-danger" data-bs-toggle="toggle" data-on="@lang('Verified')" data-off="@lang('Unverified')" name="kv" @if ($user->kv == Status::KYC_VERIFIED) checked @endif>
                                 </div>
                             </div>
-                            <div class="col-md-12">
-                                <button type="submit" class="btn btn--primary w-100 h-45">@lang('Submit')
+                    <hr>
+                    <div class="mt-4">
+                        <h5 class="mb-3">@lang('Bank Details / KYC')</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>@lang('Holder Name'):</strong> {{ $user->account_holder_name ?? 'N/A' }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>@lang('Account No'):</strong> {{ $user->account_number ?? 'N/A' }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>@lang('IFSC Code'):</strong> {{ $user->ifsc_code ?? 'N/A' }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>@lang('Bank Name'):</strong> {{ $user->bank_name ?? 'N/A' }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>@lang('UPI ID'):</strong> {{ $user->upi_id ?? 'N/A' }}</p>
+                            </div>
+                            <div class="col-md-12 mt-3">
+                                <button type="button" class="btn btn--danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteBankModal">
+                                    <i class="las la-trash"></i> @lang('Delete Bank Details')
                                 </button>
                             </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -258,6 +337,81 @@
                             <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('No')</button>
                             <button type="submit" class="btn btn--primary">@lang('Yes')</button>
                         @endif
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Reset Data Modal --}}
+    <div id="resetDataModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@lang('Reset User Data')</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="las la-times"></i>
+                    </button>
+                </div>
+                <form action="{{ route('admin.users.reset.data', $user->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <p class="text--danger">@lang('Warning: This will clear all earnings, history, packages, and transactions. User will be treated as completely new.')</p>
+                        <h4 class="text-center">@lang('Are you sure?')</h4>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('No')</button>
+                        <button type="submit" class="btn btn--primary">@lang('Yes, Reset Everything')</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Delete User Modal --}}
+    <div id="deleteUserModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@lang('Delete User Permanently')</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="las la-times"></i>
+                    </button>
+                </div>
+                <form action="{{ route('admin.users.delete', $user->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <p class="text--danger">@lang('Warning: This action cannot be undone. All data will be permanently removed.')</p>
+                        <h4 class="text-center">@lang('Delete this user ID?')</h4>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('No')</button>
+                        <button type="submit" class="btn btn--danger">@lang('Yes, Delete Permanently')</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Delete Bank Modal --}}
+    <div id="deleteBankModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@lang('Delete Bank Details')</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="las la-times"></i>
+                    </button>
+                </div>
+                <form action="{{ route('admin.users.delete.bank', $user->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <p>@lang('This will remove all saved bank information. User will need to re-complete KYC.')</p>
+                        <h4 class="text-center">@lang('Proceed?')</h4>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('No')</button>
+                        <button type="submit" class="btn btn--primary">@lang('Yes, Delete')</button>
                     </div>
                 </form>
             </div>

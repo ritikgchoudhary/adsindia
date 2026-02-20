@@ -162,6 +162,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/user/deposit/history',
+    name: 'DepositHistory',
+    component: () => import('../views/user/DepositHistory.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/user/kyc-form',
     name: 'KYCForm',
     component: () => import('../views/user/KYCForm.vue'),
@@ -349,6 +355,7 @@ const routes = [
   { path: '/master_admin/admins', name: 'MasterAdminAdmins', component: () => import('../views/master_admin/Admins.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/settings', name: 'MasterAdminSettings', component: () => import('../views/master_admin/Settings.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/courses', name: 'MasterAdminCourses', component: () => import('../views/master_admin/Courses.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/gateways', name: 'MasterAdminGateways', component: () => import('../views/master_admin/Gateways.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/customer-support', name: 'MasterAdminCustomerSupport', component: () => import('../views/master_admin/CustomerSupport.vue'), meta: { requiresMasterAdminAuth: true } }
 ]
 

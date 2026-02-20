@@ -4,11 +4,11 @@
       <div class="tw-p-6 md:tw-p-8">
         <form @submit.prevent="handleSubmit" enctype="multipart/form-data">
           <!-- Profile Locked Notice -->
-          <div class="tw-mb-6 tw-bg-amber-50 tw-border tw-border-amber-200 tw-rounded-xl tw-p-4 tw-flex tw-items-start tw-gap-3">
-            <i class="fas fa-lock tw-text-amber-600 tw-mt-0.5"></i>
+          <div class="tw-mb-6 tw-bg-indigo-50 tw-border tw-border-indigo-200 tw-rounded-xl tw-p-4 tw-flex tw-items-start tw-gap-3">
+            <i class="fas fa-info-circle tw-text-indigo-600 tw-mt-0.5"></i>
             <div>
-              <div class="tw-text-amber-900 tw-font-bold tw-text-sm">Profile editing is disabled</div>
-              <div class="tw-text-amber-800/90 tw-text-sm">If you need to change your profile details, please contact support.</div>
+              <div class="tw-text-indigo-900 tw-font-bold tw-text-sm">Update Profile Image</div>
+              <div class="tw-text-indigo-800/90 tw-text-sm">You can only update your profile picture. For other details, please contact support.</div>
             </div>
           </div>
 
@@ -19,13 +19,12 @@
                 <img id="profileImagePreview" :src="profileImage" alt="User Image" class="tw-w-full tw-h-full tw-object-cover">
               </div>
               <label
-                v-if="!profileLocked"
                 for="profile-image"
                 class="tw-absolute tw-bottom-1 tw-right-1 tw-w-8 tw-h-8 tw-bg-indigo-600 tw-text-white tw-rounded-full tw-flex tw-items-center tw-justify-center tw-cursor-pointer tw-shadow-lg tw-transition-transform hover:tw-scale-110 active:tw-scale-95"
               >
                 <i class="fas fa-camera tw-text-sm"></i>
               </label>
-              <input v-if="!profileLocked" type="file" @change="handleImageChange" name="image" id="profile-image" class="tw-hidden" accept="image/*">
+              <input type="file" @change="handleImageChange" name="image" id="profile-image" class="tw-hidden" accept="image/*">
             </div>
             <div class="tw-text-center md:tw-text-left">
               <h3 class="tw-text-xl tw-font-bold tw-text-slate-900 tw-mb-1">Hello, {{ userFullname }}</h3>
@@ -145,11 +144,9 @@
 
           <button 
             type="submit" 
-            :disabled="profileLocked"
-            class="tw-w-full tw-py-4 tw-text-white tw-font-bold tw-rounded-xl tw-transition-all tw-transform tw-shadow-lg tw-border-0 tw-text-base"
-            :class="profileLocked ? 'tw-bg-slate-400 tw-cursor-not-allowed tw-shadow-slate-500/10' : 'tw-bg-indigo-600 hover:tw-bg-indigo-700 active:tw-scale-[0.99] tw-shadow-indigo-500/30 tw-cursor-pointer'"
+            class="tw-w-full tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-transition-all tw-transform tw-shadow-lg tw-shadow-indigo-500/30 tw-cursor-pointer active:tw-scale-[0.99] tw-border-0 tw-text-base"
           >
-            Update Profile
+            Update Profile Picture
           </button>
         </form>
       </div>
@@ -198,9 +195,8 @@ export default {
     }
 
     const handleSubmit = async () => {
-      if (profileLocked.value) {
-        if (window.notify) window.notify('warning', 'Profile editing is disabled. Please contact support.')
-        else alert('Profile editing is disabled. Please contact support.')
+      if (!imageFile.value) {
+        if (window.notify) window.notify('info', 'Please select a new profile image first.')
         return
       }
       try {
