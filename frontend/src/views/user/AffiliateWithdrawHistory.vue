@@ -1,145 +1,160 @@
 <template>
-  <DashboardLayout page-title="Affiliate Withdraw Log" :dark-theme="true">
-    <div class="tw-grid tw-grid-cols-1 tw-gap-6">
-      <div class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200">
-
-        <div class="tw-p-5 tw-border-b tw-border-slate-200 tw-bg-slate-50/50 tw-flex tw-flex-col md:tw-flex-row tw-items-center tw-justify-between tw-gap-4">
-          <h5 class="tw-text-slate-900 tw-font-bold tw-text-lg tw-m-0 tw-flex tw-items-center">
-            <i class="fas fa-history tw-mr-2 tw-text-emerald-600"></i>Affiliate Withdraw History
-          </h5>
-          <div class="tw-flex tw-items-center tw-gap-3 tw-w-full md:tw-w-auto">
-            <router-link to="/user/affiliate-withdraw" class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-bg-emerald-600 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-emerald-500/30 hover:tw-bg-emerald-700 tw-no-underline tw-transition-all">
-              Withdraw (Affiliate)
-            </router-link>
-            <form class="tw-flex-1 md:tw-flex-none" @submit.prevent="handleSearch">
-              <div class="tw-relative tw-flex tw-items-center">
-                <input
-                  type="search"
-                  v-model="searchQuery"
-                  placeholder="Search by transaction..."
-                  class="tw-w-full md:tw-w-64 tw-pl-4 tw-pr-10 tw-py-2.5 tw-bg-white tw-border tw-border-slate-300 tw-rounded-xl tw-text-sm focus:tw-outline-none focus:tw-border-emerald-500 focus:tw-ring-4 focus:tw-ring-emerald-500/10 tw-transition-all"
-                >
-                <button
-                  type="submit"
-                  class="tw-absolute tw-right-2 tw-w-8 tw-h-8 tw-flex tw-items-center tw-justify-center tw-bg-emerald-600 tw-text-white tw-rounded-lg tw-transition-colors hover:tw-bg-emerald-700 tw-border-0 tw-cursor-pointer"
-                >
-                  <i class="fas fa-search tw-text-xs"></i>
-                </button>
-              </div>
+  <DashboardLayout page-title="Affiliate Withdraw History" :dark-theme="true">
+    <div class="ma-withdraw-wrap tw-animate-fade-in">
+      
+      <!-- Main Log Card -->
+      <div class="ma-glass-card">
+        <div class="ma-card-header">
+          <div class="tw-flex tw-items-center tw-gap-3">
+             <div class="header-icon-box text-glow-primary">
+                <i class="fas fa-history"></i>
+             </div>
+             <div>
+                <h5 class="tw-text-white tw-font-bold tw-text-lg tw-m-0">Affiliate Payout Log</h5>
+                <p class="tw-text-slate-400 tw-text-sm tw-m-0">Your referral commission withdrawals</p>
+             </div>
+          </div>
+          
+          <div class="header-actions">
+            <form @submit.prevent="handleSearch" class="tw-relative tw-w-full md:tw-w-auto">
+              <input 
+                type="search" 
+                v-model="searchQuery" 
+                placeholder="TRX..." 
+                class="search-input"
+              >
+              <button type="submit" class="search-btn text-primary-color">
+                <i class="fas fa-search"></i>
+              </button>
             </form>
+            <router-link to="/user/affiliate-withdraw" class="ma-btn-primary-sm">
+               <i class="fas fa-plus tw-mr-1"></i> New Request
+            </router-link>
           </div>
         </div>
 
-        <div class="tw-overflow-x-auto">
-          <table class="tw-w-full tw-text-sm tw-border-collapse">
+        <!-- Desktop Table -->
+        <div class="tw-hidden lg:tw-block">
+          <table class="ma-modern-table">
             <thead>
-              <tr class="tw-bg-slate-50 tw-border-b tw-border-slate-200">
-                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-text-slate-500 tw-tracking-wider">Gateway / Transaction</th>
-                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-text-slate-500 tw-tracking-wider">Initiated</th>
-                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-text-slate-500 tw-tracking-wider">Amount</th>
-                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-text-slate-500 tw-tracking-wider">Conversion</th>
-                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-uppercase tw-text-slate-500 tw-tracking-wider">Status</th>
-                <th class="tw-px-6 tw-py-4 tw-text-center tw-text-xs tw-font-bold tw-uppercase tw-text-slate-500 tw-tracking-wider">Action</th>
+              <tr>
+                <th>Gateway & TRX</th>
+                <th>Timeline</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th class="tw-text-right">Reason</th>
               </tr>
             </thead>
-            <tbody class="tw-divide-y tw-divide-slate-100">
-              <tr
-                v-for="withdraw in withdraws"
-                :key="withdraw?.id || Math.random()"
-                v-show="withdraw && withdraw.id"
-                class="hover:tw-bg-slate-50/80 hover:tw-text-slate-900 tw-transition-colors"
-              >
-                <td class="tw-px-6 tw-py-4">
-                  <span class="tw-block tw-font-bold tw-text-slate-900 tw-mb-1">{{ withdraw.method?.name || '–' }}</span>
-                  <span class="tw-block tw-text-xs tw-font-mono tw-text-slate-500 tw-bg-slate-100 tw-px-2 tw-py-0.5 tw-rounded tw-w-fit">{{ withdraw.trx }}</span>
-                </td>
-                <td class="tw-px-6 tw-py-4">
-                  <div class="tw-font-semibold tw-text-slate-800">{{ formatDateTime(withdraw.created_at) }}</div>
-                  <div class="tw-text-xs tw-text-slate-500">{{ withdraw.created_at_human }}</div>
-                </td>
-                <td class="tw-px-6 tw-py-4">
-                  <div class="tw-font-bold tw-text-slate-900">{{ currencySymbol }}{{ formatAmount(withdraw.amount) }}</div>
-                  <div class="tw-text-xs tw-text-red-500" :title="'Charge: ' + currencySymbol + formatAmount(withdraw.charge)">
-                    − {{ currencySymbol }}{{ formatAmount(withdraw.charge) }}
-                  </div>
-                  <div class="tw-text-xs tw-font-semibold tw-text-emerald-600 tw-mt-0.5">
-                    Net: {{ currencySymbol }}{{ formatAmount((withdraw.amount || 0) - (withdraw.charge || 0)) }}
+            <tbody>
+              <tr v-for="withdraw in withdraws" :key="withdraw?.id" class="ma-table-row">
+                <td>
+                  <div class="tw-flex tw-items-center tw-gap-3">
+                    <div class="method-icon-primary">
+                      <i :class="getMethodIcon(withdraw.method?.name)"></i>
+                    </div>
+                    <div>
+                      <div class="tw-text-white tw-font-bold">{{ withdraw.method?.name || 'Gateway' }}</div>
+                      <div class="tw-text-indigo-400/80 tw-text-xs tw-font-mono">{{ withdraw.trx }}</div>
+                    </div>
                   </div>
                 </td>
-                <td class="tw-px-6 tw-py-4">
-                  <div class="tw-text-xs tw-text-slate-500 tw-mb-0.5">1 = {{ formatAmount(withdraw.rate, false) }} {{ withdraw.currency }}</div>
-                  <div class="tw-font-bold tw-text-slate-900">{{ formatAmount(withdraw.final_amount, false) }} {{ withdraw.currency }}</div>
+                <td>
+                  <div class="tw-text-slate-200 tw-font-medium tw-text-sm">{{ formatDateTime(withdraw.created_at) }}</div>
+                  <div class="tw-text-slate-500 tw-text-xs tw-mt-0.5">{{ withdraw.created_at_human }}</div>
                 </td>
-                <td class="tw-px-6 tw-py-4">
-                  <div class="status-badge-wrapper" v-html="withdraw.status_badge"></div>
+                <td>
+                  <div class="tw-text-white tw-font-bold tw-text-lg">{{ currencySymbol }}{{ formatAmount(withdraw.amount) }}</div>
                 </td>
-                <td class="tw-px-6 tw-py-4 tw-text-center">
-                  <button
-                    type="button"
-                    class="tw-w-9 tw-h-9 tw-inline-flex tw-items-center tw-justify-center tw-rounded-lg tw-bg-slate-100 tw-text-emerald-700 hover:tw-bg-emerald-600 hover:tw-text-white tw-transition-all tw-border-0 tw-cursor-pointer"
-                    @click="showDetails(withdraw)"
-                    title="View details"
-                  >
-                    <i class="fas fa-eye"></i>
-                  </button>
+                <td>
+                   <div class="status-badge-container" v-html="withdraw.status_badge"></div>
+                </td>
+                <td class="tw-text-right">
+                   <button @click="showDetails(withdraw)" class="ma-action-btn-primary" title="View Reason">
+                      <i class="fas fa-eye"></i>
+                   </button>
                 </td>
               </tr>
-              <tr v-if="withdraws.length === 0">
-                <td colspan="6" class="tw-px-6 tw-py-16 tw-text-center">
-                  <div class="tw-w-16 tw-h-16 tw-bg-slate-50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
-                    <i class="fas fa-wallet tw-text-3xl tw-text-slate-300"></i>
-                  </div>
-                  <h3 class="tw-text-slate-900 tw-font-bold tw-text-lg tw-mb-1">No affiliate withdrawal history yet</h3>
-                  <div class="tw-mt-4">
-                    <router-link to="/user/affiliate-withdraw" class="tw-inline-flex tw-items-center tw-gap-2 tw-px-5 tw-py-2.5 tw-bg-emerald-600 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-emerald-500/30 hover:tw-bg-emerald-700 tw-no-underline tw-transition-all">
-                      Withdraw (Affiliate)
-                    </router-link>
-                  </div>
-                </td>
+              <tr v-if="withdraws.length === 0 && !loading">
+                 <td colspan="5">
+                    <div class="empty-state">
+                       <i class="fas fa-folder-open empty-icon"></i>
+                       <p>No affiliate payouts yet</p>
+                    </div>
+                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <!-- Mobile Card Layout -->
+        <div class="lg:tw-hidden tw-p-3 tw-space-y-4">
+           <div v-for="withdraw in withdraws" :key="withdraw.id" class="ma-mobile-card primary-border">
+              <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
+                 <div class="tw-flex tw-items-center tw-gap-2">
+                    <div class="method-icon-mini-primary">
+                       <i :class="getMethodIcon(withdraw.method?.name)"></i>
+                    </div>
+                    <div>
+                       <div class="tw-text-white tw-font-bold tw-text-sm">{{ withdraw.method?.name }}</div>
+                       <div class="tw-text-[10px] tw-text-indigo-500 tw-font-mono">{{ withdraw.trx }}</div>
+                    </div>
+                 </div>
+                 <div class="status-badge-container scale-75" v-html="withdraw.status_badge"></div>
+              </div>
+              <div class="tw-flex tw-justify-between tw-items-end">
+                 <div>
+                    <div class="tw-text-white tw-font-black tw-text-xl">{{ currencySymbol }}{{ formatAmount(withdraw.amount) }}</div>
+                    <div class="tw-text-[10px] tw-text-slate-500 tw-mt-1">{{ formatDateTime(withdraw.created_at) }}</div>
+                 </div>
+                 <button @click="showDetails(withdraw)" class="ma-action-payout-btn">
+                    REASON
+                 </button>
+              </div>
+           </div>
+        </div>
+
+        <!-- Loader -->
+        <div v-if="loading" class="loading-overlay">
+           <div class="primary-spinner"></div>
+        </div>
       </div>
     </div>
 
-    <div v-if="showModal" class="tw-fixed tw-inset-0 tw-z-[60] tw-flex tw-items-center tw-justify-center tw-px-4">
-      <div class="tw-absolute tw-inset-0 tw-bg-black/60 tw-backdrop-blur-sm" @click="showModal = false"></div>
-      <div class="tw-bg-white tw-rounded-2xl tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden tw-animate-fade-in-up">
-        <div class="tw-bg-emerald-600 tw-p-5 tw-flex tw-items-center tw-justify-between">
-          <h5 class="tw-text-white tw-font-bold tw-text-lg tw-m-0">Withdrawal Details</h5>
-          <button @click="showModal = false" class="tw-text-white/80 hover:tw-text-white tw-bg-transparent tw-border-0 tw-cursor-pointer">
-            <i class="fas fa-times tw-text-xl"></i>
-          </button>
+    <!-- Modal -->
+    <div v-if="showModal" class="ma-modal-overlay">
+      <div class="ma-modal-content primary-modal-border tw-animate-modal-in">
+        <div class="ma-modal-header primary-header-bg">
+           <div class="modal-title-box">
+              <i class="fas fa-shield-alt tw-text-indigo-300"></i>
+              <h5 class="tw-m-0 tw-text-white tw-font-bold">Withdrawal Remark</h5>
+           </div>
+           <button @click="showModal = false" class="modal-close-btn">
+              <i class="fas fa-times"></i>
+           </button>
         </div>
-
-        <div class="tw-p-6">
-          <ul class="tw-space-y-3 tw-mb-0 tw-list-none tw-p-0">
-            <li v-if="selectedWithdrawDetails.length === 0" class="tw-text-center tw-text-slate-500 tw-italic">
-              No additional details available.
-            </li>
-            <li v-for="(info, index) in selectedWithdrawDetails" :key="index" class="tw-flex tw-items-center tw-justify-between tw-border-b tw-border-slate-100 tw-pb-2 last:tw-border-0 last:tw-pb-0">
-              <span class="tw-font-semibold tw-text-slate-600 tw-text-sm">{{ info.name }}</span>
-              <span v-if="info.type !== 'file'" class="tw-font-bold tw-text-slate-900 tw-text-sm tw-text-right">{{ info.value }}</span>
-              <a v-else :href="info.value" target="_blank" class="tw-text-emerald-700 hover:tw-underline tw-text-sm tw-font-medium">
-                <i class="far fa-file tw-mr-1"></i>Attachment
-              </a>
-            </li>
-          </ul>
-
-          <div v-if="selectedWithdrawFeedback" class="tw-mt-6 tw-bg-blue-50 tw-border-l-4 tw-border-blue-500 tw-p-4 tw-rounded-r-lg">
-            <strong class="tw-block tw-text-blue-800 tw-text-sm tw-mb-1">Admin Feedback / Rejection Reason</strong>
-            <p class="tw-text-blue-700 tw-text-sm tw-m-0 tw-leading-relaxed">{{ selectedWithdrawFeedback }}</p>
-          </div>
-
-          <div class="tw-mt-6">
-            <button
-              @click="showModal = false"
-              class="tw-w-full tw-py-3 tw-bg-slate-100 hover:tw-bg-slate-200 tw-text-slate-700 tw-font-bold tw-rounded-xl tw-transition-colors tw-border-0 tw-cursor-pointer"
-            >
-              Close
-            </button>
-          </div>
+        
+        <div class="ma-modal-body text-center">
+           <div v-if="selectedWithdrawFeedback" class="professional-remark-primary">
+              <div class="remark-header">
+                 <div class="remark-dot-primary"></div>
+                 <span>Official Remark</span>
+              </div>
+              <div class="remark-content-primary">
+                 {{ selectedWithdrawFeedback }}
+              </div>
+           </div>
+           <div v-else class="tw-py-8">
+              <div class="tw-w-16 tw-h-16 tw-bg-indigo-900/20 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
+                 <i class="fas fa-check-circle tw-text-indigo-600 tw-text-2xl"></i>
+              </div>
+              <p class="tw-text-slate-400 tw-m-0">Your request is being processed. No remarks available yet.</p>
+           </div>
+           
+           <div class="tw-mt-8">
+              <button @click="showModal = false" class="ma-btn-primary tw-w-full">
+                 GOT IT
+              </button>
+           </div>
         </div>
       </div>
     </div>
@@ -157,85 +172,255 @@ export default {
   setup() {
     const withdraws = ref([])
     const searchQuery = ref('')
+    const loading = ref(false)
     const showModal = ref(false)
-    const selectedWithdrawDetails = ref([])
     const selectedWithdrawFeedback = ref('')
     const currencySymbol = ref('₹')
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
-      return parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+      const val = parseFloat(amount)
+      return val.toLocaleString('en-IN', { 
+         minimumFractionDigits: 2, 
+         maximumFractionDigits: 2 
+      })
     }
 
     const formatDateTime = (dateString) => {
       if (!dateString) return '-'
-      const date = new Date(dateString)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hour12 = date.getHours() % 12 || 12
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      const ampm = date.getHours() >= 12 ? 'PM' : 'AM'
-      return `${year}-${month}-${day} ${hour12}:${minutes} ${ampm}`
+      return new Date(dateString).toLocaleString('en-IN', { 
+        month: 'short', day: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true 
+      });
+    }
+
+    const getMethodIcon = (name) => {
+      const n = (name || '').toLowerCase()
+      if (n.includes('upi')) return 'fas fa-bolt'
+      if (n.includes('bank')) return 'fas fa-university'
+      return 'fas fa-wallet'
     }
 
     const showDetails = (withdraw) => {
-      selectedWithdrawDetails.value = withdraw.withdraw_information || []
       selectedWithdrawFeedback.value = withdraw.admin_feedback || ''
       showModal.value = true
     }
 
     const fetchWithdraws = async () => {
+      loading.value = true
       try {
-        const params = {}
-        if (searchQuery.value) params.search = searchQuery.value
-        const response = await api.get('/affiliate/withdraw/history', { params })
+        const response = await api.get('/affiliate/withdraw/history', { 
+           params: searchQuery.value ? { search: searchQuery.value } : {} 
+        })
         if (response.data.status === 'success') {
           withdraws.value = response.data.data?.data ?? response.data.data ?? []
           if (response.data.data?.currency_symbol) currencySymbol.value = response.data.data.currency_symbol
         }
       } catch (error) {
-        console.error('Error loading affiliate withdraws:', error)
+        console.error('Fetch Error:', error)
+      } finally {
+        loading.value = false
       }
     }
 
     const handleSearch = () => fetchWithdraws()
 
-    onMounted(() => {
-      fetchWithdraws()
-    })
+    onMounted(() => fetchWithdraws())
 
     return {
-      withdraws,
-      searchQuery,
-      showModal,
-      selectedWithdrawDetails,
+      withdraws, searchQuery, loading, showModal,
       selectedWithdrawFeedback,
       currencySymbol,
-      formatAmount,
-      formatDateTime,
-      showDetails,
-      handleSearch
+      formatAmount, formatDateTime, showDetails,
+      handleSearch, getMethodIcon, fetchWithdraws
     }
   }
 }
 </script>
 
-<style>
-.status-badge-wrapper .badge {
-  @apply tw-px-3 tw-py-1 tw-rounded-lg tw-text-xs tw-font-bold tw-uppercase;
+<style scoped>
+.ma-withdraw-wrap {
+  --primary-main: #6366f1;
+  --primary-glow: rgba(99, 102, 241, 0.4);
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --border-glass: rgba(255, 255, 255, 0.08);
 }
-.status-badge-wrapper .badge-success {
-  @apply tw-bg-emerald-100 tw-text-emerald-700;
-}
-.status-badge-wrapper .badge-warning {
-  @apply tw-bg-amber-100 tw-text-amber-700;
-}
-.status-badge-wrapper .badge-danger {
-  @apply tw-bg-red-100 tw-text-red-700;
-}
-.status-badge-wrapper .badge-primary, .status-badge-wrapper .badge-info {
-  @apply tw-bg-blue-100 tw-text-blue-700;
-}
-</style>
 
+.ma-glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--border-glass);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+.ma-card-header {
+  padding: 24px 30px;
+  border-bottom: 1px solid var(--border-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .ma-card-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.header-icon-box {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 22px;
+  box-shadow: 0 5px 20px rgba(79, 70, 229, 0.3);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 12px 18px;
+  color: white;
+  font-size: 14px;
+  width: 100%;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-main);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.ma-btn-primary-sm {
+  background: var(--primary-main);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+/* Modern Table */
+.ma-modern-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.ma-modern-table th { padding: 20px 30px; text-align: left; font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 1px; border-bottom: 1px solid var(--border-glass); }
+.ma-modern-table td { padding: 24px 30px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+.ma-table-row:hover td { background: rgba(99, 102, 241, 0.05); }
+
+.method-icon-primary {
+  width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  background: rgba(99, 102, 241, 0.1); color: #818cf8; font-size: 18px;
+}
+
+.ma-action-btn-primary {
+  width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass);
+  color: #94a3b8; cursor: pointer; transition: all 0.3s;
+}
+
+.ma-action-btn-primary:hover { background: var(--primary-main); color: white; transform: rotate(15deg); }
+
+/* Mobile Cards */
+.ma-mobile-card {
+  background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; border: 1px solid var(--border-glass);
+}
+.primary-border { border-left: 4px solid var(--primary-main); }
+
+.ma-action-payout-btn {
+  background: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 8px 16px; border-radius: 10px; font-size: 10px; font-weight: 800;
+}
+
+/* Modal */
+.ma-modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.ma-modal-content { background: #0a0f1d; border-radius: 32px; width: 100%; max-width: 480px; overflow: hidden; }
+.primary-modal-border { border: 1px solid rgba(99, 102, 241, 0.2); }
+.primary-header-bg { background: linear-gradient(to right, #4338ca, #312e81); }
+.ma-modal-header { padding: 28px; display: flex; justify-content: space-between; align-items: center; }
+.modal-title-box { display: flex; align-items: center; gap: 12px; font-size: 18px; }
+.modal-close-btn { background: rgba(255, 255, 255, 0.05); border: 0; width: 36px; height: 36px; border-radius: 10px; color: #94a3b8; cursor: pointer; }
+.ma-modal-body { padding: 30px; }
+
+.professional-remark-primary {
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-left: 4px solid #6366f1;
+  border-radius: 14px;
+  padding: 20px;
+  text-align: left;
+}
+
+.remark-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.remark-dot-primary {
+  width: 6px;
+  height: 6px;
+  background: #6366f1;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #6366f1;
+}
+
+.remark-header span {
+  font-size: 10px;
+  font-weight: 800;
+  color: #818cf8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.remark-content-primary {
+  color: #e0e7ff;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.ma-btn-primary {
+  background: var(--primary-main); color: white; border: 0; padding: 16px; border-radius: 18px; font-weight: 800;
+  box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4); cursor: pointer;
+}
+
+/* Spinners */
+.primary-spinner { width: 34px; height: 34px; border: 3px solid rgba(99, 102, 241, 0.1); border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-overlay { display: flex; align-items: center; justify-content: center; padding: 80px 0; }
+
+/* Clean Status Badges - Remove Icons/Dots */
+:deep(.status-badge-container .badge i),
+:deep(.status-badge-container .badge::before) {
+  display: none !important;
+}
+
+:deep(.status-badge-container .badge) {
+  padding: 6px 14px !important; border-radius: 10px !important; font-size: 10px !important; font-weight: 900 !important;
+  text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid transparent; display: inline-flex;
+}
+:deep(.badge-success) { background: rgba(16, 185, 129, 0.1) !important; color: #10b981 !important; border-color: rgba(16, 185, 129, 0.2) !important; }
+:deep(.badge-warning) { background: rgba(245, 158, 11, 0.1) !important; color: #fbbf24 !important; border-color: rgba(245, 158, 11, 0.2) !important; }
+:deep(.badge-danger) { background: rgba(239, 68, 68, 0.1) !important; color: #fb7185 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+
+.text-glow-primary { text-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
+</style>

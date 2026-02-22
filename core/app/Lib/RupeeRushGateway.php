@@ -6,40 +6,29 @@ class RupeeRushGateway
 {
     public static function merNo(): string
     {
-        return (string) (env('RUPEERUSH_MER_NO') ?: '');
+        return (string) (config('services.rupeerush.mer_no') ?: '');
     }
 
     public static function key(): string
     {
-        return (string) (env('RUPEERUSH_KEY') ?: '');
+        return (string) (config('services.rupeerush.key') ?: '');
     }
 
     public static function apiUrl(): string
     {
-        return (string) (env('RUPEERUSH_API_URL') ?: '');
+        return (string) (config('services.rupeerush.api_url') ?: '');
     }
 
     /**
      * Generate uppercase MD5 sign.
      * Excludes sign, and empty values.
      */
-    public static function generateSign(array $params, string $key): string
+    /**
+     * Generate uppercase MD5 sign from JSON string.
+     */
+    public static function generateSign(string $jsonString, string $key): string
     {
-        unset($params['sign']);
-
-        $filtered = [];
-        foreach ($params as $k => $v) {
-            if ($v === '' || $v === null) continue;
-            $filtered[$k] = (string) $v;
-        }
-
-        ksort($filtered);
-
-        // Documentation shows: {"key":"val",...}merchantKey
-        $jsonString = json_encode($filtered, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        $signString = $jsonString . $key;
-
-        return strtoupper(md5($signString));
+        return strtoupper(md5($jsonString . $key));
     }
 
     /**
@@ -57,27 +46,33 @@ class RupeeRushGateway
         $params = [
             'merNo'        => $merNo,
             'currencyCode' => (string) ($data['currencyCode'] ?? 'INR'),
-            'payType'      => (string) ($data['payType'] ?? (env('RUPEERUSH_PAY_TYPE') ?: 'SCAN')),
+            'payType'      => (string) ($data['payType'] ?? (config('services.rupeerush.pay_type') ?: 'SCAN')),
             'randomNo'     => (string) sprintf('%014d', mt_rand(1, 99999999999999)),
             'outTradeNo'   => (string) $data['outTradeNo'],
             'totalAmount'  => number_format((float)$data['totalAmount'], 2, '.', ''),
             'notifyUrl'    => (string) $data['notifyUrl'],
             'payCardNo'    => (string) ($data['payCardNo'] ?? '123456'),
-            'payBankCode'  => (string) ($data['payBankCode'] ?? (env('RUPEERUSH_BANK_CODE') ?: 'PAY')),
+            'payBankCode'  => (string) ($data['payBankCode'] ?? (config('services.rupeerush.bank_code') ?: 'PAY')),
             'payName'      => (string) ($data['payName'] ?? 'User'),
             'payEmail'     => (string) ($data['payEmail'] ?? 'user@email.com'),
             'payPhone'     => (string) static::formatPhone($data['payPhone'] ?? '9876543210'),
         ];
 
-        if (isset($data['payViewUrl'])) {
-            $params['payViewUrl'] = $data['payViewUrl'];
-        }
+        // Sort keys alphabetically as required for sign consistency
+        ksort($params);
 
-        $params['sign'] = static::generateSign($params, $key);
+        // Encode to JSON string once with specific flags
+        $jsonBody = json_encode($params, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        
+        // Generate sign from that exact string
+        $params['sign'] = static::generateSign($jsonBody, $key);
+        
+        // Re-encode with sign included
+        $finalJson = json_encode($params, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         \Log::info('RupeeRush Request', ['url' => $requestUrl, 'params' => $params]);
 
-        $response = CurlRequest::curlPostContent($requestUrl, json_encode($params), [
+        $response = CurlRequest::curlPostContent($requestUrl, $finalJson, [
             'Content-Type: application/json',
         ]);
 
@@ -118,9 +113,12 @@ class RupeeRushGateway
         if (strlen($phone) > 10) {
             $phone = substr($phone, -10);
         }
-        return '+91' . $phone;
+        return $phone; // Return 10 digit number without +
     }
 
+    /**
+     * Verify callback signature.
+     */
     /**
      * Verify callback signature.
      */
@@ -131,7 +129,13 @@ class RupeeRushGateway
         $received = (string) ($payload['sign'] ?? '');
         if ($received === '') return false;
 
-        $expected = static::generateSign($payload, $key);
+        $temp = $payload;
+        unset($temp['sign']);
+        ksort($temp);
+        
+        $jsonString = json_encode($temp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $expected = strtoupper(md5($jsonString . $key));
+        
         return hash_equals($expected, strtoupper($received));
     }
 }

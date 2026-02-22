@@ -67,6 +67,12 @@ class ProcessController extends Controller
             cache()->put($key, $session, now()->addHours(2));
         }
 
+        // 🟢 Fulfill Deposit in database (if exists)
+        $deposit = \App\Models\Deposit::where('trx', $mchOrderNo)->where('status', \App\Constants\Status::PAYMENT_INITIATE)->first();
+        if ($deposit) {
+            \App\Http\Controllers\Gateway\PaymentController::userDataUpdate($deposit);
+        }
+
         return response('success', 200);
     }
 }

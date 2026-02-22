@@ -103,6 +103,7 @@ export default {
         items: [
           { title: 'Reports', path: '/master_admin/reports', icon: 'fas fa-chart-bar' },
           { title: 'Settings', path: '/master_admin/settings', icon: 'fas fa-cog' },
+          { title: 'Email Settings', path: '/master_admin/email-settings', icon: 'fas fa-envelope' },
         ]
       }
     ]

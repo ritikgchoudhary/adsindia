@@ -171,15 +171,16 @@ class ReferralLinksController extends Controller
                     : URL::to('/register?pkg=' . $pkgId . '&disc=' . $discount . '&sig=' . $row->sig);
 
                 return [
-                    'id' => (int) $row->id,
-                    'package_id' => $pkgId,
-                    'package_name' => (string) ($pkg['name'] ?? ('Plan ' . $pkgId)),
-                    'original_price' => $price,
-                    'discount' => $discount,
-                    'final_price' => $price - $discount,
-                    'sig' => (string) $row->sig,
-                    'is_active' => (bool) $row->is_active,
-                    'created_at' => $row->created_at ? (string) $row->created_at : null,
+                    'id'               => (int) $row->id,
+                    'package_id'       => $pkgId,
+                    'package_name'     => (string) ($pkg['name'] ?? ('Plan ' . $pkgId)),
+                    'original_price'   => $price,
+                    'discount'         => $discount,
+                    'final_price'      => $price - $discount,
+                    'commission_amount'=> (float) ($row->commission_amount ?? 0),
+                    'sig'              => (string) $row->sig,
+                    'is_active'        => (bool) $row->is_active,
+                    'created_at'       => $row->created_at ? (string) $row->created_at : null,
                 ];
             })->values();
 
@@ -261,6 +262,40 @@ class ReferralLinksController extends Controller
             $row->delete();
             return responseSuccess('special_link_deleted', ['Special link deleted'], [
                 'id' => (int) $id,
+            ]);
+        } catch (\Throwable $e) {
+            return responseError('not_found', ['Link not found']);
+        }
+    }
+
+    /**
+     * Update commission_amount for a specific special discount link.
+     * Used by Master Admin → Commission Management → Special Discount Link Commission section.
+     */
+    public function updateSpecialLinkCommissionAmount(Request $request, $id)
+    {
+        $request->validate([
+            'commission_amount' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            /** @var SpecialDiscountLink $row */
+            $row = SpecialDiscountLink::where('is_global', true)->findOrFail($id);
+            $row->commission_amount = (float) $request->commission_amount;
+            $row->updated_at = now();
+            $row->save();
+
+            $packages = static::packagesData();
+            $pkgId = (int) $row->package_id;
+            $pkg = $packages[$pkgId] ?? null;
+            $price = (int) ($pkg['price'] ?? 0);
+            $discount = max(0, (int) $row->discount);
+
+            return responseSuccess('special_link_commission_updated', ['Commission updated'], [
+                'id'               => (int) $row->id,
+                'package_name'     => (string) ($pkg['name'] ?? ('Plan ' . $pkgId)),
+                'final_price'      => $price - $discount,
+                'commission_amount'=> (float) $row->commission_amount,
             ]);
         } catch (\Throwable $e) {
             return responseError('not_found', ['Link not found']);

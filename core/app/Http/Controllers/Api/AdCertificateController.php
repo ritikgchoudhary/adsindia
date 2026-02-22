@@ -50,6 +50,21 @@ class AdCertificateController extends Controller
         }
 
         $trx = getTrx();
+        $deposit = new \App\Models\Deposit();
+        $deposit->user_id = $user->id;
+        $deposit->method_code = $gw->code;
+        $deposit->amount = (float) self::PRICE;
+        $deposit->method_currency = $general->cur_text;
+        $deposit->charge = 0;
+        $deposit->rate = 1;
+        $deposit->final_amount = (float) self::PRICE;
+        $deposit->btc_amount = 0;
+        $deposit->btc_wallet = '';
+        $deposit->trx = $trx;
+        $deposit->remark = self::REMARK;
+        $deposit->status = Status::PAYMENT_INITIATE;
+        $deposit->save();
+
         cache()->put($gateway . '_payment_' . $trx, [
             'type' => 'ad_certificate',
             'user_id' => $user->id,

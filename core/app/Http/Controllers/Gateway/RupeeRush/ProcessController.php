@@ -39,8 +39,6 @@ class ProcessController extends Controller
         }
 
         // Mark payment session success (based on cache key pattern used in this project)
-        // Check SimplyPay's pattern: 'simplypay_payment_' . $mchOrderNo
-        // We'll use 'adspay_payment_' . $mchOrderNo
         $key = 'rupeerush_payment_' . $mchOrderNo;
         $session = cache()->get($key);
         if (is_array($session)) {
@@ -52,6 +50,12 @@ class ProcessController extends Controller
                 'totalAmount' => $payload['totalAmount'] ?? null,
             ];
             cache()->put($key, $session, now()->addHours(2));
+        }
+
+        // 🟢 Fulfill Deposit in database (if exists)
+        $deposit = \App\Models\Deposit::where('trx', $mchOrderNo)->where('status', \App\Constants\Status::PAYMENT_INITIATE)->first();
+        if ($deposit) {
+            \App\Http\Controllers\Gateway\PaymentController::userDataUpdate($deposit);
         }
 
         return response('SUCCESS', 200);

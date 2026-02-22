@@ -39,11 +39,21 @@
             </div>
           </div>
           <select v-model="filterStatus" @change="fetchOrders(1)" class="ma-select">
-            <option value="">All</option>
+            <option value="">All Status</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
             <option value="initiated">Initiated</option>
+          </select>
+          <select v-model="filterType" @change="fetchOrders(1)" class="ma-select">
+            <option value="">All Type</option>
+            <option value="ad_plan_purchase">Ad Plan</option>
+            <option value="ad_certificate_fee">Certificate</option>
+            <option value="kyc_fee">KYC</option>
+            <option value="withdrawal">Withdrawal</option>
+            <option value="package_upgrade_gateway">Package</option>
+            <option value="partner_program_gateway">Partner Program</option>
+            <option value="registration_fee">Registration</option>
           </select>
           <div class="d-flex gap-2 align-items-center">
             <input type="date" v-model="startDate" class="ma-date">
@@ -60,8 +70,8 @@
       <div class="ma-card ma-table-card">
         <div class="ma-card__header ma-card__header--gradient">
           <div>
-            <h5 class="ma-card__title"><i class="fas fa-receipt me-2"></i>All Gateway Orders</h5>
-            <p class="ma-card__subtitle">Approve / Reject gateway deposit orders</p>
+            <h5 class="ma-card__title"><i class="fas fa-file-invoice-dollar me-2"></i>Unified Orders History</h5>
+            <p class="ma-card__subtitle">Manage all gateway deposits and withdrawals in one place</p>
           </div>
           <span class="ma-card__count">{{ totalOrders }} orders</span>
         </div>
@@ -141,9 +151,10 @@
                 </td>
                 <td>
                   <span class="ma-badge" :class="{
-                    'ma-badge--success': o.status_class === 'success',
+                    'ma-badge--success': o.status_class === 'success' && !o.is_manual,
+                    'ma-badge--danger': o.status_class === 'success' && o.is_manual,
                     'ma-badge--warning': o.status_class === 'warning',
-                    'ma-badge--danger': o.status_class === 'danger',
+                    'ma-badge--red': o.status_class === 'danger',
                     'ma-badge--secondary': o.status_class === 'secondary'
                   }">
                     <i :class="{
@@ -152,7 +163,7 @@
                       'fas fa-times-circle': o.status_class === 'danger',
                       'fas fa-circle': o.status_class === 'secondary'
                     }"></i>
-                    {{ o.status_text }}
+                    {{ o.is_manual ? 'Manual Approved' : o.status_text }}
                   </span>
                 </td>
                 <td>
@@ -225,6 +236,60 @@
         </div>
       </div>
     </div>
+
+    <!-- View Details Modal -->
+    <div v-if="selectedOrder" class="ma-modal-overlay" @click.self="selectedOrder = null">
+      <div class="ma-modal">
+        <div class="ma-modal__header">
+          <div class="d-flex align-items-center gap-2">
+             <i class="fas fa-file-invoice-dollar text-primary"></i>
+             <h5 class="m-0 text-white">{{ selectedOrder.source === 'withdrawal' ? 'Withdrawal' : 'Order' }} #{{ selectedOrder.id }}</h5>
+          </div>
+          <button class="ma-modal__close" @click="selectedOrder = null"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ma-modal__body p-4">
+          <div class="row g-3">
+             <div class="col-md-7">
+                <div class="ma-modal-card">
+                  <h6 class="ma-modal-card__title"><i class="fas fa-info-circle me-2"></i>Transaction Details</h6>
+                  <div class="ma-modal-info">
+                    <div class="ma-modal-info__row"><span><i class="fas fa-hashtag me-2"></i>TRX ID:</span><code class="text-amber-bright fw-bold">{{ selectedOrder.trx }}</code></div>
+                    <div class="ma-modal-info__row"><span><i class="fas fa-tag me-2"></i>Type:</span><span class="badge-solid badge-solid--primary">{{ selectedOrder.order_type }}</span></div>
+                    <div class="ma-modal-info__row"><span><i class="fas fa-check-double me-2"></i>Status:</span><span :class="'badge-solid badge-solid--' + selectedOrder.status_class">{{ selectedOrder.status_text }}</span></div>
+                    <div class="ma-modal-info__row"><span><i class="fas fa-university me-2"></i>Gateway:</span><span class="text-faded">{{ selectedOrder.method_name }}</span></div>
+                    <div class="ma-modal-info__row"><span><i class="fas fa-calendar-alt me-2"></i>Date:</span><span class="text-faded">{{ formatDateTime(selectedOrder.created_at) }}</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-5">
+                <div class="ma-modal-card">
+                  <h6 class="ma-modal-card__title"><i class="fas fa-file-invoice-dollar me-2"></i>Amount Summary</h6>
+                  <div class="ma-modal-info">
+                    <div class="ma-modal-info__row"><span>Amount:</span><span class="text-white fw-bold" style="font-size:1.1rem">₹{{ formatAmount(selectedOrder.amount) }}</span></div>
+                    <div class="ma-modal-info__row"><span>Charge:</span><span class="text-danger-bright fw-bold">₹{{ formatAmount(selectedOrder.charge) }}</span></div>
+                    <div class="ma-modal-info__row"><span>Final:</span><span class="text-success-bright fw-extrabold" style="font-size:1.3rem">₹{{ formatAmount(selectedOrder.after_charge) }}</span></div>
+                  </div>
+                </div>
+              </div>
+             <div class="col-12">
+                <div class="ma-modal-card" style="background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25);">
+                   <h6 class="ma-modal-card__title" style="color: #c7d2fe; margin-bottom: 1.5rem;"><i class="fas fa-user-circle me-2"></i>User Details</h6>
+                   <div class="ma-modal-info ma-modal-info--horizontal">
+                      <div class="ma-modal-info__row"><span><i class="fas fa-id-card me-2"></i>Name:</span><span class="text-white fw-bold">{{ selectedOrder.user?.firstname }} {{ selectedOrder.user?.lastname }}</span></div>
+                      <div class="ma-modal-info__row"><span><i class="fas fa-envelope me-2"></i>Email:</span><span class="text-white">{{ selectedOrder.user?.email }}</span></div>
+                      <div class="ma-modal-info__row"><span><i class="fas fa-mobile-alt me-2"></i>Number:</span><span class="text-white">{{ selectedOrder.user?.mobile || '—' }}</span></div>
+                      <div class="ma-modal-info__row"><span><i class="fas fa-fingerprint me-2"></i>Ads ID:</span><span class="text-success-bright fw-bold" style="font-size: 1.15rem;">{{ selectedOrder.user?.ads_id }}</span></div>
+                   </div>
+                </div>
+             </div>
+          </div>
+        </div>
+        <div class="ma-modal__footer d-flex justify-content-end gap-2 p-3 border-top border-white-5">
+           <button v-if="isPending(selectedOrder)" class="ma-btn ma-btn--reject" @click="rejectOrder(selectedOrder)">Reject</button>
+           <button v-if="isPending(selectedOrder)" class="ma-btn ma-btn--approve" @click="approveOrder(selectedOrder)">Approve</button>
+        </div>
+      </div>
+    </div>
   </MasterAdminLayout>
 </template>
 
@@ -241,11 +306,13 @@ export default {
     const loading = ref(false)
     const searchQuery = ref('')
     const filterStatus = ref('')
+    const filterType = ref('')
     const startDate = ref('')
     const endDate = ref('')
     const totalOrders = ref(0)
     const currentPage = ref(1)
     const lastPage = ref(1)
+    const selectedOrder = ref(null)
     const summary = ref({ total: 0, successful: 0, pending: 0, rejected: 0, initiated: 0 })
     let searchTimeout = null
 
@@ -273,12 +340,7 @@ export default {
 
     const isPending = (d) => {
       if (!d) return false
-      if (String(d.source || '') !== 'deposit') return false
-      if (d.approvable === true) return true
-      if (Number(d.status) === 2) return true
-      const t = String(d.status_text || '').toLowerCase()
-      if (t.includes('pending')) return true
-      return String(d.status_class || '').toLowerCase() === 'warning'
+      return d.approvable === true || d.approvable === 1 || Number(d.status) === 0 || Number(d.status) === 2
     }
 
     const paginationPages = computed(() => {
@@ -301,6 +363,7 @@ export default {
         const params = { page: currentPage.value, per_page: 20 }
         if (searchQuery.value) params.search = searchQuery.value
         if (filterStatus.value) params.status = filterStatus.value
+        if (filterType.value) params.type = filterType.value
         if (startDate.value) params.start_date = startDate.value
         if (endDate.value) params.end_date = endDate.value
 
@@ -351,7 +414,7 @@ export default {
       if (!confirm(`Approve order #${o.id} of ₹${formatAmount(o.amount)}?`)) return
       try {
         const id = o.source_id || o.id
-        const res = await api.post(`/admin/order/approve/${id}`)
+        const res = await api.post(`/admin/order/approve/${id}?source=${o.source}`)
         if (res.data?.status === 'success') {
           if (window.notify) window.notify('success', res.data?.message || 'Order approved successfully')
           fetchOrders()
@@ -372,7 +435,7 @@ export default {
       if (!reason) return
       try {
         const id = o.source_id || o.id
-        const res = await api.post(`/admin/order/reject/${id}`, { reason })
+        const res = await api.post(`/admin/order/reject/${id}?source=${o.source}`, { reason })
         if (res.data?.status === 'success') {
           if (window.notify) window.notify('success', res.data?.message || 'Order rejected successfully')
           fetchOrders()
@@ -388,7 +451,7 @@ export default {
       if (!confirm(`Are you sure you want to PERMANENTLY delete order #${o.id}? This cannot be undone.`)) return
       try {
         const id = o.source_id || o.id
-        const res = await api.post(`/admin/order/delete/${id}`)
+        const res = await api.post(`/admin/order/delete/${id}?source=${o.source}`)
         if (res.data?.status === 'success') {
           if (window.notify) window.notify('success', res.data?.message || 'Order deleted successfully')
           fetchOrders()
@@ -401,16 +464,14 @@ export default {
     }
 
     const viewOrder = (o) => {
-      alert(
-        `Order Details:\n\nID: ${o.id}\nSource: ${o.source || '—'}\nType: ${o.order_type || '—'}\nTransaction ID: ${o.trx}\nAmount: ₹${formatAmount(o.amount)}\nCharge: ₹${formatAmount(o.charge)}\nAfter Charge: ₹${formatAmount(o.after_charge)}\nGateway: ${o.method_name}\nStatus: ${o.status_text}\nDate: ${formatDateTime(o.created_at)}`
-      )
+      selectedOrder.value = o
     }
 
     onMounted(() => fetchOrders(1))
 
     return {
-      orders, loading, searchQuery, filterStatus, startDate, endDate,
-      totalOrders, currentPage, lastPage, paginationPages, summary,
+      orders, loading, searchQuery, filterStatus, filterType, startDate, endDate,
+      totalOrders, currentPage, lastPage, paginationPages, summary, selectedOrder,
       formatAmount, formatDateTime, getInitials, isPending,
       fetchOrders, debounceSearch, copyTrx,
       approveOrder, rejectOrder, deleteOrder, viewOrder
@@ -478,7 +539,7 @@ export default {
 
 .ma-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .ma-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 1400px; }
-.ma-table th { padding: 1rem 1.25rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.08em; border-bottom: 2px solid rgba(99,102,241,0.2); white-space: nowrap; text-align: left; background: rgba(15, 23, 42, 0.3); }
+.ma-table th { padding: 1rem 1.25rem; color: #f1f5f9; font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.08em; border-bottom: 2px solid rgba(99,102,241,0.3); white-space: nowrap; text-align: left; background: rgba(15, 23, 42, 0.5); }
 .ma-table th i { color: #818cf8; font-size: 0.75rem; }
 .ma-table td { padding: 1rem 1.25rem; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
 .ma-table-row { transition: all 0.2s ease; }
@@ -555,5 +616,79 @@ export default {
 
 .ma-spinner { width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #818cf8; border-radius: 50%; animation: maSpin 0.7s linear infinite; }
 @keyframes maSpin { to { transform: rotate(360deg); } }
+/* ═══ Modal ═══ */
+.ma-modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+  padding: 1.5rem; animation: maFade 0.3s ease-out;
+}
+.ma-modal {
+  background: #1e293b; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px; width: 100%; max-width: 650px; overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+.ma-modal__header {
+  padding: 1.25rem 1.5rem; background: rgba(15,23,42,0.4);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.ma-modal__close {
+  background: none; border: none; color: #64748b; cursor: pointer;
+  width: 32px; height: 32px; border-radius: 50%; transition: all 0.2s;
+}
+.ma-modal__close:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
+.ma-modal-card {
+  background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px; padding: 1.25rem; height: 100%;
+}
+.ma-modal-card__title {
+  color: #818cf8; font-size: 0.8rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 1.25rem; display: flex; align-items: center;
+}
+.ma-modal-info { display: flex; flex-direction: column; gap: 0.85rem; }
+.ma-modal-info__row { display: flex; align-items: center; justify-content: space-between; font-size: 0.95rem; }
+.ma-modal-info__row span:first-child { color: #e2e8f0; font-weight: 700; opacity: 0.9; }
+.ma-modal-info__row span:last-child { color: #ffffff; }
+.ma-modal-info__line { height: 1px; background: rgba(255,255,255,0.06); margin: 0.5rem 0; border-style: dashed; }
+.ma-modal-info--horizontal { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 2rem; }
+
+.ma-btn {
+  height: 40px; padding: 0 1.5rem; border-radius: 10px; font-weight: 700;
+  font-size: 0.88rem; transition: all 0.2s; border: none; cursor: pointer;
+}
+.ma-btn--approve { background: #10b981; color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+.ma-btn--approve:hover { background: #059669; transform: translateY(-1px); }
+.ma-btn--reject { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+.ma-btn--reject:hover { background: #dc2626; transform: translateY(-1px); }
+
+.border-white-5 { border-color: rgba(255,255,255,0.1) !important; }
+.text-white-50 { color: rgba(255,255,255,0.7) !important; }
+.text-light { color: #f8fafc !important; }
+.text-faded { color: #e2e8f0 !important; }
+.text-amber-bright { color: #fbbf24 !important; }
+.text-success-bright { color: #10b981 !important; }
+.text-danger-bright { color: #f87171 !important; }
+.fw-extrabold { font-weight: 900; }
+
+.badge-solid {
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block;
+}
+.badge-solid--primary { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
+.badge-solid--success { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+.badge-solid--danger { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+.badge-solid--warning { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+.badge-solid--info { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+.badge-solid--dark { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+
+@media (max-width: 576px) {
+  .ma-modal-info--horizontal { grid-template-columns: 1fr; }
+}
 </style>
 

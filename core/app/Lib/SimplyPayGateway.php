@@ -6,17 +6,17 @@ class SimplyPayGateway
 {
     public static function appId(): string
     {
-        return (string) (env('SIMPLYPAY_APP_ID') ?: '');
+        return (string) (config('services.simplypay.app_id') ?: '');
     }
 
     public static function appSecret(): string
     {
-        return (string) (env('SIMPLYPAY_APP_SECRET') ?: '');
+        return (string) (config('services.simplypay.app_secret') ?: '');
     }
 
     public static function apiUrl(): string
     {
-        return (string) (env('SIMPLYPAY_API_URL') ?: 'https://api.simplypay.vip/api/v2/payment/order/create');
+        return (string) (config('services.simplypay.api_url') ?: 'https://api.simplypay.vip/api/v2/payment/order/create');
     }
 
     /**

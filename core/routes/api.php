@@ -297,6 +297,8 @@ Route::namespace('Api')->name('api.')->group(function(){
             Route::get('commissions/agent-upgrade-rules', [\App\Http\Controllers\Admin\AdminController::class, 'listAgentUpgradeRules']);
             Route::post('commissions/agent-upgrade-rules', [\App\Http\Controllers\Admin\AdminController::class, 'upsertAgentUpgradeRule']);
             Route::post('commissions/reverse', [\App\Http\Controllers\Admin\AdminController::class, 'reverseAffiliateCommission']);
+            Route::get('commissions/special-link', [\App\Http\Controllers\Admin\AdminController::class, 'getSpecialLinkCommissions']);
+            Route::post('commissions/special-link/{packageId}', [\App\Http\Controllers\Admin\AdminController::class, 'updateSpecialLinkCommission']);
             Route::get('gateway-orders', [\App\Http\Controllers\Admin\AdminController::class, 'gatewayOrders']);
             Route::get('gateway-deposit-orders', [\App\Http\Controllers\Admin\AdminController::class, 'gatewayDepositOrders']);
             Route::get('all-gateway-orders', [\App\Http\Controllers\Admin\AdminController::class, 'allGatewayOrders']);
@@ -310,6 +312,7 @@ Route::namespace('Api')->name('api.')->group(function(){
             Route::get('referral/special-links', [\App\Http\Controllers\Admin\ReferralLinksController::class, 'listSpecialLinks']);
             Route::put('referral/special-links/{id}', [\App\Http\Controllers\Admin\ReferralLinksController::class, 'updateSpecialLink']);
             Route::delete('referral/special-links/{id}', [\App\Http\Controllers\Admin\ReferralLinksController::class, 'deleteSpecialLink']);
+            Route::post('referral/special-links/{id}/commission', [\App\Http\Controllers\Admin\ReferralLinksController::class, 'updateSpecialLinkCommissionAmount']);
             Route::post('deposit/approve/{id}', [\App\Http\Controllers\Admin\DepositController::class, 'approve']);
             Route::post('deposit/reject', [\App\Http\Controllers\Admin\DepositController::class, 'reject']);
             Route::post('withdraw/approve', [\App\Http\Controllers\Admin\AdminController::class, 'approveWithdrawal']);
@@ -370,6 +373,10 @@ Route::namespace('Api')->name('api.')->group(function(){
 
             // Reports & Analytics (Master Admin)
             Route::get('reports', [\App\Http\Controllers\Admin\AdminController::class, 'reports']);
+
+            // Email Settings
+            Route::get('email-settings', [\App\Http\Controllers\Admin\AdminController::class, 'getEmailSettings']);
+            Route::post('email-settings', [\App\Http\Controllers\Admin\AdminController::class, 'updateEmailSettings']);
 
             // Admin Logout
             Route::post('logout', function (\Illuminate\Http\Request $request) {

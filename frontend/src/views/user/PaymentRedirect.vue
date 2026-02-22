@@ -1,5 +1,9 @@
 <template>
-  <DashboardLayout :page-title="pageTitleDisplay" :dark-theme="true">
+  <DashboardLayout 
+    :page-title="pageTitleDisplay" 
+    :dark-theme="true"
+    :no-sidebar="flowType === 'registration'"
+  >
     <div class="tw-min-h-[85vh] tw-flex tw-items-center tw-justify-center tw-p-4 tw-font-sans">
       
       <!-- Premium Dark Card -->

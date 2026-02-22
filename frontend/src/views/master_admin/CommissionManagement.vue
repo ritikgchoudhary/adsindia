@@ -53,6 +53,7 @@
                        <span class="ma-mini-badge tw-bg-purple-500/10 tw-text-purple-400">PARTNER: {{ displayMiniSetting(agent.settings, 'partner') }}</span>
                        <span class="ma-mini-badge tw-bg-sky-500/10 tw-text-sky-400">CERT: {{ displayMiniSetting(agent.settings, 'certificate') }}</span>
                        <span class="ma-mini-badge tw-bg-amber-500/10 tw-text-amber-400">KYC: {{ displayMiniSetting(agent.settings, 'kyc') }}</span>
+                       <span class="ma-mini-badge tw-bg-rose-500/10 tw-text-rose-400">SPECIAL LINK: {{ displayMiniSetting(agent.settings, 'special_discount') }}</span>
                     </div>
                     <div v-else class="tw-text-xs tw-text-slate-500 italic">No custom settings</div>
                   </td>
@@ -288,6 +289,82 @@
         </div>
       </div>
 
+
+      <!-- Special Discount Link Commission (Direct Affiliate) -->
+      <div v-if="activeTab === 'direct'" class="ma-card" style="margin-top:1.5rem;">
+        <div class="ma-card__header ma-card__header--gradient" style="background: linear-gradient(135deg, rgba(244,114,182,0.12) 0%, rgba(236,72,153,0.10) 100%); border-color: rgba(244,114,182,0.22);">
+          <div>
+            <h5 class="ma-card__title"><i class="fas fa-tag me-2" style="color:#f472b6;"></i>Special Discount Link Commission</h5>
+            <p class="ma-card__subtitle">
+              Set how much commission a referrer earns when someone registers via one of the special discount links below.
+              Links are managed at
+              <router-link to="/master_admin/special-links" class="tw-text-pink-400 tw-underline">Special Links page</router-link>.
+            </p>
+          </div>
+          <button class="ma-btn" @click="fetchSpecialLink">
+            <i class="fas fa-sync-alt"></i>
+            Refresh
+          </button>
+        </div>
+
+        <div class="ma-card__body">
+          <div v-if="loadingSpecialLink" class="ma-loading"><div class="ma-spinner"></div> Loading...</div>
+          <div v-else-if="specialLinkRows.length === 0" class="tw-text-center tw-py-8 tw-text-slate-400">
+            <i class="fas fa-tag tw-text-3xl tw-mb-3 tw-block tw-opacity-30"></i>
+            No special discount links created yet.
+            <router-link to="/master_admin/special-links" class="tw-text-pink-400 tw-underline tw-ml-1">Create one here</router-link>.
+          </div>
+          <div v-else class="table-responsive">
+            <table class="ma-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Plan</th>
+                  <th>Original Price</th>
+                  <th>Discount</th>
+                  <th style="color:#4ade80;">Final Price (Registration)</th>
+                  <th>Commission Amount (₹)</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in specialLinkRows" :key="r.id">
+                  <td class="tw-text-slate-400 tw-font-mono">#{{ r.id }}</td>
+                  <td>
+                    <div class="tw-font-bold tw-text-slate-100">{{ r.package_name }}</div>
+                  </td>
+                  <td class="tw-text-slate-400 tw-line-through">₹{{ formatAmount(r.original_price) }}</td>
+                  <td class="tw-text-rose-400">- ₹{{ formatAmount(r.discount) }}</td>
+                  <td class="tw-font-bold tw-text-green-400">₹{{ formatAmount(r.final_price) }}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      class="ma-input"
+                      style="width:140px;"
+                      v-model.number="r.commission_amount"
+                      placeholder="0"
+                    />
+                  </td>
+                  <td>
+                    <span v-if="r.is_active" class="tw-text-xs tw-px-2 tw-py-1 tw-rounded-full tw-bg-green-500/10 tw-text-green-400 tw-font-bold">Active</span>
+                    <span v-else class="tw-text-xs tw-px-2 tw-py-1 tw-rounded-full tw-bg-slate-500/10 tw-text-slate-400 tw-font-bold">Inactive</span>
+                  </td>
+                  <td>
+                    <button class="ma-btn ma-btn--pink" @click="saveSpecialLink(r)">
+                      <i class="fas fa-save"></i>
+                      Save
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   </MasterAdminLayout>
 </template>
@@ -327,6 +404,10 @@ export default {
     const settingsTab = ref('general')
     const savingAgent = ref(false)
     const granular = ref({ course: {}, adplan: {}, partner: {} })
+
+    // Special Link Commission (Direct Affiliate)
+    const loadingSpecialLink = ref(false)
+    const specialLinkRows = ref([])
 
     const staticCourses = [
       { id: 1, name: 'AdsLite', price: 1499 },
@@ -436,7 +517,15 @@ export default {
       try {
         const res = await api.get(`/admin/user/${agent.id}/agent-commissions`)
         if (res.data?.status === 'success') {
-          agentForm.value = res.data.data?.settings || {}
+          // Sanitize all *_value fields from DB (removes trailing zeros like 50.00000000 → 50)
+          const rawSettings = res.data.data?.settings || {}
+          Object.keys(rawSettings).forEach(k => {
+            if (k.endsWith('_value') && rawSettings[k] !== null && rawSettings[k] !== undefined) {
+              const f = parseFloat(rawSettings[k])
+              rawSettings[k] = isNaN(f) ? 0 : (Number.isInteger(f) ? f : parseFloat(f.toFixed(2)))
+            }
+          })
+          agentForm.value = rawSettings
           
           // Prepare granular settings
           const rawGranular = agentForm.value.granular_settings || {}
@@ -444,15 +533,15 @@ export default {
           
           staticCourses.forEach(p => {
             const saved = rawGranular.course?.[p.id] || {}
-            newGranular.course[p.id] = { mode: saved.mode || 'percent', value: saved.value != null ? Number(saved.value) : 0 }
+            const cv = parseFloat(saved.value ?? 0); newGranular.course[p.id] = { mode: saved.mode || 'percent', value: isNaN(cv) ? 0 : (Number.isInteger(cv) ? cv : parseFloat(cv.toFixed(2))) }
           })
           staticAds.forEach(p => {
             const saved = rawGranular.adplan?.[p.id] || {}
-            newGranular.adplan[p.id] = { mode: saved.mode || 'percent', value: saved.value != null ? Number(saved.value) : 0 }
+            const av = parseFloat(saved.value ?? 0); newGranular.adplan[p.id] = { mode: saved.mode || 'percent', value: isNaN(av) ? 0 : (Number.isInteger(av) ? av : parseFloat(av.toFixed(2))) }
           })
           staticPartners.forEach(p => {
              const saved = rawGranular.partner?.[p.id] || {}
-             newGranular.partner[p.id] = { mode: saved.mode || 'percent', value: saved.value != null ? Number(saved.value) : 0 }
+             const pv = parseFloat(saved.value ?? 0); newGranular.partner[p.id] = { mode: saved.mode || 'percent', value: isNaN(pv) ? 0 : (Number.isInteger(pv) ? pv : parseFloat(pv.toFixed(2))) }
           })
           granular.value = newGranular
         }
@@ -563,8 +652,50 @@ export default {
       }
     }
 
+    const fetchSpecialLink = async () => {
+      loadingSpecialLink.value = true
+      try {
+        // Fetch the actual special discount links (same source as /master_admin/special-links)
+        const res = await api.get('/admin/referral/special-links')
+        if (res.data?.status === 'success') {
+          specialLinkRows.value = (res.data.data?.links || []).map((r) => ({
+            id: r.id,
+            package_name: r.package_name,
+            original_price: r.original_price,
+            discount: r.discount,
+            final_price: r.final_price,
+            commission_amount: Number(r.commission_amount || 0),
+            is_active: !!r.is_active,
+          }))
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', 'Failed to load special links')
+      } finally {
+        loadingSpecialLink.value = false
+      }
+    }
+
+    const saveSpecialLink = async (row) => {
+      savingKey.value = `sl:${row.id}`
+      try {
+        const res = await api.post(`/admin/referral/special-links/${row.id}/commission`, {
+          commission_amount: Number(row.commission_amount || 0)
+        })
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', 'Commission saved!')
+        } else if (window.notify) {
+          window.notify('error', res.data?.message?.[0] || 'Failed to save')
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', 'Failed to save')
+      } finally {
+        savingKey.value = ''
+      }
+    }
+
     onMounted(async () => {
       await fetchDirect()
+      await fetchSpecialLink()
       await fetchAgents()
       await fetchDefaults()
       await fetchUpgradeRules()
@@ -606,10 +737,16 @@ export default {
       fetchUpgradeRules,
       saveRule,
 
+      loadingSpecialLink,
+      specialLinkRows,
+      fetchSpecialLink,
+      saveSpecialLink,
+
       displayMiniSetting: (settings, type) => {
         if (!settings) return '0%';
         const mode = settings[type + '_mode'] || 'percent';
-        const val = settings[type + '_value'] || 0;
+        const raw = parseFloat(settings[type + '_value'] || 0);
+        const val = Number.isInteger(raw) ? raw : parseFloat(raw.toFixed(2));
         return mode === 'percent' ? val + '%' : '₹' + val;
       }
     }
@@ -787,5 +924,11 @@ export default {
 .ma-table--small th, .ma-table--small td { padding: 0.5rem 0.75rem; font-size: 0.82rem; }
 .ma-input--sm { height: 32px; width: 120px; font-size: 0.8rem; }
 .ma-select--sm { height: 32px; font-size: 0.8rem; padding: 0 8px; }
+.ma-btn--pink {
+  background: rgba(244,114,182,0.18);
+  border-color: rgba(244,114,182,0.35);
+  color: #fce7f3;
+}
+.ma-btn--pink:hover:not(:disabled) { background: rgba(244,114,182,0.28); }
 </style>
 

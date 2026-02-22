@@ -282,6 +282,22 @@ class AdPlanController extends Controller
     {
         $trx = getTrx();
 
+        // 🟢 Create a real Deposit record so it shows in "All Orders" immediately (Initiated)
+        $gateRecord = \App\Models\Gateway::where('alias', $gateway)->first();
+        $deposit = new \App\Models\Deposit();
+        $deposit->user_id = $user->id;
+        $deposit->method_code = $gateRecord->code ?? 0;
+        $deposit->method_currency = 'INR';
+        $deposit->amount = (float) $adPackage->price;
+        $deposit->charge = 0;
+        $deposit->rate = 1;
+        $deposit->final_amount = (float) $adPackage->price;
+        $deposit->trx = $trx;
+        $deposit->remark = 'ad_plan_purchase';
+        $deposit->detail = ['plan_id' => $adPackage->id]; // store for later fulfillment
+        $deposit->status = \App\Constants\Status::PAYMENT_INITIATE;
+        $deposit->save();
+
         // Create a payment session for gateway IPN to update
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';

@@ -11,7 +11,6 @@ use App\Models\UserLogin;
 use App\Models\AdminNotification;
 use App\Models\Transaction;
 use App\Models\AdPackageOrder;
-use App\Lib\DirectAffiliateCommission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -71,10 +70,11 @@ class RegisterController extends Controller
      */
     private static function findReferrerByRef(string $ref): ?User
     {
-        $ref = trim($ref);
+        $ref = strtoupper(trim($ref));
         if (preg_match('/^ADS(\d+)$/i', $ref, $m)) {
             return User::where('id', (int) $m[1])->where('status', Status::USER_ACTIVE)->first();
         }
+        // Fallback to username (case-insensitive)
         return User::where('username', $ref)->where('status', Status::USER_ACTIVE)->first();
     }
 
@@ -122,7 +122,7 @@ class RegisterController extends Controller
             'lastname' => 'required|string|max:255',
             'fullname' => 'nullable|string|max:255', // Accept fullname, will split if needed
             'email' => 'required|string|email|max:255|unique:users',
-            'username' => 'nullable|string|min:6|max:255|unique:users|regex:/^[a-z0-9_]+$/', // Optional, can auto-generate
+            'username' => 'nullable|string|min:3|max:255|unique:users|regex:/^[a-z0-9._]+$/', // Optional, can auto-generate (allowed: a-z, 0-9, _, .)
             'password' => ['required', 'confirmed', $passwordValidation],
             'mobile' => 'required|string|max:15|regex:/^[0-9]{10}$/',
             'state' => 'required|string|max:255',
@@ -148,12 +148,18 @@ class RegisterController extends Controller
 
         // Auto-generate username from email if not provided
         if (!$request->username && $request->email) {
+            // Strip any illegal characters from the email part
             $username = strtolower(explode('@', $request->email)[0]);
+            $username = preg_replace('/[^a-z0-9._]/', '', $username);
+            
+            // Ensure minimum length for auto-gen
+            if (strlen($username) < 3) $username .= 'user';
+            
             // Ensure username is unique
             $baseUsername = $username;
             $counter = 1;
             while (User::where('username', $username)->exists()) {
-                $username = $baseUsername . $counter;
+                $username = substr($baseUsername, 0, 240) . $counter;
                 $counter++;
             }
             $request->merge(['username' => $username]);
@@ -255,7 +261,6 @@ class RegisterController extends Controller
         }
         $trx = getTrx();
 
-        // Store payment info in cache
         $paymentData = [
             'registration_token' => $regToken,
             'amount' => $registrationFee,
@@ -268,6 +273,31 @@ class RegisterController extends Controller
             'created_at' => now(),
         ];
         cache()->put('reg_payment_' . $trx, $paymentData, now()->addMinutes(30));
+
+        // 🟢 Create a Deposit record so it shows in Admin Panel
+        $deposit = new \App\Models\Deposit();
+        $deposit->user_id = 0; // 0 means pre-registration
+        $deposit->method_code = $gw->code;
+        $deposit->amount = $registrationFee;
+        $deposit->method_currency = 'INR';
+        $deposit->charge = 0;
+        $deposit->rate = 1;
+        $deposit->final_amount = $registrationFee;
+        $deposit->btc_amount = 0;
+        $deposit->btc_wallet = '';
+        $deposit->trx = $trx;
+        $deposit->status = Status::PAYMENT_INITIATE; // 2
+        $deposit->from_api = 1;
+        $deposit->is_web = 1;
+        $deposit->remark = 'registration_fee';
+        // Store name and email in detail for admin to see
+        $deposit->detail = [
+            'name' => ($registrationData['firstname'] ?? '') . ' ' . ($registrationData['lastname'] ?? ''),
+            'email' => $registrationData['email'] ?? '',
+            'mobile' => $registrationData['mobile'] ?? '',
+            'package' => $pkgMeta['name'] ?? 'Package'
+        ];
+        $deposit->save();
 
         $gw_param = 'watchpay_trx=';
         if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
@@ -383,10 +413,43 @@ class RegisterController extends Controller
             return responseError('payment_pending', ['Payment not verified yet. Please complete payment and try again.']);
         }
 
-        // Now proceed with actual registration
-        $passwordValidation = Password::min(6);
-        if (gs('secure_password')) {
-            $passwordValidation = $passwordValidation->mixedCase()->numbers()->symbols()->uncompromised();
+        $result = static::finalizeRegistration($regToken, $paymentTrx);
+        if ($result instanceof \Illuminate\Http\JsonResponse) {
+            return $result;
+        }
+
+        $user = $result['user'];
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return responseSuccess('registration_successful', ['Registration successful'], [
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+            ],
+            'token' => $token,
+            'package_info' => $result['package_info'] ?? null,
+        ]);
+    }
+
+    /**
+     * Finalize registration: creates user, links deposit, sends email, processes commissions.
+     * Can be called from API or from Admin Approval (PaymentController).
+     */
+    public static function finalizeRegistration($regToken, $paymentTrx)
+    {
+        // Get registration data
+        $registrationData = cache()->get('reg_' . $regToken);
+        if (!$registrationData) {
+            return responseError('invalid_token', ['Registration token expired. Please start again.']);
+        }
+
+        // Verify payment
+        $paymentData = cache()->get('reg_payment_' . $paymentTrx);
+        if (!$paymentData) {
+            // If called from Admin or IPN, we might not have the cache if it expired, but we have the Deposit record.
+            // However, we NEED the registrationData from cache.
+            return responseError('payment_not_found', ['Payment data not found in cache.']);
         }
 
         // Use registration data from cache
@@ -431,6 +494,9 @@ class RegisterController extends Controller
         $user->tv = Status::ENABLE;
         $user->status = Status::USER_ACTIVE;
         $user->save();
+
+        // 🟢 Link the temporary deposit to the now-confirmed user
+        \App\Models\Deposit::where('trx', $paymentTrx)->update(['user_id' => $user->id]);
 
         // Send welcome email notification (non-blocking)
         try {
@@ -553,19 +619,14 @@ class RegisterController extends Controller
         cache()->forget('reg_' . $regToken);
         cache()->forget('reg_payment_' . $paymentTrx);
 
-        return responseSuccess('registration_successful', ['Registration successful'], [
-            'user' => [
-                'id' => $user->id,
-                'username' => $user->username,
-                'email' => $user->email,
-            ],
-            'token' => $token,
+        return [
+            'user' => $user,
             'package_info' => $packageId ? [
                 'package_id' => $packageId,
                 'price' => $packagePrice,
-                'message' => $packagePrice > 0 ? 'Package activated successfully' : 'Package activated successfully',
+                'message' => 'Package activated successfully',
             ] : null,
-        ]);
+        ];
     }
 
     /**

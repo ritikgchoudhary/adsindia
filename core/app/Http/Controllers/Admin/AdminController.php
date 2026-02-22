@@ -772,6 +772,91 @@ class AdminController extends Controller {
     }
 
     /**
+     * Special Discount Link Commission rules (Master Admin API)
+     * Defines commission earned by referrer when someone buys via a special discount link.
+     */
+    public function getSpecialLinkCommissions()
+    {
+        $packages = [
+            ['id' => 1, 'name' => 'AdsLite',      'price' => 1499],
+            ['id' => 2, 'name' => 'AdsPro',        'price' => 2999],
+            ['id' => 3, 'name' => 'AdsSupreme',    'price' => 5999],
+            ['id' => 4, 'name' => 'AdsPremium',    'price' => 9999],
+            ['id' => 5, 'name' => 'AdsPremium+',   'price' => 15999],
+        ];
+
+        $rules = [];
+        try {
+            $rules = DB::table('special_link_commission_settings')->get()->keyBy('package_id')->toArray();
+        } catch (\Throwable $e) {
+            $rules = [];
+        }
+
+        $rows = array_map(function ($p) use ($rules) {
+            $r = $rules[$p['id']] ?? null;
+            return [
+                'package_id'       => (int) $p['id'],
+                'package_name'     => (string) $p['name'],
+                'package_price'    => (float) $p['price'],
+                'enabled'          => $r ? (bool) ($r->enabled ?? false) : false,
+                'mode'             => $r ? (string) ($r->mode ?? 'fixed') : 'fixed',
+                'value'            => $r ? (float) ($r->value ?? 0) : 0,
+                'updated_at'       => $r ? (string) ($r->updated_at ?? '') : null,
+            ];
+        }, $packages);
+
+        return responseSuccess('special_link_commissions', ['Special link commission rules retrieved'], [
+            'rows' => $rows,
+        ]);
+    }
+
+    public function updateSpecialLinkCommission(Request $request, $packageId)
+    {
+        $request->validate([
+            'enabled' => 'required|boolean',
+            'mode'    => 'required|in:percent,fixed',
+            'value'   => 'required|numeric|min:0',
+        ]);
+
+        $packageId = (int) $packageId;
+        $packages = [
+            1 => ['name' => 'AdsLite',    'price' => 1499],
+            2 => ['name' => 'AdsPro',     'price' => 2999],
+            3 => ['name' => 'AdsSupreme', 'price' => 5999],
+            4 => ['name' => 'AdsPremium', 'price' => 9999],
+            5 => ['name' => 'AdsPremium+','price' => 15999],
+        ];
+        if (!isset($packages[$packageId])) {
+            return responseError('invalid_package', ['Invalid package id']);
+        }
+
+        $payload = [
+            'package_id' => $packageId,
+            'enabled'    => (bool) $request->enabled,
+            'mode'       => (string) $request->mode,
+            'value'      => (float) $request->value,
+            'updated_at' => now(),
+        ];
+
+        try {
+            $existing = DB::table('special_link_commission_settings')->where('package_id', $packageId)->first();
+            if ($existing) {
+                DB::table('special_link_commission_settings')->where('package_id', $packageId)->update($payload);
+            } else {
+                $payload['created_at'] = now();
+                DB::table('special_link_commission_settings')->insert($payload);
+            }
+        } catch (\Throwable $e) {
+            return responseError('update_failed', ['Failed to update special link commission rule']);
+        }
+
+        $row = DB::table('special_link_commission_settings')->where('package_id', $packageId)->first();
+        return responseSuccess('special_link_commission_updated', ['Special link commission rule updated'], [
+            'row' => $row ? (array) $row : null,
+        ]);
+    }
+
+    /**
      * Agent commission defaults (Master Admin API)
      */
     public function getAgentCommissionDefaults()
@@ -1207,8 +1292,11 @@ class AdminController extends Controller {
         $perPage = $request->get('per_page', 20);
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
+        $gatewayCode = $request->get('method_code');
+        $remark = $request->get('remark');
 
-        $query = Deposit::with('user')->orderBy('id', 'desc');
+        // Joined with gateways to get method name correctly
+        $query = Deposit::with(['user', 'gateway'])->orderBy('id', 'desc');
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -1220,22 +1308,25 @@ class AdminController extends Controller {
             });
         }
 
-        if ($status === 'pending') {
-            $query->where('status', Status::PAYMENT_PENDING);
-        } elseif ($status === 'approved') {
-            $query->where('method_code', '>=', 1000)
-                  ->where('method_code', '<', 5000)
-                  ->where('status', Status::PAYMENT_SUCCESS);
-        } elseif ($status === 'successful') {
-            $query->where('status', Status::PAYMENT_SUCCESS);
-        } elseif ($status === 'rejected') {
-            $query->where('status', Status::PAYMENT_REJECT);
-        } elseif ($status === 'initiated') {
-            $query->where('status', Status::PAYMENT_INITIATE);
-        }
+        // Always show ONLY successful deposits for History view
+        $query->where('status', \App\Constants\Status::PAYMENT_SUCCESS);
 
         if ($userId) {
-            $query->where('user_id', $userId);
+            $query->where("user_id", $userId);
+        }
+
+        if ($gatewayCode !== null && $gatewayCode !== "") {
+            if ($gatewayCode === "manual") {
+                $query->where(function($q) {
+                    $q->where("approved_by_admin", 1)->orWhere("method_code", 0);
+                });
+            } else {
+                $query->where("method_code", $gatewayCode);
+            }
+        }
+
+        if ($remark) {
+            $query->where("remark", $remark);
         }
 
         // Date filter (inclusive)
@@ -1246,9 +1337,7 @@ class AdminController extends Controller {
             if ($endDate) {
                 $query->whereDate('created_at', '<=', Carbon::parse($endDate)->toDateString());
             }
-        } catch (\Throwable $e) {
-            // Ignore invalid date formats
-        }
+        } catch (\Throwable $e) {}
 
         $deposits = $query->paginate($perPage);
 
@@ -1260,12 +1349,13 @@ class AdminController extends Controller {
                 $statusText = 'Pending';
                 $statusClass = 'warning';
             } elseif ($deposit->status == Status::PAYMENT_SUCCESS) {
-                if ($deposit->method_code >= 1000 && $deposit->method_code < 5000) {
-                    $statusText = 'Approved';
+                if ($deposit->approved_by_admin) {
+                    $statusText = 'Admin Approved';
+                    $statusClass = 'danger'; // Red for manual
                 } else {
-                    $statusText = 'Successful';
+                    $statusText = 'Auto Verified';
+                    $statusClass = 'success'; // Green for auto
                 }
-                $statusClass = 'success';
             } elseif ($deposit->status == Status::PAYMENT_REJECT) {
                 $statusText = 'Rejected';
                 $statusClass = 'danger';
@@ -1281,37 +1371,46 @@ class AdminController extends Controller {
                 'charge' => $deposit->charge ?? 0,
                 'after_charge' => $deposit->amount - ($deposit->charge ?? 0),
                 'method_code' => $deposit->method_code,
-                'method_name' => $deposit->methodName(),
+                'method_name' => $deposit->gateway->name ?? $deposit->methodName(),
                 'status' => $deposit->status,
                 'status_text' => $statusText,
                 'status_class' => $statusClass,
+                'order_type' => $deposit->remark ? ucwords(str_replace('_', ' ', $deposit->remark)) : 'Deposit',
+                'is_manual' => (bool)$deposit->approved_by_admin,
                 'user_id' => $deposit->user_id,
                 'user' => $deposit->user ? [
                     'id' => $deposit->user->id,
                     'username' => $deposit->user->username,
                     'email' => $deposit->user->email,
                     'firstname' => $deposit->user->firstname,
-                    'lastname' => $deposit->user->lastname,
+                    "lastname" => $deposit->user->lastname,
+                    "mobile" => (string) $deposit->user->mobile,
+                    "ads_id" => "ADS" . $deposit->user->id,
                 ] : null,
                 'created_at' => $deposit->created_at->format('Y-m-d H:i:s'),
                 'created_at_human' => $deposit->created_at->diffForHumans(),
                 'updated_at' => $deposit->updated_at->format('Y-m-d H:i:s'),
+                'approvable' => in_array($deposit->status, [Status::PAYMENT_PENDING, Status::PAYMENT_INITIATE]),
             ];
         });
 
-        // Calculate summary (respect date range filter; ignore pagination)
+        // Calculate summary
         $summaryQuery = Deposit::query();
         try {
-            if ($startDate) {
-                $summaryQuery->whereDate('created_at', '>=', Carbon::parse($startDate)->toDateString());
-            }
-            if ($endDate) {
-                $summaryQuery->whereDate('created_at', '<=', Carbon::parse($endDate)->toDateString());
-            }
+            if ($startDate) $summaryQuery->whereDate('created_at', '>=', Carbon::parse($startDate)->toDateString());
+            if ($endDate) $summaryQuery->whereDate('created_at', '<=', Carbon::parse($endDate)->toDateString());
         } catch (\Throwable $e) {}
-        if ($userId) {
-            $summaryQuery->where('user_id', $userId);
+        if ($userId) $summaryQuery->where('user_id', $userId);
+        if ($gatewayCode !== null && $gatewayCode !== '') {
+            if ($gatewayCode === 'manual') {
+                $summaryQuery->where(function($q) {
+                    $q->where('approved_by_admin', 1)->orWhere('method_code', 0);
+                });
+            } else {
+                $summaryQuery->where('method_code', $gatewayCode);
+            }
         }
+        if ($remark) $summaryQuery->where('remark', $remark);
         if ($search) {
             $summaryQuery->where(function ($q) use ($search) {
                 $q->where('trx', 'like', "%{$search}%")
@@ -1323,13 +1422,12 @@ class AdminController extends Controller {
         }
 
         $summary = [
-            'total' => (clone $summaryQuery)->count(),
-            'successful' => (clone $summaryQuery)->where('status', Status::PAYMENT_SUCCESS)->sum('amount'),
-            'pending' => (clone $summaryQuery)->where('status', Status::PAYMENT_PENDING)->sum('amount'),
-            'rejected' => (clone $summaryQuery)->where('status', Status::PAYMENT_REJECT)->sum('amount'),
-            'initiated' => (clone $summaryQuery)->where('status', Status::PAYMENT_INITIATE)->sum('amount'),
+            "total" => (clone $summaryQuery)->where("status", Status::PAYMENT_SUCCESS)->count(),
+            "successful" => (clone $summaryQuery)->where("status", Status::PAYMENT_SUCCESS)->sum("amount"),
+            "pending" => 0,
+            "rejected" => 0,
+            "initiated" => 0,
         ];
-
         return responseSuccess('deposits', ['Deposits retrieved successfully'], [
             'deposits' => $deposits->items(),
             'summary' => $summary,
@@ -1339,6 +1437,7 @@ class AdminController extends Controller {
             'last_page' => $deposits->lastPage(),
         ]);
     }
+
 
     /**
      * Gateway Deposit Orders (Admin API)
@@ -1516,17 +1615,6 @@ class AdminController extends Controller {
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
 
-        $allowedRemarks = [
-            'registration_fee',
-            'kyc_fee',
-            'package_upgrade_gateway',
-            'ad_plan_purchase',
-            'partner_program_gateway',
-            'course_plan_purchase_gateway',
-            // legacy / other gateway related
-            'deposit',
-            'campaign_payment',
-        ];
         $remarkLabels = [
             'registration_fee' => 'Registration Fee',
             'kyc_fee' => 'KYC Fee',
@@ -1534,20 +1622,24 @@ class AdminController extends Controller {
             'ad_plan_purchase' => 'Ad Plan Purchase',
             'partner_program_gateway' => 'Partner Program',
             'course_plan_purchase_gateway' => 'Course Plan Purchase',
+            'ad_certificate_fee' => 'Certificate Payment',
             'deposit' => 'Deposit',
             'campaign_payment' => 'Campaign Payment',
+            'withdrawal' => 'Withdrawal',
         ];
+
+        $type = $request->get('type');
 
         $pending = (int) Status::PAYMENT_PENDING;
         $success = (int) Status::PAYMENT_SUCCESS;
         $reject = (int) Status::PAYMENT_REJECT;
         $init = (int) Status::PAYMENT_INITIATE;
 
-        // Gateway deposits: include all method codes (custom QR is 999)
         $depositQ = DB::table('deposits as d')
             ->leftJoin('users as u', 'u.id', '=', 'd.user_id')
-            ->where('d.method_code', '>=', 500) // Lowered to include Custom QR and others
-            ->where('d.method_code', '<', 10000) // Increased to include RupeeRush (6001) and future gateways
+            ->leftJoin('gateways as g', 'g.code', '=', 'd.method_code')
+            ->where('d.method_code', '>=', 500)
+            ->where('d.method_code', '<', 10000)
             ->select([
                 DB::raw("'deposit' as source"),
                 DB::raw('d.id as source_id'),
@@ -1555,7 +1647,7 @@ class AdminController extends Controller {
                 DB::raw('d.amount as amount'),
                 DB::raw('COALESCE(d.charge, 0) as charge'),
                 DB::raw('(d.amount - COALESCE(d.charge, 0)) as after_charge'),
-                DB::raw("'WatchPay' as method_name"),
+                DB::raw('COALESCE(g.name, "Gateway") as method_name'),
                 DB::raw('d.status as status'),
                 DB::raw("CASE
                     WHEN d.status = {$pending} THEN 'Pending'
@@ -1569,156 +1661,151 @@ class AdminController extends Controller {
                     WHEN d.status = {$reject} THEN 'danger'
                     WHEN d.status = {$init} THEN 'secondary'
                     ELSE 'secondary' END as status_class"),
-                DB::raw("'Deposit' as order_type"),
-                DB::raw("NULL as remark"),
+                DB::raw("COALESCE(d.remark, 'deposit') as remark"),
                 DB::raw('d.user_id as user_id'),
+                DB::raw('d.detail as detail'),
                 DB::raw('u.username as username'),
                 DB::raw('u.email as email'),
                 DB::raw('u.firstname as firstname'),
                 DB::raw('u.lastname as lastname'),
+                DB::raw('u.mobile as mobile'),
                 DB::raw('d.created_at as created_at'),
-                DB::raw("CASE WHEN d.status = {$pending} THEN 1 ELSE 0 END as approvable"),
+                DB::raw("CASE WHEN d.status IN ({$pending}, {$init}) THEN 1 ELSE 0 END as approvable"),
             ]);
 
-        // Gateway payments: transactions table (successful gateway payments)
-        $trxCase = "CASE t.remark\n";
-        foreach ($remarkLabels as $rk => $lbl) {
-            $trxCase .= "  WHEN '{$rk}' THEN '{$lbl}'\n";
-        }
-        $trxCase .= "  ELSE t.remark END";
-
-        $trxQ = DB::table('transactions as t')
-            ->leftJoin('users as u', 'u.id', '=', 't.user_id')
-            ->where('t.trx_type', '-') // outgoing payment record
-            ->whereIn('t.remark', $allowedRemarks)
+        $withdrawalQ = DB::table('withdrawals as w')
+            ->leftJoin('users as u', 'u.id', '=', 'w.user_id')
+            ->leftJoin('withdraw_methods as m', 'm.id', '=', 'w.method_id')
             ->select([
-                DB::raw("'payment' as source"),
-                DB::raw('t.id as source_id'),
-                DB::raw('t.trx as trx'),
-                DB::raw('t.amount as amount'),
-                DB::raw('COALESCE(t.charge, 0) as charge'),
-                DB::raw('t.amount as after_charge'),
-                DB::raw("'WatchPay' as method_name"),
-                DB::raw("{$success} as status"),
-                DB::raw("'Successful' as status_text"),
-                DB::raw("'success' as status_class"),
-                DB::raw("{$trxCase} as order_type"),
-                DB::raw('t.remark as remark'),
-                DB::raw('t.user_id as user_id'),
+                DB::raw("'withdrawal' as source"),
+                DB::raw('w.id as source_id'),
+                DB::raw('w.trx as trx'),
+                DB::raw('w.amount as amount'),
+                DB::raw('COALESCE(w.charge, 0) as charge'),
+                DB::raw('(w.amount - COALESCE(w.charge, 0)) as after_charge'),
+                DB::raw('COALESCE(m.name, "Withdrawal") as method_name'),
+                DB::raw('w.status as status'),
+                DB::raw("CASE
+                    WHEN w.status = {$pending} THEN 'Pending'
+                    WHEN w.status = {$success} THEN 'Approved'
+                    WHEN w.status = {$reject} THEN 'Rejected'
+                    ELSE 'Unknown' END as status_text"),
+                DB::raw("CASE
+                    WHEN w.status = {$pending} THEN 'warning'
+                    WHEN w.status = {$success} THEN 'success'
+                    WHEN w.status = {$reject} THEN 'danger'
+                    ELSE 'secondary' END as status_class"),
+                DB::raw("'withdrawal' as remark"),
+                DB::raw('w.user_id as user_id'),
+                DB::raw('NULL as detail'),
                 DB::raw('u.username as username'),
                 DB::raw('u.email as email'),
                 DB::raw('u.firstname as firstname'),
                 DB::raw('u.lastname as lastname'),
-                DB::raw('t.created_at as created_at'),
-                DB::raw('0 as approvable'),
+                DB::raw('u.mobile as mobile'),
+                DB::raw('w.created_at as created_at'),
+                DB::raw("CASE WHEN w.status = {$pending} THEN 1 ELSE 0 END as approvable"),
             ]);
-
-        // Union + wrap so we can order/paginate
-        $union = $depositQ->unionAll($trxQ);
-        $base = DB::query()->fromSub($union, 'x');
 
         if ($search) {
-            $base->where(function ($q) use ($search) {
-                $q->where('x.trx', 'like', "%{$search}%")
-                    ->orWhere('x.username', 'like', "%{$search}%")
-                    ->orWhere('x.email', 'like', "%{$search}%");
+            $depositQ->where(function ($q) use ($search) {
+                $q->where('d.trx', 'like', "%{$search}%")
+                  ->orWhere('u.username', 'like', "%{$search}%")
+                  ->orWhere('u.email', 'like', "%{$search}%")
+                  ->orWhere('d.detail', 'like', "%{$search}%");
+            });
+            $withdrawalQ->where(function ($q) use ($search) {
+                $q->where('w.trx', 'like', "%{$search}%")
+                  ->orWhere('u.username', 'like', "%{$search}%")
+                  ->orWhere('u.email', 'like', "%{$search}%");
             });
         }
         if ($userId) {
-            $base->where('x.user_id', (int) $userId);
+            $depositQ->where('d.user_id', (int) $userId);
+            $withdrawalQ->where('w.user_id', (int) $userId);
         }
         if ($status === 'pending') {
-            $base->where('x.source', 'deposit')->where('x.status', $pending);
+            $depositQ->where('d.status', $pending);
+            $withdrawalQ->where('w.status', $pending);
         } elseif ($status === 'approved' || $status === 'successful') {
-            // approved deposits + all gateway payments
-            $base->where(function ($q) use ($success) {
-                $q->where(function ($q2) use ($success) {
-                    $q2->where('x.source', 'deposit')->where('x.status', $success);
-                })->orWhere('x.source', 'payment');
-            });
+            $depositQ->where('d.status', $success);
+            $withdrawalQ->where('w.status', $success);
         } elseif ($status === 'rejected') {
-            $base->where('x.source', 'deposit')->where('x.status', $reject);
+            $depositQ->where('d.status', $reject);
+            $withdrawalQ->where('w.status', $reject);
         } elseif ($status === 'initiated') {
-            $base->where('x.source', 'deposit')->where('x.status', $init);
+            $depositQ->where('d.status', $init);
+            $withdrawalQ->where('w.id', -1);
         }
 
-        // Date filter (inclusive)
+        if ($type) {
+            if ($type === 'withdrawal') {
+                $depositQ->where('d.id', -1);
+            } else {
+                $depositQ->where('d.remark', $type);
+                $withdrawalQ->where('w.id', -1);
+            }
+        }
+
         try {
             if ($startDate) {
-                $base->whereDate('x.created_at', '>=', Carbon::parse($startDate)->toDateString());
+                $depositQ->whereDate('d.created_at', '>=', Carbon::parse($startDate)->toDateString());
+                $withdrawalQ->whereDate('w.created_at', '>=', Carbon::parse($startDate)->toDateString());
             }
             if ($endDate) {
-                $base->whereDate('x.created_at', '<=', Carbon::parse($endDate)->toDateString());
+                $depositQ->whereDate('d.created_at', '<=', Carbon::parse($endDate)->toDateString());
+                $withdrawalQ->whereDate('w.created_at', '<=', Carbon::parse($endDate)->toDateString());
             }
         } catch (\Throwable $e) {}
+
+        $union = $depositQ->unionAll($withdrawalQ);
+        $base = DB::query()->fromSub($union, 'x');
 
         $page = $base->orderByDesc('x.created_at')->paginate($perPage);
 
-        $items = collect($page->items())->map(function ($r) {
+        $items = collect($page->items())->map(function ($r) use ($remarkLabels) {
+            $detail = json_decode((string)$r->detail, true);
+            $orderType = $remarkLabels[$r->remark] ?? ucwords(str_replace('_', ' ', $r->remark));
             return [
-                'id' => (int) ($r->source_id ?? 0),
-                'source' => (string) ($r->source ?? ''),
-                'source_id' => (int) ($r->source_id ?? 0),
-                'trx' => (string) ($r->trx ?? ''),
-                'amount' => (float) ($r->amount ?? 0),
-                'charge' => (float) ($r->charge ?? 0),
-                'after_charge' => (float) ($r->after_charge ?? 0),
-                'method_name' => (string) ($r->method_name ?? 'Gateway'),
-                'status' => (int) ($r->status ?? 0),
-                'status_text' => (string) ($r->status_text ?? 'Unknown'),
-                'status_class' => (string) ($r->status_class ?? 'secondary'),
-                'order_type' => (string) ($r->order_type ?? ''),
+                'id' => (int) $r->source_id,
+                'source' => $r->source,
+                'source_id' => (int) $r->source_id,
+                'trx' => (string) $r->trx,
+                'amount' => (float) $r->amount,
+                'charge' => (float) $r->charge,
+                'after_charge' => (float) $r->after_charge,
+                'method_name' => (string) $r->method_name,
+                'status' => (int) $r->status,
+                'status_text' => (string) $r->status_text,
+                'status_class' => (string) $r->status_class,
+                'order_type' => $orderType,
                 'remark' => $r->remark,
-                'approvable' => (int) ($r->approvable ?? 0) === 1,
-                'user_id' => (int) ($r->user_id ?? 0),
-                'user' => ($r->user_id ?? null) ? [
-                    'id' => (int) ($r->user_id ?? 0),
-                    'username' => (string) ($r->username ?? ''),
-                    'email' => (string) ($r->email ?? ''),
-                    'firstname' => (string) ($r->firstname ?? ''),
-                    'lastname' => (string) ($r->lastname ?? ''),
-                ] : null,
-                'created_at' => $r->created_at ? (string) $r->created_at : null,
+                'approvable' => (int) $r->approvable === 1,
+                'user_id' => (int) $r->user_id,
+                'user' => [
+                    'id' => (int) $r->user_id,
+                    'username' => (string) $r->username ?: ($detail['email'] ?? 'Pending Register'),
+                    'email' => (string) $r->email ?: ($detail['email'] ?? 'N/A'),
+                    'firstname' => (string) $r->firstname ?: ($detail['name'] ?? ''),
+                    'lastname' => (string) $r->lastname ?: '',
+                    'name' => trim(($r->firstname ?? '') . ' ' . ($r->lastname ?? '')) ?: ($detail['name'] ?? 'N/A'),
+                    'mobile' => (string) $r->mobile ?: ($detail['mobile'] ?? ''),
+                    'ads_id' => $r->user_id > 0 ? ('ADS' . $r->user_id) : 'Pending',
+                ],
+                'created_at' => (string) $r->created_at,
             ];
-        })->values()->all();
-
-        // Summary from same filters (but without pagination)
-        $summaryBase = DB::query()->fromSub($union, 'x');
-        if ($search) {
-            $summaryBase->where(function ($q) use ($search) {
-                $q->where('x.trx', 'like', "%{$search}%")
-                    ->orWhere('x.username', 'like', "%{$search}%")
-                    ->orWhere('x.email', 'like', "%{$search}%");
-            });
-        }
-        if ($userId) $summaryBase->where('x.user_id', (int) $userId);
-        if ($status === 'pending') {
-            $summaryBase->where('x.source', 'deposit')->where('x.status', $pending);
-        } elseif ($status === 'approved' || $status === 'successful') {
-            $summaryBase->where(function ($q) use ($success) {
-                $q->where(function ($q2) use ($success) {
-                    $q2->where('x.source', 'deposit')->where('x.status', $success);
-                })->orWhere('x.source', 'payment');
-            });
-        } elseif ($status === 'rejected') {
-            $summaryBase->where('x.source', 'deposit')->where('x.status', $reject);
-        } elseif ($status === 'initiated') {
-            $summaryBase->where('x.source', 'deposit')->where('x.status', $init);
-        }
-        try {
-            if ($startDate) $summaryBase->whereDate('x.created_at', '>=', Carbon::parse($startDate)->toDateString());
-            if ($endDate) $summaryBase->whereDate('x.created_at', '<=', Carbon::parse($endDate)->toDateString());
-        } catch (\Throwable $e) {}
-
+        });
+        // Summary
+        $summaryQuery = clone $base;
         $summary = [
-            'total' => (clone $summaryBase)->count(),
-            'successful' => (clone $summaryBase)->where('x.status', $success)->sum('x.amount'),
-            'pending' => (clone $summaryBase)->where('x.source', 'deposit')->where('x.status', $pending)->sum('x.amount'),
-            'rejected' => (clone $summaryBase)->where('x.source', 'deposit')->where('x.status', $reject)->sum('x.amount'),
-            'initiated' => (clone $summaryBase)->where('x.source', 'deposit')->where('x.status', $init)->sum('x.amount'),
+            'total' => $summaryQuery->count(),
+            'successful' => (clone $summaryQuery)->where('status', $success)->sum('amount'),
+            'pending' => (clone $summaryQuery)->where('status', $pending)->sum('amount'),
+            'rejected' => (clone $summaryQuery)->where('status', $reject)->sum('amount'),
+            'initiated' => (clone $summaryQuery)->where('status', $init)->sum('amount'),
         ];
 
-        return responseSuccess('all_gateway_orders', ['Gateway orders retrieved successfully'], [
+        return responseSuccess('orders', ['Orders retrieved successfully'], [
             'orders' => $items,
             'summary' => $summary,
             'total' => $page->total(),
@@ -1727,6 +1814,7 @@ class AdminController extends Controller {
             'last_page' => $page->lastPage(),
         ]);
     }
+
 
     /**
      * Gateway Orders (Admin API)
@@ -2679,37 +2767,102 @@ class AdminController extends Controller {
         return responseSuccess('qr_removed', ['QR image removed']);
     }
 
-    public function approveOrder($id) {
-        $deposit = Deposit::where('id', $id)->where('status', Status::PAYMENT_PENDING)->firstOrFail();
-        \App\Http\Controllers\Gateway\PaymentController::userDataUpdate($deposit, true);
-        return responseSuccess('order_approved', ['Order approved successfully']);
+    public function approveOrder(Request $request, $id) {
+        $source = $request->get('source', 'deposit');
+        if ($source === 'withdrawal') {
+            $withdraw = Withdrawal::where('id', $id)->where('status', Status::PAYMENT_PENDING)->with(['user', 'method'])->firstOrFail();
+            $withdraw->status = Status::PAYMENT_SUCCESS;
+            $withdraw->save();
+
+            notify($withdraw->user, 'WITHDRAW_APPROVE', [
+                'method_name' => $withdraw->method->name,
+                'method_currency' => $withdraw->currency,
+                'method_amount' => showAmount($withdraw->final_amount, currencyFormat: false),
+                'amount' => showAmount($withdraw->amount, currencyFormat: false),
+                'charge' => showAmount($withdraw->charge, currencyFormat: false),
+                'rate' => showAmount($withdraw->rate, currencyFormat: false),
+                'trx' => $withdraw->trx,
+                'admin_details' => 'Approved via unified orders panel',
+            ]);
+
+            return responseSuccess('order_approved', ['Withdrawal approved successfully']);
+        } else {
+            $deposit = Deposit::where('id', $id)->whereIn('status', [Status::PAYMENT_PENDING, Status::PAYMENT_INITIATE])->firstOrFail();
+            \App\Http\Controllers\Gateway\PaymentController::userDataUpdate($deposit, true);
+            return responseSuccess('order_approved', ['Order approved successfully']);
+        }
     }
 
     public function rejectOrder(Request $request, $id) {
-        $request->validate(['reason' => 'required|string|max:255']);
-        $deposit = Deposit::where('id', $id)->where('status', Status::PAYMENT_PENDING)->firstOrFail();
+        $source = $request->get('source', 'deposit');
+        if ($source === 'withdrawal') {
+            $request->validate(['reason' => 'required|string|max:1000']);
+            $withdraw = Withdrawal::where('id', $id)->where('status', Status::PAYMENT_PENDING)->with(['user', 'method'])->firstOrFail();
 
-        $deposit->admin_feedback = $request->reason;
-        $deposit->status = Status::PAYMENT_REJECT;
-        $deposit->save();
+            $withdraw->status = Status::PAYMENT_REJECT;
+            $withdraw->admin_feedback = $request->reason;
+            $withdraw->save();
 
-        notify($deposit->user, 'DEPOSIT_REJECT', [
-            'method_name' => $deposit->methodName(),
-            'method_currency' => $deposit->method_currency,
-            'method_amount' => showAmount($deposit->final_amount, currencyFormat: false),
-            'amount' => showAmount($deposit->amount, currencyFormat: false),
-            'charge' => showAmount($deposit->charge, currencyFormat: false),
-            'rate' => showAmount($deposit->rate, currencyFormat: false),
-            'trx' => $deposit->trx,
-            'rejection_message' => $request->reason,
-        ]);
+            $user = $withdraw->user;
+            $user->balance += $withdraw->amount;
+            $user->save();
 
-        return responseSuccess('order_rejected', ['Order rejected successfully']);
+            $transaction = new Transaction();
+            $transaction->user_id = $withdraw->user_id;
+            $transaction->amount = $withdraw->amount;
+            $transaction->post_balance = $user->balance;
+            $transaction->charge = 0;
+            $transaction->trx_type = '+';
+            $transaction->remark = 'withdraw_reject';
+            $transaction->details = 'Refunded for withdrawal rejection (Unified Panel)';
+            $transaction->trx = $withdraw->trx;
+            $transaction->save();
+
+            notify($user, 'WITHDRAW_REJECT', [
+                'method_name' => $withdraw->method->name,
+                'method_currency' => $withdraw->currency,
+                'method_amount' => showAmount($withdraw->final_amount, currencyFormat: false),
+                'amount' => showAmount($withdraw->amount, currencyFormat: false),
+                'charge' => showAmount($withdraw->charge, currencyFormat: false),
+                'rate' => showAmount($withdraw->rate, currencyFormat: false),
+                'trx' => $withdraw->trx,
+                'post_balance' => showAmount($user->balance, currencyFormat: false),
+                'admin_details' => $request->reason,
+            ]);
+
+            return responseSuccess('order_rejected', ['Withdrawal rejected successfully']);
+        } else {
+            $request->validate(['reason' => 'required|string|max:255']);
+            $deposit = Deposit::where('id', $id)->whereIn('status', [Status::PAYMENT_PENDING, Status::PAYMENT_INITIATE])->firstOrFail();
+
+            $deposit->admin_feedback = $request->reason;
+            $deposit->status = Status::PAYMENT_REJECT;
+            $deposit->save();
+
+            notify($deposit->user, 'DEPOSIT_REJECT', [
+                'method_name' => $deposit->methodName(),
+                'method_currency' => $deposit->method_currency,
+                'method_amount' => showAmount($deposit->final_amount, currencyFormat: false),
+                'amount' => showAmount($deposit->amount, currencyFormat: false),
+                'charge' => showAmount($deposit->charge, currencyFormat: false),
+                'rate' => showAmount($deposit->rate, currencyFormat: false),
+                'trx' => $deposit->trx,
+                'rejection_message' => $request->reason,
+            ]);
+
+            return responseSuccess('order_rejected', ['Order rejected successfully']);
+        }
     }
 
-    public function deleteOrder($id) {
-        $deposit = Deposit::findOrFail($id);
-        $deposit->delete();
+    public function deleteOrder(Request $request, $id) {
+        $source = $request->get('source', 'deposit');
+        if ($source === 'withdrawal') {
+            $withdraw = Withdrawal::findOrFail($id);
+            $withdraw->delete();
+        } else {
+            $deposit = Deposit::findOrFail($id);
+            $deposit->delete();
+        }
         return responseSuccess('order_deleted', ['Order deleted successfully']);
     }
 
@@ -2953,6 +3106,48 @@ class AdminController extends Controller {
         AdminNotification::truncate();
         NotificationLog::truncate();
         return responseSuccess('cleared', ['All notification history cleared']);
+    }
+
+    public function getEmailSettings()
+    {
+        $gs = gs();
+        return responseSuccess('email_settings', ['Email settings retrieved'], [
+            'email_from' => $gs->email_from,
+            'mail_config' => $gs->mail_config,
+        ]);
+    }
+
+    public function updateEmailSettings(Request $request)
+    {
+        $request->validate([
+            'email_from' => 'required|email',
+            'mail_method' => 'required|in:php,smtp',
+            'smtp_host' => 'required_if:mail_method,smtp',
+            'smtp_port' => 'required_if:mail_method,smtp',
+            'smtp_username' => 'required_if:mail_method,smtp',
+            'smtp_password' => 'required_if:mail_method,smtp',
+            'smtp_encryption' => 'nullable|in:ssl,tls',
+        ]);
+
+        $gs = gs();
+        $gs->email_from = $request->email_from;
+        
+        $mailConfig = [
+            'name' => $request->mail_method,
+        ];
+
+        if ($request->mail_method === 'smtp') {
+            $mailConfig['host'] = $request->smtp_host;
+            $mailConfig['port'] = $request->smtp_port;
+            $mailConfig['username'] = $request->smtp_username;
+            $mailConfig['password'] = $request->smtp_password;
+            $mailConfig['enc'] = $request->smtp_encryption;
+        }
+
+        $gs->mail_config = $mailConfig;
+        $gs->save();
+
+        return responseSuccess('email_settings_updated', ['Email settings updated successfully']);
     }
 }
 

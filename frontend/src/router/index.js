@@ -356,7 +356,8 @@ const routes = [
   { path: '/master_admin/settings', name: 'MasterAdminSettings', component: () => import('../views/master_admin/Settings.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/courses', name: 'MasterAdminCourses', component: () => import('../views/master_admin/Courses.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/gateways', name: 'MasterAdminGateways', component: () => import('../views/master_admin/Gateways.vue'), meta: { requiresMasterAdminAuth: true } },
-  { path: '/master_admin/customer-support', name: 'MasterAdminCustomerSupport', component: () => import('../views/master_admin/CustomerSupport.vue'), meta: { requiresMasterAdminAuth: true } }
+  { path: '/master_admin/customer-support', name: 'MasterAdminCustomerSupport', component: () => import('../views/master_admin/CustomerSupport.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/email-settings', name: 'MasterAdminEmailSettings', component: () => import('../views/master_admin/EmailSettings.vue'), meta: { requiresMasterAdminAuth: true } }
 ]
 
 const router = createRouter({

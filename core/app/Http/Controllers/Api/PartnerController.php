@@ -89,6 +89,20 @@ class PartnerController extends Controller
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
         
         $cacheKey = $cachePrefix . $trx;
+        $deposit = new \App\Models\Deposit();
+        $deposit->user_id = $user->id;
+        $deposit->method_code = $gw->code;
+        $deposit->amount = (float) $planPrice;
+        $deposit->method_currency = gs()->cur_text;
+        $deposit->charge = 0;
+        $deposit->rate = 1;
+        $deposit->final_amount = (float) $planPrice;
+        $deposit->trx = $trx;
+        $deposit->remark = 'partner_program_gateway';
+        $deposit->detail = json_encode(['plan_id' => (int) $request->plan_id]);
+        $deposit->status = \App\Constants\Status::PAYMENT_INITIATE;
+        $deposit->save();
+
         cache()->put($cacheKey, [
             'type' => 'partner_program',
             'user_id' => $user->id,

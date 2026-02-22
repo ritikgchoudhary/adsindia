@@ -365,6 +365,22 @@ class UserController extends Controller
         }
 
         $trx = getTrx();
+
+        // 🟢 Create a real Deposit record so it shows in "All Orders" immediately (Initiated)
+        $gate = \App\Models\Gateway::where('alias', $gateway)->first();
+        $deposit = new \App\Models\Deposit();
+        $deposit->user_id = $user->id;
+        $deposit->method_code = $gate->code ?? 0;
+        $deposit->method_currency = 'INR';
+        $deposit->amount = $kycFee;
+        $deposit->charge = 0;
+        $deposit->rate = 1;
+        $deposit->final_amount = $kycFee;
+        $deposit->trx = $trx;
+        $deposit->remark = 'kyc_fee';
+        $deposit->status = Status::PAYMENT_INITIATE;
+        $deposit->save();
+
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';

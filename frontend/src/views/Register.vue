@@ -66,7 +66,7 @@
                         <input type="hidden" name="pkg" :value="form.pkg || ''">
                       </template>
                       <template v-else>
-                        <select v-model="form.pkg" name="pkg" class="form--control register-select2" required>
+                        <select v-model="form.pkg" name="pkg" class="form--control register-select2">
                           <option value="">-- Select Package --</option>
                           <option v-for="pkg in packages" :key="pkg.id" :value="pkg.id">
                             {{ pkg.name }} - {{ currencySymbol }}{{ formatAmount(pkg.price) }}
@@ -81,15 +81,15 @@
                   <!-- Sponsor ID -->
                   <div class="col-sm-6">
                     <div class="form-group">
-                      <label class="form--label"><i class="fas fa-user-tie me-2"></i>Sponsor ID <span class="text-muted">(Optional)</span></label>
+                      <label class="form--label"><i class="fas fa-user-shield me-2"></i>Sponsor ID <span class="text-muted">(Optional)</span></label>
                       <input 
                         v-model="form.sponsor_id" 
                         type="text" 
                         name="sponsor_id" 
                         class="form--control" 
-                        placeholder="Enter Sponsor Username or ID"
+                        placeholder="Enter Sponsor ID (e.g. ADS15000)"
                         @blur="fetchSponsorInfo"
-                        @input="clearSponsorInfo"
+                        @input="handleSponsorInput"
                       >
                     </div>
                   </div>
@@ -174,7 +174,7 @@
                       <!-- Keep this as a native <select>.
                            Select2 can visually show a selection while the underlying <select> stays empty,
                            which triggers the browser "Please select an item in the list." validation. -->
-                      <select v-model="form.state" name="state" class="form--control" required>
+                      <select v-model="form.state" name="state" class="form--control register-select2">
                         <option value="">-- Select State --</option>
                         <option v-for="state in indianStates" :key="state" :value="state">
                           {{ state }}
@@ -475,6 +475,21 @@ export default {
 
     // Step 1: Validate registration data
     const handleStep1 = async () => {
+      // Manual validation for selects
+      if (!form.value.pkg) {
+        if (window.notify) window.notify('error', 'Please select a package')
+        return
+      }
+      if (!form.value.state) {
+        if (window.notify) window.notify('error', 'Please select your state')
+        return
+      }
+
+      if (userExists.value) {
+        if (window.notify) window.notify('error', 'This email is already registered')
+        return
+      }
+
       // Validate sponsor only if user entered one
       if (form.value.sponsor_id && !sponsorInfo.value) {
         if (window.notify) {
@@ -512,7 +527,6 @@ export default {
           firstname: firstname,
           lastname: lastname,
           ref: (form.value.ref || form.value.sponsor_id || '').trim() || null,
-          username: form.value.email.split('@')[0], // Auto-generate username from email
           pkg_sig: pkgSig.value || null
         }
 
@@ -526,15 +540,38 @@ export default {
             window.notify('success', 'Details validated. Please proceed to payment.')
           }
         } else {
-          error.value = response.data.message?.[0] || 'Validation failed'
+          // If it's a validation error, the message might be an object of arrays
+          const msg = response.data.message;
+          let errorText = 'Validation failed';
+          
+          if (typeof msg === 'object') {
+            errorText = Object.values(msg).flat()[0] || 'Validation failed';
+          } else if (Array.isArray(msg)) {
+            errorText = msg[0];
+          } else if (typeof msg === 'string') {
+            errorText = msg;
+          }
+
+          error.value = errorText;
           if (window.notify) {
-            window.notify('error', error.value)
+            window.notify('error', errorText)
           }
         }
       } catch (err) {
-        error.value = err.response?.data?.message?.[0] || err.response?.data?.message || 'An error occurred'
+        const msg = err.response?.data?.message;
+        let errorText = 'An error occurred';
+
+        if (typeof msg === 'object') {
+          errorText = Object.values(msg).flat()[0] || 'An error occurred';
+        } else if (Array.isArray(msg)) {
+          errorText = msg[0];
+        } else if (typeof msg === 'string') {
+          errorText = msg;
+        }
+
+        error.value = errorText;
         if (window.notify) {
-          window.notify('error', error.value)
+          window.notify('error', errorText)
         }
       } finally {
         loading.value = false
@@ -640,25 +677,31 @@ export default {
     }
 
     const fetchSponsorInfo = async () => {
-      const sponsorId = form.value.sponsor_id?.trim()
+      let sponsorId = form.value.sponsor_id?.trim()
       if (!sponsorId) {
         sponsorInfo.value = null
+        form.value.ref = ''
         return
       }
       
+      // Auto-prefix if missing
+      if (/^\d+$/.test(sponsorId)) {
+        sponsorId = 'ADS' + sponsorId
+        form.value.sponsor_id = sponsorId
+      }
+
       loadingSponsor.value = true
       try {
         const response = await api.get(`/register/referrer-info?ref=${sponsorId}`)
         if (response.data.status === 'success') {
           sponsorInfo.value = response.data.data
-          // Auto-fill ref field for backend
-          form.value.ref = sponsorInfo.value.username
+          // Use ADS ID internally for registration to be safe
+          form.value.ref = sponsorInfo.value.ref_code || sponsorInfo.value.username
         } else {
           sponsorInfo.value = null
           form.value.ref = ''
         }
       } catch (error) {
-        console.error('Error fetching sponsor info:', error)
         sponsorInfo.value = null
         form.value.ref = ''
       } finally {
@@ -666,30 +709,29 @@ export default {
       }
     }
 
-    const clearSponsorInfo = () => {
+    const handleSponsorInput = () => {
       if (!form.value.sponsor_id) {
         sponsorInfo.value = null
         form.value.ref = ''
       }
     }
 
-    const fetchReferrerInfo = async (refUsername) => {
-      if (!refUsername) return
+    const fetchReferrerInfo = async (refCode) => {
+      if (!refCode) return
       
       loadingReferrer.value = true
       try {
-        const response = await api.get(`/register/referrer-info?ref=${refUsername}`)
+        const response = await api.get(`/register/referrer-info?ref=${refCode}`)
         if (response.data.status === 'success') {
           referrerInfo.value = response.data.data
           // Auto-fill sponsor fields if ref from URL
-          form.value.sponsor_id = refUsername
+          form.value.sponsor_id = response.data.data.ref_code || refCode
           sponsorInfo.value = response.data.data
-          form.value.ref = refUsername
+          form.value.ref = refCode
         } else {
           referrerInfo.value = null
         }
       } catch (error) {
-        console.error('Error fetching referrer info:', error)
         referrerInfo.value = null
       } finally {
         loadingReferrer.value = false
@@ -734,16 +776,28 @@ export default {
         }
       })
       try {
-        // IMPORTANT: Keep dropdown inside the form container.
-        // If dropdown is appended to <body>, on some layouts it miscalculates width/position
-        // and stretches across the page (as seen in screenshot).
         $els.each(function () {
           const $el = $(this)
+          const name = $el.attr('name')
           const $parent = $el.closest('.account-form')
+          
           $el.select2({
             width: '100%',
             dropdownAutoWidth: false,
             dropdownParent: $parent && $parent.length ? $parent : $(document.body),
+          }).on('select2:select', function (e) {
+            // Force update Vue model
+            if (name && form.value.hasOwnProperty(name)) {
+              form.value[name] = e.params.data.id
+            }
+          }).on('change', function () {
+            // Backup update
+            if (name && form.value.hasOwnProperty(name)) {
+              const val = $(this).val()
+              if (val !== form.value[name]) {
+                form.value[name] = val
+              }
+            }
           })
         })
       } catch (e) {
@@ -927,7 +981,7 @@ export default {
       copyPaymentLink,
       fetchReferrerInfo,
       fetchSponsorInfo,
-      clearSponsorInfo,
+      handleSponsorInput,
       fetchPackages
     }
   }

@@ -6,7 +6,7 @@ class WatchPayGateway
 {
     public static function mchId(): string
     {
-        return (string) (env('WATCHPAY_MCH_ID') ?: '100225567');
+        return (string) (config('services.watchpay.mch_id') ?: '100225567');
     }
 
     /**
@@ -15,14 +15,12 @@ class WatchPayGateway
      */
     public static function merchantKey(): string
     {
-        // Prefer a dedicated env var for web payments, then a generic WatchPay key.
-        // This avoids confusion with transfer/balance keys which may be different.
-        return (string) (env('WATCHPAY_WEB_MERCHANT_KEY') ?: (env('WATCHPAY_MERCHANT_KEY') ?: '49fd706f0a924b679df02131a3df8794'));
+        return (string) (config('services.watchpay.web_merchant_key') ?: (config('services.watchpay.merchant_key') ?: '49fd706f0a924b679df02131a3df8794'));
     }
 
     public static function webApiUrl(): string
     {
-        return (string) (env('WATCHPAY_WEB_API_URL') ?: 'https://api.watchglb.com/pay/web');
+        return (string) (config('services.watchpay.web_api_url') ?: 'https://api.watchglb.com/pay/web');
     }
 
     /**
@@ -67,7 +65,7 @@ class WatchPayGateway
             'notify_url'     => $notifyUrl,
             'page_url'       => $pageUrl,
             'mch_order_no'   => $mchOrderNo,
-            'pay_type'       => (string) ($payType ?: (env('WATCHPAY_PAY_TYPE') ?: '101')),
+            'pay_type'       => (string) ($payType ?: (config('services.watchpay.pay_type') ?: '101')),
             'trade_amount'   => number_format($amount, 2, '.', ''),
             'order_date'     => date('Y-m-d H:i:s'),
             'goods_name'     => $goodsName,
