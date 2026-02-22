@@ -105,10 +105,10 @@ class UserController extends Controller
         ", [$today, $last7Days, $last30Days])
         ->first();
 
-    // Unified stats query for transactions
+    // Unified stats query for transactions (Top Cards: Ads only as per request)
     $trxStats = Transaction::where('user_id', $user->id)
         ->where('trx_type', '+')
-        ->whereIn('remark', $incomeRemarks)
+        ->where('remark', 'ad_view_reward')
         ->selectRaw("
             SUM(CASE WHEN created_at >= ? THEN amount ELSE 0 END) as today,
             SUM(CASE WHEN created_at >= ? THEN amount ELSE 0 END) as last7,
@@ -117,27 +117,55 @@ class UserController extends Controller
         ", [$today, $last7Days, $last30Days])
         ->first();
 
-    // Ad view reward sum (specifically for widget)
-    $adsIncome = Transaction::where('user_id', $user->id)
-        ->where('remark', 'ad_view_reward')
+    // Ad view reward sum (specifically for widget logic)
+    $adsIncome = (float) ($trxStats->total ?? 0);
+
+    // Affiliate wallet sum (all time) - This will show in the "Affiliate Income" card
+    $affiliateRemarks = [
+        'referral_commission',
+        'downline_commission',
+        'affiliate_commission',
+        'direct_affiliate_commission',
+        'agent_registration_commission',
+        'agent_kyc_commission',
+        'agent_withdraw_fee_commission',
+        'agent_upgrade_commission',
+        'agent_course_commission',
+        'agent_adplan_commission',
+        'agent_partner_commission',
+        'agent_certificate_commission',
+        'agent_partner_override_commission',
+    ];
+
+    $affiliateStats = Transaction::where('user_id', $user->id)
+        ->where('wallet', 'affiliate')
         ->where('trx_type', '+')
-        ->sum('amount');
+        ->whereIn('remark', $affiliateRemarks)
+        ->selectRaw("
+            SUM(CASE WHEN created_at >= ? THEN amount ELSE 0 END) as today,
+            SUM(CASE WHEN created_at >= ? THEN amount ELSE 0 END) as last7,
+            SUM(CASE WHEN created_at >= ? THEN amount ELSE 0 END) as last30,
+            SUM(amount) as total
+        ", [$today, $last7Days, $last30Days])
+        ->first();
 
     // Calculate widget data
     $widget = [
-        'balance' => $user->balance ?? 0,
-        'total_earning' => (float) ($convStats->total ?? 0),
-        'ads_income' => (float) $adsIncome,
-        'total_withdraw' => Withdrawal::where('user_id', $user->id)
+        'balance' => (float) ($user->balance ?? 0),
+        'affiliate_balance' => (float) ($user->affiliate_balance ?? 0),
+        'total_earning' => (float) ($affiliateStats->total ?? 0), // Fetch total affiliate income here
+        'ads_income' => $adsIncome,
+        'total_withdraw' => (float) Withdrawal::where('user_id', $user->id)
             ->where('status', Status::PAYMENT_SUCCESS)
             ->sum('amount'),
     ];
 
+    // Earnings shows ONLY Ads + Conversions (Work income) as per user request
     $earnings = [
-        'today' => (float) ($convStats->today ?? 0) + (float) ($trxStats->today ?? 0),
-        'last7Days' => (float) ($convStats->last7 ?? 0) + (float) ($trxStats->last7 ?? 0),
-        'last30Days' => (float) ($convStats->last30 ?? 0) + (float) ($trxStats->last30 ?? 0),
-        'total' => (float) ($convStats->total ?? 0) + (float) ($trxStats->total ?? 0),
+        'today' => (float) ($trxStats->today ?? 0) + (float) ($convStats->today ?? 0),
+        'last7Days' => (float) ($trxStats->last7 ?? 0) + (float) ($convStats->last7 ?? 0),
+        'last30Days' => (float) ($trxStats->last30 ?? 0) + (float) ($convStats->last30 ?? 0),
+        'total' => (float) ($trxStats->total ?? 0) + (float) ($convStats->total ?? 0),
     ];
 
         // Get general settings for currency
@@ -321,6 +349,9 @@ class UserController extends Controller
         }
 
         $gateway = $request->input('gateway', 'watchpay');
+        if (!in_array($gateway, ['watchpay', 'simplypay', 'rupeerush'])) {
+            $gateway = 'watchpay';
+        }
 
         // Check if payment already made (gateway-only proof; NOT wallet balance payment)
         $hasPaid = (bool) ($user->has_paid_kyc_fee ?? false) && (!empty($user->kyc_fee_trx) || !empty($user->kyc_fee_paid_at));
@@ -334,7 +365,11 @@ class UserController extends Controller
         }
 
         $trx = getTrx();
-        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $cacheKey = $cachePrefix . $trx;
         cache()->put($cacheKey, [
             'type' => 'kyc_fee',
             'user_id' => $user->id,
@@ -343,8 +378,12 @@ class UserController extends Controller
             'created_at' => now()->format('Y-m-d H:i:s'),
         ], now()->addHours(2));
 
+        $gw_param = 'watchpay_trx=';
+        if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
+        if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
-        $pageUrl = $base . '/user/account-kyc?' . ($gateway === 'simplypay' ? 'simplypay_trx=' : 'watchpay_trx=') . urlencode($trx);
+        $pageUrl = $base . '/user/account-kyc?' . $gw_param . urlencode($trx);
         $notifyUrl = $base . '/ipn/' . $gateway;
 
         try {
@@ -360,6 +399,17 @@ class UserController extends Controller
                     'attach' => 'KYC Verification Fee',
                 ]);
                 $paymentUrl = $sp['pay_link'];
+            } elseif ($gateway === 'rupeerush') {
+                $ap = \App\Lib\RupeeRushGateway::createPayment([
+                    'outTradeNo' => $trx,
+                    'totalAmount' => $kycFee,
+                    'notifyUrl' => $notifyUrl,
+                    'payViewUrl' => $pageUrl,
+                    'payName' => $user->fullname ?: $user->username,
+                    'email' => $user->email,
+                    'payPhone' => $user->mobile,
+                ]);
+                $paymentUrl = $ap['pay_link'];
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -385,7 +435,7 @@ class UserController extends Controller
             'trx' => $trx,
             'amount' => $kycFee,
             'currency_symbol' => $general->cur_sym ?? '₹',
-            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : 'WatchPay'),
+            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : ($gateway === 'rupeerush' ? 'RupeeRush' : 'WatchPay')),
         ]);
     }
 
@@ -393,7 +443,7 @@ class UserController extends Controller
     {
         $request->validate([
             'trx' => 'required|string',
-            'gateway' => 'nullable|string|in:watchpay,simplypay',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
         ]);
 
         $user = auth()->user();
@@ -405,7 +455,11 @@ class UserController extends Controller
 
         $trx = (string) $request->trx;
         $gateway = $request->input('gateway', 'watchpay');
-        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $cacheKey = $cachePrefix . $trx;
 
         $session = cache()->get($cacheKey);
         if (!is_array($session) || ($session['type'] ?? '') !== 'kyc_fee' || (int)($session['user_id'] ?? 0) !== (int)$user->id) {
@@ -668,8 +722,8 @@ class UserController extends Controller
         // We must sync the form data labels to match what we receive in $request.
         foreach ($formData as $key => $data) {
             $dataObj = clone (object)$data; 
-            // Replace spaces with underscores in the label (key)
-            $dataObj->label = str_replace(' ', '_', $dataObj->label);
+            // Standardize key: lowercase + underscores (matches frontend JS)
+            $dataObj->label = strtolower(str_replace(' ', '_', $dataObj->label));
             $processedFormData[$key] = $dataObj;
         }
         $formData = $processedFormData;

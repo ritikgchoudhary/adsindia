@@ -13,6 +13,15 @@ class ProcessController extends Controller
      */
     public function ipn(Request $request)
     {
+        \Log::info('SimplyPay Callback Received', ['ip' => $request->ip(), 'payload' => $request->all()]);
+
+        // Validate IP if provided by user
+        $allowedIps = ['15.207.74.156', '159.89.168.162'];
+        if (!in_array($request->ip(), $allowedIps) && env('APP_ENV') === 'production') {
+             \Log::warning('SimplyPay Callback Unauthorized IP', ['ip' => $request->ip()]);
+             // return response('Unauthorized IP', 403); // Uncomment for strict security
+        }
+
         $payload = $request->all();
 
         // If payload is wrapped in 'data', unwrap it (though verifyCallback should handle it if passed correctly)

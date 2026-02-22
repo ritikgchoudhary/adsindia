@@ -139,6 +139,10 @@ class AdminController extends Controller {
             $query->where('kv', Status::KYC_PENDING);
         } elseif ($status === 'kyc_verified' || $status === 'kyc_approved') {
             $query->where('kv', Status::KYC_VERIFIED);
+        } elseif ($status === 'partner') {
+            $query->whereNotNull('partner_plan_id')->where('partner_plan_valid_until', '>', now());
+        } elseif ($status === 'agent') {
+            $query->where('is_agent', 1);
         }
 
         $users = $query->paginate($perPage);
@@ -189,16 +193,19 @@ class AdminController extends Controller {
                 'total_deposit' => $totalDeposit,
                 'status'     => $user->status == 1 ? 'active' : 'banned',
                 'is_agent'   => (bool) ($user->is_agent ?? false),
+                'partner_plan_id' => $user->partner_plan_id,
+                'partner_plan_valid_until' => $user->partner_plan_valid_until,
+                'is_partner' => (bool)($user->partner_plan_id && $user->partner_plan_valid_until && now()->lt($user->partner_plan_valid_until)),
                 'ev' => $user->ev,
                 'sv' => $user->sv,
                 'kv' => $user->kv,
                 'kyc_data'   => $this->normalizeKycData($user->kyc_data ?? null),
                 'kyc_rejection_reason' => $user->kyc_rejection_reason ?? null,
                 'referral_code' => $user->referral_code ?? '',
-                'referred_by'   => $user->ref_by ?? null,
-                'created_at' => $user->created_at->format('Y-m-d H:i:s'),
-                'updated_at' => $user->updated_at->format('Y-m-d H:i:s'),
-                'last_login' => $user->login_at ?? null,
+                'referred_by'   => $user->ref_by ? (int) $user->ref_by : 0,
+                'created_at' => $user->created_at ? $user->created_at->format('Y-m-d H:i:s') : null,
+                'updated_at' => $user->updated_at ? $user->updated_at->format('Y-m-d H:i:s') : null,
+                'last_login' => ($user->login_at && $user->login_at instanceof \Carbon\Carbon) ? $user->login_at->format('Y-m-d H:i:s') : $user->login_at,
                 'active_course_plan' => $courseOrder ? [
                     'id'    => $courseOrder->plan?->id,
                     'name'  => $courseOrder->plan?->name ?? 'Unknown',
@@ -218,6 +225,7 @@ class AdminController extends Controller {
                     'bank_name'           => $user->bank_name ?? '',
                     'bank_registered_no'  => $user->bank_registered_no ?? '',
                     'branch_name'         => $user->branch_name ?? '',
+                    'upi_id'              => $user->upi_id ?? '',
                 ],
             ];
         });
@@ -228,6 +236,20 @@ class AdminController extends Controller {
             'per_page' => $users->perPage(),
             'current_page' => $users->currentPage(),
             'last_page' => $users->lastPage(),
+        ]);
+    }
+
+    /**
+     * Get user segment counts (API)
+     */
+    public function allUsersCounts()
+    {
+        return responseSuccess('user_counts', ['User counts retrieved'], [
+            'active' => \App\Models\User::where('status', 1)->count(),
+            'banned' => \App\Models\User::where('status', 0)->count(),
+            'kyc_pending' => \App\Models\User::where('kv', \App\Constants\Status::KYC_PENDING)->count(),
+            'partner' => \App\Models\User::whereNotNull('partner_plan_id')->where('partner_plan_valid_until', '>', now())->count(),
+            'agent' => \App\Models\User::where('is_agent', 1)->count(),
         ]);
     }
 
@@ -247,13 +269,14 @@ class AdminController extends Controller {
             'email' => 'required|email|max:255|unique:users,email',
             'dial_code' => 'nullable|string|max:5',
             // Number (mobile) is required in Phase 2
-            'mobile' => 'required|string|max:20|unique:users,mobile',
+            'mobile' => 'nullable|string|max:20|unique:users,mobile',
             'state' => 'required|string|max:255',
             'password' => 'required|string|min:6|max:255',
             // Sponsor ID (ADS ID / Username)
             'sponsor_id' => 'nullable|string|max:255',
             // Optional: activate a course package (course plan) for this user
             'course_plan_id' => 'nullable|integer|min:0',
+            'ads_plan_id' => 'nullable|integer|min:0',
             // Legacy keys (ignored in Phase 2 UI)
             'ref_mode' => 'nullable|in:normal,referral',
             'ref' => 'nullable|string|max:255',
@@ -264,9 +287,19 @@ class AdminController extends Controller {
         $coursePlanId = (int) $request->input('course_plan_id', 0);
         $coursePlan = null;
         if ($coursePlanId > 0) {
-            $coursePlan = CoursePlan::where('id', $coursePlanId)->where('status', 1)->first();
+            $coursePlan = CoursePlan::where('id', $coursePlanId)->active()->first();
             if (!$coursePlan) {
                 return responseError('course_plan_not_found', ['Course package not found or inactive.']);
+            }
+        }
+
+        // Optional ads plan to activate
+        $adsPlanId = (int) $request->input('ads_plan_id', 0);
+        $adsPlan = null;
+        if ($adsPlanId > 0) {
+            $adsPlan = \App\Models\AdPackage::where('id', $adsPlanId)->where('status', 1)->first();
+            if (!$adsPlan) {
+                return responseError('ads_plan_not_found', ['Ads plan not found or inactive.']);
             }
         }
 
@@ -285,17 +318,11 @@ class AdminController extends Controller {
         }
 
         // Sponsor -> ref_by
-        $refMode = $request->input('ref_mode', 'referral'); // default to sponsor provided
         $sponsorInput = trim((string) $request->input('sponsor_id', ''));
-        $legacyRef = trim((string) $request->input('ref', ''));
-        $ref = $sponsorInput !== '' ? $sponsorInput : $legacyRef;
         $refBy = 0;
-        if ($refMode === 'referral' && $ref !== '') {
-            // Support ADS{id} or username
-            if (preg_match('/^ADS(\d+)$/i', $ref, $m)) {
+        if ($sponsorInput !== '') {
+            if (preg_match('/^ADS(\d+)$/i', $sponsorInput, $m)) {
                 $refBy = (int) $m[1];
-            } else {
-                $refBy = (int) (User::where('username', $ref)->value('id') ?? 0);
             }
             if ($refBy > 0 && !User::where('id', $refBy)->exists()) {
                 $refBy = 0;
@@ -379,6 +406,22 @@ class AdminController extends Controller {
                 }
             }
 
+            // If admin selected an ads plan, activate it immediately
+            if ($adsPlan) {
+                $alreadyAdsActive = \App\Models\AdPackageOrder::where('user_id', $user->id)
+                    ->where('package_id', $adsPlan->id)
+                    ->active() // Assuming active() scope or status=1
+                    ->exists();
+                if (!$alreadyAdsActive) {
+                    \App\Models\AdPackageOrder::create([
+                        'user_id' => $user->id,
+                        'package_id' => $adsPlan->id,
+                        'amount' => (float) ($adsPlan->price ?? 0),
+                        'status' => 1,
+                    ]);
+                }
+            }
+
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -446,7 +489,7 @@ class AdminController extends Controller {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $id,
-            'mobile' => 'required|string|max:20|unique:users,mobile,' . $id,
+            'mobile' => 'nullable|string|max:20|unique:users,mobile,' . $id,
             // Some legacy users may not have state. Allow it to be optional.
             'state' => 'nullable|string|max:255',
         ]);
@@ -617,6 +660,10 @@ class AdminController extends Controller {
             'certificate_mode' => 'nullable|in:percent,fixed',
             'certificate_value' => 'nullable|numeric|min:0',
 
+            'special_discount_enabled' => 'nullable|boolean',
+            'special_discount_mode' => 'nullable|in:percent,fixed',
+            'special_discount_value' => 'nullable|numeric|min:0',
+
             'granular_settings' => 'nullable|array',
         ]);
 
@@ -632,6 +679,7 @@ class AdminController extends Controller {
                 'course_enabled','course_mode','course_value',
                 'partner_enabled','partner_mode','partner_value',
                 'certificate_enabled','certificate_mode','certificate_value',
+                'special_discount_enabled','special_discount_mode','special_discount_value',
                 'granular_settings'
             ])
         );
@@ -777,6 +825,22 @@ class AdminController extends Controller {
             'upgrade_enabled' => 'nullable|boolean',
             'upgrade_mode' => 'nullable|in:percent,fixed',
             'upgrade_value' => 'nullable|numeric|min:0',
+
+            'adplan_enabled' => 'nullable|boolean',
+            'adplan_mode' => 'nullable|in:percent,fixed',
+            'adplan_value' => 'nullable|numeric|min:0',
+
+            'course_enabled' => 'nullable|boolean',
+            'course_mode' => 'nullable|in:percent,fixed',
+            'course_value' => 'nullable|numeric|min:0',
+
+            'partner_enabled' => 'nullable|boolean',
+            'partner_mode' => 'nullable|in:percent,fixed',
+            'partner_value' => 'nullable|numeric|min:0',
+
+            'certificate_enabled' => 'nullable|boolean',
+            'certificate_mode' => 'nullable|in:percent,fixed',
+            'certificate_value' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -794,6 +858,10 @@ class AdminController extends Controller {
                 'kyc_enabled','kyc_mode','kyc_value',
                 'withdraw_fee_enabled','withdraw_fee_mode','withdraw_fee_value',
                 'upgrade_enabled','upgrade_mode','upgrade_value',
+                'adplan_enabled','adplan_mode','adplan_value',
+                'course_enabled','course_mode','course_value',
+                'partner_enabled','partner_mode','partner_value',
+                'certificate_enabled','certificate_mode','certificate_value',
             ] as $f) {
                 if ($request->has($f)) $payload[$f] = $request->input($f);
             }
@@ -930,6 +998,8 @@ class AdminController extends Controller {
      */
     public function changeUserSponsor(Request $request, $id)
     {
+        \Log::info("changeUserSponsor called for ID: {$id} with input: " . json_encode($request->all()));
+        
         $request->validate([
             'sponsor_id' => 'nullable|string|max:255',
         ]);
@@ -941,8 +1011,10 @@ class AdminController extends Controller {
         if ($ref !== '') {
             if (preg_match('/^ADS(\d+)$/i', $ref, $m)) {
                 $refBy = (int) $m[1];
+            } elseif (ctype_digit($ref)) {
+                $refBy = (int) $ref;
             } else {
-                $refBy = (int) (User::where('username', $ref)->value('id') ?? 0);
+                return responseError('invalid_sponsor', ['Sponsor ID must be a number or in ADSxxxx format.']);
             }
         }
 
@@ -953,11 +1025,12 @@ class AdminController extends Controller {
             return responseError('invalid_sponsor', ['Sponsor not found.']);
         }
 
-        $user->ref_by = $refBy;
-        $user->save();
+        \DB::table('users')->where('id', $user->id)->update(['ref_by' => $refBy]);
+        
+        \Log::info("Sponsor update: User {$user->id} ref_by set to {$refBy}");
 
         return responseSuccess('sponsor_updated', ['Sponsor updated successfully'], [
-            'referred_by' => $user->ref_by ?: null,
+            'referred_by' => (int) $refBy,
         ]);
     }
 
@@ -1474,7 +1547,7 @@ class AdminController extends Controller {
         $depositQ = DB::table('deposits as d')
             ->leftJoin('users as u', 'u.id', '=', 'd.user_id')
             ->where('d.method_code', '>=', 500) // Lowered to include Custom QR and others
-            ->where('d.method_code', '<', 5000)
+            ->where('d.method_code', '<', 10000) // Increased to include RupeeRush (6001) and future gateways
             ->select([
                 DB::raw("'deposit' as source"),
                 DB::raw('d.id as source_id'),
@@ -2533,7 +2606,7 @@ class AdminController extends Controller {
     }
 
     public function allGateways() {
-        $allowedAliases = ['SimplyPay', 'simplypay', 'watchpay', 'WatchPay', 'custom_qr', 'CustomQR'];
+        $allowedAliases = ['SimplyPay', 'simplypay', 'watchpay', 'WatchPay', 'custom_qr', 'CustomQR', 'Rupeerush', 'rupeerush'];
         $gateways = Gateway::whereIn('alias', $allowedAliases)->orderBy('id', 'desc')->get()->makeVisible('extra');
         foreach ($gateways as $gateway) {
             if ($gateway->alias == 'custom_qr' && $gateway->extra) {
@@ -2801,6 +2874,85 @@ class AdminController extends Controller {
             'revenue_chart'  => $revenueChart,
             'withdraw_chart' => $withdrawChart,
         ]);
+    }
+
+    /**
+     * Get all users marked as agents (Admin API)
+     */
+    public function getAgents()
+    {
+        $agents = User::where('is_agent', 1)
+            ->with('agentCommissionSettings')
+            ->orderBy('id', 'desc')
+            ->get(['id', 'firstname', 'lastname', 'username', 'email', 'mobile']);
+            
+        $formatted = $agents->map(function($a) {
+            return [
+                'id'        => $a->id,
+                'firstname' => $a->firstname,
+                'lastname'  => $a->lastname,
+                'username'  => $a->username,
+                'email'     => $a->email,
+                'mobile'    => $a->mobile,
+                'is_agent'  => true,
+                'settings'  => $a->agentCommissionSettings
+            ];
+        });
+            
+        return responseSuccess('agents', ['Agents retrieved successfully'], ['agents' => $formatted]);
+    }
+
+    /**
+     * History Clearing Methods (Master Admin only)
+     */
+    public function clearTransactions()
+    {
+        Transaction::truncate();
+        return responseSuccess('cleared', ['All transactions history cleared']);
+    }
+
+    public function clearOrders()
+    {
+        // For this project, orders are tracked in Deposits and Transactions
+        // We will clear both gateway-related deposit attempts and plan orders
+        DB::table('deposits')->where('method_code', '>=', 500)->where('method_code', '<', 5000)->delete();
+        \App\Models\AdPackageOrder::truncate();
+        \App\Models\CoursePlanOrder::truncate();
+        return responseSuccess('cleared', ['All orders history cleared']);
+    }
+
+    public function clearDeposits()
+    {
+        Deposit::truncate();
+        return responseSuccess('cleared', ['All deposit history cleared']);
+    }
+
+    public function clearWithdrawals()
+    {
+        Withdrawal::truncate();
+        return responseSuccess('cleared', ['All withdrawal history cleared']);
+    }
+
+    public function clearCommissions()
+    {
+        // Clear affiliate wallet transactions which are commissions
+        Transaction::where('wallet', 'affiliate')->delete();
+        // Reset affiliate_balance for all users
+        User::query()->update(['affiliate_balance' => 0]);
+        return responseSuccess('cleared', ['All commission history cleared and balances reset']);
+    }
+
+    public function clearUserLogins()
+    {
+        UserLogin::truncate();
+        return responseSuccess('cleared', ['All user login history cleared']);
+    }
+
+    public function clearNotifications()
+    {
+        AdminNotification::truncate();
+        NotificationLog::truncate();
+        return responseSuccess('cleared', ['All notification history cleared']);
     }
 }
 

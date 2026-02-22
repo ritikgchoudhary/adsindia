@@ -8,18 +8,224 @@
               <i class="fas fa-user-friends"></i>
               Direct Affiliate (All Users)
             </button>
-            <button type="button" class="ma-tab" :class="{ active: activeTab === 'agent_defaults' }" @click="activeTab = 'agent_defaults'">
-              <i class="fas fa-user-shield"></i>
-              Agent Defaults
-            </button>
-            <button type="button" class="ma-tab" :class="{ active: activeTab === 'upgrade_rules' }" @click="activeTab = 'upgrade_rules'">
-              <i class="fas fa-sliders-h"></i>
-              Upgrade Rules (Per Plan)
+            <button type="button" class="ma-tab" :class="{ active: activeTab === 'agents' }" @click="activeTab = 'agents'">
+              <i class="fas fa-user-tie"></i>
+              Manage Agents
             </button>
           </div>
         </div>
       </div>
 
+      <!-- Manage Agents -->
+      <div v-if="activeTab === 'agents'" class="ma-card">
+        <div class="ma-card__header ma-card__header--gradient">
+          <div>
+            <h5 class="ma-card__title"><i class="fas fa-user-tie me-2"></i>Individual Agent Commissions</h5>
+            <p class="ma-card__subtitle">Set custom commission rules for specific agents. These settings override global defaults for the selected agent.</p>
+          </div>
+          <button class="ma-btn" @click="fetchAgents">
+            <i class="fas fa-sync-alt"></i>
+            Refresh
+          </button>
+        </div>
+
+        <div class="ma-card__body">
+          <div v-if="loadingAgents" class="ma-loading"><div class="ma-spinner"></div> Loading...</div>
+          <div v-else class="table-responsive">
+            <table class="ma-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="agent in agents" :key="agent.id">
+                  <td>
+                    <div class="tw-font-bold tw-text-slate-100">{{ agent.firstname }} {{ agent.lastname }}</div>
+                    <div class="tw-text-xs tw-text-indigo-400 tw-font-bold">ADS{{ agent.id }}</div>
+                  </td>
+                  <td>
+                    <div v-if="agent.settings" class="tw-flex tw-flex-wrap tw-gap-1">
+                       <span class="ma-mini-badge tw-bg-emerald-500/10 tw-text-emerald-400">ADS: {{ displayMiniSetting(agent.settings, 'adplan') }}</span>
+                       <span class="ma-mini-badge tw-bg-indigo-500/10 tw-text-indigo-400">COURSE: {{ displayMiniSetting(agent.settings, 'course') }}</span>
+                       <span class="ma-mini-badge tw-bg-purple-500/10 tw-text-purple-400">PARTNER: {{ displayMiniSetting(agent.settings, 'partner') }}</span>
+                       <span class="ma-mini-badge tw-bg-sky-500/10 tw-text-sky-400">CERT: {{ displayMiniSetting(agent.settings, 'certificate') }}</span>
+                       <span class="ma-mini-badge tw-bg-amber-500/10 tw-text-amber-400">KYC: {{ displayMiniSetting(agent.settings, 'kyc') }}</span>
+                    </div>
+                    <div v-else class="tw-text-xs tw-text-slate-500 italic">No custom settings</div>
+                  </td>
+                  <td>
+                    <button class="ma-btn ma-btn--primary" @click="openAgentSettings(agent)">
+                      <i class="fas fa-cog"></i>
+                      Manage Settings
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="!agents.length">
+                  <td colspan="3" class="tw-text-center tw-py-8 tw-text-slate-400">No agents found. Mark users as agents from User Management.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Settings Modal -->
+      <div v-if="showAgentModal" class="ma-modal-overlay">
+        <div class="ma-modal ma-modal--lg">
+          <div class="ma-modal__header">
+            <div>
+               <h5 class="ma-modal__title">Manage Agent: {{ selectedAgent?.firstname }} {{ selectedAgent?.lastname }}</h5>
+               <p class="ma-card__subtitle">ADS{{ selectedAgent?.id }} • {{ selectedAgent?.email }}</p>
+            </div>
+            <button class="ma-modal__close" @click="showAgentModal = false">&times;</button>
+          </div>
+          <div class="ma-modal__body">
+            <div v-if="loadingAgentSettings" class="ma-loading tw-py-10 tw-justify-center"><div class="ma-spinner"></div> Loading Settings...</div>
+            <div v-else-if="agentForm" class="ma-agent-settings">
+              
+              <!-- Tab Navigation for settings categories -->
+              <div class="ma-sub-tabs mb-4">
+                 <button class="ma-sub-tab" :class="{ active: settingsTab === 'general' }" @click="settingsTab = 'general'">General Fees</button>
+                 <button class="ma-sub-tab" :class="{ active: settingsTab === 'courses' }" @click="settingsTab = 'courses'">Courses (5)</button>
+                 <button class="ma-sub-tab" :class="{ active: settingsTab === 'ads' }" @click="settingsTab = 'ads'">Ads Plans (4)</button>
+                 <button class="ma-sub-tab" :class="{ active: settingsTab === 'partners' }" @click="settingsTab = 'partners'">Partners (4)</button>
+              </div>
+
+              <!-- General Fees -->
+              <div v-if="settingsTab === 'general'" class="ma-grid">
+                <div class="ma-setting" v-for="block in generalBlocks" :key="block.key">
+                  <div class="ma-setting__head">
+                    <div class="ma-setting__title">{{ block.title }}</div>
+                    <label class="ma-switch">
+                      <input type="checkbox" v-model="agentForm[block.enabledKey]" />
+                      <span class="ma-switch__slider"></span>
+                    </label>
+                  </div>
+                  <div class="ma-setting__row">
+                    <label class="ma-label">Mode</label>
+                    <select class="ma-select" v-model="agentForm[block.modeKey]" :disabled="!agentForm[block.enabledKey]">
+                      <option value="percent">Percent (%)</option>
+                      <option value="fixed">Fixed (₹)</option>
+                    </select>
+                  </div>
+                  <div class="ma-setting__row">
+                    <label class="ma-label">Value</label>
+                    <input type="number" step="0.01" class="ma-input" v-model.number="agentForm[block.valueKey]" :disabled="!agentForm[block.enabledKey]" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Courses Overrides -->
+              <div v-if="settingsTab === 'courses'">
+                <p class="tw-text-xs tw-text-slate-400 tw-mb-4">Set specific commission for each course package. This overrides the "Course Package Commission" general setting above.</p>
+                <div class="table-responsive">
+                  <table class="ma-table ma-table--small">
+                    <thead>
+                      <tr>
+                        <th>Package</th>
+                        <th>Price</th>
+                        <th>Override Mode</th>
+                        <th>Override Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="p in staticCourses" :key="p.id">
+                        <td>{{ p.name }}</td>
+                        <td>₹{{ formatAmount(p.price) }}</td>
+                        <td>
+                          <select class="ma-select ma-select--sm" v-model="granular.course[p.id].mode">
+                             <option value="percent">Percent (%)</option>
+                             <option value="fixed">Fixed (₹)</option>
+                          </select>
+                        </td>
+                        <td>
+                          <input type="number" step="0.01" class="ma-input ma-input--sm" v-model.number="granular.course[p.id].value" placeholder="0.00" />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Ads Plans Overrides -->
+              <div v-if="settingsTab === 'ads'">
+                <p class="tw-text-xs tw-text-slate-400 tw-mb-4">Set specific commission for each ads plan.</p>
+                <div class="table-responsive">
+                  <table class="ma-table ma-table--small">
+                    <thead>
+                      <tr>
+                        <th>Plan</th>
+                        <th>Price</th>
+                        <th>Override Mode</th>
+                        <th>Override Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="p in staticAds" :key="p.id">
+                        <td>{{ p.name }}</td>
+                        <td>₹{{ formatAmount(p.price) }}</td>
+                        <td>
+                          <select class="ma-select ma-select--sm" v-model="granular.adplan[p.id].mode">
+                             <option value="percent">Percent (%)</option>
+                             <option value="fixed">Fixed (₹)</option>
+                          </select>
+                        </td>
+                        <td>
+                          <input type="number" step="0.01" class="ma-input ma-input--sm" v-model.number="granular.adplan[p.id].value" placeholder="0.00" />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Partner Overrides -->
+              <div v-if="settingsTab === 'partners'">
+                <p class="tw-text-xs tw-text-slate-400 tw-mb-4">Set specific commission for each partner program.</p>
+                <div class="table-responsive">
+                  <table class="ma-table ma-table--small">
+                    <thead>
+                      <tr>
+                        <th>Program</th>
+                        <th>Price</th>
+                        <th>Override Mode</th>
+                        <th>Override Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="p in staticPartners" :key="p.id">
+                        <td>{{ p.name }}</td>
+                        <td>₹{{ formatAmount(p.price) }}</td>
+                        <td>
+                          <select class="ma-select ma-select--sm" v-model="granular.partner[p.id].mode">
+                             <option value="percent">Percent (%)</option>
+                             <option value="fixed">Fixed (₹)</option>
+                          </select>
+                        </td>
+                        <td>
+                          <input type="number" step="0.01" class="ma-input ma-input--sm" v-model.number="granular.partner[p.id].value" placeholder="0.00" />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <div class="ma-modal__footer tw-p-4 tw-border-t tw-border-slate-700 tw-flex tw-justify-end tw-gap-3">
+             <button class="ma-btn" @click="showAgentModal = false">Cancel</button>
+             <button class="ma-btn ma-btn--primary" :disabled="savingAgent" @click="saveAgentSettings">
+                <i v-if="savingAgent" class="fas fa-spinner fa-spin"></i>
+                <i v-else class="fas fa-save"></i>
+                Save Settings
+             </button>
+          </div>
+        </div>
+      </div>
       <!-- Direct Affiliate Commission -->
       <div v-if="activeTab === 'direct'" class="ma-card">
         <div class="ma-card__header ma-card__header--gradient">
@@ -82,146 +288,13 @@
         </div>
       </div>
 
-      <!-- Agent Defaults -->
-      <div v-if="activeTab === 'agent_defaults'" class="ma-card">
-        <div class="ma-card__header ma-card__header--gradient">
-          <div>
-            <h5 class="ma-card__title"><i class="fas fa-user-shield me-2"></i>Agent Commission Defaults</h5>
-            <p class="ma-card__subtitle">These defaults are applied when you enable a user as Agent.</p>
-          </div>
-          <button class="ma-btn" @click="fetchDefaults">
-            <i class="fas fa-sync-alt"></i>
-            Refresh
-          </button>
-        </div>
-
-        <div class="ma-card__body">
-          <div v-if="loadingDefaults" class="ma-loading"><div class="ma-spinner"></div> Loading...</div>
-          <div v-else-if="!agentDefaults" class="tw-text-slate-300">No defaults found.</div>
-
-          <div v-else class="ma-grid">
-            <div class="ma-setting" v-for="block in defaultBlocks" :key="block.key">
-              <div class="ma-setting__head">
-                <div class="ma-setting__title">{{ block.title }}</div>
-                <label class="ma-switch">
-                  <input type="checkbox" v-model="agentDefaults[block.enabledKey]" />
-                  <span class="ma-switch__slider"></span>
-                </label>
-              </div>
-              <div class="ma-setting__row">
-                <label class="ma-label">Mode</label>
-                <select class="ma-select" v-model="agentDefaults[block.modeKey]" :disabled="!agentDefaults[block.enabledKey]">
-                  <option value="percent">Percent (%)</option>
-                  <option value="fixed">Fixed (₹)</option>
-                </select>
-              </div>
-              <div class="ma-setting__row">
-                <label class="ma-label">Value</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  class="ma-input"
-                  v-model.number="agentDefaults[block.valueKey]"
-                  :disabled="!agentDefaults[block.enabledKey]"
-                />
-              </div>
-              <div class="ma-setting__hint">
-                Applied on gross amount before gateway charges.
-              </div>
-            </div>
-          </div>
-
-          <div class="tw-mt-5 tw-flex tw-justify-end">
-            <button class="ma-btn ma-btn--primary" @click="saveDefaults">
-              <i class="fas fa-save"></i>
-              Save Defaults
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Upgrade Rules -->
-      <div v-if="activeTab === 'upgrade_rules'" class="ma-card">
-        <div class="ma-card__header ma-card__header--gradient">
-          <div>
-            <h5 class="ma-card__title"><i class="fas fa-sliders-h me-2"></i>Agent Upgrade Rules (Per Plan)</h5>
-            <p class="ma-card__subtitle">Optional per-plan override. If a rule is enabled, it overrides the agent’s own registration/upgrade value for that plan.</p>
-          </div>
-          <div class="tw-flex tw-gap-2 tw-items-center">
-            <select class="ma-select" v-model="rulePlanType" @change="fetchUpgradeRules">
-              <option value="ad_plan">Ad Plans</option>
-              <option value="package">Packages (AdsLite…)</option>
-              <option value="course_plan">Course Plans</option>
-            </select>
-            <button class="ma-btn" @click="fetchUpgradeRules">
-              <i class="fas fa-sync-alt"></i>
-              Refresh
-            </button>
-          </div>
-        </div>
-
-        <div class="ma-card__body">
-          <div v-if="loadingRules" class="ma-loading"><div class="ma-spinner"></div> Loading...</div>
-          <div v-else class="table-responsive">
-            <table class="ma-table">
-              <thead>
-                <tr>
-                  <th>Plan</th>
-                  <th>Price</th>
-                  <th>Enabled</th>
-                  <th>Mode</th>
-                  <th>Value</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="p in rulePlans" :key="p.id">
-                  <td>
-                    <div class="tw-font-bold tw-text-slate-100">{{ p.name }}</div>
-                    <div class="tw-text-xs tw-text-slate-400">ID: {{ p.id }}</div>
-                  </td>
-                  <td class="tw-text-slate-200">₹{{ formatAmount(p.price) }}</td>
-                  <td>
-                    <label class="ma-switch">
-                      <input type="checkbox" v-model="ruleForm[p.id].enabled" />
-                      <span class="ma-switch__slider"></span>
-                    </label>
-                  </td>
-                  <td>
-                    <select class="ma-select" v-model="ruleForm[p.id].mode" :disabled="!ruleForm[p.id].enabled">
-                      <option value="percent">Percent (%)</option>
-                      <option value="fixed">Fixed (₹)</option>
-                    </select>
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      class="ma-input"
-                      v-model.number="ruleForm[p.id].value"
-                      :disabled="!ruleForm[p.id].enabled"
-                    />
-                  </td>
-                  <td>
-                    <button class="ma-btn ma-btn--primary" @click="saveRule(p.id)">
-                      <i class="fas fa-save"></i>
-                      Save
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
     </div>
   </MasterAdminLayout>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import MasterAdminLayout from '../../components/master_admin/MasterAdminLayout.vue'
 import api from '../../services/api'
 
@@ -230,6 +303,7 @@ export default {
   components: { MasterAdminLayout },
   setup() {
     const route = useRoute()
+    const router = useRouter()
     const activeTab = ref(route.query.tab || 'direct')
     const savingKey = ref('')
 
@@ -240,6 +314,39 @@ export default {
     // Agent defaults
     const loadingDefaults = ref(false)
     const agentDefaults = ref(null)
+
+    // Agents List
+    const loadingAgents = ref(false)
+    const agents = ref([])
+
+    // Individual Agent Settings
+    const showAgentModal = ref(false)
+    const loadingAgentSettings = ref(false)
+    const selectedAgent = ref(null)
+    const agentForm = ref(null)
+    const settingsTab = ref('general')
+    const savingAgent = ref(false)
+    const granular = ref({ course: {}, adplan: {}, partner: {} })
+
+    const staticCourses = [
+      { id: 1, name: 'AdsLite', price: 1499 },
+      { id: 2, name: 'AdsPro', price: 2999 },
+      { id: 3, name: 'AdsSupreme', price: 5999 },
+      { id: 4, name: 'AdsPremium', price: 9999 },
+      { id: 5, name: 'AdsPremium+', price: 15999 }
+    ]
+    const staticAds = [
+      { id: 1, name: 'Starter Plan', price: 2999 },
+      { id: 2, name: 'Popular Plan', price: 4999 },
+      { id: 3, name: 'Premium Plan', price: 7499 },
+      { id: 4, name: 'Elite Plan', price: 9999 }
+    ]
+    const staticPartners = [
+      { id: 1, name: 'Associate Partner', price: 1999 },
+      { id: 2, name: 'Executive Partner', price: 3999 },
+      { id: 3, name: 'Master Partner', price: 5999 },
+      { id: 4, name: 'Elite Partner', price: 9999 }
+    ]
 
     // Upgrade rules
     const rulePlanType = ref('ad_plan')
@@ -253,10 +360,21 @@ export default {
     }
 
     const defaultBlocks = computed(() => [
-      { key: 'registration', title: 'Registration Commission', enabledKey: 'registration_enabled', modeKey: 'registration_mode', valueKey: 'registration_value' },
-      { key: 'kyc', title: 'KYC Commission', enabledKey: 'kyc_enabled', modeKey: 'kyc_mode', valueKey: 'kyc_value' },
-      { key: 'withdraw', title: 'Withdrawal Fee Commission', enabledKey: 'withdraw_fee_enabled', modeKey: 'withdraw_fee_mode', valueKey: 'withdraw_fee_value' },
+      { key: 'registration', title: 'Registration / Direct Commission', enabledKey: 'registration_enabled', modeKey: 'registration_mode', valueKey: 'registration_value' },
+      { key: 'kyc', title: 'KYC Fees Commission', enabledKey: 'kyc_enabled', modeKey: 'kyc_mode', valueKey: 'kyc_value' },
+      { key: 'withdraw', title: 'Withdrawal Fees Commission', enabledKey: 'withdraw_fee_enabled', modeKey: 'withdraw_fee_mode', valueKey: 'withdraw_fee_value' },
       { key: 'upgrade', title: 'Upgrade Commission', enabledKey: 'upgrade_enabled', modeKey: 'upgrade_mode', valueKey: 'upgrade_value' },
+      { key: 'adplan', title: 'General Ads Plans Commission', enabledKey: 'adplan_enabled', modeKey: 'adplan_mode', valueKey: 'adplan_value' },
+      { key: 'course', title: 'General Course Packages Commission', enabledKey: 'course_enabled', modeKey: 'course_mode', valueKey: 'course_value' },
+      { key: 'partner', title: 'General Partner Program Commission', enabledKey: 'partner_enabled', modeKey: 'partner_mode', valueKey: 'partner_value' },
+      { key: 'certificate', title: 'Ad Certificate Commission', enabledKey: 'certificate_enabled', modeKey: 'certificate_mode', valueKey: 'certificate_value' },
+    ])
+
+    const generalBlocks = computed(() => [
+      { key: 'certificate', title: 'Ad Certificate Commission', enabledKey: 'certificate_enabled', modeKey: 'certificate_mode', valueKey: 'certificate_value' },
+      { key: 'withdraw', title: 'Withdrawal Fees Commission', enabledKey: 'withdraw_fee_enabled', modeKey: 'withdraw_fee_mode', valueKey: 'withdraw_fee_value' },
+      { key: 'kyc', title: 'KYC Fees Commission', enabledKey: 'kyc_enabled', modeKey: 'kyc_mode', valueKey: 'kyc_value' },
+      { key: 'special_discount', title: 'Special Discount Link Commission', enabledKey: 'special_discount_enabled', modeKey: 'special_discount_mode', valueKey: 'special_discount_value' }
     ])
 
     const fetchDirect = async () => {
@@ -293,6 +411,72 @@ export default {
         if (window.notify) window.notify('error', 'Failed to save')
       } finally {
         savingKey.value = ''
+      }
+    }
+
+    const fetchAgents = async () => {
+      loadingAgents.value = true
+      try {
+        const res = await api.get('/admin/agents')
+        if (res.data?.status === 'success') {
+          agents.value = res.data.data?.agents || []
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', 'Failed to load agents')
+      } finally {
+        loadingAgents.value = false
+      }
+    }
+
+    const openAgentSettings = async (agent) => {
+      selectedAgent.value = agent
+      showAgentModal.value = true
+      loadingAgentSettings.value = true
+      settingsTab.value = 'general'
+      try {
+        const res = await api.get(`/admin/user/${agent.id}/agent-commissions`)
+        if (res.data?.status === 'success') {
+          agentForm.value = res.data.data?.settings || {}
+          
+          // Prepare granular settings
+          const rawGranular = agentForm.value.granular_settings || {}
+          const newGranular = { course: {}, adplan: {}, partner: {} }
+          
+          staticCourses.forEach(p => {
+            const saved = rawGranular.course?.[p.id] || {}
+            newGranular.course[p.id] = { mode: saved.mode || 'percent', value: saved.value != null ? Number(saved.value) : 0 }
+          })
+          staticAds.forEach(p => {
+            const saved = rawGranular.adplan?.[p.id] || {}
+            newGranular.adplan[p.id] = { mode: saved.mode || 'percent', value: saved.value != null ? Number(saved.value) : 0 }
+          })
+          staticPartners.forEach(p => {
+             const saved = rawGranular.partner?.[p.id] || {}
+             newGranular.partner[p.id] = { mode: saved.mode || 'percent', value: saved.value != null ? Number(saved.value) : 0 }
+          })
+          granular.value = newGranular
+        }
+      } finally {
+        loadingAgentSettings.value = false
+      }
+    }
+
+    const saveAgentSettings = async () => {
+      savingAgent.value = true
+      try {
+        const payload = {
+          ...agentForm.value,
+          granular_settings: granular.value
+        }
+        const res = await api.post(`/admin/user/${selectedAgent.value.id}/agent-commissions`, payload)
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', 'Agent settings updated')
+          showAgentModal.value = false
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', 'Failed to update agent settings')
+      } finally {
+        savingAgent.value = false
       }
     }
 
@@ -381,6 +565,7 @@ export default {
 
     onMounted(async () => {
       await fetchDirect()
+      await fetchAgents()
       await fetchDefaults()
       await fetchUpgradeRules()
     })
@@ -400,10 +585,33 @@ export default {
       formatAmount,
       fetchDirect,
       saveDirect,
+      fetchAgents,
+      loadingAgents,
+      agents,
+      openAgentSettings,
+      showAgentModal,
+      loadingAgentSettings,
+      selectedAgent,
+      agentForm,
+      settingsTab,
+      savingAgent,
+      saveAgentSettings,
+      generalBlocks,
+      granular,
+      staticCourses,
+      staticAds,
+      staticPartners,
       fetchDefaults,
       saveDefaults,
       fetchUpgradeRules,
       saveRule,
+
+      displayMiniSetting: (settings, type) => {
+        if (!settings) return '0%';
+        const mode = settings[type + '_mode'] || 'percent';
+        const val = settings[type + '_value'] || 0;
+        return mode === 'percent' ? val + '%' : '₹' + val;
+      }
     }
   },
 }
@@ -560,5 +768,24 @@ export default {
 .ma-setting__row{ display:flex; align-items:center; justify-content:space-between; gap: 10px; margin-top: 10px; }
 .ma-label{ color:#94a3b8; font-weight:800; font-size: 0.8rem; }
 .ma-setting__hint{ margin-top: 10px; color: rgba(255,255,255,0.55); font-size: 0.76rem; }
+
+.ma-mini-badge { background: rgba(99,102,241,0.15); color: #a5b4fc; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; border: 1px solid rgba(99,102,241,0.2); }
+
+.ma-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+.ma-modal { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+.ma-modal--lg { max-width: 850px; }
+.ma-modal__header { padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+.ma-modal__title { margin: 0; color: #f1f5f9; font-weight: 700; font-size: 1.1rem; }
+.ma-modal__close { background: none; border: none; color: #94a3b8; font-size: 1.25rem; cursor: pointer; }
+.ma-modal__body { padding: 1.5rem; overflow-y: auto; flex: 1; }
+
+.ma-sub-tabs { display: flex; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px; }
+.ma-sub-tab { background: none; border: none; color: #94a3b8; font-weight: 800; font-size: 0.85rem; padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+.ma-sub-tab:hover { color: #f1f5f9; background: rgba(255,255,255,0.05); }
+.ma-sub-tab.active { color: #fff; background: rgba(99,102,241,0.6); }
+
+.ma-table--small th, .ma-table--small td { padding: 0.5rem 0.75rem; font-size: 0.82rem; }
+.ma-input--sm { height: 32px; width: 120px; font-size: 0.8rem; }
+.ma-select--sm { height: 32px; font-size: 0.8rem; padding: 0 8px; }
 </style>
 

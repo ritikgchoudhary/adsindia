@@ -124,7 +124,7 @@ class PackageController extends Controller
         $request->validate([
             'package_id' => 'required|integer|in:1,2,3,4,5',
             'payment_method' => 'required|in:gateway',
-            'gateway' => 'nullable|string|in:watchpay,simplypay',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
         ]);
 
         $packagesData = [
@@ -185,7 +185,7 @@ class PackageController extends Controller
     /**
      * Process package purchase with balance
      */
-    private function processPackagePurchase($user, $packageId, $package, $remainingAmount, $currentOrder, ?string $gatewayTrx = null)
+    private function processPackagePurchase($user, $packageId, $package, $remainingAmount, $currentOrder, ?string $gatewayTrx = null, ?string $gatewayName = null)
     {
         $postBalance = (float) ($user->balance ?? 0);
 
@@ -198,7 +198,7 @@ class PackageController extends Controller
             $transaction->post_balance = $postBalance;
             $transaction->charge = 0;
             $transaction->trx_type = '-';
-            $transaction->details = 'Upgrade package via WatchPay: ' . $package['name'];
+            $transaction->details = 'Upgrade package via ' . ($gatewayName ?: 'Gateway') . ': ' . $package['name'];
             $transaction->trx = $trx;
             $transaction->remark = 'package_upgrade_gateway';
             $transaction->save();
@@ -267,7 +267,11 @@ class PackageController extends Controller
         $trx = getTrx();
 
         // Create payment session for gateway IPN to update
-        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $cacheKey = $cachePrefix . $trx;
         cache()->put($cacheKey, [
             'type' => 'package',
             'user_id' => $user->id,
@@ -277,9 +281,12 @@ class PackageController extends Controller
             'created_at' => now()->format('Y-m-d H:i:s'),
         ], now()->addHours(2));
 
-        // Return to SPA payment screen to confirm
+        $gw_param = 'watchpay_trx=';
+        if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
+        if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        
         $base = request()->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
-        $pageUrl = $base . '/user/package-payment?' . ($gateway === 'simplypay' ? 'simplypay_trx=' : 'watchpay_trx=') . urlencode($trx) . '&amount=' . $remainingAmount . '&package_id=' . $packageId . '&package_name=' . urlencode($package['name']);
+        $pageUrl = $base . '/user/package-payment?' . $gw_param . urlencode($trx) . '&amount=' . $remainingAmount . '&package_id=' . $packageId . '&package_name=' . urlencode($package['name']);
         $notifyUrl = $base . '/ipn/' . $gateway;
         try {
             if ($gateway === 'simplypay') {
@@ -294,6 +301,17 @@ class PackageController extends Controller
                     'attach' => 'Package: ' . $package['name'],
                 ]);
                 $paymentUrl = $sp['pay_link'];
+            } elseif ($gateway === 'rupeerush') {
+                $ap = \App\Lib\RupeeRushGateway::createPayment([
+                    'outTradeNo' => $trx,
+                    'totalAmount' => $remainingAmount,
+                    'notifyUrl' => $notifyUrl,
+                    'payViewUrl' => $pageUrl,
+                    'payName' => $user->fullname ?: $user->username,
+                    'payEmail' => $user->email,
+                    'payPhone' => $user->mobile,
+                ]);
+                $paymentUrl = $ap['pay_link'];
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -314,7 +332,7 @@ class PackageController extends Controller
             'amount' => $remainingAmount,
             'package_id' => $packageId,
             'package_name' => $package['name'],
-            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : 'WatchPay'),
+            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : ($gateway === 'rupeerush' ? 'RupeeRush' : 'WatchPay')),
         ]);
     }
 
@@ -327,7 +345,7 @@ class PackageController extends Controller
         $request->validate([
             'trx' => 'required|string',
             'package_id' => 'required|integer|in:1,2,3,4,5',
-            'gateway' => 'nullable|string|in:watchpay,simplypay',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
         ]);
 
         $user = auth()->user();
@@ -367,7 +385,11 @@ class PackageController extends Controller
         }
 
         // Gateway verification
-        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $request->trx;
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $cacheKey = $cachePrefix . $request->trx;
         $session = cache()->get($cacheKey);
         if (!is_array($session) || ($session['type'] ?? '') !== 'package' || (int)($session['user_id'] ?? 0) !== (int)$user->id) {
             return responseError('payment_not_found', ['Payment session not found. Please initiate payment again.']);
@@ -377,6 +399,7 @@ class PackageController extends Controller
         }
 
         // Gateway verified: activate package without using wallet
-        return $this->processPackagePurchase($user, $packageId, $package, $remainingAmount, $currentOrder, (string) $request->trx);
+        $gatewayName = ($gateway === 'simplypay' ? 'SimplyPay' : ($gateway === 'rupeerush' ? 'RupeeRush' : 'WatchPay'));
+        return $this->processPackagePurchase($user, $packageId, $package, $remainingAmount, $currentOrder, (string) $request->trx, $gatewayName);
     }
 }

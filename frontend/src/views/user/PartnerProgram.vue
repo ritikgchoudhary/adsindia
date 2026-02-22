@@ -147,7 +147,9 @@ export default {
         return
       }
 
-      const redirectUrl = `/user/payment-redirect?flow=partner_plan&plan_id=${encodeURIComponent(plan.id)}&back=${encodeURIComponent('/user/partner-program')}`
+      const amount = plan.price
+      const planName = plan.name
+      const redirectUrl = `/user/payment-redirect?flow=partner_plan&plan_id=${encodeURIComponent(plan.id)}&amount=${amount}&plan_name=${encodeURIComponent(planName)}&back=${encodeURIComponent('/user/partner-program')}`
       const w = window.open(redirectUrl, '_blank')
       if (!w) {
         router.push(redirectUrl)

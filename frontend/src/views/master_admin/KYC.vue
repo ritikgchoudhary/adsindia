@@ -227,10 +227,6 @@
                   <div class="tw-text-white tw-font-semibold">{{ selectedUser?.firstname }} {{ selectedUser?.lastname }}</div>
                </div>
                <div>
-                  <label class="tw-block tw-text-xs tw-text-slate-500 tw-mb-1">Username</label>
-                  <div class="tw-text-white tw-font-semibold">@{{ selectedUser?.username }}</div>
-               </div>
-               <div>
                   <label class="tw-block tw-text-xs tw-text-slate-500 tw-mb-1">Email Address</label>
                   <div class="tw-text-white tw-font-semibold tw-truncate" :title="selectedUser?.email">{{ selectedUser?.email }}</div>
                </div>
@@ -240,10 +236,6 @@
                </div>
                
                <!-- Bank Details (Added if needed, based on typical KYC flow) -->
-               <div v-if="selectedUser?.upi_id">
-                  <label class="tw-block tw-text-xs tw-text-slate-500 tw-mb-1">UPI ID</label>
-                  <div class="tw-text-white tw-font-semibold">{{ selectedUser?.upi_id }}</div>
-               </div>
             </div>
           </div>
 
@@ -270,8 +262,8 @@
                 <div class="tw-text-white tw-font-semibold">{{ selectedUser?.bank_details?.bank_name || 'N/A' }}</div>
               </div>
               <div>
-                <label class="tw-block tw-text-xs tw-text-slate-500 tw-mb-1">Branch Name</label>
-                <div class="tw-text-white tw-font-semibold">{{ selectedUser?.bank_details?.branch_name || 'N/A' }}</div>
+                <label class="tw-block tw-text-xs tw-text-slate-500 tw-mb-1">UPI Id</label>
+                <div class="tw-text-white tw-font-semibold">{{ selectedUser?.bank_details?.upi_id || 'N/A' }}</div>
               </div>
               <div>
                 <label class="tw-block tw-text-xs tw-text-slate-500 tw-mb-1">Bank Registered Number</label>

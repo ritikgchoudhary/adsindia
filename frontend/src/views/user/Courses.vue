@@ -443,7 +443,8 @@ export default {
           if (window.notify) window.notify('error', 'Please accept Terms & Privacy Policy before payment.')
           return
         }
-        const redirectUrl = `/user/payment-redirect?flow=ad_certificate&back=${encodeURIComponent('/user/courses')}`
+        const amount = adCertificatePrice.value
+        const redirectUrl = `/user/payment-redirect?flow=ad_certificate&amount=${amount}&plan_name=Ad%20Certificate&back=${encodeURIComponent('/user/courses')}`
         const w = window.open(redirectUrl, '_blank')
         if (!w) {
           router.push(redirectUrl)

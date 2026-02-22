@@ -44,6 +44,7 @@
             <div class="tw-flex tw-flex-col tw-gap-5 tw-mb-10">
               <!-- WatchPay Option -->
               <button 
+                v-if="gatewayStatuses.watchpay"
                 @click="selectedGateway = 'watchpay'"
                 class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-indigo-500/50 hover:tw-shadow-lg hover:tw-shadow-indigo-500/5 tw-flex tw-items-center tw-justify-between"
                 :class="selectedGateway === 'watchpay' ? 'tw-border-indigo-500 tw-bg-indigo-500/5 tw-ring-1 tw-ring-indigo-500/50' : ''"
@@ -64,6 +65,7 @@
 
               <!-- SimplyPay Option -->
               <button 
+                v-if="gatewayStatuses.simplypay"
                 @click="selectedGateway = 'simplypay'"
                 class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-emerald-500/50 hover:tw-shadow-lg hover:tw-shadow-emerald-500/5 tw-flex tw-items-center tw-justify-between"
                 :class="selectedGateway === 'simplypay' ? 'tw-border-emerald-500 tw-bg-emerald-500/5 tw-ring-1 tw-ring-emerald-500/50' : ''"
@@ -79,6 +81,48 @@
                 </div>
                 <div class="tw-w-10 tw-h-10 tw-bg-slate-800/50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-transition-colors group-hover:tw-bg-emerald-500/20">
                     <i class="fas fa-chevron-right tw-text-slate-500 tw-text-sm tw-transition-transform group-hover:tw-translate-x-0.5 group-hover:tw-text-emerald-400"></i>
+                </div>
+              </button>
+
+              <!-- RupeeRush Option -->
+              <button 
+                v-if="gatewayStatuses.rupeerush"
+                @click="selectedGateway = 'rupeerush'"
+                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-orange-500/50 hover:tw-shadow-lg hover:tw-shadow-orange-500/5 tw-flex tw-items-center tw-justify-between"
+                :class="selectedGateway === 'rupeerush' ? 'tw-border-orange-500 tw-bg-orange-500/5 tw-ring-1 tw-ring-orange-500/50' : ''"
+              >
+                <div class="tw-flex tw-items-center">
+                  <div class="tw-w-14 tw-h-14 tw-bg-orange-600 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-orange-600/20 tw-transition-transform group-hover:tw-scale-110">
+                    <i class="fas fa-indian-rupee-sign tw-text-white tw-text-xl"></i>
+                  </div>
+                  <div>
+                    <div class="tw-font-bold tw-text-white tw-text-lg">RupeeRush</div>
+                    <div class="tw-text-xs tw-text-slate-500">UPI Gateway - Rupee Rush</div>
+                  </div>
+                </div>
+                <div class="tw-w-10 tw-h-10 tw-bg-slate-800/50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-transition-colors group-hover:tw-bg-orange-500/20">
+                    <i class="fas fa-chevron-right tw-text-slate-500 tw-text-sm tw-transition-transform group-hover:tw-translate-x-0.5 group-hover:tw-text-orange-400"></i>
+                </div>
+              </button>
+
+              <!-- Custom QR Option -->
+              <button 
+                v-if="gatewayStatuses.customqr"
+                @click="selectedGateway = 'custom_qr'"
+                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-slate-500/50 hover:tw-shadow-lg hover:tw-shadow-slate-500/5 tw-flex tw-items-center tw-justify-between"
+                :class="selectedGateway === 'custom_qr' ? 'tw-border-slate-400 tw-bg-slate-500/5 tw-ring-1 tw-ring-slate-400/50' : ''"
+              >
+                <div class="tw-flex tw-items-center">
+                  <div class="tw-w-14 tw-h-14 tw-bg-slate-700 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-slate-600/20 tw-transition-transform group-hover:tw-scale-110">
+                    <i class="fas fa-qrcode tw-text-white tw-text-xl"></i>
+                  </div>
+                  <div>
+                    <div class="tw-font-bold tw-text-white tw-text-lg">Manual QR</div>
+                    <div class="tw-text-xs tw-text-slate-500">Scan & Upload Screenshot</div>
+                  </div>
+                </div>
+                <div class="tw-w-10 tw-h-10 tw-bg-slate-800/50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-transition-colors group-hover:tw-bg-slate-500/20">
+                    <i class="fas fa-chevron-right tw-text-slate-500 tw-text-sm tw-transition-transform group-hover:tw-translate-x-0.5 group-hover:tw-text-slate-400"></i>
                 </div>
               </button>
             </div>
@@ -100,7 +144,7 @@
               <div class="tw-absolute tw-inset-0 tw-border-4 tw-border-indigo-500 tw-border-t-transparent tw-rounded-full tw-animate-spin"></div>
             </div>
             <div class="tw-text-white tw-font-bold tw-text-xl tw-mb-2">Securing Transaction...</div>
-            <div class="tw-text-slate-400 tw-text-sm">Redirecting to {{ selectedGateway === 'simplypay' ? 'SimplyPay' : 'WatchPay' }} gateway</div>
+            <div class="tw-text-slate-400 tw-text-sm">Redirecting to {{ selectedGateway === 'simplypay' ? 'SimplyPay' : (selectedGateway === 'rupeerush' ? 'RupeeRush' : (selectedGateway === 'custom_qr' ? 'Manual QR' : 'WatchPay')) }} gateway</div>
           </div>
 
           <!-- State: Error -->
@@ -147,6 +191,12 @@ export default {
     const status = ref('selecting') // selecting | processing | failed
     const errorMessage = ref('Unknown error')
     const selectedGateway = ref('')
+    const gatewayStatuses = ref({
+      watchpay: 1,
+      simplypay: 1,
+      rupeerush: 1,
+      customqr: 1
+    })
     
     // Dynamic content from query params
     const flowType = computed(() => route.query.flow || 'other')
@@ -175,6 +225,7 @@ export default {
     })
 
     const fetchData = async () => {
+       fetchGatewayStatus()
        const flow = flowType.value
        try {
           if (flow === 'ad_plan' && !route.query.plan_name) {
@@ -204,6 +255,20 @@ export default {
              if (!itemAmount.value || itemAmount.value == 0) itemAmount.value = 990
           } else if (flow === 'withdraw_gst') {
              itemName.value = '18% GST Fee'
+          } else if (flow === 'ad_certificate') {
+             itemName.value = 'Ad Certificate'
+             if (!itemAmount.value || itemAmount.value == 0) itemAmount.value = 1250
+          } else if (flow === 'partner_plan' && !route.query.plan_name) {
+             const planId = parseInt(route.query.plan_id)
+             const res = await api.get('/partner-program/plans')
+             if (res.data?.status === 'success') {
+                const plans = res.data.data || []
+                const plan = plans.find(p => p.id === planId)
+                if (plan) {
+                   itemName.value = plan.name
+                   itemAmount.value = plan.price
+                }
+             }
           }
        } catch (e) { 
          console.error('Fetch error:', e)
@@ -269,6 +334,17 @@ export default {
       router.replace(from)
     }
 
+    const fetchGatewayStatus = async () => {
+      try {
+        const res = await api.get('/gateway-status')
+        if (res.data?.status === 'success') {
+          gatewayStatuses.value = res.data.data
+        }
+      } catch (e) {
+        console.error('Failed to fetch gateway status:', e)
+      }
+    }
+
     onMounted(() => {
       fetchData()
     })
@@ -285,7 +361,8 @@ export default {
       itemAmount,
       currencySymbol,
       formatAmount,
-      pageTitleDisplay
+      pageTitleDisplay,
+      gatewayStatuses
     }
   }
 }

@@ -18,6 +18,10 @@ class AgentCommission
             'kyc' => 'agent_kyc_commission',
             'withdraw_fee' => 'agent_withdraw_fee_commission',
             'upgrade' => 'agent_upgrade_commission',
+            'adplan' => 'agent_adplan_commission',
+            'course' => 'agent_course_commission',
+            'partner' => 'agent_partner_commission',
+            'certificate' => 'agent_certificate_commission',
             'partner_override' => 'agent_partner_override_commission',
             default => 'agent_commission',
         };
@@ -54,6 +58,26 @@ class AgentCommission
             $enabledField = 'upgrade_enabled';
             $modeField = 'upgrade_mode';
             $valueField = 'upgrade_value';
+        } elseif ($type === 'adplan') {
+            $enabledField = 'adplan_enabled';
+            $modeField = 'adplan_mode';
+            $valueField = 'adplan_value';
+        } elseif ($type === 'course') {
+            $enabledField = 'course_enabled';
+            $modeField = 'course_mode';
+            $valueField = 'course_value';
+        } elseif ($type === 'partner') {
+            $enabledField = 'partner_enabled';
+            $modeField = 'partner_mode';
+            $valueField = 'partner_value';
+        } elseif ($type === 'certificate') {
+            $enabledField = 'certificate_enabled';
+            $modeField = 'certificate_mode';
+            $valueField = 'certificate_value';
+        } elseif ($type === 'special_discount') {
+            $enabledField = 'special_discount_enabled';
+            $modeField = 'special_discount_mode';
+            $valueField = 'special_discount_value';
         } elseif ($type === 'partner_override') {
             // Partner override is percent only
             if (!(bool) ($settings->partner_override_enabled ?? false)) return 0.0;
@@ -66,9 +90,25 @@ class AgentCommission
 
         if (!(bool) ($settings->{$enabledField} ?? false)) return 0.0;
 
-        // Per-plan override rules for upgrade/registration (Master Admin controlled)
-        // meta keys: plan_type, plan_id
-        if (($type === 'upgrade' || $type === 'registration') && !empty($meta['plan_type']) && !empty($meta['plan_id'])) {
+        // 1. Check Granular Settings for this specific Agent (Highest priority)
+        if (!empty($meta['plan_id'])) {
+            $granular = is_string($settings->granular_settings) ? json_decode($settings->granular_settings, true) : (array)($settings->granular_settings ?? []);
+            $planId = (string) $meta['plan_id'];
+            if (isset($granular[$type][$planId])) {
+                $item = $granular[$type][$planId];
+                $mode = (string) ($item['mode'] ?? 'percent');
+                $value = (float) ($item['value'] ?? 0);
+                if ($value > 0) {
+                    if ($mode === 'fixed') {
+                        return round($value, 8);
+                    }
+                    return round($baseAmount * $value / 100, 8);
+                }
+            }
+        }
+
+        // 2. Per-plan GLOBAL override rules (Master Admin controlled)
+        if (($type === 'upgrade' || $type === 'registration' || $type === 'adplan' || $type === 'course') && !empty($meta['plan_type']) && !empty($meta['plan_id'])) {
             try {
                 $rule = DB::table('agent_upgrade_commission_rules')
                     ->where('plan_type', (string) $meta['plan_type'])
@@ -89,6 +129,7 @@ class AgentCommission
             }
         }
 
+        // 3. Fallback to Agent's General Setting
         $mode = (string) ($settings->{$modeField} ?? 'percent');
         $value = (float) ($settings->{$valueField} ?? 0);
         if ($value <= 0) return 0.0;

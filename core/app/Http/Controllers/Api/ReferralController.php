@@ -148,11 +148,28 @@ class ReferralController extends Controller
                 ];
             });
 
+        $commissionRemarks = [
+            'referral_commission',
+            'downline_commission',
+            'affiliate_commission',
+            'direct_affiliate_commission',
+            'agent_registration_commission',
+            'agent_kyc_commission',
+            'agent_withdraw_fee_commission',
+            'agent_upgrade_commission',
+            'agent_course_commission',
+            'agent_adplan_commission',
+            'agent_partner_commission',
+            'agent_certificate_commission',
+            'agent_partner_override_commission',
+        ];
+
         $teamStats = [
             'total_members' => User::where('ref_by', $user->id)->count(),
             'active_members' => User::where('ref_by', $user->id)->where('status', 1)->count(),
             'total_earning' => Transaction::where('user_id', $user->id)
-                ->where('remark', 'referral_commission')
+                ->whereIn('remark', $commissionRemarks)
+                ->where('wallet', 'affiliate')
                 ->where('trx_type', '+')
                 ->sum('amount'),
         ];
@@ -162,17 +179,20 @@ class ReferralController extends Controller
 
         $referralEarning = [
             'today' => Transaction::where('user_id', $user->id)
-                ->where('remark', 'referral_commission')
+                ->whereIn('remark', $commissionRemarks)
+                ->where('wallet', 'affiliate')
                 ->where('trx_type', '+')
                 ->where('created_at', '>=', $today)
                 ->sum('amount'),
             'this_month' => Transaction::where('user_id', $user->id)
-                ->where('remark', 'referral_commission')
+                ->whereIn('remark', $commissionRemarks)
+                ->where('wallet', 'affiliate')
                 ->where('trx_type', '+')
                 ->where('created_at', '>=', $thisMonth)
                 ->sum('amount'),
             'total' => Transaction::where('user_id', $user->id)
-                ->where('remark', 'referral_commission')
+                ->whereIn('remark', $commissionRemarks)
+                ->where('wallet', 'affiliate')
                 ->where('trx_type', '+')
                 ->sum('amount'),
         ];
@@ -230,6 +250,8 @@ class ReferralController extends Controller
             'team_stats' => $teamStats,
             'referral_earning' => $referralEarning,
             'currency_symbol' => $general->cur_sym ?? '₹',
+            'is_partner' => (bool)($user->partner_plan_id && $user->partner_plan_valid_until && now()->lt($user->partner_plan_valid_until)),
+            'is_agent' => (bool)$user->is_agent,
         ]);
     }
 }

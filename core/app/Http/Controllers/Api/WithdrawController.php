@@ -258,7 +258,7 @@ class WithdrawController extends Controller
         $request->validate([
             'method_code' => 'required',
             'payout_type' => 'nullable|in:bank,upi',
-            'gateway' => 'nullable|string|in:watchpay,simplypay',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
         ]);
 
         $user = auth()->user();
@@ -315,7 +315,11 @@ class WithdrawController extends Controller
         $trx = getTrx();
         $gateway = $request->input('gateway', 'watchpay');
 
-        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $cacheKey = $cachePrefix . $trx;
         cache()->put($cacheKey, [
             'type' => 'withdraw_gst',
             'user_id' => (int) $user->id,
@@ -328,8 +332,12 @@ class WithdrawController extends Controller
             'created_at' => now()->format('Y-m-d H:i:s'),
         ], now()->addHours(2));
 
+        $gw_param = 'watchpay_trx=';
+        if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
+        if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
-        $pageUrl = $base . '/user/withdraw?' . ($gateway === 'simplypay' ? 'simplypay_trx=' : 'watchpay_trx=') . urlencode($trx) . '&withdraw_gst=1';
+        $pageUrl = $base . '/user/withdraw?' . $gw_param . urlencode($trx) . '&withdraw_gst=1';
         $notifyUrl = $base . '/ipn/' . $gateway;
 
         try {
@@ -345,6 +353,17 @@ class WithdrawController extends Controller
                     'attach' => 'GST Payment for Withdrawal',
                 ]);
                 $paymentUrl = $sp['pay_link'];
+            } elseif ($gateway === 'rupeerush') {
+                $ap = \App\Lib\RupeeRushGateway::createPayment([
+                    'outTradeNo' => $trx,
+                    'totalAmount' => $gstAmount,
+                    'notifyUrl' => $notifyUrl,
+                    'payViewUrl' => $pageUrl,
+                    'payName' => $user->fullname ?: $user->username,
+                    'email' => $user->email,
+                    'payPhone' => $user->mobile,
+                ]);
+                $paymentUrl = $ap['pay_link'];
             } else {
                 $wp = WatchPayGateway::createWebPayment(
                     $trx,
@@ -366,7 +385,7 @@ class WithdrawController extends Controller
             'gst_percent' => (float) self::MAIN_WITHDRAW_GST_PERCENT,
             'gst_amount' => (float) $gstAmount,
             'currency_symbol' => $general->cur_sym ?? '₹',
-            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : 'WatchPay'),
+            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : ($gateway === 'rupeerush' ? 'RupeeRush' : 'WatchPay')),
         ]);
     }
 
@@ -374,14 +393,17 @@ class WithdrawController extends Controller
     {
         $request->validate([
             'trx' => 'required|string',
-            'gateway' => 'nullable|string|in:watchpay,simplypay',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
         ]);
 
         $user = auth()->user();
         $trx = (string) $request->trx;
         $gateway = $request->input('gateway', 'watchpay');
-
-        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $cacheKey = $cachePrefix . $trx;
         $session = cache()->get($cacheKey);
         if (!is_array($session) || ($session['type'] ?? '') !== 'withdraw_gst' || (int)($session['user_id'] ?? 0) !== (int)$user->id) {
             return responseError('payment_not_found', ['Payment session not found. Please initiate GST payment again.']);

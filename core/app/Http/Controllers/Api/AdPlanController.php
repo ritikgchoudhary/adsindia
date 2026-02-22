@@ -193,7 +193,7 @@ class AdPlanController extends Controller
         $request->validate([
             'plan_id' => 'required|integer',
             'payment_method' => 'required|in:gateway', // Only gateway payment
-            'gateway' => 'nullable|string|in:watchpay,simplypay',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush,custom_qr',
         ]);
 
         // Get the AdPackage by ID
@@ -205,8 +205,14 @@ class AdPlanController extends Controller
             return responseError('plan_not_found', ['Ad plan not found']);
         }
 
+        $gateway = $request->input('gateway', 'watchpay');
+        $gw = \App\Models\Gateway::where('alias', $gateway)->first();
+        if (!$gw || $gw->status != 1) {
+            return responseError('gateway_unavailable', ['Selected payment gateway is currently unavailable.']);
+        }
+
         // Only gateway payment is allowed
-        return $this->initiateGatewayPayment($user, $adPackage, $request->input('gateway', 'watchpay'));
+        return $this->initiateGatewayPayment($user, $adPackage, $gateway);
     }
 
     /**
@@ -238,7 +244,7 @@ class AdPlanController extends Controller
         $transaction->post_balance = $user->balance;
         $transaction->charge = 0;
         $transaction->trx_type = '-';
-        $transaction->details = 'Purchase ad plan via WatchPay: ' . $adPackage->name;
+        $transaction->details = 'Purchase ad plan via ' . ($gatewayTrx ? ($request->gateway == 'simplypay' ? 'SimplyPay' : ($request->gateway == 'rupeerush' ? 'RupeeRush' : 'WatchPay')) : 'Gateway') . ': ' . $adPackage->name;
         $transaction->trx = $trx;
         $transaction->remark = 'ad_plan_purchase';
         $transaction->save();
@@ -249,7 +255,7 @@ class AdPlanController extends Controller
             if ($agentId > 0) {
                 AgentCommission::process(
                     $agentId,
-                    'upgrade',
+                    'adplan',
                     (float) ($adPackage->price ?? 0),
                     (string) $trx,
                     'Agent commission from User#' . (int) $user->id . ' – Ad Plan: ' . (string) ($adPackage->name ?? '') . ' | Base: ₹' . (float) ($adPackage->price ?? 0),
@@ -277,7 +283,11 @@ class AdPlanController extends Controller
         $trx = getTrx();
 
         // Create a payment session for gateway IPN to update
-        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $cacheKey = $cachePrefix . $trx;
         cache()->put($cacheKey, [
             'type' => 'ad_plan',
             'user_id' => $user->id,
@@ -288,8 +298,12 @@ class AdPlanController extends Controller
         ], now()->addHours(2));
 
         // Page return to SPA payment screen to confirm
+        $gw_param = 'watchpay_trx=';
+        if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
+        if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        
         $base = request()->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
-        $pageUrl = $base . '/user/ad-plans/payment?' . ($gateway === 'simplypay' ? 'simplypay_trx=' : 'watchpay_trx=') . urlencode($trx) . '&plan_id=' . $adPackage->id . '&amount=' . $adPackage->price . '&plan_name=' . urlencode($adPackage->name);
+        $pageUrl = $base . '/user/ad-plans/payment?' . $gw_param . urlencode($trx) . '&plan_id=' . $adPackage->id . '&amount=' . $adPackage->price . '&plan_name=' . urlencode($adPackage->name);
         $notifyUrl = $base . '/ipn/' . $gateway;
         try {
             if ($gateway === 'simplypay') {
@@ -304,6 +318,17 @@ class AdPlanController extends Controller
                     'attach' => 'Ad Plan: ' . $adPackage->name,
                 ]);
                 $paymentUrl = $sp['pay_link'];
+            } elseif ($gateway === 'rupeerush') {
+                $ap = \App\Lib\RupeeRushGateway::createPayment([
+                    'outTradeNo' => $trx,
+                    'totalAmount' => $adPackage->price,
+                    'notifyUrl' => $notifyUrl,
+                    'payViewUrl' => $pageUrl,
+                    'payName' => $user->fullname ?: $user->username,
+                    'payEmail' => $user->email,
+                    'payPhone' => $user->mobile,
+                ]);
+                $paymentUrl = $ap['pay_link'];
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -323,7 +348,7 @@ class AdPlanController extends Controller
             'payment_url' => $paymentUrl,
             'trx' => $trx,
             'amount' => $adPackage->price,
-            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : 'WatchPay'),
+            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : ($gateway === 'rupeerush' ? 'RupeeRush' : 'WatchPay')),
         ]);
     }
 
@@ -336,7 +361,7 @@ class AdPlanController extends Controller
         $request->validate([
             'trx' => 'required|string',
             'plan_id' => 'required|integer',
-            'gateway' => 'nullable|string|in:watchpay,simplypay',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
         ]);
 
         $user = auth()->user();
@@ -353,7 +378,11 @@ class AdPlanController extends Controller
         }
 
         // Gateway verification
-        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $request->trx;
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $cacheKey = $cachePrefix . $request->trx;
         $session = cache()->get($cacheKey);
         if (!is_array($session) || ($session['type'] ?? '') !== 'ad_plan' || (int)($session['user_id'] ?? 0) !== (int)$user->id) {
             return responseError('payment_not_found', ['Payment session not found. Please initiate payment again.']);

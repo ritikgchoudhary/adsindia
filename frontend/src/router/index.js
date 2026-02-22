@@ -161,12 +161,12 @@ const routes = [
     component: () => import('../views/user/WithdrawHistory.vue'),
     meta: { requiresAuth: true }
   },
-  {
+  /* {
     path: '/user/deposit/history',
     name: 'DepositHistory',
     component: () => import('../views/user/DepositHistory.vue'),
     meta: { requiresAuth: true }
-  },
+  }, */
   {
     path: '/user/kyc-form',
     name: 'KYCForm',

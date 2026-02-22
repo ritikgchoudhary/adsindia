@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Constants\Status;
+use App\Lib\AgentCommission;
+use App\Lib\DirectAffiliateCommission;
 use App\Models\User;
 use App\Models\UserLogin;
 use App\Models\AdminNotification;
@@ -226,11 +228,17 @@ class RegisterController extends Controller
     {
         $request->validate([
             'registration_token' => 'required|string',
-            'gateway' => 'nullable|string|in:watchpay,simplypay',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
         ]);
 
         $regToken = $request->registration_token;
-        $gateway = $request->gateway == 'simplypay' ? 'simplypay' : 'watchpay';
+        $gateway = $request->input('gateway', 'watchpay');
+        
+        $gw = \App\Models\Gateway::where('alias', $gateway)->first();
+        if (!$gw || $gw->status != 1) {
+            return responseError('gateway_unavailable', ['Selected payment gateway is currently unavailable.']);
+        }
+        
         $registrationData = cache()->get('reg_' . $regToken);
 
         if (!$registrationData) {
@@ -261,20 +269,40 @@ class RegisterController extends Controller
         ];
         cache()->put('reg_payment_' . $trx, $paymentData, now()->addMinutes(30));
 
+        $gw_param = 'watchpay_trx=';
+        if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
+        if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        
         // Create Payment via Gateway Selection
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
-        $pageUrl = $base . '/register?' . ($gateway == 'simplypay' ? 'simplypay_trx' : 'watchpay_trx') . '=' . urlencode($trx);
-        $notifyUrl = $base . '/ipn/' . ($gateway == 'simplypay' ? 'simplypay' : 'watchpay');
+        $pageUrl = $base . '/register?' . $gw_param . urlencode($trx);
+        $notifyUrl = $base . '/ipn/' . $gateway;
         
         try {
             if ($gateway == 'simplypay') {
-                $paymentUrl = \App\Lib\SimplyPayGateway::createPayment(
-                    $trx,
-                    (float) $registrationFee,
-                    'Registration: ' . (string) ($pkgMeta['name'] ?? 'Package'),
-                    $pageUrl,
-                    $notifyUrl
-                );
+                $sp = \App\Lib\SimplyPayGateway::createPayment([
+                    'merOrderNo' => $trx,
+                    'amount' => (float) $registrationFee,
+                    'goodsName' => 'Registration: ' . (string) ($pkgMeta['name'] ?? 'Package'),
+                    'returnUrl' => $pageUrl,
+                    'notifyUrl' => $notifyUrl,
+                    'name' => ($registrationData['firstname'] ?? '') . ' ' . ($registrationData['lastname'] ?? ''),
+                    'email' => $registrationData['email'] ?? '',
+                    'mobile' => $registrationData['mobile'] ?? '',
+                    'attach' => 'registration_temp_id:' . $trx
+                ]);
+                $paymentUrl = $sp['pay_link'];
+            } elseif ($gateway == 'rupeerush') {
+                $ap = \App\Lib\RupeeRushGateway::createPayment([
+                    'outTradeNo' => $trx,
+                    'totalAmount' => (float) $registrationFee,
+                    'notifyUrl' => $notifyUrl,
+                    'payViewUrl' => $pageUrl,
+                    'payName' => ($registrationData['firstname'] ?? '') . ' ' . ($registrationData['lastname'] ?? ''),
+                    'payEmail' => $registrationData['email'] ?? '',
+                    'payPhone' => $registrationData['mobile'] ?? '',
+                ]);
+                $paymentUrl = $ap['pay_link'];
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -289,8 +317,12 @@ class RegisterController extends Controller
             return responseError('payment_gateway_error', ['Payment gateway init failed: ' . $e->getMessage()]);
         }
 
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
         // Store status session for IPN (consistent key for both gateways)
-        cache()->put($gateway . '_payment_' . $trx, [
+        cache()->put($cachePrefix . $trx, [
             'type' => 'registration_fee',
             'registration_token' => $regToken,
             'amount' => $registrationFee,
@@ -305,7 +337,7 @@ class RegisterController extends Controller
             'trx' => $trx,
             'amount' => $registrationFee,
             'currency_symbol' => gs('cur_sym') ?? '₹',
-            'gateway_name' => $gateway == 'simplypay' ? 'SimplyPay' : 'WatchPay',
+            'gateway_name' => $gateway == 'simplypay' ? 'SimplyPay' : ($gateway == 'rupeerush' ? 'RupeeRush' : 'WatchPay'),
             'package_name' => (string) ($pkgMeta['name'] ?? 'Package'),
         ]);
     }
@@ -339,7 +371,11 @@ class RegisterController extends Controller
             return responseError('payment_not_verified', ['Payment not verified. Please complete payment first.']);
         }
         $gateway = $paymentData['gateway'] ?? 'watchpay';
-        $gwSession = cache()->get($gateway . '_payment_' . $paymentTrx);
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $gwSession = cache()->get($cachePrefix . $paymentTrx);
         $gwOk = is_array($gwSession) && (($gwSession['status'] ?? '') === 'success') && (($gwSession['registration_token'] ?? null) === $regToken);
         $legacyOk = (($paymentData['status'] ?? '') === 'success');
         
@@ -484,6 +520,26 @@ class RegisterController extends Controller
                     (float) $finalPackagePrice,
                     (string) $regFeeTrx,
                     (string) $packageName
+                );
+            }
+        } catch (\Throwable $e) {
+            // non-blocking
+        }
+
+        // Agent commission (only if sponsor is Agent)
+        try {
+            if ($user->ref_by > 0) {
+                // Determine if special discount link was used (signed link)
+                $isSpecialLink = !empty($registrationData['pkg_sig']);
+                $commissionType = $isSpecialLink ? 'special_discount' : 'registration';
+                
+                AgentCommission::process(
+                    (int) $user->ref_by,
+                    $commissionType,
+                    (float) $finalPackagePrice,
+                    (string) $regFeeTrx,
+                    'Agent commission from User#' . (int) $user->id . ' – Package: ' . $packageName . ($isSpecialLink ? ' (Special Link)' : '') . ' | Base: ₹' . (float) $finalPackagePrice,
+                    ['plan_type' => 'package', 'plan_id' => (int) $packageId]
                 );
             }
         } catch (\Throwable $e) {

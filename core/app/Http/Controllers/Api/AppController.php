@@ -479,4 +479,20 @@ class AppController extends Controller
 
         return responseSuccess('campaign', ['Campaign details retrieved successfully'], $campaign);
     }
+
+    public function paymentMethodsStatus()
+    {
+        $allowedAliases = ['simplypay', 'watchpay', 'rupeerush', 'custom_qr'];
+        $gateways = \App\Models\Gateway::whereIn('alias', $allowedAliases)->get(['alias', 'status']);
+        
+        $status = [];
+        foreach ($gateways as $gateway) {
+            $status[strtolower($gateway->alias)] = (int)$gateway->status;
+        }
+        
+        // Handle variations
+        if (isset($status['custom_qr'])) $status['customqr'] = $status['custom_qr'];
+
+        return responseSuccess('gateway_status', ['Gateway status retrieved successfully'], $status);
+    }
 }

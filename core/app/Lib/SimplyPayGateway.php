@@ -26,24 +26,33 @@ class SimplyPayGateway
     public static function sign(array $params, string $appSecret): string
     {
         unset($params['sign']);
+        ksort($params);
 
-        $filtered = [];
+        $parts = [];
         foreach ($params as $k => $v) {
-            // Include everything except 'sign', even empty objects/arrays if they are strings
             if ($v === '' || $v === null) continue;
-            $filtered[$k] = $v;
-        }
-
-        ksort($filtered);
-
-        $queryString = '';
-        foreach ($filtered as $k => $v) {
+            
             if (is_array($v) || is_object($v)) {
-                $v = json_encode($v, JSON_UNESCAPED_SLASHES);
+                if ($k === 'extra') {
+                    // For 'extra' field (request), serialize as sorted query string WITHOUT trailing &
+                    $sub = (array) $v;
+                    ksort($sub);
+                    $subParts = [];
+                    foreach ($sub as $sk => $sv) {
+                        $subParts[] = $sk . '=' . $sv;
+                    }
+                    $v = implode('&', $subParts);
+                } else {
+                    // For others (like 'params' in response), serialize as JSON with unescaped slashes
+                    $v = json_encode($v, JSON_UNESCAPED_SLASHES);
+                }
             }
-            $queryString .= $k . '=' . $v . '&';
+            $parts[] = $k . '=' . $v;
         }
-        $queryString .= 'key=' . $appSecret;
+        $parts[] = 'key=' . $appSecret;
+        $queryString = implode('&', $parts);
+
+        \Log::info('SimplyPay Signature Base String', ['string' => $queryString]);
 
         return strtolower(hash('sha256', $queryString));
     }
@@ -55,6 +64,7 @@ class SimplyPayGateway
      */
     public static function createPayment(array $data): array
     {
+        \Log::info('SimplyPay createPayment data', ['data' => $data]);
         $appId = static::appId();
         $appSecret = static::appSecret();
         $requestUrl = static::apiUrl();
@@ -68,17 +78,39 @@ class SimplyPayGateway
             'amount'     => number_format((float)$data['amount'], 2, '.', ''),
             'attach'     => (string) ($data['attach'] ?? 'Payment'),
             'extra'      => [
-                'name'   => (string) ($data['name'] ?? 'User'),
-                'email'  => (string) ($data['email'] ?? 'user@example.com'),
-                'mobile' => (string) ($data['mobile'] ?? '0000000000'),
+                'name'   => (string) ($data['name'] ?? ($data['extra']['name'] ?? 'User')),
+                'email'  => (string) ($data['email'] ?? ($data['extra']['email'] ?? 'user@example.com')),
+                'mobile' => (string) ($data['mobile'] ?? ($data['extra']['mobile'] ?? '0000000000')),
             ],
         ];
 
         $params['sign'] = static::sign($params, $appSecret);
 
-        $response = CurlRequest::curlPostContent($requestUrl, json_encode($params), [
+        \Log::info('SimplyPay Request', ['url' => $requestUrl, 'params' => $params]);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_URL, $requestUrl);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params, JSON_UNESCAPED_SLASHES));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
+            'Accept: application/json',
         ]);
+        
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($error) {
+            \Log::error('SimplyPay CURL Error', ['error' => $error]);
+            throw new \RuntimeException('Gateway connection error');
+        }
+
+        \Log::info('SimplyPay Response', ['code' => $httpCode, 'response' => $response]);
 
         $resData = json_decode((string) $response, true);
         if (!is_array($resData)) {
@@ -93,17 +125,16 @@ class SimplyPayGateway
 
         $paymentData = $resData['data'] ?? [];
         $paramsData  = $paymentData['params'] ?? [];
-        
-        $payLink = (string) ($paramsData['paymentLink'] ?? '');
-        $orderNo = (string) ($paymentData['orderNo'] ?? '');
-        $mchNo   = (string) ($paymentData['merOrderNo'] ?? $data['merOrderNo']);
+        $paymentUrl  = (string) ($paramsData['url'] ?? ($paramsData['paymentLink'] ?? ''));
+        $orderNo     = (string) ($paymentData['orderNo'] ?? '');
+        $mchNo       = (string) ($paymentData['merOrderNo'] ?? ($data['merOrderNo'] ?? ''));
 
-        if ($payLink === '') {
-            throw new \RuntimeException('SimplyPay response missing paymentLink');
+        if ($paymentUrl === '') {
+            throw new \RuntimeException('SimplyPay response missing payment URL');
         }
 
         return [
-            'pay_link' => $payLink,
+            'pay_link' => $paymentUrl,
             'order_no' => $orderNo,
             'mch_order_no' => $mchNo,
             'raw' => $resData,

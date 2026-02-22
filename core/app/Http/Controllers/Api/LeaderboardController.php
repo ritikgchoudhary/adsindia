@@ -62,9 +62,10 @@ class LeaderboardController extends Controller
                 DB::raw('COALESCE(conv.conversion_income, 0) as conversion_income'),
                 DB::raw('(COALESCE(trx.ads_income, 0) + COALESCE(conv.conversion_income, 0)) as earning'),
             ])
+            ->having('earning', '>', 0)
             ->orderByDesc('earning')
             ->orderBy('users.id')
-            ->limit(100)
+            ->limit(10)
             ->get();
 
         $leaderboard = $rows->map(function ($user, $index) {
@@ -79,7 +80,40 @@ class LeaderboardController extends Controller
                 'ads_income' => (float) ($user->ads_income ?? 0),
                 'conversion_income' => (float) ($user->conversion_income ?? 0),
             ];
-        });
+        })->toArray();
+
+        // Testing: Add dummy data if less than 10
+        if (count($leaderboard) < 10) {
+            $dummyNames = [
+                'Arjun Sharma', 'Priya Patel', 'Rahul Verma', 'Sneha Reddy', 
+                'Vikram Singh', 'Ananya Gupta', 'Aditya Mishra', 'Ishani Rao',
+                'Karan Malhotra', 'Riya Sen', 'Siddharth Jain', 'Meera Nair'
+            ];
+            $baseRank = count($leaderboard) + 1;
+            $needed = 10 - count($leaderboard);
+            for ($i = 0; $i < $needed; $i++) {
+                $leaderboard[] = [
+                    'rank' => $baseRank + $i,
+                    'user_id' => 1000 + $i,
+                    'name' => $dummyNames[$i % count($dummyNames)],
+                    'username' => '',
+                    'image' => 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($dummyNames[$i % count($dummyNames)]),
+                    'earning' => (float) (5000 - ($i * 450)),
+                    'ads_income' => (float) (2000),
+                    'conversion_income' => (float) (3000 - ($i * 450)),
+                ];
+            }
+            
+            // Re-sort mock data by earning
+            usort($leaderboard, function($a, $b) {
+                return $b['earning'] <=> $a['earning'];
+            });
+            
+            // Re-assign ranks
+            foreach ($leaderboard as $idx => &$item) {
+                $item['rank'] = $idx + 1;
+            }
+        }
 
         // Current user rank (within full set, not just top 100)
         $authUser = auth()->user();

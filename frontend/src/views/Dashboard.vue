@@ -173,7 +173,7 @@
                 :class="`${stat.from} ${stat.to}`"
               >
                 <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-bg-white/20 tw-flex tw-items-center tw-justify-center tw-text-xl tw-mb-3">
-                  <i :class="stat.icon"></i>
+                   <i :class="stat.icon"></i>
                 </div>
                 <span class="tw-text-xs tw-font-bold tw-uppercase tw-opacity-90 tw-tracking-wide">{{ stat.label }}</span>
                 <h3 class="tw-text-2xl tw-font-extrabold tw-mt-1 tw-mb-0">
@@ -364,7 +364,7 @@ export default {
 
     // Track animation sequences per ref so multiple widgets can animate simultaneously.
     const animSeqMap = new WeakMap()
-    const animateTo = (targetRef, to, duration = 300) => {
+    const animateTo = (targetRef, to, duration = 1000) => {
       const seq = (animSeqMap.get(targetRef) || 0) + 1
       animSeqMap.set(targetRef, seq)
       const toNum = Number(to) || 0

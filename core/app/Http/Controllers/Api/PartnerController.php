@@ -70,7 +70,7 @@ class PartnerController extends Controller
         $user = auth()->user();
         $request->validate([
             'plan_id' => 'required|integer|in:1,2,3,4',
-            'gateway' => 'nullable|string|in:watchpay,simplypay',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
         ]);
 
         $planPrices = [1 => 1999, 2 => 3999, 3 => 5999, 4 => 9999];
@@ -79,7 +79,16 @@ class PartnerController extends Controller
         $trx = getTrx();
         $gateway = $request->input('gateway', 'watchpay');
 
-        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        $gw = \App\Models\Gateway::where('alias', $gateway)->first();
+        if (!$gw || $gw->status != 1) {
+            return responseError('gateway_unavailable', ['Selected payment gateway is currently unavailable.']);
+        }
+
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $cacheKey = $cachePrefix . $trx;
         cache()->put($cacheKey, [
             'type' => 'partner_program',
             'user_id' => $user->id,
@@ -89,8 +98,12 @@ class PartnerController extends Controller
             'created_at' => now()->format('Y-m-d H:i:s'),
         ], now()->addHours(2));
 
+        $gw_param = 'watchpay_trx=';
+        if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
+        if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
-        $pageUrl = $base . '/user/partner-program?' . ($gateway === 'simplypay' ? 'simplypay_trx=' : 'watchpay_trx=') . urlencode($trx) . '&partner_plan_id=' . (int) $request->plan_id;
+        $pageUrl = $base . '/user/partner-program?' . $gw_param . urlencode($trx) . '&partner_plan_id=' . (int) $request->plan_id;
         $notifyUrl = $base . '/ipn/' . $gateway;
 
         try {
@@ -106,6 +119,17 @@ class PartnerController extends Controller
                     'attach' => 'Partner Program',
                 ]);
                 $paymentUrl = $sp['pay_link'];
+            } elseif ($gateway === 'rupeerush') {
+                $ap = \App\Lib\RupeeRushGateway::createPayment([
+                    'outTradeNo' => $trx,
+                    'totalAmount' => $planPrice,
+                    'notifyUrl' => $notifyUrl,
+                    'payViewUrl' => $pageUrl,
+                    'payName' => $user->fullname ?: $user->username,
+                    'payEmail' => $user->email,
+                    'payPhone' => $user->mobile,
+                ]);
+                $paymentUrl = $ap['pay_link'];
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -125,7 +149,7 @@ class PartnerController extends Controller
             'trx' => $trx,
             'amount' => (float) $planPrice,
             'plan_id' => (int) $request->plan_id,
-            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : 'WatchPay'),
+            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : ($gateway === 'rupeerush' ? 'RupeeRush' : 'WatchPay')),
         ]);
     }
 
@@ -135,12 +159,16 @@ class PartnerController extends Controller
         $request->validate([
             'trx' => 'required|string',
             'plan_id' => 'required|integer|in:1,2,3,4',
-            'gateway' => 'nullable|string|in:watchpay,simplypay',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
         ]);
 
         $trx = (string) $request->trx;
         $gateway = $request->input('gateway', 'watchpay');
-        $cacheKey = ($gateway === 'simplypay' ? 'simplypay_payment_' : 'watchpay_payment_') . $trx;
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $cacheKey = $cachePrefix . $trx;
 
         $session = cache()->get($cacheKey);
         if (!is_array($session) || ($session['type'] ?? '') !== 'partner_program' || (int)($session['user_id'] ?? 0) !== (int)$user->id) {
@@ -170,10 +198,24 @@ class PartnerController extends Controller
         $transaction->post_balance = $user->balance;
         $transaction->charge = 0;
         $transaction->trx_type = '-';
-        $transaction->details = 'Join Partner Program via WatchPay';
+        $transaction->details = 'Join Partner Program via ' . ($gateway == 'simplypay' ? 'SimplyPay' : ($gateway == 'rupeerush' ? 'RupeeRush' : 'WatchPay'));
         $transaction->trx = $trx;
         $transaction->remark = 'partner_program_gateway';
         $transaction->save();
+
+        // Agent commission
+        try {
+            $agentId = (int) ($user->ref_by ?? 0);
+            if ($agentId > 0) {
+                \App\Lib\AgentCommission::process(
+                    $agentId,
+                    'partner',
+                    (float) $planPrice,
+                    $trx,
+                    'Agent commission from User#' . $user->id . ' (Partner Program) | Base: ₹' . $planPrice
+                );
+            }
+        } catch (\Throwable $e) {}
 
         return responseSuccess('partner_program_joined', ['Partner program joined successfully']);
     }

@@ -48,6 +48,7 @@ Route::namespace('Api')->name('api.')->group(function(){
         Route::get('traffic-types', 'getTrafficTypes');
         Route::get('campaigns', 'getCampaigns');
         Route::get('campaign/details/{slug}', 'getCampaignDetails');
+        Route::get('gateway-status', 'paymentMethodsStatus');
         Route::get('ticket/{ticket}', 'viewTicket');
         Route::post('ticket/ticket-reply/{id}', 'replyTicket');
     });
@@ -258,6 +259,7 @@ Route::namespace('Api')->name('api.')->group(function(){
             Route::get('dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard']);
             Route::get('user', [\App\Http\Controllers\Admin\AdminController::class, 'user']);
             Route::get('users', [\App\Http\Controllers\Admin\AdminController::class, 'allUsers']);
+            Route::get('users/counts', [\App\Http\Controllers\Admin\AdminController::class, 'allUsersCounts']);
             Route::post('users/create', [\App\Http\Controllers\Admin\AdminController::class, 'createUser']);
             Route::post('user/{id}/ban', [\App\Http\Controllers\Admin\AdminController::class, 'banUser']);
             Route::post('user/{id}/unban', [\App\Http\Controllers\Admin\AdminController::class, 'unbanUser']);
@@ -312,6 +314,16 @@ Route::namespace('Api')->name('api.')->group(function(){
             Route::post('deposit/reject', [\App\Http\Controllers\Admin\DepositController::class, 'reject']);
             Route::post('withdraw/approve', [\App\Http\Controllers\Admin\AdminController::class, 'approveWithdrawal']);
             Route::post('withdraw/reject', [\App\Http\Controllers\Admin\AdminController::class, 'rejectWithdrawal']);
+            // Master Admin Settings & History Clear
+            Route::get('agents', [\App\Http\Controllers\Admin\AdminController::class, 'getAgents']);
+            Route::post('clear-history/transactions', [\App\Http\Controllers\Admin\AdminController::class, 'clearTransactions']);
+            Route::post('clear-history/orders', [\App\Http\Controllers\Admin\AdminController::class, 'clearOrders']);
+            Route::post('clear-history/deposits', [\App\Http\Controllers\Admin\AdminController::class, 'clearDeposits']);
+            Route::post('clear-history/withdrawals', [\App\Http\Controllers\Admin\AdminController::class, 'clearWithdrawals']);
+            Route::post('clear-history/commissions', [\App\Http\Controllers\Admin\AdminController::class, 'clearCommissions']);
+            Route::post('clear-history/user-logins', [\App\Http\Controllers\Admin\AdminController::class, 'clearUserLogins']);
+            Route::post('clear-history/notifications', [\App\Http\Controllers\Admin\AdminController::class, 'clearNotifications']);
+
             // Dummy (GET) deposit gateway – creates pending deposit for admin approval
             Route::get('dummy/user-deposit', [\App\Http\Controllers\Admin\DummyGatewayController::class, 'createUserDeposit']);
             

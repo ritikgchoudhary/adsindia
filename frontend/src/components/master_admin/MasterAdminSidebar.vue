@@ -15,25 +15,30 @@
         <i class="fas fa-times"></i>
       </button>
     </div>
-    <ul class="sidebar-menu">
-      <li :class="{ active: isActive('/master_admin/dashboard') }"><router-link to="/master_admin/dashboard"><i class="fas fa-home"></i><span>Dashboard</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/users') }"><router-link to="/master_admin/users"><i class="fas fa-users"></i><span>All Users</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/orders') }"><router-link to="/master_admin/orders"><i class="fas fa-receipt"></i><span>All Orders</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/deposits') }"><router-link to="/master_admin/deposits"><i class="fas fa-arrow-down"></i><span>Deposits</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/withdrawals') }"><router-link to="/master_admin/withdrawals"><i class="fas fa-arrow-up"></i><span>Withdrawals</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/transactions') }"><router-link to="/master_admin/transactions"><i class="fas fa-exchange-alt"></i><span>Transactions</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/gateways') }"><router-link to="/master_admin/gateways"><i class="fas fa-credit-card"></i><span>Gateway Management</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/commissions') }"><router-link to="/master_admin/commissions"><i class="fas fa-coins"></i><span>Commission Management</span></router-link></li>
-      <li :class="{ active: route.query.tab === 'agent_defaults' }"><router-link to="/master_admin/commissions?tab=agent_defaults"><i class="fas fa-user-shield"></i><span>Agent Commissions</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/special-links') }"><router-link to="/master_admin/special-links"><i class="fas fa-tag"></i><span>Special Discount Links</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/kyc') }"><router-link to="/master_admin/kyc"><i class="fas fa-id-card"></i><span>KYC Management</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/reports') }"><router-link to="/master_admin/reports"><i class="fas fa-chart-bar"></i><span>Reports</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/courses') }"><router-link to="/master_admin/courses"><i class="fas fa-play-circle"></i><span>Courses & Videos</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/admins') }"><router-link to="/master_admin/admins"><i class="fas fa-user-shield"></i><span>Admins</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/settings') }"><router-link to="/master_admin/settings"><i class="fas fa-cog"></i><span>Settings</span></router-link></li>
-      <li :class="{ active: isActive('/master_admin/customer-support') }"><router-link to="/master_admin/customer-support"><i class="fas fa-headset"></i><span>Customer Support</span></router-link></li>
-      <li><a href="#" @click.prevent="handleLogout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
-    </ul>
+
+    <div class="sidebar-content">
+      <div v-for="(group, gIdx) in menuGroups" :key="gIdx" class="menu-group">
+        <div class="menu-group-label">{{ group.label }}</div>
+        <ul class="sidebar-menu">
+          <li v-for="(item, iIdx) in group.items" :key="iIdx" :class="{ active: isActive(item.path) }">
+            <router-link :to="item.path">
+              <i :class="item.icon"></i>
+              <span>{{ item.title }}</span>
+            </router-link>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Logout (Outside Groups) -->
+      <ul class="sidebar-menu mt-auto">
+        <li>
+          <a href="#" @click.prevent="handleLogout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -52,13 +57,55 @@ export default {
     const route = useRoute()
     const router = useRouter()
     
-    const isActive = (path) => route.path === path || route.path.startsWith(path + '/')
+    const isActive = (path) => route.path === path || (path !== '/master_admin/dashboard' && route.path.startsWith(path + '/'))
     const logoUrl = ref('/assets/images/logo_icon/logo.png?v=' + new Date().getTime())
     
     const onLogoError = () => {
       // detailed error handling or fallback if needed
-      // for now, we keep it simple or maybe verify the path
     }
+
+    const menuGroups = [
+      {
+        label: 'Dashboard',
+        items: [
+          { title: 'Home', path: '/master_admin/dashboard', icon: 'fas fa-home' },
+        ]
+      },
+      {
+        label: 'User Management',
+        items: [
+          { title: 'All Users', path: '/master_admin/users', icon: 'fas fa-users' },
+          { title: 'KYC Management', path: '/master_admin/kyc', icon: 'fas fa-id-card' },
+          { title: 'Admins', path: '/master_admin/admins', icon: 'fas fa-user-shield' },
+        ]
+      },
+      {
+        label: 'Financials',
+        items: [
+          { title: 'All Orders', path: '/master_admin/orders', icon: 'fas fa-receipt' },
+          { title: 'Deposits', path: '/master_admin/deposits', icon: 'fas fa-arrow-down' },
+          { title: 'Withdrawals', path: '/master_admin/withdrawals', icon: 'fas fa-arrow-up' },
+          { title: 'Transactions', path: '/master_admin/transactions', icon: 'fas fa-exchange-alt' },
+          { title: 'Commissions', path: '/master_admin/commissions', icon: 'fas fa-coins' },
+          { title: 'Support Tickets', path: '/master_admin/customer-support', icon: 'fas fa-headset' },
+        ]
+      },
+      {
+        label: 'Platform Assets',
+        items: [
+          { title: 'Gateways', path: '/master_admin/gateways', icon: 'fas fa-credit-card' },
+          { title: 'Special Links', path: '/master_admin/special-links', icon: 'fas fa-tag' },
+          { title: 'Courses & Videos', path: '/master_admin/courses', icon: 'fas fa-play-circle' },
+        ]
+      },
+      {
+        label: 'System',
+        items: [
+          { title: 'Reports', path: '/master_admin/reports', icon: 'fas fa-chart-bar' },
+          { title: 'Settings', path: '/master_admin/settings', icon: 'fas fa-cog' },
+        ]
+      }
+    ]
 
     const handleLogout = async () => {
       try { await api.post('/admin/logout') } catch (e) {}
@@ -66,7 +113,7 @@ export default {
       router.push('/master_admin/login')
     }
     
-    return { isActive, handleLogout, logoUrl, onLogoError, route }
+    return { isActive, handleLogout, logoUrl, onLogoError, route, menuGroups }
   }
 }
 </script>
@@ -154,12 +201,27 @@ export default {
 
 .sidebar-menu { 
   list-style: none; 
-  padding: 12px 0; 
+  padding: 0; 
   margin: 0; 
 }
 
+.menu-group {
+  margin-top: 1.5rem;
+  padding: 0 12px;
+}
+
+.menu-group-label {
+  padding: 0 16px;
+  margin-bottom: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.05em;
+}
+
 .sidebar-menu li {
-  margin: 4px 12px;
+  margin: 4px 0;
 }
 
 .sidebar-menu li a {

@@ -189,7 +189,7 @@
         </div>
 
         <!-- Transaction Summary Table -->
-        <div class="ma-card">
+        <div class="ma-card mb-4">
           <div class="ma-card__header ma-card__header--gradient">
             <h5 class="ma-card__title"><i class="fas fa-exchange-alt me-2"></i>Financial Summary</h5>
           </div>
@@ -245,6 +245,34 @@
           </div>
         </div>
 
+        <!-- History Management (Clear Logs) -->
+        <div class="ma-card">
+          <div class="ma-card__header ma-card__header--danger">
+            <h5 class="ma-card__title"><i class="fas fa-trash-alt me-2"></i>History Management (Danger Zone)</h5>
+            <p class="ma-card__subtitle text-white/60">Clear history logs independently. This action is irreversible.</p>
+          </div>
+          <div class="ma-card__body">
+            <div class="ma-maintenance-grid">
+              <div v-for="action in clearActions" :key="action.key" class="ma-maintenance-item">
+                <div class="ma-maintenance-item__content">
+                  <div class="ma-maintenance-item__title">{{ action.label }}</div>
+                  <div class="ma-maintenance-item__desc">{{ action.desc }}</div>
+                </div>
+                <button
+                  class="ma-btn-clear"
+                  :class="{ 'ma-btn-clear--loading': cleaning === action.key }"
+                  :disabled="cleaning"
+                  @click="confirmClear(action)"
+                >
+                  <i v-if="cleaning === action.key" class="fas fa-spinner fa-spin"></i>
+                  <i v-else class="fas fa-trash"></i>
+                  <span>Clear</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </template>
     </div>
   </MasterAdminLayout>
@@ -260,6 +288,7 @@ export default {
   components: { MasterAdminLayout },
   setup() {
     const loading = ref(false)
+    const cleaning = ref(null)
     const range = ref(30)
     const ranges = [
       { val: 7,  label: '7 Days'  },
@@ -267,6 +296,16 @@ export default {
       { val: 30, label: '30 Days' },
       { val: 60, label: '60 Days' },
       { val: 90, label: '90 Days' },
+    ]
+
+    const clearActions = [
+      { key: 'orders', label: 'Clear All Orders', desc: 'Gateway attempts, plan purchases.', path: '/admin/clear-history/orders' },
+      { key: 'deposits', label: 'Clear Deposits', desc: 'Full deposit log (main wallet).', path: '/admin/clear-history/deposits' },
+      { key: 'withdrawals', label: 'Clear Withdrawals', desc: 'All withdrawal requests.', path: '/admin/clear-history/withdrawals' },
+      { key: 'transactions', label: 'Clear Transactions', desc: 'System-wide transaction history.', path: '/admin/clear-history/transactions' },
+      { key: 'commissions', label: 'Clear Commissions', desc: 'Affiliate logs and resets balances.', path: '/admin/clear-history/commissions' },
+      { key: 'logins', label: 'Clear Login Logs', desc: 'All user login history.', path: '/admin/clear-history/user-logins' },
+      { key: 'notifications', label: 'Clear Notifications', desc: 'All admin & user notifications.', path: '/admin/clear-history/notifications' },
     ]
 
     const summary = ref({
@@ -352,6 +391,28 @@ export default {
       return Math.round((summary.value.kyc_verified / summary.value.total_users) * 100)
     })
 
+    const confirmClear = async (action) => {
+      if (!confirm(`Are you sure you want to ${action.label.toLowerCase()}? This will PERMANENTLY DELETE all records in this category and cannot be undone.`)) return
+      const secondCheck = prompt(`Type "DELETE" to confirm:`)
+      if (secondCheck !== 'DELETE') return
+
+      cleaning.value = action.key
+      try {
+        const res = await api.post(action.path)
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', res.data.message || 'Cleared successfully')
+          fetchReports()
+        } else {
+          if (window.notify) window.notify('error', res.data?.message || 'Failed to clear')
+        }
+      } catch (e) {
+        console.error('Clear error', e)
+        if (window.notify) window.notify('error', 'Operation failed')
+      } finally {
+        cleaning.value = null
+      }
+    }
+
     onMounted(fetchReports)
 
     return {
@@ -360,6 +421,7 @@ export default {
       fmt, fetchReports,
       userGrowthBars, revBars,
       userActivePct, kycVerifiedPct,
+      cleaning, clearActions, confirmClear
     }
   }
 }
@@ -534,4 +596,54 @@ export default {
 /* Util */
 .text-info { color: #38bdf8 !important; }
 .ma-center { text-align: center; }
+/* Maintenance */
+.ma-card__header--danger {
+  background: linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(185,28,28,0.15) 100%);
+  border-bottom: 1px solid rgba(239,68,68,0.3);
+}
+
+.ma-maintenance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.ma-maintenance-item {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ma-maintenance-item__content { flex: 1; }
+.ma-maintenance-item__title { font-size: 0.9rem; font-weight: 700; color: #f1f5f9; margin-bottom: 2px; }
+.ma-maintenance-item__desc { font-size: 0.75rem; color: #64748b; }
+
+.ma-btn-clear {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(239,68,68,0.4);
+  background: rgba(239,68,68,0.1);
+  color: #f87171;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.ma-btn-clear:hover:not(:disabled) {
+  background: rgba(239,68,68,0.25);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.ma-btn-clear:disabled { opacity: 0.5; cursor: not-allowed; }
+.ma-btn-clear--loading { background: rgba(255,255,255,0.05); color: #94a3b8; border-color: rgba(255,255,255,0.1); }
 </style>

@@ -138,4 +138,8 @@ class User extends Authenticatable {
     public function allReferrals() {
         return $this->referrals()->with('referrer');
     }
+
+    public function agentCommissionSettings() {
+        return $this->hasOne(AgentCommissionSetting::class, 'user_id');
+    }
 }

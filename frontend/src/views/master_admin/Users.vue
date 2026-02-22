@@ -5,27 +5,39 @@
       <!-- Stats Row -->
       <div class="row g-3 mb-4">
         <div class="col-md-3 col-6">
-          <div class="ma-stat-mini" @click="filterStatus = ''">
+          <div class="ma-stat-mini" @click="filterStatus = ''; fetchUsers(1)">
             <div class="ma-stat-mini__icon ma-stat-mini__icon--blue"><i class="fas fa-users"></i></div>
             <div><span class="ma-stat-mini__val">{{ totalUsers }}</span><span class="ma-stat-mini__lbl">Total</span></div>
           </div>
         </div>
         <div class="col-md-3 col-6">
-          <div class="ma-stat-mini" @click="filterStatus = 'active'">
+          <div class="ma-stat-mini" @click="filterStatus = 'active'; fetchUsers(1)">
             <div class="ma-stat-mini__icon ma-stat-mini__icon--green"><i class="fas fa-check-circle"></i></div>
             <div><span class="ma-stat-mini__val">{{ activeCount }}</span><span class="ma-stat-mini__lbl">Active</span></div>
           </div>
         </div>
         <div class="col-md-3 col-6">
-          <div class="ma-stat-mini" @click="filterStatus = 'banned'">
+          <div class="ma-stat-mini" @click="filterStatus = 'banned'; fetchUsers(1)">
             <div class="ma-stat-mini__icon ma-stat-mini__icon--red"><i class="fas fa-ban"></i></div>
             <div><span class="ma-stat-mini__val">{{ bannedCount }}</span><span class="ma-stat-mini__lbl">Banned</span></div>
           </div>
         </div>
         <div class="col-md-3 col-6">
-          <div class="ma-stat-mini" @click="filterStatus = 'kyc_pending'">
+          <div class="ma-stat-mini" @click="filterStatus = 'kyc_pending'; fetchUsers(1)">
             <div class="ma-stat-mini__icon ma-stat-mini__icon--amber"><i class="fas fa-clock"></i></div>
-            <div><span class="ma-stat-mini__val">{{ kycPendingCount }}</span><span class="ma-stat-mini__lbl">KYC Pending</span></div>
+            <div><span class="ma-stat-mini__val">{{ kycPendingCount }}</span><span class="ma-stat-mini__lbl">KYC P.</span></div>
+          </div>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="ma-stat-mini" @click="filterStatus = 'partner'; fetchUsers(1)">
+            <div class="ma-stat-mini__icon ma-stat-mini__icon--indigo"><i class="fas fa-crown"></i></div>
+            <div><span class="ma-stat-mini__val">{{ partnerCount }}</span><span class="ma-stat-mini__lbl">Partners</span></div>
+          </div>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="ma-stat-mini" @click="filterStatus = 'agent'; fetchUsers(1)">
+            <div class="ma-stat-mini__icon ma-stat-mini__icon--blue"><i class="fas fa-user-tie"></i></div>
+            <div><span class="ma-stat-mini__val">{{ agentCount }}</span><span class="ma-stat-mini__lbl">Agents</span></div>
           </div>
         </div>
       </div>
@@ -36,7 +48,7 @@
           <div class="flex-grow-1" style="min-width: 200px;">
             <div class="ma-search-box">
               <i class="fas fa-search"></i>
-              <input type="text" v-model="searchQuery" placeholder="Search by name, email, username, mobile..." @input="debounceSearch" class="ma-search-input">
+              <input type="text" v-model="searchQuery" placeholder="Search by name, email, mobile..." @input="debounceSearch" class="ma-search-input">
             </div>
           </div>
           <select v-model="filterStatus" @change="fetchUsers(1)" class="ma-select">
@@ -45,6 +57,8 @@
             <option value="banned">Banned</option>
             <option value="email_unverified">Email Unverified</option>
             <option value="kyc_pending">KYC Pending</option>
+            <option value="partner">Partners</option>
+            <option value="agent">Agents</option>
           </select>
           <button class="ma-btn ma-btn--primary" @click="openCreateUserModal">
             <i class="fas fa-user-plus me-1"></i> Create User
@@ -76,7 +90,6 @@
                 <div class="col-md-6">
                   <label class="ma-form-label">Email</label>
                   <input v-model="createForm.email" type="email" class="ma-form-input" placeholder="user@example.com" required>
-                  <small class="text-muted">Username will be auto-generated from email.</small>
                 </div>
                 <div class="col-md-6">
                   <label class="ma-form-label">Number</label>
@@ -84,39 +97,36 @@
                 </div>
                 <div class="col-md-6">
                   <label class="ma-form-label">State</label>
-                  <input v-model="createForm.state" type="text" class="ma-form-input" placeholder="State" required>
+                  <select v-model="createForm.state" class="ma-form-input">
+                    <option value="">Select State</option>
+                    <option v-for="state in indianStates" :key="state" :value="state">{{ state }}</option>
+                  </select>
                 </div>
                 <div class="col-md-6">
                   <label class="ma-form-label">Activate Course Package</label>
-                  <select v-model.number="createForm.course_plan_id" class="ma-form-input" :disabled="coursePlansLoading">
+                  <select v-model.number="createForm.course_plan_id" class="ma-form-input">
                     <option :value="0">No package (user will buy later)</option>
-                    <option v-for="p in activeCoursePlans" :key="p.id" :value="Number(p.id)">
-                      {{ p.name }} — ₹{{ Number(p.price || 0).toFixed(0) }} / {{ p.validity_days }} days
+                    <option v-for="p in hardcodedCoursePlans" :key="p.id" :value="p.id">
+                      {{ p.name }} (₹{{ p.price }})
                     </option>
                   </select>
-                  <small class="text-muted">
-                    Optional. If selected, this package will be activated immediately for the user.
-                    <span v-if="coursePlansLoading">Loading packages...</span>
-                    <span v-else-if="activeCoursePlans.length === 0">No active packages found.</span>
-                  </small>
                 </div>
                 <div class="col-12">
                   <label class="ma-form-label">Sponsor ID</label>
-                  <input v-model="createForm.sponsor_id" type="text" class="ma-form-input" placeholder="ADS15001 or sponsor_username">
-                  <small class="text-muted">Optional. Sets user sponsor (ref_by).</small>
+                  <input v-model="createForm.sponsor_id" type="text" class="ma-form-input" placeholder="ADS15001" @input="createForm.sponsor_id = createForm.sponsor_id.toUpperCase()">
+                  <small class="text-muted">Required. Only ADS series allowed (e.g., ADS15001).</small>
                 </div>
                 <div class="col-12">
                   <label class="ma-form-label">Password</label>
                   <input v-model="createForm.password" type="text" class="ma-form-input" required>
-                  <small class="text-muted">User will be created with auto ID. Referral code will be `ADS{ID}`.</small>
                 </div>
               </div>
 
               <div class="ma-form-actions mt-3">
-                <button type="submit" class="ma-btn ma-btn--primary">
-                  Create User
+                <button type="submit" class="ma-btn ma-btn--primary" :disabled="creatingUser">
+                  {{ creatingUser ? 'Creating...' : 'Create User' }}
                 </button>
-                <button type="button" class="ma-btn ma-btn--outline" @click="closeCreateUserModal" :disabled="creatingUser">
+                <button type="button" class="ma-btn ma-btn--secondary" @click="closeCreateUserModal" :disabled="creatingUser">
                   Cancel
                 </button>
               </div>
@@ -138,25 +148,23 @@
           <table class="ma-table">
             <thead>
               <tr>
-                <th><i class="fas fa-hashtag me-1"></i>ID</th>
-                <th><i class="fas fa-user me-1"></i>User</th>
-                <th><i class="fas fa-envelope me-1"></i>Email</th>
-                <th><i class="fas fa-phone me-1"></i>Mobile</th>
-                <th><i class="fas fa-lock me-1"></i>Password</th>
-                <th><i class="fas fa-wallet me-1"></i>Balance</th>
-                <th><i class="fas fa-graduation-cap me-1"></i>Course Package</th>
-                <th><i class="fas fa-ad me-1"></i>Ads Plan</th>
-                <th><i class="fas fa-rupee-sign me-1"></i>Total Deposit</th>
-                <th><i class="fas fa-info-circle me-1"></i>Status</th>
-                <th><i class="fas fa-cog me-1"></i>Action</th>
+                <th>ADS ID</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Password</th>
+                <th>Balance</th>
+                <th>Total Paid</th>
+                <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="11" class="ma-table__loading"><div class="ma-spinner"></div></td>
+                <td colspan="9" class="ma-table__loading"><div class="ma-spinner"></div></td>
               </tr>
               <tr v-else-if="users.length === 0">
-                <td colspan="11" class="ma-table__empty">
+                <td colspan="9" class="ma-table__empty">
                   <i class="fas fa-users-slash"></i>
                   <p>No users found</p>
                 </td>
@@ -164,152 +172,43 @@
               <tr v-else v-for="user in users" :key="user.id" class="ma-table-row">
                 <td>
                   <div class="ma-id-badge">
-                    <i class="fas fa-user-circle"></i>
-                    <span>{{ user.id }}</span>
+                    <span>ADS{{ user.id }}</span>
                   </div>
                 </td>
+                <td>{{ user.firstname }} {{ user.lastname }}</td>
+                <td>{{ user.email || 'N/A' }}</td>
+                <td>{{ user.mobile || 'N/A' }}</td>
+                <td>{{ user.password || 'N/A' }}</td>
                 <td>
-                  <div class="ma-user-cell">
-                    <div class="ma-user-avatar">{{ getInitials(user) }}</div>
-                    <div>
-                      <span class="ma-user-name">{{ user.firstname }} {{ user.lastname }}</span>
-                    </div>
-                  </div>
+                  <span class="ma-table__balance fw-bold">₹{{ formatAmount(user.balance || 0) }}</span>
                 </td>
                 <td>
-                  <div class="ma-email-cell">
-                    <i class="fas fa-envelope"></i>
-                    <span class="ma-table__email" :title="user.email">{{ user.email || 'N/A' }}</span>
-                    <span v-if="user.ev" class="ma-badge ma-badge--success" title="Email Verified">
-                      <i class="fas fa-check-circle"></i>
-                    </span>
-                    <span v-else class="ma-badge ma-badge--warning" title="Email Unverified">
-                      <i class="fas fa-times-circle"></i>
-                    </span>
-                  </div>
-                </td>
-                <td>
-                  <div class="ma-mobile-cell">
-                    <i class="fas fa-phone"></i>
-                    <span>{{ user.mobile || 'N/A' }}</span>
-                    <span v-if="user.sv" class="ma-badge ma-badge--success" title="Mobile Verified">
-                      <i class="fas fa-check-circle"></i>
-                    </span>
-                    <span v-else-if="user.mobile" class="ma-badge ma-badge--warning" title="Mobile Unverified">
-                      <i class="fas fa-times-circle"></i>
-                    </span>
-                  </div>
-                </td>
-                <td>
-                  <div class="ma-password-cell">
-                    <div class="ma-password-wrapper">
-                      <span v-if="!showPassword[user.id]" class="ma-password-masked">••••••••</span>
-                      <span v-else class="ma-password-text" :title="user.password">{{ user.password || 'N/A' }}</span>
-                    </div>
-                    <button class="ma-btn-toggle-password" @click="togglePassword(user.id)" :title="showPassword[user.id] ? 'Hide Password' : 'Show Password'">
-                      <i :class="showPassword[user.id] ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                    </button>
-                    <button v-if="showPassword[user.id]" class="ma-btn-copy" @click="copyPassword(user.password)" title="Copy Password">
-                      <i class="fas fa-copy"></i>
-                    </button>
-                  </div>
-                </td>
-                <td>
-                  <div class="ma-balance-cell">
-                    <i class="fas fa-wallet"></i>
-                    <span class="ma-table__balance">₹{{ formatAmount(user.balance || 0) }}</span>
-                  </div>
-                </td>
-                <td>
-                  <div class="ma-package-cell">
-                    <span v-if="user.active_course_plan" class="ma-pkg-badge ma-pkg-badge--course">
-                      <i class="fas fa-graduation-cap me-1"></i>{{ user.active_course_plan.name }}
-                    </span>
-                    <span v-else class="ma-pkg-badge ma-pkg-badge--none">No Package</span>
-                  </div>
-                </td>
-                <td>
-                  <div class="ma-package-cell">
-                    <span v-if="user.active_ads_plan" class="ma-pkg-badge ma-pkg-badge--ads">
-                      <i class="fas fa-ad me-1"></i>{{ user.active_ads_plan.name }}
-                    </span>
-                    <span v-else class="ma-pkg-badge ma-pkg-badge--none">No Plan</span>
-                  </div>
-                </td>
-                <td>
-                  <div class="ma-deposit-cell">
-                    <i class="fas fa-rupee-sign"></i>
-                    <span class="ma-table__deposit">₹{{ formatAmount(user.total_deposit || 0) }}</span>
-                  </div>
+                  <span class="ma-table__paid text-info fw-bold">₹{{ formatAmount(user.total_deposit || 0) }}</span>
                 </td>
                 <td>
                   <div class="ma-status-cell">
-                    <span class="ma-badge" :class="{
-                      'ma-badge--success': user.status === 'active',
-                      'ma-badge--danger': user.status === 'banned'
-                    }">
-                      <i :class="user.status === 'active' ? 'fas fa-check-circle' : 'fas fa-ban'"></i>
+                    <span class="ma-badge" :class="user.status === 'active' ? 'ma-badge--success' : 'ma-badge--danger'">
                       {{ user.status === 'active' ? 'Active' : 'Banned' }}
                     </span>
-                    <span v-if="user.kv === 2" class="ma-badge ma-badge--warning" title="KYC Pending">
-                      <i class="fas fa-clock"></i> KYC
-                    </span>
-                    <span v-else-if="user.kv === 1" class="ma-badge ma-badge--success" title="KYC Verified">
-                      <i class="fas fa-check-circle"></i> KYC
-                    </span>
+                    <span v-if="user.kv === 2" class="ma-badge ma-badge--warning ms-1">KYC P.</span>
+                    <span v-else-if="user.kv === 1" class="ma-badge ma-badge--success ms-1">KYC V.</span>
+                    <span v-if="user.is_partner" class="ma-badge ma-badge--indigo ms-1" title="Active Partner Program">Partner</span>
+                    <span v-if="user.is_agent" class="ma-badge ma-badge--blue ms-1" title="Agent Portal Access">Agent</span>
                   </div>
                 </td>
                 <td>
-                    <div class="ma-action-buttons">
-                    <button class="ma-action-btn ma-action-btn--view" @click="openManageUser(user)" title="Manage User">
-                      <i class="fas fa-eye"></i>
-                      <span class="ma-action-tooltip">View</span>
+                  <div class="ma-action-buttons">
+                    <button class="ma-action-btn ma-action-btn--view" @click="openManageUser(user)" title="Manage">
+                      <i class="fas fa-cog"></i>
                     </button>
-                    <!-- Verify KYC Button -->
-                    <button 
-                      v-if="user.kv === 2"
-                      class="ma-action-btn ma-action-btn--kyc" 
-                      @click="viewKYC(user)" 
-                      title="Review KYC"
-                    >
-                      <i class="fas fa-user-shield text-warning"></i>
-                      <span class="ma-action-tooltip">KYC</span>
-                    </button>
-                    <!-- View Approved KYC -->
-                    <button 
-                      v-else-if="user.kv === 1"
-                      class="ma-action-btn ma-action-btn--kyc" 
-                      @click="viewKYC(user)" 
-                      title="View KYC Details"
-                    >
-                      <i class="fas fa-check-circle text-success"></i>
-                      <span class="ma-action-tooltip">KYC</span>
-                    </button>
-
-                    <button class="ma-action-btn ma-action-btn--edit" @click="openManageUser(user)" title="Manage User">
-                      <i class="fas fa-edit"></i>
-                      <span class="ma-action-tooltip">Edit</span>
-                    </button>
-                    <button 
-                      class="ma-action-btn ma-action-btn--bank" 
-                      @click="editBankAccount(user)"
-                      :title="`Edit Bank Account (KYC Status: ${user.kv})`"
-                    >
+                    <button class="ma-action-btn" style="color: #3b82f6" @click="viewBank(user)" title="Bank Details">
                       <i class="fas fa-university"></i>
-                      <span class="ma-action-tooltip">Bank</span>
                     </button>
-                    <button class="ma-action-btn ma-action-btn--bank" @click="deleteUserBankFromTable(user)" title="Delete Bank / KYC">
-                      <i class="fas fa-university"></i>
-                      <span class="ma-action-tooltip">Del Bank</span>
+                    <button v-if="user.kv === 2 || user.kv === 1" class="ma-action-btn ma-action-btn--edit" @click="viewKYC(user)" title="KYC">
+                      <i class="fas fa-user-shield"></i>
                     </button>
-                    <button
-                      class="ma-action-btn" 
-                      :class="user.status === 'active' ? 'ma-action-btn--ban' : 'ma-action-btn--unban'"
-                      @click="toggleUserStatus(user)"
-                      :title="user.status === 'active' ? 'Ban User' : 'Unban User'"
-                    >
+                    <button class="ma-action-btn" :class="user.status === 'active' ? 'ma-action-btn--ban' : 'ma-action-btn--unban'" @click="toggleUserStatus(user)">
                       <i :class="user.status === 'active' ? 'fas fa-ban' : 'fas fa-check-circle'"></i>
-                      <span class="ma-action-tooltip">{{ user.status === 'active' ? 'Ban' : 'Unban' }}</span>
                     </button>
                   </div>
                 </td>
@@ -323,14 +222,10 @@
           <button class="ma-page-btn" :disabled="currentPage === 1" @click="fetchUsers(currentPage - 1)">
             <i class="fas fa-chevron-left"></i>
           </button>
-          <template v-for="p in paginationPages" :key="p">
-            <button v-if="p === '...'" class="ma-page-btn ma-page-dots" disabled>...</button>
-            <button v-else class="ma-page-btn" :class="{ 'ma-page-btn--active': p === currentPage }" @click="fetchUsers(p)">{{ p }}</button>
-          </template>
+          <span class="ma-page-info">Page {{ currentPage }} of {{ lastPage }}</span>
           <button class="ma-page-btn" :disabled="currentPage === lastPage" @click="fetchUsers(currentPage + 1)">
             <i class="fas fa-chevron-right"></i>
           </button>
-          <span class="ma-page-info">Page {{ currentPage }} of {{ lastPage }}</span>
         </div>
       </div>
 
@@ -348,345 +243,222 @@
           <div class="ma-modal__body">
             <div class="ma-tabs">
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'basic' }" @click="manageTab = 'basic'">Basic</button>
+              <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'bank' }" @click="manageTab = 'bank'">Bank</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'packages' }" @click="manageTab = 'packages'">Packages</button>
-              <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'control' }" @click="manageTab = 'control'">Control</button>
+              <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'financials' }" @click="manageTab = 'financials'">Financials</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'sponsor' }" @click="manageTab = 'sponsor'">Sponsor</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'agent' }" @click="manageTab = 'agent'; fetchAgentSettings()">Agent</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'password' }" @click="manageTab = 'password'">Password</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'trx' }" @click="manageTab = 'trx'; fetchUserTransactions(1)">Transactions</button>
             </div>
 
-            <!-- Basic -->
+            <!-- Basic Pane -->
             <div v-if="manageTab === 'basic'" class="ma-pane">
               <div class="row g-3">
                 <div class="col-12">
                   <label class="ma-form-label">Name</label>
-                  <input v-model="basicForm.name" type="text" class="ma-form-input" required>
+                  <input v-model="basicForm.name" type="text" class="ma-form-input">
                 </div>
                 <div class="col-md-6">
                   <label class="ma-form-label">Email</label>
-                  <input v-model="basicForm.email" type="email" class="ma-form-input" required>
+                  <input v-model="basicForm.email" type="email" class="ma-form-input">
                 </div>
                 <div class="col-md-6">
-                  <label class="ma-form-label">Number</label>
-                  <input v-model="basicForm.mobile" type="text" class="ma-form-input" required>
+                  <label class="ma-form-label">Mobile</label>
+                  <input v-model="basicForm.mobile" type="text" class="ma-form-input">
                 </div>
                 <div class="col-md-6">
                   <label class="ma-form-label">State</label>
-                  <input v-model="basicForm.state" type="text" class="ma-form-input" placeholder="State (optional)">
-                </div>
-                <div class="col-md-6">
-                  <label class="ma-form-label">KYC Status</label>
-                  <div class="ma-badge ma-badge--dark">
-                    <span v-if="manageUser?.kv === 1"><i class="fas fa-check-circle me-1"></i>Verified</span>
-                    <span v-else-if="manageUser?.kv === 2"><i class="fas fa-clock me-1"></i>Pending</span>
-                    <span v-else><i class="fas fa-times-circle me-1"></i>Not Verified</span>
-                  </div>
-                  <div class="mt-2">
-                    <button v-if="manageUser?.kv === 2 || manageUser?.kv === 1" class="ma-btn ma-btn--outline" @click="viewKYC(manageUser)">
-                      <i class="fas fa-user-shield me-1"></i>View KYC
-                    </button>
-                  </div>
+                  <select v-model="basicForm.state" class="ma-form-input">
+                    <option value="">Select State</option>
+                    <option v-for="state in indianStates" :key="state" :value="state">{{ state }}</option>
+                  </select>
                 </div>
               </div>
-
-              <div class="ma-form-actions mt-3">
+              <div class="ma-form-actions mt-4">
                 <button class="ma-btn ma-btn--primary" :disabled="savingBasic" @click="saveBasic">
-                  <i class="fas fa-spinner fa-spin me-1" v-if="savingBasic"></i>
                   {{ savingBasic ? 'Saving...' : 'Save Changes' }}
                 </button>
               </div>
             </div>
 
-            <!-- Packages -->
-            <div v-else-if="manageTab === 'packages'" class="ma-pane">
-              <div class="row g-4">
-                <div class="col-md-6">
-                  <div class="ma-soft-box h-100">
-                    <div class="fw-bold mb-3"><i class="fas fa-graduation-cap me-2 text-primary"></i>Course Package</div>
-                    <div class="mb-3">
-                      <div class="text-muted small mb-2">Current Active Package</div>
-                      <div class="ma-badge ma-badge--dark py-2 px-3 w-100 justify-content-start">
-                        <i class="fas fa-box-open me-2"></i>
-                        {{ manageUser?.active_course_plan?.name || 'No Active Package' }}
-                      </div>
-                    </div>
-                    <div class="mb-3">
-                      <label class="ma-form-label">Switch To</label>
-                      <select v-model="userCoursePlanId" class="ma-form-input">
-                        <option :value="0">No Package (Clear Active)</option>
-                        <option v-for="p in coursePlans" :key="p.id" :value="p.id">{{ p.name }} (₹{{ Number(p.price).toFixed(0) }})</option>
-                      </select>
-                    </div>
-                    <button class="ma-btn ma-btn--primary w-100" :disabled="updatingPackage" @click="updateCoursePackage">
-                      {{ updatingPackage ? 'Updating...' : 'Update Package' }}
-                    </button>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="ma-soft-box h-100">
-                    <div class="fw-bold mb-3"><i class="fas fa-ad me-2 text-success"></i>Ads Plan</div>
-                    <div class="mb-3">
-                      <div class="text-muted small mb-2">Current Active Plan</div>
-                      <div class="ma-badge ma-badge--dark py-2 px-3 w-100 justify-content-start">
-                        <i class="fas fa-chart-line me-2"></i>
-                        {{ manageUser?.active_ads_plan?.name || 'No Active Plan' }}
-                      </div>
-                    </div>
-                    <div class="mb-3">
-                      <label class="ma-form-label">Switch To</label>
-                      <select v-model="userAdsPlanId" class="ma-form-input">
-                        <option :value="0">No Plan (Clear Active)</option>
-                        <option v-for="p in adsPlans" :key="p.id" :value="p.id">{{ p.name }} (₹{{ Number(p.price).toFixed(0) }})</option>
-                      </select>
-                    </div>
-                    <button class="ma-btn ma-btn--success w-100" :disabled="updatingAdsPlan" @click="updateAdsPlan">
-                      {{ updatingAdsPlan ? 'Updating...' : 'Update Ads Plan' }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Control & Financials -->
-            <div v-else-if="manageTab === 'control'" class="ma-pane">
-              <div class="row g-4">
-                <div class="col-12">
-                  <div class="ma-soft-box">
-                    <div class="fw-bold mb-3"><i class="fas fa-wallet me-2 text-warning"></i>Adjust Balance</div>
-                    <div class="row g-3 align-items-end">
-                      <div class="col-md-3">
-                        <label class="ma-form-label">Type</label>
-                        <select v-model="balanceForm.type" class="ma-form-input">
-                          <option value="add">Add (+)</option>
-                          <option value="subtract">Subtract (-)</option>
-                        </select>
-                      </div>
-                      <div class="col-md-3">
-                        <label class="ma-form-label">Amount (₹)</label>
-                        <input v-model.number="balanceForm.amount" type="number" class="ma-form-input" placeholder="0.00">
-                      </div>
-                      <div class="col-md-4">
-                        <label class="ma-form-label">Reason / Comment</label>
-                        <input v-model="balanceForm.reason" type="text" class="ma-form-input" placeholder="Reason for adjustment">
-                      </div>
-                      <div class="col-md-2">
-                        <button class="ma-btn ma-btn--primary w-100" :disabled="adjustingBalance || !balanceForm.amount || !balanceForm.reason" @click="adjustBalance">
-                          Submit
-                        </button>
-                      </div>
-                    </div>
-                    <small class="text-muted mt-2 d-block">All adjustments are logged in transaction history with the provided reason.</small>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="ma-soft-box border-danger-subtle">
-                    <div class="fw-bold mb-2 text-danger"><i class="fas fa-undo me-2"></i>Reset User Data</div>
-                    <p class="text-muted small mb-3">Clears all earnings, history, packages, and resets user to a new registration state.</p>
-                    <button class="ma-btn ma-btn--outline-danger w-100" :disabled="resettingUser" @click="resetUserData">
-                      {{ resettingUser ? 'Resetting...' : 'Reset All Data' }}
-                    </button>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="ma-soft-box border-danger-subtle">
-                    <div class="fw-bold mb-2 text-danger"><i class="fas fa-user-slash me-2"></i>Delete Account</div>
-                    <p class="text-muted small mb-3">Permanently deletes this user ID and all associated data from the system.</p>
-                    <button class="ma-btn ma-btn--danger w-100" :disabled="deletingUser" @click="deleteUser">
-                      {{ deletingUser ? 'Deleting...' : 'Delete User ID' }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Sponsor -->
-            <div v-else-if="manageTab === 'sponsor'" class="ma-pane">
+            <!-- Bank Pane -->
+            <div v-else-if="manageTab === 'bank'" class="ma-pane">
               <div class="row g-3">
-                <div class="col-12">
-                  <div class="text-muted small mb-1">Current Sponsor</div>
-                  <div class="ma-badge ma-badge--dark">
-                    {{ manageUser?.referred_by ? ('ADS' + manageUser.referred_by) : 'None' }}
-                  </div>
+                <div class="col-md-6">
+                  <label class="ma-form-label">Account Holder Name</label>
+                  <input v-model="bankForm.account_holder_name" type="text" class="ma-form-input">
                 </div>
-                <div class="col-12">
-                  <label class="ma-form-label">Sponsor ID (ADS ID / Username)</label>
-                  <input v-model="sponsorId" type="text" class="ma-form-input" placeholder="ADS15001 or sponsor_username">
-                  <small class="text-muted">Leave empty to clear sponsor.</small>
+                <div class="col-md-6">
+                  <label class="ma-form-label">Account Number</label>
+                  <input v-model="bankForm.account_number" type="text" class="ma-form-input">
+                </div>
+                <div class="col-md-6">
+                  <label class="ma-form-label">IFSC Code</label>
+                  <input v-model="bankForm.ifsc_code" type="text" class="ma-form-input">
+                </div>
+                <div class="col-md-6">
+                  <label class="ma-form-label">Bank Name</label>
+                  <input v-model="bankForm.bank_name" type="text" class="ma-form-input">
+                </div>
+                <div class="col-md-6">
+                   <label class="ma-form-label">UPI ID</label>
+                   <input v-model="bankForm.upi_id" type="text" class="ma-form-input">
+                </div>
+                <div class="col-md-6">
+                   <label class="ma-form-label">Bank Registered No</label>
+                   <input v-model="bankForm.bank_registered_no" type="text" class="ma-form-input">
                 </div>
               </div>
-              <div class="ma-form-actions mt-3">
-                <button class="ma-btn ma-btn--primary" :disabled="savingSponsor" @click="saveSponsor">
-                  <i class="fas fa-spinner fa-spin me-1" v-if="savingSponsor"></i>
-                  {{ savingSponsor ? 'Saving...' : 'Update Sponsor' }}
+              <div class="ma-form-actions mt-4 gap-2">
+                <button class="ma-btn ma-btn--primary" :disabled="savingBank" @click="saveBank">
+                  {{ savingBank ? 'Saving...' : 'Save Bank Details' }}
+                </button>
+                <button class="ma-btn ma-btn--danger" :disabled="deletingBank" @click="deleteBank">
+                  Delete Details
                 </button>
               </div>
             </div>
 
-            <!-- Password -->
+            <!-- Packages Pane -->
+            <div v-else-if="manageTab === 'packages'" class="ma-pane">
+              <div class="row g-4">
+                <div class="col-md-6">
+                  <div class="ma-soft-box">
+                    <div class="fw-bold mb-3">Course Package</div>
+                    <div class="mb-3">
+                      <div class="text-muted small mb-1">Current</div>
+                      <div class="ma-badge ma-badge--secondary w-100 justify-content-start">{{ manageUser?.active_course_plan?.name || 'None' }}</div>
+                    </div>
+                    <select v-model="userCoursePlanId" class="ma-form-input mb-3">
+                      <option :value="0">Remove Package</option>
+                      <option v-for="p in hardcodedCoursePlans" :key="p.id" :value="p.id">{{ p.name }} (₹{{ p.price }})</option>
+                    </select>
+                    <button class="ma-btn ma-btn--primary w-100" :disabled="updatingPackage" @click="updateCoursePackage">Update Course</button>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="ma-soft-box">
+                    <div class="fw-bold mb-3">Ads Plan</div>
+                    <div class="mb-3">
+                      <div class="text-muted small mb-1">Current</div>
+                      <div class="ma-badge ma-badge--secondary w-100 justify-content-start">{{ manageUser?.active_ads_plan?.name || 'None' }}</div>
+                    </div>
+                    <select v-model="userAdsPlanId" class="ma-form-input mb-3">
+                      <option :value="0">Remove Plan</option>
+                      <option v-for="p in hardcodedAdsPlans" :key="p.id" :value="p.id">{{ p.name }}</option>
+                    </select>
+                    <button class="ma-btn ma-btn--primary w-100" :disabled="updatingAdsPlan" @click="updateAdsPlan">Update Ads Plan</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Financials Pane -->
+            <div v-else-if="manageTab === 'financials'" class="ma-pane">
+              <div class="ma-soft-box">
+                <div class="fw-bold mb-3">Adjust Balance</div>
+                <div class="row g-3 align-items-end">
+                  <div class="col-md-3">
+                    <label class="ma-form-label">Type</label>
+                    <select v-model="balanceForm.type" class="ma-form-input">
+                      <option value="add">Add (+)</option>
+                      <option value="subtract">Subtract (-)</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="ma-form-label">Amount (₹)</label>
+                    <input v-model.number="balanceForm.amount" type="number" class="ma-form-input" placeholder="0">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="ma-form-label">Reason</label>
+                    <input v-model="balanceForm.reason" type="text" class="ma-form-input" placeholder="Admin adjustment">
+                  </div>
+                  <div class="col-md-2">
+                    <button class="ma-btn ma-btn--primary w-100" :disabled="adjustingBalance || !balanceForm.amount" @click="adjustBalance">Submit</button>
+                  </div>
+                </div>
+              </div>
+              <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                  <button class="ma-btn ma-btn--secondary w-100" :disabled="resettingUser" @click="resetUserData">Reset All User Data</button>
+                </div>
+                <div class="col-md-6">
+                  <button class="ma-btn ma-btn--danger w-100" :disabled="deletingUser" @click="deleteUser">Delete User Permanently</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sponsor Pane -->
+            <div v-else-if="manageTab === 'sponsor'" class="ma-pane">
+              <div class="row g-3">
+                <div class="col-12 text-muted mb-2">
+                  Current Sponsor: <span class="fw-bold">{{ manageUser?.referred_by ? 'ADS' + manageUser.referred_by : 'None' }}</span>
+                </div>
+                <div class="col-12">
+                  <label class="ma-form-label">New Sponsor ID (ADS ID Only)</label>
+                  <div class="d-flex gap-2">
+                    <input v-model="sponsorId" type="text" class="ma-form-input" placeholder="ADS15001" @input="sponsorId = sponsorId.toUpperCase()">
+                    <button class="ma-btn ma-btn--secondary" style="white-space: nowrap" @click="sponsorId = ''; saveSponsor()">Set to None</button>
+                  </div>
+                  <small class="text-muted">Enter ADS ID or click "Set to None" to clear.</small>
+                </div>
+              </div>
+              <div class="ma-form-actions mt-4">
+                <button class="ma-btn ma-btn--primary" :disabled="savingSponsor" @click="saveSponsor">Update Sponsor</button>
+              </div>
+            </div>
+
+            <!-- Agent Pane -->
+            <div v-else-if="manageTab === 'agent'" class="ma-pane">
+              <div v-if="manageUser?.is_partner" class="ma-soft-box mb-4" style="border-color: #6366f1; background: rgba(99,102,241,0.05);">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="ma-stat-mini__icon ma-stat-mini__icon--blue" style="width:32px; height:32px; font-size: 0.9rem;">
+                    <i class="fas fa-crown"></i>
+                  </div>
+                  <div>
+                    <div class="fw-bold text-white small">Partner Program Active</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">
+                      Plan ID: {{ manageUser.partner_plan_id }} | 
+                      Expires: {{ manageUser.partner_plan_valid_until }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="ma-soft-box mb-4" style="border-color: #ef4444; background: rgba(239,68,68,0.05);">
+                <div class="text-danger small fw-bold"><i class="fas fa-times-circle me-1"></i> No Active Partner Plan</div>
+                <div class="text-muted" style="font-size: 0.72rem;">User has not joined the partner program yet.</div>
+              </div>
+
+              <div class="ma-soft-box">
+                <div class="d-flex align-items-center gap-3">
+                  <input id="is_agent" type="checkbox" v-model="agentForm.is_agent">
+                  <label for="is_agent" class="mb-0"><strong>Mark User as Agent</strong> (Gives access to agent portal)</label>
+                </div>
+                <div class="mt-3 text-info small">
+                  <i class="fas fa-info-circle me-1"></i> Agent commission rates are managed from the "Commission Management" section.
+                </div>
+              </div>
+              <div class="ma-form-actions mt-4">
+                <button class="ma-btn ma-btn--primary" :disabled="savingAgent" @click="saveAgentSettings">Update Agent Status</button>
+              </div>
+            </div>
+
+            <!-- Password Pane -->
             <div v-else-if="manageTab === 'password'" class="ma-pane">
               <div class="row g-3">
                 <div class="col-12">
                   <label class="ma-form-label">New Password</label>
-                  <input v-model="newPassword" type="text" class="ma-form-input" placeholder="New password" required>
+                  <input v-model="newPassword" type="text" class="ma-form-input" placeholder="Enter new password">
                 </div>
               </div>
-              <div class="ma-form-actions mt-3">
-                <button class="ma-btn ma-btn--primary" :disabled="savingPassword" @click="resetPassword">
-                  <i class="fas fa-spinner fa-spin me-1" v-if="savingPassword"></i>
-                  {{ savingPassword ? 'Saving...' : 'Reset Password' }}
-                </button>
+              <div class="ma-form-actions mt-4">
+                <button class="ma-btn ma-btn--primary" :disabled="savingPassword" @click="resetPassword">Reset Password</button>
               </div>
             </div>
 
-            <!-- Agent -->
-            <div v-else-if="manageTab === 'agent'" class="ma-pane">
-              <div v-if="agentLoading" class="ma-center py-4">
-                <div class="ma-spinner"></div>
-              </div>
-              <div v-else class="row g-3">
-                <div class="col-12">
-                  <label class="ma-form-label">Mark User as Agent</label>
-                  <div class="d-flex align-items-center gap-3">
-                    <input id="is_agent" type="checkbox" v-model="agentForm.is_agent">
-                    <label for="is_agent" class="mb-0 text-muted">Enable Agent dashboard + commissions</label>
-                  </div>
-                  <small class="text-muted">If disabled, affiliate dashboard pages are hidden for this user.</small>
-                </div>
-
-                <div v-if="agentForm.is_agent" class="col-12">
-                  <div class="ma-soft-box">
-                    <div class="fw-bold mb-2"><i class="fas fa-percentage me-1"></i>Commission Settings (per Agent)</div>
-
-                    <div class="row g-3">
-                      <div class="col-md-6">
-                        <div class="ma-comm-row">
-                          <div class="ma-comm-title">Registration</div>
-                          <label class="ma-check"><input type="checkbox" v-model="agentForm.registration_enabled"> Enabled</label>
-                          <select v-model="agentForm.registration_mode" class="ma-form-input ma-form-input--sm">
-                            <option value="percent">Percent (%)</option>
-                            <option value="fixed">Fixed (₹)</option>
-                          </select>
-                          <input v-model="agentForm.registration_value" type="number" min="0" step="0.0001" class="ma-form-input ma-form-input--sm" placeholder="Value">
-                        </div>
-                      </div>
-
-                      <div class="col-md-6">
-                        <div class="ma-comm-row">
-                          <div class="ma-comm-title">KYC Fee</div>
-                          <label class="ma-check"><input type="checkbox" v-model="agentForm.kyc_enabled"> Enabled</label>
-                          <select v-model="agentForm.kyc_mode" class="ma-form-input ma-form-input--sm">
-                            <option value="percent">Percent (%)</option>
-                            <option value="fixed">Fixed (₹)</option>
-                          </select>
-                          <input v-model="agentForm.kyc_value" type="number" min="0" step="0.0001" class="ma-form-input ma-form-input--sm" placeholder="Value">
-                        </div>
-                      </div>
-
-                      <div class="col-md-6">
-                        <div class="ma-comm-row">
-                          <div class="ma-comm-title">Withdrawal Fee (GST)</div>
-                          <label class="ma-check"><input type="checkbox" v-model="agentForm.withdraw_fee_enabled"> Enabled</label>
-                          <select v-model="agentForm.withdraw_fee_mode" class="ma-form-input ma-form-input--sm">
-                            <option value="percent">Percent (%)</option>
-                            <option value="fixed">Fixed (₹)</option>
-                          </select>
-                          <input v-model="agentForm.withdraw_fee_value" type="number" min="0" step="0.0001" class="ma-form-input ma-form-input--sm" placeholder="Value">
-                        </div>
-                      </div>
-
-                      <div class="col-md-6">
-                        <div class="ma-comm-row">
-                          <div class="ma-comm-title">Upgrade</div>
-                          <label class="ma-check"><input type="checkbox" v-model="agentForm.upgrade_enabled"> Enabled</label>
-                          <select v-model="agentForm.upgrade_mode" class="ma-form-input ma-form-input--sm">
-                            <option value="percent">Percent (%)</option>
-                            <option value="fixed">Fixed (₹)</option>
-                          </select>
-                          <input v-model="agentForm.upgrade_value" type="number" min="0" step="0.0001" class="ma-form-input ma-form-input--sm" placeholder="Value">
-                        </div>
-                      </div>
-
-                      <div class="col-12">
-                        <div class="ma-comm-row">
-                          <div class="ma-comm-title">Partner Override</div>
-                          <label class="ma-check"><input type="checkbox" v-model="agentForm.partner_override_enabled"> Enabled</label>
-                          <div class="text-muted small">Percent only</div>
-                          <input v-model="agentForm.partner_override_percent" type="number" min="0" max="100" step="0.0001" class="ma-form-input ma-form-input--sm" placeholder="Percent">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="ma-soft-box mt-3">
-                    <div class="fw-bold mb-3"><i class="fas fa-list-ul me-1"></i>Granular Package Commissions</div>
-                    <div class="row g-3">
-                      <div class="col-12">
-                        <div class="text-muted small mb-2">Configure specific commission values for each course package/ads plan.</div>
-                        <div class="table-responsive">
-                          <table class="ma-table ma-table--compact text-center">
-                            <thead>
-                              <tr>
-                                <th>Package / Plan</th>
-                                <th>Mode</th>
-                                <th>Value</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr v-for="p in coursePlans" :key="'cp'+p.id">
-                                <td class="text-start">{{ p.name }} (Course)</td>
-                                <td>
-                                  <select v-model="agentForm.granular_settings['course_'+p.id+'_mode']" class="ma-form-input ma-form-input--sm">
-                                    <option value="percent">Percent (%)</option>
-                                    <option value="fixed">Fixed (₹)</option>
-                                  </select>
-                                </td>
-                                <td>
-                                  <input v-model="agentForm.granular_settings['course_'+p.id+'_value']" type="number" class="ma-form-input ma-form-input--sm" placeholder="Default">
-                                </td>
-                              </tr>
-                              <tr v-for="p in adsPlans" :key="'ap'+p.id">
-                                <td class="text-start">{{ p.name }} (Ads Plan)</td>
-                                <td>
-                                  <select v-model="agentForm.granular_settings['adplan_'+p.id+'_mode']" class="ma-form-input ma-form-input--sm">
-                                    <option value="percent">Percent (%)</option>
-                                    <option value="fixed">Fixed (₹)</option>
-                                  </select>
-                                </td>
-                                <td>
-                                  <input v-model="agentForm.granular_settings['adplan_'+p.id+'_value']" type="number" class="ma-form-input ma-form-input--sm" placeholder="Default">
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="col-12">
-                  <div class="ma-form-actions mt-2">
-                    <button class="ma-btn ma-btn--primary" :disabled="savingAgent" @click="saveAgentSettings">
-                      <i class="fas fa-spinner fa-spin me-1" v-if="savingAgent"></i>
-                      {{ savingAgent ? 'Saving...' : 'Save Agent Settings' }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Transactions -->
+            <!-- Transactions Pane -->
             <div v-else class="ma-pane">
-              <div class="ma-trx-header">
-                <div class="text-muted">Latest transactions for this user</div>
-                <button class="ma-btn-refresh" @click="fetchUserTransactions(trxPage)" :disabled="trxLoading">
-                  <i class="fas fa-sync-alt" :class="{ 'fa-spin': trxLoading }"></i>
-                </button>
-              </div>
               <div class="table-responsive">
                 <table class="ma-table ma-table--compact">
                   <thead>
@@ -703,27 +475,22 @@
                       <td colspan="5" class="ma-table__loading"><div class="ma-spinner"></div></td>
                     </tr>
                     <tr v-else-if="userTransactions.length === 0">
-                      <td colspan="5" class="ma-table__empty">No transactions</td>
+                      <td colspan="5" class="ma-table__empty">No transactions found</td>
                     </tr>
                     <tr v-for="t in userTransactions" :key="t.id">
                       <td class="ma-mono">{{ t.trx }}</td>
                       <td><span class="ma-badge" :class="t.trx_type === '+' ? 'ma-badge--success' : 'ma-badge--danger'">{{ t.trx_type }}</span></td>
                       <td>₹{{ formatAmount(t.amount || 0) }}</td>
-                      <td class="ma-truncate" :title="t.details">{{ t.details }}</td>
+                      <td class="ma-truncate">{{ t.details }}</td>
                       <td>{{ t.created_at }}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-
               <div v-if="trxLastPage > 1" class="ma-pagination mt-3">
-                <button class="ma-page-btn" :disabled="trxPage === 1" @click="fetchUserTransactions(trxPage - 1)">
-                  <i class="fas fa-chevron-left"></i>
-                </button>
-                <span class="ma-page-info">Page {{ trxPage }} of {{ trxLastPage }}</span>
-                <button class="ma-page-btn" :disabled="trxPage === trxLastPage" @click="fetchUserTransactions(trxPage + 1)">
-                  <i class="fas fa-chevron-right"></i>
-                </button>
+                <button class="ma-page-btn" :disabled="trxPage === 1" @click="fetchUserTransactions(trxPage - 1)">Prev</button>
+                <span class="ma-page-info">{{ trxPage }} / {{ trxLastPage }}</span>
+                <button class="ma-page-btn" :disabled="trxPage === trxLastPage" @click="fetchUserTransactions(trxPage + 1)">Next</button>
               </div>
             </div>
           </div>
@@ -737,270 +504,112 @@
             <h5 class="ma-modal__title">
               <i class="fas fa-user-shield me-2"></i>Review KYC - {{ selectedUser?.firstname }} {{ selectedUser?.lastname }}
             </h5>
-            <button class="ma-modal__close" @click="closeKYCModal">
-              <i class="fas fa-times"></i>
-            </button>
+            <button class="ma-modal__close" @click="closeKYCModal"><i class="fas fa-times"></i></button>
           </div>
           <div class="ma-modal__body">
-             <div class="row g-4">
-              <!-- Bank Information -->
+            <div class="row g-4">
               <div class="col-12">
-                <div class="ma-doc-card">
-                  <div class="ma-doc-header">
-                    <h6><i class="fas fa-university me-2"></i>Bank Information</h6>
-                    <span class="ma-badge ma-badge--dark">User Bank Details</span>
-                  </div>
-                  <div class="p-3">
-                    <div class="row g-3">
-                      <div class="col-md-4">
-                        <div class="text-muted small mb-1">Account Holder Name</div>
-                        <div class="text-white fw-medium">{{ selectedUser?.bank_details?.account_holder_name || 'N/A' }}</div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="text-muted small mb-1">Account Number</div>
-                        <div class="text-white fw-medium">{{ selectedUser?.bank_details?.account_number || 'N/A' }}</div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="text-muted small mb-1">IFSC Code</div>
-                        <div class="text-white fw-medium">{{ selectedUser?.bank_details?.ifsc_code || 'N/A' }}</div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="text-muted small mb-1">Bank Name</div>
-                        <div class="text-white fw-medium">{{ selectedUser?.bank_details?.bank_name || 'N/A' }}</div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="text-muted small mb-1">Branch Name</div>
-                        <div class="text-white fw-medium">{{ selectedUser?.bank_details?.branch_name || 'N/A' }}</div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="text-muted small mb-1">Bank Registered Number</div>
-                        <div class="text-white fw-medium">{{ selectedUser?.bank_details?.bank_registered_no || 'N/A' }}</div>
-                      </div>
-                      <div class="col-12 text-end mt-2">
-                        <button class="ma-btn ma-btn--outline-danger ma-btn--sm" @click="deleteUserBank">
-                          <i class="fas fa-trash-alt me-1"></i>Delete Bank Details
-                        </button>
-                      </div>
+                <div class="ma-soft-box">
+                  <div class="fw-bold mb-3"><i class="fas fa-university me-2"></i>Bank Details</div>
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <div class="text-muted small">Account Holder</div>
+                      <div class="text-white">{{ selectedUser?.bank_details?.account_holder_name || 'N/A' }}</div>
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <div class="ma-doc-card">
-                  <div class="ma-doc-header">
-                    <h6><i class="fas fa-id-card me-2"></i>Aadhaar Card</h6>
-                    <span class="ma-badge ma-badge--dark">{{ selectedUser?.kyc_data?.aadhaar_number || 'N/A' }}</span>
-                  </div>
-                  <div class="ma-doc-preview">
-                    <a
-                      v-if="selectedUser?.kyc_data?.aadhaar_image || selectedUser?.kyc_data?.aadhaar_file"
-                      :href="selectedUser?.kyc_data?.aadhaar_image || selectedUser?.kyc_data?.aadhaar_file"
-                      target="_blank"
-                      class="ma-doc-link"
-                    >
-                      <img v-if="selectedUser?.kyc_data?.aadhaar_image" :src="selectedUser.kyc_data.aadhaar_image" alt="Aadhaar" class="img-fluid rounded" />
-                      <div v-else class="text-center py-5 text-muted w-100">
-                        <i class="fa-regular fa-file fa-2x mb-2"></i>
-                        <p class="mb-0">Open Aadhaar Document</p>
-                      </div>
-                    </a>
-                    <div v-else class="text-center py-5 text-muted">
-                      <i class="fas fa-image fa-2x mb-2"></i>
-                      <p class="mb-0">No document uploaded</p>
+                    <div class="col-md-4">
+                      <div class="text-muted small">Account Number</div>
+                      <div class="text-white">{{ selectedUser?.bank_details?.account_number || 'N/A' }}</div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="text-muted small">IFSC Code</div>
+                      <div class="text-white">{{ selectedUser?.bank_details?.ifsc_code || 'N/A' }}</div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="text-muted small">Bank Name</div>
+                      <div class="text-white">{{ selectedUser?.bank_details?.bank_name || 'N/A' }}</div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="text-muted small">UPI ID</div>
+                      <div class="text-white">{{ selectedUser?.bank_details?.upi_id || 'N/A' }}</div>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="ma-doc-card">
-                  <div class="ma-doc-header">
-                    <h6><i class="fas fa-credit-card me-2"></i>PAN Card</h6>
-                    <span class="ma-badge ma-badge--dark">{{ selectedUser?.kyc_data?.pan_number || 'N/A' }}</span>
-                  </div>
+                  <div class="ma-doc-header"><h6>Aadhaar Card</h6></div>
                   <div class="ma-doc-preview">
-                    <a
-                      v-if="selectedUser?.kyc_data?.pan_image || selectedUser?.kyc_data?.pan_file"
-                      :href="selectedUser?.kyc_data?.pan_image || selectedUser?.kyc_data?.pan_file"
-                      target="_blank"
-                      class="ma-doc-link"
-                    >
-                      <img v-if="selectedUser?.kyc_data?.pan_image" :src="selectedUser.kyc_data.pan_image" alt="PAN Card" class="img-fluid rounded" />
-                      <div v-else class="text-center py-5 text-muted w-100">
-                        <i class="fa-regular fa-file fa-2x mb-2"></i>
-                        <p class="mb-0">Open PAN Document</p>
-                      </div>
-                    </a>
-                    <div v-else class="text-center py-5 text-muted">
-                      <i class="fas fa-image fa-2x mb-2"></i>
-                      <p class="mb-0">No document uploaded</p>
-                    </div>
+                    <img v-if="selectedUser?.kyc_data?.aadhaar_image" :src="selectedUser.kyc_data.aadhaar_image" class="img-fluid rounded" />
+                    <div v-else class="text-muted">No Image</div>
                   </div>
                 </div>
               </div>
+              <div class="col-md-6">
+                <div class="ma-doc-card">
+                  <div class="ma-doc-header"><h6>PAN Card</h6></div>
+                  <div class="ma-doc-preview">
+                    <img v-if="selectedUser?.kyc_data?.pan_image" :src="selectedUser.kyc_data.pan_image" class="img-fluid rounded" />
+                    <div v-else class="text-muted">No Image</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ma-form-actions mt-4 gap-3">
+              <!-- If Pending (kv=2) -->
+              <template v-if="selectedUser?.kv === 2">
+                <button class="ma-btn ma-btn--primary" @click="approveKYC">Verify KYC</button>
+                <button class="ma-btn ma-btn--danger" @click="showRejectForm = true">Reject</button>
+              </template>
               
-              <!-- Action Buttons -->
-              <div class="col-12 mt-4" v-if="selectedUser?.kv === 2">
-                <div v-if="!showRejectForm" class="d-flex gap-3 justify-content-end">
-                   <button class="ma-btn ma-btn--danger" @click="showRejectForm = true">Reject</button>
-                   <button class="ma-btn ma-btn--success" @click="approveKYC">Approve</button>
-                </div>
-                <div v-else class="ma-reject-form">
-                  <textarea v-model="rejectionReason" class="ma-form-input mb-3" rows="2" placeholder="Rejection reason..."></textarea>
-                  <div class="d-flex gap-3 justify-content-end">
-                    <button class="ma-btn ma-btn--secondary" @click="showRejectForm = false">Cancel</button>
-                    <button class="ma-btn ma-btn--danger" @click="rejectKYC">Confirm Reject</button>
-                  </div>
-                </div>
+              <!-- If Verified (kv=1) -->
+              <template v-else-if="selectedUser?.kv === 1">
+                <button class="ma-btn ma-btn--warning" @click="unapproveKYC">Unapprove</button>
+                <button class="ma-btn ma-btn--danger" @click="showRejectForm = true">Reject</button>
+              </template>
+              
+              <!-- Always allow delete if bank details exist -->
+              <button class="ma-btn ma-btn--secondary" style="background: #475569; color: white" @click="deleteKYCFromReview">Delete KYC</button>
+            </div>
+
+            <div v-if="showRejectForm" class="mt-4 ma-reject-form">
+              <textarea v-model="rejectionReason" class="ma-form-input mb-3" placeholder="Enter reason for rejection..."></textarea>
+              <div class="d-flex gap-2">
+                <button class="ma-btn ma-btn--danger" :disabled="!rejectionReason" @click="rejectKYC">Submit Rejection</button>
+                <button class="ma-btn ma-btn--secondary" @click="showRejectForm = false">Cancel</button>
               </div>
-              <div class="col-12 mt-4 text-center text-success fw-bold" v-else-if="selectedUser?.kv === 1">
-                <i class="fas fa-check-circle me-2"></i> KYC Verified
-              </div>
-             </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Bank Account Edit Modal -->
-      <div v-if="showBankModal" class="ma-modal-overlay" @click="closeBankModal">
-        <div class="ma-modal" @click.stop>
-          <div class="ma-modal__header">
-            <h5 class="ma-modal__title">
-              <i class="fas fa-university me-2"></i>Edit Bank Account - {{ selectedUser?.firstname }} {{ selectedUser?.lastname }}
-            </h5>
-            <button class="ma-modal__close" @click="closeBankModal">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-          <div class="ma-modal__body">
-            <form @submit.prevent="saveBankDetails">
-              <div class="ma-form-group">
-                <label class="ma-form-label">
-                  <i class="fas fa-user me-1"></i>Account Holder Name <span class="text-danger">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  v-model="bankForm.account_holder_name" 
-                  class="ma-form-input" 
-                  placeholder="Enter account holder name"
-                  required
-                />
-              </div>
-              <div class="ma-form-group">
-                <label class="ma-form-label">
-                  <i class="fas fa-hashtag me-1"></i>Account Number <span class="text-danger">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  v-model="bankForm.account_number" 
-                  class="ma-form-input" 
-                  placeholder="Enter account number"
-                  required
-                />
-              </div>
-              <div class="ma-form-group">
-                <label class="ma-form-label">
-                  <i class="fas fa-code me-1"></i>IFSC Code <span class="text-danger">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  v-model="bankForm.ifsc_code" 
-                  class="ma-form-input" 
-                  placeholder="Enter IFSC code"
-                  required
-                  maxlength="20"
-                />
-              </div>
-              <div class="ma-form-group">
-                <label class="ma-form-label">
-                  <i class="fas fa-university me-1"></i>Bank Name <span class="text-danger">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  v-model="bankForm.bank_name" 
-                  class="ma-form-input" 
-                  placeholder="Enter bank name"
-                  required
-                />
-              </div>
-              <div class="ma-form-group">
-                <label class="ma-form-label">
-                  <i class="fas fa-id-card me-1"></i>Bank Registered Number
-                </label>
-                <input 
-                  type="text" 
-                  v-model="bankForm.bank_registered_no" 
-                  class="ma-form-input" 
-                  placeholder="Enter bank registered number (optional)"
-                />
-              </div>
-              <div class="ma-form-group">
-                <label class="ma-form-label">
-                  <i class="fas fa-map-marker-alt me-1"></i>Branch Name
-                </label>
-                <input 
-                  type="text" 
-                  v-model="bankForm.branch_name" 
-                  class="ma-form-input" 
-                  placeholder="Enter branch name (optional)"
-                />
-              </div>
-              <div class="ma-modal__footer">
-                <button type="button" class="ma-btn ma-btn--secondary" @click="closeBankModal">
-                  <i class="fas fa-times me-1"></i>Cancel
-                </button>
-                <button type="submit" class="ma-btn ma-btn--primary" :disabled="savingBank">
-                  <i class="fas fa-save me-1"></i>{{ savingBank ? 'Saving...' : 'Save Changes' }}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
     </div>
   </MasterAdminLayout>
 </template>
 
 <script>
-import { ref, computed, onMounted, nextTick } from 'vue'
-import MasterAdminLayout from '../../components/master_admin/MasterAdminLayout.vue'
-import api from '../../services/api'
+import { ref, onMounted, computed, nextTick } from 'vue'
+import MasterAdminLayout from '@/components/master_admin/MasterAdminLayout.vue'
+import api from '@/services/api'
 
 export default {
-  name: 'MasterAdminUsers',
+  name: 'Users',
   components: { MasterAdminLayout },
-  setup() {
+  setup () {
     const users = ref([])
+    const totalUsers = ref(0)
     const loading = ref(false)
     const searchQuery = ref('')
     const filterStatus = ref('')
-    const totalUsers = ref(0)
     const currentPage = ref(1)
     const lastPage = ref(1)
+
     const activeCount = ref(0)
     const bannedCount = ref(0)
     const kycPendingCount = ref(0)
-    const showPassword = ref({})
-    const showCreateUserModal = ref(false)
-    const creatingUser = ref(false)
-    const createForm = ref({
-      name: '',
-      email: '',
-      mobile: '',
-      state: '',
-      course_plan_id: 0,
-      sponsor_id: '',
-      password: ''
-    })
+    const partnerCount = ref(0)
+    const agentCount = ref(0)
 
-    const coursePlans = ref([])
-    const coursePlansLoading = ref(false)
-    const activeCoursePlans = computed(() => {
-      return (coursePlans.value || []).filter(p => Number(p?.status ?? 1) === 1)
-    })
-    const showBankModal = ref(false)
-    const selectedUser = ref(null)
-    // Manage User Modal (Phase 2)
+    const showPassword = ref({})
     const showManageModal = ref(false)
     const manageUser = ref(null)
     const manageTab = ref('basic')
@@ -1010,194 +619,171 @@ export default {
     const savingBasic = ref(false)
     const savingSponsor = ref(false)
     const savingPassword = ref(false)
+
+    const userCoursePlanId = ref(0)
+    const userAdsPlanId = ref(0)
+    const updatingPackage = ref(false)
+    const updatingAdsPlan = ref(false)
+
     const agentLoading = ref(false)
     const savingAgent = ref(false)
-    const agentForm = ref({
-      is_agent: false,
-      registration_enabled: true,
-      registration_mode: 'percent',
-      registration_value: 50,
-      kyc_enabled: true,
-      kyc_mode: 'percent',
-      kyc_value: 50,
-      withdraw_fee_enabled: true,
-      withdraw_fee_mode: 'percent',
-      withdraw_fee_value: 50,
-      upgrade_enabled: true,
-      upgrade_mode: 'percent',
-      upgrade_value: 50,
-      partner_override_enabled: false,
-      partner_override_percent: 0,
-      adplan_enabled: true,
-      adplan_mode: 'percent',
-      adplan_value: 50,
-      course_enabled: true,
-      course_mode: 'percent',
-      course_value: 50,
-      partner_enabled: true,
-      partner_mode: 'percent',
-      partner_value: 50,
-      certificate_enabled: true,
-      certificate_mode: 'percent',
-      certificate_value: 50,
-      granular_settings: {}
-    })
-    const adsPlans = ref([])
-    const adsPlansLoading = ref(false)
-    const activeAdsPlans = computed(() => (adsPlans.value || []).filter(p => Number(p?.status ?? 1) === 1))
+    const agentForm = ref({ is_agent: false })
+
+    const userTransactions = ref([])
+    const trxLoading = ref(false)
+    const trxPage = ref(1)
+    const trxLastPage = ref(1)
 
     const balanceForm = ref({ amount: 0, type: 'add', reason: '' })
     const adjustingBalance = ref(false)
     const resettingUser = ref(false)
     const deletingUser = ref(false)
 
-    const userCoursePlanId = ref(0)
-    const userAdsPlanId = ref(0)
-    const updatingPackage = ref(false)
-    const updatingAdsPlan = ref(false)
-    const userTransactions = ref([])
-    const trxLoading = ref(false)
-    const trxPage = ref(1)
-    const trxLastPage = ref(1)
-
-    const savingBank = ref(false)
     const bankForm = ref({
-      account_holder_name: '',
-      account_number: '',
-      ifsc_code: '',
-      bank_name: '',
-      bank_registered_no: '',
-      branch_name: ''
+      account_holder_name: '', account_number: '', ifsc_code: '', bank_name: '', bank_registered_no: '',
+      branch_name: '', upi_id: '', mobile: ''
     })
-    let searchTimeout = null
+    const savingBank = ref(false)
+    const deletingBank = ref(false)
 
-    const formatAmount = (n) => {
-      if (!n && n !== 0) return '0.00'
-      return parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-    }
-    const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
-    const getInitials = (u) => ((u.firstname?.[0] || '') + (u.lastname?.[0] || '') || u.username?.[0] || 'U').toUpperCase()
+    const showCreateUserModal = ref(false)
+    const creatingUser = ref(false)
+    const createForm = ref({ name: '', email: '', mobile: '', state: '', course_plan_id: 0, ads_plan_id: 0, sponsor_id: '', password: '' })
 
-    const getApiErrorMessage = (payloadOrError) => {
-      const d = payloadOrError?.response?.data ?? payloadOrError?.data ?? payloadOrError
-      if (!d) return 'Request failed'
-      if (typeof d === 'string') return d
+    const indianStates = [
+      "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana",
+      "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+      "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
+      "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh",
+      "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+    ];
 
-      const msg = d.message
-      if (Array.isArray(msg) && msg.length) return String(msg[0])
-      if (typeof msg === 'string' && msg.trim()) return msg
-      if (msg && typeof msg === 'object' && Array.isArray(msg.error) && msg.error.length) return String(msg.error[0])
+    const hardcodedCoursePlans = [
+      { id: 4, name: 'AdsLite', price: 1499 },
+      { id: 5, name: 'AdsPro', price: 2999 },
+      { id: 6, name: 'AdsSupreme', price: 5999 },
+      { id: 7, name: 'AdsPremium', price: 9999 },
+      { id: 8, name: 'AdsPremium+', price: 15999 }
+    ];
 
-      const errors = d.errors
-      if (errors && typeof errors === 'object') {
-        const firstKey = Object.keys(errors)[0]
-        const firstVal = firstKey ? errors[firstKey] : null
-        if (Array.isArray(firstVal) && firstVal.length) return String(firstVal[0])
-      }
+    const hardcodedAdsPlans = [
+      { id: 4, name: 'Starter Plan', price: 0 },
+      { id: 5, name: 'Popular Plan', price: 0 },
+      { id: 6, name: 'Premium Plan', price: 0 },
+      { id: 7, name: 'Elite Plan', price: 0 }
+    ];
 
-      return String(d.remark || 'Request failed')
-    }
+    const formatAmount = (val) => Number(val).toLocaleString('en-IN', { maximumFractionDigits: 2 })
+    const getInitials = (u) => (u.firstname?.charAt(0) || '') + (u.lastname?.charAt(0) || '')
 
-    const paginationPages = computed(() => {
-      const pages = []
-      const total = lastPage.value
-      const cur = currentPage.value
-      if (total <= 7) { for (let i = 1; i <= total; i++) pages.push(i); return pages }
-      pages.push(1)
-      if (cur > 3) pages.push('...')
-      for (let i = Math.max(2, cur - 1); i <= Math.min(total - 1, cur + 1); i++) pages.push(i)
-      if (cur < total - 2) pages.push('...')
-      pages.push(total)
-      return pages
-    })
-
-    const fetchUsers = async (page) => {
-      if (page) currentPage.value = page
+    const fetchUsers = async (page = 1) => {
       loading.value = true
+      currentPage.value = page
       try {
-        const params = { page: currentPage.value, per_page: 20 }
-        if (searchQuery.value) params.search = searchQuery.value
-        if (filterStatus.value) params.status = filterStatus.value
-
-        const res = await api.get('/admin/users', { params })
+        const res = await api.get('/admin/users', { 
+          params: { page, search: searchQuery.value, status: filterStatus.value } 
+        })
         if (res.data?.status === 'success' && res.data.data) {
           users.value = res.data.data.users || []
-          totalUsers.value = res.data.data.total || 0
-          currentPage.value = res.data.data.current_page || 1
-          lastPage.value = res.data.data.last_page || 1
+          totalUsers.value = Number(res.data.data.total || 0)
+          lastPage.value = Number(res.data.data.last_page || 1)
+        } else {
+          users.value = []
+          totalUsers.value = 0
+          lastPage.value = 1
         }
       } catch (e) {
-        console.error('Error fetching users:', e)
-        if (window.notify) window.notify('error', 'Failed to load users')
+        console.error('Fetch Users Error:', e)
+        if (window.notify) window.notify('error', 'Failed to fetch users: ' + (e.response?.data?.message?.error?.[0] || e.message))
+        users.value = []
+        totalUsers.value = 0
+        lastPage.value = 1
       } finally {
         loading.value = false
       }
     }
 
+    const viewBank = (u) => {
+      manageUser.value = u
+      manageTab.value = 'bank'
+      bankForm.value = {
+        account_holder_name: u.bank_details?.account_holder_name || '',
+        account_number: u.bank_details?.account_number || '',
+        ifsc_code: u.bank_details?.ifsc_code || '',
+        bank_name: u.bank_details?.bank_name || '',
+        bank_registered_no: u.bank_details?.bank_registered_no || '',
+        branch_name: u.bank_details?.branch_name || '',
+        upi_id: u.bank_details?.upi_id || '',
+        mobile: u.bank_details?.mobile || u.mobile || ''
+      }
+      showManageModal.value = true
+    }
+
+    const saveBank = async () => {
+      if (!manageUser.value) return
+      savingBank.value = true
+      try {
+        await api.post(`/admin/user/${manageUser.value.id}/bank-details`, bankForm.value)
+        if (window.notify) window.notify('success', 'Bank details updated')
+        fetchUsers(currentPage.value)
+      } catch (e) {
+        if (window.notify) window.notify('error', 'Update failed')
+      } finally {
+        savingBank.value = false
+      }
+    }
+
+    const deleteBank = async () => {
+      if (!confirm('DELETE bank details? KYC will be reset.')) return
+      deletingBank.value = true
+      try {
+        await api.post(`/admin/user/${manageUser.value.id}/delete-bank`)
+        if (window.notify) window.notify('success', 'Bank details deleted')
+        bankForm.value = { account_holder_name: '', account_number: '', ifsc_code: '', bank_name: '', bank_registered_no: '', branch_name: '', upi_id: '', mobile: '' }
+        fetchUsers(currentPage.value)
+      } finally {
+        deletingBank.value = false
+      }
+    }
+
     const fetchCounts = async () => {
       try {
-        const res = await api.get('/admin/dashboard')
+        const res = await api.get('/admin/users/counts')
         if (res.data?.status === 'success' && res.data.data) {
-          const d = res.data.data
-          activeCount.value = d.verified_users || 0
-          bannedCount.value = (d.total_users || 0) - (d.verified_users || 0)
-          kycPendingCount.value = d.kyc_pending_users || 0
+          activeCount.value = res.data.data.active || 0
+          bannedCount.value = res.data.data.banned || 0
+          kycPendingCount.value = res.data.data.kyc_pending || 0
+          partnerCount.value = res.data.data.partner || 0
+          agentCount.value = res.data.data.agent || 0
         }
       } catch (e) {}
     }
 
+    let searchTimer = null
     const debounceSearch = () => {
-      clearTimeout(searchTimeout)
-      searchTimeout = setTimeout(() => fetchUsers(1), 400)
+      clearTimeout(searchTimer)
+      searchTimer = setTimeout(() => fetchUsers(1), 500)
     }
 
-    const togglePassword = (userId) => {
-      showPassword.value[userId] = !showPassword.value[userId]
-    }
-
-    const copyPassword = async (password) => {
-      if (!password) return
-      try {
-        await navigator.clipboard.writeText(password)
-        if (window.notify) window.notify('success', 'Password copied to clipboard')
-      } catch (e) {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea')
-        textArea.value = password
-        textArea.style.position = 'fixed'
-        textArea.style.opacity = '0'
-        document.body.appendChild(textArea)
-        textArea.select()
-        document.execCommand('copy')
-        document.body.removeChild(textArea)
-        if (window.notify) window.notify('success', 'Password copied to clipboard')
-      }
+    const togglePassword = (id) => { showPassword.value[id] = !showPassword.value[id] }
+    const copyPassword = (pass) => {
+      navigator.clipboard.writeText(pass || '')
+      if (window.notify) window.notify('success', 'Password copied!')
     }
 
     const openManageUser = async (user) => {
       manageUser.value = user
-      manageTab.value = 'basic'
       basicForm.value = {
-        name: `${user.firstname || ''} ${user.lastname || ''}`.trim() || user.username || '',
+        name: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
         email: user.email || '',
         mobile: user.mobile || '',
         state: user.state || ''
       }
       sponsorId.value = user.referred_by ? `ADS${user.referred_by}` : ''
       newPassword.value = ''
-      userTransactions.value = []
-      trxPage.value = 1
-      trxLastPage.value = 1
-      agentLoading.value = false
-      savingAgent.value = false
-      agentForm.value = { ...agentForm.value, is_agent: !!(user.is_agent) }
-      
-      // Initialize package selections
       userCoursePlanId.value = user.active_course_plan_id || 0
       userAdsPlanId.value = user.active_ads_plan_id || 0
-      
-      balanceForm.value = { amount: 0, type: 'add', reason: '' }
-      
+      agentForm.value = { is_agent: !!user.is_agent }
       await nextTick()
       showManageModal.value = true
     }
@@ -1206,283 +792,21 @@ export default {
       showManageModal.value = false
       manageUser.value = null
       manageTab.value = 'basic'
-      basicForm.value = { name: '', email: '', mobile: '', state: '' }
-      sponsorId.value = ''
-      newPassword.value = ''
-      userTransactions.value = []
-      trxPage.value = 1
-      trxLastPage.value = 1
-      agentLoading.value = false
-      savingAgent.value = false
-      agentForm.value = {
-        is_agent: false,
-        registration_enabled: true,
-        registration_mode: 'percent',
-        registration_value: 50,
-        kyc_enabled: true,
-        kyc_mode: 'percent',
-        kyc_value: 50,
-        withdraw_fee_enabled: true,
-        withdraw_fee_mode: 'percent',
-        withdraw_fee_value: 50,
-        upgrade_enabled: true,
-        upgrade_mode: 'percent',
-        upgrade_value: 50,
-        partner_override_enabled: false,
-        partner_override_percent: 0
-      }
-    }
-
-    const fetchAgentSettings = async () => {
-      if (!manageUser.value) return
-      agentLoading.value = true
-      try {
-        const res = await api.get(`/admin/user/${manageUser.value.id}/agent-commissions`, { __skipLoader: true })
-        if (res.data?.status === 'success' && res.data.data) {
-          const d = res.data.data
-          const s = d.settings || null
-          agentForm.value.is_agent = !!d.is_agent
-          if (s) {
-            agentForm.value.registration_enabled = !!s.registration_enabled
-            agentForm.value.registration_mode = s.registration_mode || 'percent'
-            agentForm.value.registration_value = Number(s.registration_value ?? 0)
-            agentForm.value.kyc_enabled = !!s.kyc_enabled
-            agentForm.value.kyc_mode = s.kyc_mode || 'percent'
-            agentForm.value.kyc_value = Number(s.kyc_value ?? 0)
-            agentForm.value.withdraw_fee_enabled = !!s.withdraw_fee_enabled
-            agentForm.value.withdraw_fee_mode = s.withdraw_fee_mode || 'percent'
-            agentForm.value.withdraw_fee_value = Number(s.withdraw_fee_value ?? 0)
-            agentForm.value.upgrade_enabled = !!s.upgrade_enabled
-            agentForm.value.upgrade_mode = s.upgrade_mode || 'percent'
-            agentForm.value.upgrade_value = Number(s.upgrade_value ?? 0)
-            agentForm.value.partner_override_enabled = !!s.partner_override_enabled
-            agentForm.value.partner_override_percent = Number(s.partner_override_percent ?? 0)
-            
-            agentForm.value.adplan_enabled = !!s.adplan_enabled
-            agentForm.value.adplan_mode = s.adplan_mode || 'percent'
-            agentForm.value.adplan_value = Number(s.adplan_value ?? 0)
-            agentForm.value.course_enabled = !!s.course_enabled
-            agentForm.value.course_mode = s.course_mode || 'percent'
-            agentForm.value.course_value = Number(s.course_value ?? 0)
-            agentForm.value.partner_enabled = !!s.partner_enabled
-            agentForm.value.partner_mode = s.partner_mode || 'percent'
-            agentForm.value.partner_value = Number(s.partner_value ?? 0)
-            agentForm.value.certificate_enabled = !!s.certificate_enabled
-            agentForm.value.certificate_mode = s.certificate_mode || 'percent'
-            agentForm.value.certificate_value = Number(s.certificate_value ?? 0)
-            
-            agentForm.value.granular_settings = s.granular_settings || {}
-          }
-        }
-      } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Failed to load agent settings')
-      } finally {
-        agentLoading.value = false
-      }
-    }
-
-    const saveAgentSettings = async () => {
-      if (!manageUser.value) return
-      savingAgent.value = true
-      try {
-        // 1) Update agent tag
-        const tagRes = await api.post(`/admin/user/${manageUser.value.id}/agent`, { is_agent: !!agentForm.value.is_agent })
-        if (tagRes.data?.status !== 'success') {
-          if (window.notify) window.notify('error', getApiErrorMessage(tagRes) || 'Failed to update agent status')
-          return
-        }
-
-        // 2) Update commission settings (only meaningful when agent enabled)
-        if (agentForm.value.is_agent) {
-          const payload = {
-            registration_enabled: !!agentForm.value.registration_enabled,
-            registration_mode: agentForm.value.registration_mode,
-            registration_value: Number(agentForm.value.registration_value || 0),
-            kyc_enabled: !!agentForm.value.kyc_enabled,
-            kyc_mode: agentForm.value.kyc_mode,
-            kyc_value: Number(agentForm.value.kyc_value || 0),
-            withdraw_fee_enabled: !!agentForm.value.withdraw_fee_enabled,
-            withdraw_fee_mode: agentForm.value.withdraw_fee_mode,
-            withdraw_fee_value: Number(agentForm.value.withdraw_fee_value || 0),
-            upgrade_enabled: !!agentForm.value.upgrade_enabled,
-            upgrade_mode: agentForm.value.upgrade_mode,
-            upgrade_value: Number(agentForm.value.upgrade_value || 0),
-            partner_override_enabled: !!agentForm.value.partner_override_enabled,
-            partner_override_percent: Number(agentForm.value.partner_override_percent || 0),
-            adplan_enabled: !!agentForm.value.adplan_enabled,
-            adplan_mode: agentForm.value.adplan_mode,
-            adplan_value: Number(agentForm.value.adplan_value || 0),
-            course_enabled: !!agentForm.value.course_enabled,
-            course_mode: agentForm.value.course_mode,
-            course_value: Number(agentForm.value.course_value || 0),
-            partner_enabled: !!agentForm.value.partner_enabled,
-            partner_mode: agentForm.value.partner_mode,
-            partner_value: Number(agentForm.value.partner_value || 0),
-            certificate_enabled: !!agentForm.value.certificate_enabled,
-            certificate_mode: agentForm.value.certificate_mode,
-            certificate_value: Number(agentForm.value.certificate_value || 0),
-            granular_settings: agentForm.value.granular_settings
-          }
-          const res = await api.post(`/admin/user/${manageUser.value.id}/agent-commissions`, payload)
-          if (res.data?.status !== 'success') {
-            if (window.notify) window.notify('error', getApiErrorMessage(res) || 'Failed to update commission settings')
-            return
-          }
-        }
-
-        if (window.notify) window.notify('success', 'Agent settings saved')
-        // Update local state + list
-        manageUser.value = { ...manageUser.value, is_agent: !!agentForm.value.is_agent }
-        fetchUsers(currentPage.value)
-      } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Failed to save agent settings')
-      } finally {
-        savingAgent.value = false
-      }
-    }
-
-    const adjustBalance = async () => {
-      if (!manageUser.value || !balanceForm.value.amount) return
-      adjustingBalance.value = true
-      try {
-        const res = await api.post(`/admin/user/${manageUser.value.id}/adjust-balance`, balanceForm.value)
-        if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'Balance adjusted successfully')
-          balanceForm.value = { amount: 0, type: 'add', reason: '' }
-          fetchUsers(currentPage.value)
-          // Update local balance
-          const change = Number(balanceForm.value.amount)
-          manageUser.value.balance = balanceForm.value.type === 'add' 
-            ? manageUser.value.balance + change 
-            : manageUser.value.balance - change
-        } else {
-          if (window.notify) window.notify('error', getApiErrorMessage(res) || 'Adjustment failed')
-        }
-      } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Adjustment failed')
-      } finally {
-        adjustingBalance.value = false
-      }
-    }
-
-    const resetUserData = async () => {
-      if (!manageUser.value) return
-      if (!confirm(`Are you sure you want to RESET ALL DATA for ADS${manageUser.value.id}? This cannot be undone.`)) return
-      resettingUser.value = true
-      try {
-        const res = await api.post(`/admin/user/${manageUser.value.id}/reset-data`)
-        if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'User data reset successfully')
-          fetchUsers(currentPage.value)
-          closeManageModal()
-        }
-      } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Reset failed')
-      } finally {
-        resettingUser.value = false
-      }
-    }
-
-    const deleteUser = async () => {
-      if (!manageUser.value) return
-      if (!confirm(`Are you sure you want to PERMANENTLY DELETE user ADS${manageUser.value.id}? This cannot be undone.`)) return
-      deletingUser.value = true
-      try {
-        const res = await api.post(`/admin/user/${manageUser.value.id}/delete`)
-        if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'User deleted successfully')
-          fetchUsers(currentPage.value)
-          closeManageModal()
-        }
-      } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Delete failed')
-      } finally {
-        deletingUser.value = false
-      }
-    }
-
-    const deleteUserBank = async () => {
-      if (!manageUser.value) return
-      if (!confirm('Are you sure you want to DELETE bank details? User will need to re-complete KYC.')) return
-      try {
-        const res = await api.post(`/admin/user/${manageUser.value.id}/delete-bank`)
-        if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'Bank details deleted')
-          manageUser.value.kv = 0
-          manageUser.value.bank_details = null
-          fetchUsers(currentPage.value)
-        }
-      } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Action failed')
-      }
-    }
-
-    const deleteUserBankFromTable = async (user) => {
-      if (!confirm(`Are you sure you want to DELETE bank details for ADS${user.id}? User will need to re-complete KYC.`)) return
-      try {
-        const res = await api.post(`/admin/user/${user.id}/delete-bank`)
-        if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'Bank details deleted')
-          fetchUsers(currentPage.value)
-        }
-      } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Action failed')
-      }
-    }
-
-    const updateCoursePackage = async () => {
-      if (!manageUser.value) return
-      updatingPackage.value = true
-      try {
-        const res = await api.post(`/admin/user/${manageUser.value.id}/update-course-package`, { course_plan_id: userCoursePlanId.value || null })
-        if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'Course package updated')
-          fetchUsers(currentPage.value)
-        }
-      } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Update failed')
-      } finally {
-        updatingPackage.value = false
-      }
-    }
-
-    const updateAdsPlan = async () => {
-      if (!manageUser.value) return
-      updatingAdsPlan.value = true
-      try {
-        const res = await api.post(`/admin/user/${manageUser.value.id}/update-ads-plan`, { ads_plan_id: userAdsPlanId.value || null })
-        if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'Ads plan updated')
-          fetchUsers(currentPage.value)
-        }
-      } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Update failed')
-      } finally {
-        updatingAdsPlan.value = false
-      }
     }
 
     const saveBasic = async () => {
       if (!manageUser.value) return
       savingBasic.value = true
       try {
-        const payload = {
-          name: basicForm.value?.name || '',
-          email: basicForm.value?.email || '',
-          mobile: basicForm.value?.mobile || '',
-          state: basicForm.value?.state || ''
-        }
-        const res = await api.post(`/admin/user/${manageUser.value.id}/basic-update`, payload)
+        const res = await api.post(`/admin/user/${manageUser.value.id}/basic-update`, basicForm.value)
         if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'User updated successfully')
+          if (window.notify) window.notify('success', 'User updated')
           fetchUsers(currentPage.value)
-          // Update local user
-          manageUser.value = { ...manageUser.value, ...(res.data.data?.user || {}) }
         } else {
-          if (window.notify) window.notify('error', getApiErrorMessage(res) || 'Update failed')
+          if (window.notify) window.notify('error', res.data?.message?.error?.[0] || 'Update failed')
         }
       } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Update failed')
+        if (window.notify) window.notify('error', 'Update failed')
       } finally {
         savingBasic.value = false
       }
@@ -1491,20 +815,72 @@ export default {
     const saveSponsor = async () => {
       if (!manageUser.value) return
       savingSponsor.value = true
+      const targetSponsor = sponsorId.value
+      const userId = manageUser.value.id
       try {
-        const res = await api.post(`/admin/user/${manageUser.value.id}/change-sponsor`, { sponsor_id: sponsorId.value || '' })
+        const res = await api.post(`/admin/user/${userId}/change-sponsor`, { sponsor_id: targetSponsor })
         if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'Sponsor updated successfully')
-          const referredBy = res.data.data?.referred_by ?? null
-          manageUser.value = { ...manageUser.value, referred_by: referredBy }
-          fetchUsers(currentPage.value)
+          const savedRef = Number(res.data.data?.referred_by ?? 0)
+          const displayLabel = savedRef ? `ADS${savedRef}` : 'None'
+          
+          if (window.notify) window.notify('success', `Sponsor updated to ${displayLabel}`)
+          alert(`Sponsor updated successfully!\nNew Sponsor: ${displayLabel}`)
+          
+          // 1. Update the current active user object
+          if (manageUser.value) {
+            manageUser.value.referred_by = savedRef
+          }
+          
+          // 2. Update the input field
+          sponsorId.value = savedRef ? `ADS${savedRef}` : ''
+          
+          // 3. Update the matching user in the main list directly
+          const userInList = users.value.find(u => u.id === userId)
+          if (userInList) {
+            userInList.referred_by = savedRef
+          }
+          
+          // 4. Still refresh the whole table for consistency, but a bit later
+          setTimeout(() => fetchUsers(currentPage.value), 1000)
         } else {
-          if (window.notify) window.notify('error', getApiErrorMessage(res) || 'Sponsor update failed')
+          const m = res.data?.message;
+          const errMsg = m?.error?.[0] || m?.success?.[0] || (Array.isArray(m) ? m[0] : m) || 'Sponsor update failed';
+          if (window.notify) window.notify('error', errMsg)
         }
       } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Sponsor update failed')
+        console.error('Sponsor Update Error:', e)
+        if (window.notify) window.notify('error', 'Update failed - try again')
       } finally {
         savingSponsor.value = false
+      }
+    }
+
+    const fetchAgentSettings = async () => {
+      if (!manageUser.value) return
+      agentLoading.value = true
+      try {
+        const res = await api.get(`/admin/user/${manageUser.value.id}/agent-commissions`)
+        if (res.data?.status === 'success') {
+          agentForm.value.is_agent = !!res.data.data?.is_agent
+        }
+      } catch (e) {} finally {
+        agentLoading.value = false
+      }
+    }
+
+    const saveAgentSettings = async () => {
+      if (!manageUser.value) return
+      savingAgent.value = true
+      try {
+        const res = await api.post(`/admin/user/${manageUser.value.id}/agent`, { is_agent: agentForm.value.is_agent })
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', 'Agent status updated')
+          fetchUsers(currentPage.value)
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', 'Failed to update agent')
+      } finally {
+        savingAgent.value = false
       }
     }
 
@@ -1514,280 +890,206 @@ export default {
       try {
         const res = await api.post(`/admin/user/${manageUser.value.id}/reset-password`, { password: newPassword.value })
         if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'Password reset successfully')
+          if (window.notify) window.notify('success', 'Password reset')
           newPassword.value = ''
-          fetchUsers(currentPage.value)
-        } else {
-          if (window.notify) window.notify('error', getApiErrorMessage(res) || 'Password reset failed')
         }
-      } catch (e) {
-        if (window.notify) window.notify('error', getApiErrorMessage(e) || 'Password reset failed')
-      } finally {
+      } catch (e) {} finally {
         savingPassword.value = false
       }
     }
 
-    const fetchUserTransactions = async (page = 1) => {
-      if (!manageUser.value) return
-      trxLoading.value = true
-      trxPage.value = page
+    const adjustBalance = async () => {
+      if (!manageUser.value || !balanceForm.value.amount) return
+      adjustingBalance.value = true
       try {
-        const res = await api.get('/admin/transactions', { params: { user_id: manageUser.value.id, page, per_page: 10 } })
-        if (res.data?.status === 'success' && res.data.data) {
-          userTransactions.value = res.data.data.transactions || []
-          trxLastPage.value = Number(res.data.data.last_page || 1)
-        } else {
-          userTransactions.value = []
-          trxLastPage.value = 1
+        const res = await api.post(`/admin/user/${manageUser.value.id}/adjust-balance`, balanceForm.value)
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', 'Balance adjusted')
+          balanceForm.value = { amount: 0, type: 'add', reason: '' }
+          fetchUsers(currentPage.value)
         }
-      } catch (e) {
-        userTransactions.value = []
-        trxLastPage.value = 1
+      } catch (e) {} finally {
+        adjustingBalance.value = false
+      }
+    }
+
+    const resetUserData = async () => {
+      if (!confirm('This will wipe all transactions and earnings for this user. Continue?')) return
+      resettingUser.value = true
+      try {
+        await api.post(`/admin/user/${manageUser.value.id}/reset-data`)
+        if (window.notify) window.notify('success', 'User data reset')
+        fetchUsers(currentPage.value)
       } finally {
-        trxLoading.value = false
+        resettingUser.value = false
+      }
+    }
+
+    const deleteUser = async () => {
+      if (!confirm('Permanently DELETE this user? This cannot be undone.')) return
+      deletingUser.value = true
+      try {
+        await api.post(`/admin/user/${manageUser.value.id}/delete`)
+        if (window.notify) window.notify('success', 'User deleted')
+        closeManageModal()
+        fetchUsers(1)
+      } finally {
+        deletingUser.value = false
       }
     }
 
     const toggleUserStatus = async (user) => {
       const action = user.status === 'active' ? 'ban' : 'unban'
-      const actionText = user.status === 'active' ? 'ban' : 'unban'
-      const confirmMsg = `Are you sure you want to ${actionText} user ${user.firstname} ${user.lastname} (ID: ${user.id})?`
-      
-      if (!confirm(confirmMsg)) return
-
+      if (!confirm(`Are you sure you want to ${action} user ADS${user.id}?`)) return
       try {
-        // Call API to ban/unban user
         const res = await api.post(`/admin/user/${user.id}/${action}`)
         if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', `User ${actionText}ned successfully`)
-          fetchUsers() // Refresh list
-        } else {
-          if (window.notify) window.notify('error', res.data?.message || `Failed to ${actionText} user`)
+          if (window.notify) window.notify('success', `User ${action}ned`)
+          fetchUsers(currentPage.value)
         }
-      } catch (e) {
-        console.error('Error toggling user status:', e)
-        if (window.notify) window.notify('error', `Failed to ${actionText} user`)
-      }
+      } catch (e) {}
     }
 
-    const editBankAccount = async (user) => {
-      selectedUser.value = user
-      
-      // Handle bank_details - check if it's nested or direct
-      let bankData = {}
-      if (user.bank_details && typeof user.bank_details === 'object' && Object.keys(user.bank_details).length > 0) {
-        bankData = user.bank_details
-      } else if (user.account_holder_name || user.account_number || user.ifsc_code) {
-        // Fallback: check if bank fields are directly on user object
-        bankData = {
-          account_holder_name: user.account_holder_name || '',
-          account_number: user.account_number || '',
-          ifsc_code: user.ifsc_code || '',
-          bank_name: user.bank_name || '',
-          bank_registered_no: user.bank_registered_no || '',
-          branch_name: user.branch_name || ''
-        }
-      }
-      
-      // Set form values
-      bankForm.value.account_holder_name = bankData.account_holder_name || ''
-      bankForm.value.account_number = bankData.account_number || ''
-      bankForm.value.ifsc_code = bankData.ifsc_code || ''
-      bankForm.value.bank_name = bankData.bank_name || ''
-      bankForm.value.bank_registered_no = bankData.bank_registered_no || ''
-      bankForm.value.branch_name = bankData.branch_name || ''
-      
-      // Wait for Vue to update, then show modal
-      await nextTick()
-      showBankModal.value = true
-    }
-
-    const closeBankModal = () => {
-      showBankModal.value = false
-      selectedUser.value = null
-      bankForm.value = {
-        account_holder_name: '',
-        account_number: '',
-        ifsc_code: '',
-        bank_name: '',
-        bank_registered_no: '',
-        branch_name: ''
-      }
-    }
-
-    const saveBankDetails = async () => {
-      if (!selectedUser.value) return
-      
-      savingBank.value = true
+    const updateCoursePackage = async () => {
+      updatingPackage.value = true
       try {
-        const res = await api.post(`/admin/user/${selectedUser.value.id}/bank-details`, bankForm.value)
-        if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'Bank details updated successfully')
-          closeBankModal()
-          fetchUsers() // Refresh list to get updated data
-        } else {
-          if (window.notify) window.notify('error', res.data?.message || 'Failed to update bank details')
-        }
-      } catch (e) {
-        console.error('Error updating bank details:', e)
-        const errorMsg = e.response?.data?.message || e.response?.data?.data?.[0] || 'Failed to update bank details'
-        if (window.notify) window.notify('error', errorMsg)
+        await api.post(`/admin/user/${manageUser.value.id}/update-course-package`, { course_plan_id: userCoursePlanId.value })
+        if (window.notify) window.notify('success', 'Course package updated')
+        fetchUsers(currentPage.value)
       } finally {
-        savingBank.value = false
+        updatingPackage.value = false
       }
     }
 
-    // KYC Logic
+    const updateAdsPlan = async () => {
+      updatingAdsPlan.value = true
+      try {
+        await api.post(`/admin/user/${manageUser.value.id}/update-ads-plan`, { ads_plan_id: userAdsPlanId.value })
+        if (window.notify) window.notify('success', 'Ads plan updated')
+        fetchUsers(currentPage.value)
+      } finally {
+        updatingAdsPlan.value = false
+      }
+    }
+
+    const fetchUserTransactions = async (page = 1) => {
+      trxLoading.value = true
+      trxPage.value = page
+      try {
+        const res = await api.get('/admin/transactions', { params: { user_id: manageUser.value.id, page } })
+        if (res.data?.status === 'success') {
+          userTransactions.value = res.data.data.transactions || []
+          trxLastPage.value = res.data.data.last_page || 1
+        }
+      } finally {
+        trxLoading.value = false
+      }
+    }
+
     const showKYCModal = ref(false)
+    const selectedUser = ref(null)
     const showRejectForm = ref(false)
     const rejectionReason = ref('')
 
-    const viewKYC = (user) => {
-      selectedUser.value = user
-      showKYCModal.value = true
-      showRejectForm.value = false
-      rejectionReason.value = ''
-    }
-
-    const closeKYCModal = () => {
-      showKYCModal.value = false
-      selectedUser.value = null
-      showRejectForm.value = false
-    }
-
     const approveKYC = async () => {
-      if (!selectedUser.value) return
-      if (!confirm(`Verify KYC for ${selectedUser.value.firstname}?`)) return
-      
       try {
-        const res = await api.post(`/admin/user/${selectedUser.value.id}/approve-kyc`)
-        if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'KYC Approved')
-          closeKYCModal()
-          fetchUsers()
-        }
-      } catch (e) {
-        if (window.notify) window.notify('error', e.response?.data?.message || 'Failed to approve')
-      }
+        await api.post(`/admin/user/${selectedUser.value.id}/approve-kyc`)
+        if (window.notify) window.notify('success', 'KYC Approved')
+        showKYCModal.value = false
+        fetchUsers(currentPage.value)
+      } catch (e) {}
+    }
+    const rejectKYC = async () => {
+      if (!rejectionReason.value) return
+      try {
+        await api.post(`/admin/user/${selectedUser.value.id}/reject-kyc`, { reason: rejectionReason.value })
+        if (window.notify) window.notify('success', 'KYC Rejected')
+        showKYCModal.value = false
+        fetchUsers(currentPage.value)
+      } catch (e) {}
+    }
+    const unapproveKYC = async () => {
+      if (!confirm('Unapprove this verified KYC?')) return
+      try {
+        await api.post(`/admin/user/${selectedUser.value.id}/unapprove-kyc`)
+        if (window.notify) window.notify('success', 'KYC Unapproved')
+        showKYCModal.value = false
+        fetchUsers(currentPage.value)
+      } catch (e) {}
     }
 
-    const rejectKYC = async () => {
-      if (!selectedUser.value || !rejectionReason.value) return
-      
+    const deleteKYCFromReview = async () => {
+      if (!confirm('DELETE all KYC and bank details for this user?')) return
       try {
-        const res = await api.post(`/admin/user/${selectedUser.value.id}/reject-kyc`, { reason: rejectionReason.value })
-        if (res.data?.status === 'success') {
-          if (window.notify) window.notify('success', 'KYC Rejected')
-          closeKYCModal()
-          fetchUsers()
-        }
-      } catch (e) {
-        if (window.notify) window.notify('error', e.response?.data?.message || 'Failed to reject')
-      }
+        await api.post(`/admin/user/${selectedUser.value.id}/delete-bank`)
+        if (window.notify) window.notify('success', 'KYC Deleted')
+        showKYCModal.value = false
+        fetchUsers(currentPage.value)
+      } catch (e) {}
+    }
+
+    const viewKYC = (u) => {
+      selectedUser.value = u
+      showKYCModal.value = true
     }
 
     const openCreateUserModal = () => {
+      createForm.value = { name: '', email: '', mobile: '', state: '', course_plan_id: 0, ads_plan_id: 0, sponsor_id: '', password: '' }
       showCreateUserModal.value = true
-      createForm.value = {
-        name: '',
-        email: '',
-        mobile: '',
-        state: '',
-        course_plan_id: 0,
-        sponsor_id: '',
-        password: ''
-      }
-      fetchCoursePlans()
     }
-
-    const closeCreateUserModal = () => {
-      showCreateUserModal.value = false
-    }
-
+    const closeCreateUserModal = () => { showCreateUserModal.value = false }
     const createUser = async () => {
       creatingUser.value = true
       try {
         const payload = {
-          name: createForm.value.name || '',
-          email: createForm.value.email || '',
-          mobile: createForm.value.mobile || '',
-          state: createForm.value.state || '',
-          password: createForm.value.password || '',
-          sponsor_id: createForm.value.sponsor_id || '',
-          course_plan_id: Number(createForm.value.course_plan_id || 0)
+          ...createForm.value,
+          course_plan_id: Number(createForm.value.course_plan_id || 0),
+          ads_plan_id: Number(createForm.value.ads_plan_id || 0)
         }
         const res = await api.post('/admin/users/create', payload)
         if (res.data?.status === 'success') {
-          const u = res.data.data?.user
-          const plan = res.data.data?.activated_course_plan
-          if (window.notify) {
-            window.notify('success', plan?.name
-              ? `User created: ADS${u?.id || ''} (Package activated: ${plan.name})`
-              : `User created: ADS${u?.id || ''}`
-            )
-          }
-          closeCreateUserModal()
+          if (window.notify) window.notify('success', 'User created successfully')
+          showCreateUserModal.value = false
           fetchUsers(1)
-          fetchCounts()
         } else {
-          if (window.notify) window.notify('error', res.data?.message?.[0] || 'Create user failed')
+          const m = res.data?.message;
+          const msg = m?.error?.[0] || m?.success?.[0] || (Array.isArray(m) ? m[0] : m) || 'Failed to create user';
+          if (window.notify) window.notify('error', msg)
         }
       } catch (e) {
-        if (window.notify) window.notify('error', e.response?.data?.message?.[0] || e.message || 'Create user failed')
+        const m = e.response?.data?.message;
+        const msg = m?.error?.[0] || m?.success?.[0] || (Array.isArray(m) ? m[0] : m) || e.response?.data?.message || 'Failed to create user';
+        if (window.notify) window.notify('error', msg)
       } finally {
         creatingUser.value = false
-      }
-    }
-
-    async function fetchAdsPlans () {
-      if (adsPlansLoading.value) return
-      adsPlansLoading.value = true
-      try {
-        const res = await api.get('/admin/ad-plans')
-        if (res.data?.status === 'success' && res.data.data) {
-          adsPlans.value = res.data.data.plans || []
-        } else {
-          adsPlans.value = []
-        }
-      } catch (e) {
-        adsPlans.value = []
-      } finally {
-        adsPlansLoading.value = false
       }
     }
 
     onMounted(() => {
       fetchUsers(1)
       fetchCounts()
-      fetchCoursePlans()
-      fetchAdsPlans()
     })
 
     return {
-      users, loading, searchQuery, filterStatus,
-      totalUsers, currentPage, lastPage, paginationPages,
-      activeCount, bannedCount, kycPendingCount,
-      showPassword, togglePassword, copyPassword, openManageUser, closeManageModal,
-      showManageModal, manageUser, manageTab, basicForm, sponsorId, newPassword,
-      savingBasic, savingSponsor, savingPassword,
+      users, totalUsers, loading, searchQuery, filterStatus, currentPage, lastPage,
+      activeCount, bannedCount, kycPendingCount, partnerCount, agentCount,
+      showPassword, togglePassword, copyPassword,
+      showManageModal, openManageUser, closeManageModal, manageUser, manageTab, 
+      basicForm, sponsorId, newPassword, savingBasic, savingSponsor, savingPassword, saveBasic, saveSponsor, resetPassword,
+      userCoursePlanId, userAdsPlanId, updatingPackage, updatingAdsPlan, updateCoursePackage, updateAdsPlan,
       agentLoading, savingAgent, agentForm, fetchAgentSettings, saveAgentSettings,
       userTransactions, trxLoading, trxPage, trxLastPage, fetchUserTransactions,
-      saveBasic, saveSponsor, resetPassword,
-      toggleUserStatus,
-      formatAmount, formatDate, getInitials,
-      fetchUsers, debounceSearch,
-      showCreateUserModal, creatingUser, createForm, openCreateUserModal, closeCreateUserModal, createUser,
-      coursePlansLoading, activeCoursePlans,
-      showBankModal, selectedUser, bankForm, savingBank,
-      editBankAccount, closeBankModal, saveBankDetails,
-      showKYCModal, showRejectForm, rejectionReason, viewKYC, closeKYCModal, approveKYC, rejectKYC,
-      adsPlans, adsPlansLoading, activeAdsPlans,
-      balanceForm, adjustingBalance, adjustBalance,
-      resettingUser, resetUserData,
-      deletingUser, deleteUser,
-      deleteUserBank, deleteUserBankFromTable,
-      userCoursePlanId, userAdsPlanId, updatingPackage, updatingAdsPlan,
-      updateCoursePackage, updateAdsPlan
+      balanceForm, adjustingBalance, adjustBalance, resetUserData, resettingUser, deleteUser, deletingUser,
+      toggleUserStatus, formatAmount, getInitials, debounceSearch, fetchUsers,
+      viewBank, saveBank, bankForm, savingBank, deleteBank, deletingBank,
+      rejectKYC, unapproveKYC, deleteKYCFromReview, rejectionReason, showRejectForm,
+      indianStates, hardcodedCoursePlans, hardcodedAdsPlans,
+      showKYCModal, selectedUser, approveKYC, viewKYC, closeKYCModal: () => { 
+        showKYCModal.value = false; 
+        showRejectForm.value = false; 
+        rejectionReason.value = ''; 
+      },
+      showCreateUserModal, creatingUser, createForm, openCreateUserModal, closeCreateUserModal, createUser
     }
   }
 }
@@ -1797,523 +1099,114 @@ export default {
 .ma-users { animation: maFade 0.4s ease-out; }
 @keyframes maFade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ═══ Mini Stats ═══ */
 .ma-stat-mini {
   display: flex; align-items: center; gap: 0.75rem;
   background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px; padding: 1rem 1.15rem; cursor: pointer;
-  transition: all 0.25s ease;
+  border-radius: 14px; padding: 1rem 1.15rem; cursor: pointer; transition: all 0.25s ease;
 }
-.ma-stat-mini:hover { background: rgba(30, 41, 59, 1); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
-.ma-stat-mini__icon {
-  width: 42px; height: 42px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem; color: #fff; flex-shrink: 0;
-}
+.ma-stat-mini:hover { background: rgba(30, 41, 59, 1); transform: translateY(-2px); }
+.ma-stat-mini__icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #fff; }
 .ma-stat-mini__icon--blue { background: linear-gradient(135deg, #3b82f6, #6366f1); }
 .ma-stat-mini__icon--green { background: linear-gradient(135deg, #10b981, #059669); }
 .ma-stat-mini__icon--red { background: linear-gradient(135deg, #ef4444, #dc2626); }
 .ma-stat-mini__icon--amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.ma-stat-mini__icon--indigo { background: linear-gradient(135deg, #6366f1, #4338ca); }
 .ma-stat-mini__val { display: block; color: #f1f5f9; font-size: 1.35rem; font-weight: 800; line-height: 1.2; }
 .ma-stat-mini__lbl { display: block; color: #94a3b8; font-size: 0.78rem; font-weight: 600; }
 
-.ma-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.ma-tab { border: 1px solid rgba(255,255,255,0.12); background: rgba(15,23,42,0.35); color: #e2e8f0; padding: 0.4rem 0.75rem; border-radius: 999px; font-weight: 700; font-size: 0.85rem; }
-.ma-tab--active { background: rgba(79,70,229,0.9); border-color: rgba(99,102,241,0.7); }
-.ma-pane { padding-top: 0.25rem; }
-.ma-soft-box {
-  background: rgba(15, 23, 42, 0.35);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-  padding: 1rem;
-}
-.ma-form-input--sm {
-  padding: 0.45rem 0.65rem;
-  font-size: 0.85rem;
-}
-.ma-comm-row {
-  display: grid;
-  grid-template-columns: 1fr auto 160px 1fr;
-  gap: 0.6rem;
-  align-items: center;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 12px;
-  background: rgba(2, 6, 23, 0.35);
-}
-.ma-comm-title { font-weight: 800; color: #e2e8f0; }
-.ma-check { display: inline-flex; align-items: center; gap: 0.35rem; color: #cbd5e1; font-weight: 600; margin: 0; }
-@media (max-width: 768px) {
-  .ma-comm-row { grid-template-columns: 1fr; }
-}
-.ma-table--compact th, .ma-table--compact td { padding: 0.55rem 0.75rem; }
-.ma-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.85rem; }
-.ma-truncate { max-width: 380px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ma-trx-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+.ma-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.ma-tab { border: 1px solid rgba(255,255,255,0.12); background: rgba(15,23,42,0.35); color: #e2e8f0; padding: 0.4rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+.ma-tab--active { background: #6366f1; border-color: #6366f1; color: #fff; }
 
-/* ═══ Card ═══ */
-.ma-card {
-  background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 18px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-}
-.ma-card__body { padding: 1rem 1.25rem; }
-.ma-card__header {
-  padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.06);
-  display: flex; align-items: center; justify-content: space-between;
-  background: rgba(15, 23, 42, 0.4);
-}
-.ma-card__header--gradient {
-  background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%);
-  border-bottom: 1px solid rgba(99,102,241,0.2);
-}
-.ma-card__title { margin: 0 0 0.25rem 0; color: #f1f5f9; font-weight: 700; font-size: 1.15rem; }
-.ma-card__title i { color: #818cf8; }
-.ma-card__subtitle {
-  margin: 0; color: #94a3b8; font-size: 0.8rem; font-weight: 500;
-}
-.ma-card__count {
-  color: #64748b; font-size: 0.85rem; font-weight: 600;
-  background: rgba(99,102,241,0.15); padding: 0.4rem 0.8rem;
-  border-radius: 8px; border: 1px solid rgba(99,102,241,0.2);
-}
-.ma-table-card { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+.ma-card { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; overflow: hidden; }
+.ma-card__body { padding: 1.25rem; }
+.ma-card__header { padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+.ma-card__header--gradient { background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%); }
+.ma-card__title { margin: 0; color: #f1f5f9; font-weight: 700; font-size: 1.1rem; }
+.ma-card__subtitle { margin: 0.25rem 0 0; color: #94a3b8; font-size: 0.8rem; }
+.ma-card__count { background: rgba(99,102,241,0.1); padding: 0.35rem 0.75rem; border-radius: 8px; color: #a5b4fc; font-size: 0.8rem; font-weight: 600; }
 
-/* ═══ Search ═══ */
-.ma-search-box {
-  display: flex; align-items: center; gap: 0.5rem;
-  background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px; padding: 0 1rem;
-}
-.ma-search-box i { color: #64748b; font-size: 0.9rem; }
-.ma-search-input {
-  flex: 1; background: none; border: none; outline: none;
-  color: #f1f5f9; padding: 0.6rem 0; font-size: 0.9rem;
-}
-.ma-search-input::placeholder { color: #475569; }
-.ma-select {
-  background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px; padding: 0.6rem 1rem; color: #f1f5f9;
-  font-size: 0.88rem; outline: none; cursor: pointer;
-}
-.ma-select option { background: #1e293b; color: #f1f5f9; }
-.ma-btn-refresh {
-  width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(15, 23, 42, 0.6); color: #94a3b8; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-}
-.ma-btn-refresh:hover:not(:disabled) { color: #f1f5f9; background: rgba(99,102,241,0.2); }
-.ma-btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+.ma-search-box { display: flex; align-items: center; gap: 0.75rem; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 0 1rem; }
+.ma-search-box i { color: #64748b; }
+.ma-search-input { flex: 1; background: none; border: none; outline: none; color: #f1f5f9; padding: 0.75rem 0; font-size: 0.9rem; }
+.ma-select { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 0.75rem 1rem; color: #f1f5f9; cursor: pointer; }
 
-/* ═══ Table ═══ */
-.ma-table-wrapper {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.ma-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 1000px; }
-.ma-table th {
-  padding: 1rem 1.25rem; color: #94a3b8; font-weight: 700;
-  text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.08em;
-  border-bottom: 2px solid rgba(99,102,241,0.2); white-space: nowrap; text-align: left;
-  background: rgba(15, 23, 42, 0.3);
-}
-.ma-table th i { color: #818cf8; font-size: 0.75rem; }
-.ma-table td {
-  padding: 1rem 1.25rem; color: #cbd5e1;
-  border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle;
-}
-.ma-table-row { transition: all 0.2s ease; }
-.ma-table-row:hover {
-  background: rgba(99,102,241,0.05) !important;
-  transform: scale(1.001);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
+.ma-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.ma-table th { background: rgba(15, 23, 42, 0.3); padding: 1rem 1.25rem; text-align: left; color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.ma-table td { padding: 1rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; color: #cbd5e1; }
+.ma-table-row:hover { background: rgba(255,255,255,0.02); }
 
-/* ═══ ID Badge ═══ */
-.ma-id-badge {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  background: rgba(99,102,241,0.15); padding: 0.4rem 0.75rem;
-  border-radius: 8px; border: 1px solid rgba(99,102,241,0.2);
-  color: #a5b4fc; font-weight: 700; font-size: 0.85rem;
-}
-.ma-id-badge i { font-size: 0.9rem; }
-
-/* ═══ Email Cell ═══ */
-.ma-email-cell {
-  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
-}
-.ma-email-cell i {
-  color: #818cf8; font-size: 0.85rem; flex-shrink: 0;
-}
-.ma-table__email {
-  font-size: 0.85rem; max-width: 200px; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap; color: #cbd5e1;
-}
-
-/* ═══ Mobile Cell ═══ */
-.ma-mobile-cell {
-  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
-}
-.ma-mobile-cell i {
-  color: #818cf8; font-size: 0.85rem; flex-shrink: 0;
-}
-.ma-mobile-cell > span:not(.ma-badge) {
-  color: #cbd5e1; font-size: 0.85rem;
-}
-
-/* ═══ Balance Cell ═══ */
-.ma-balance-cell {
-  display: flex; align-items: center; gap: 0.5rem;
-}
-.ma-balance-cell i {
-  color: #34d399; font-size: 0.85rem;
-}
-.ma-table__balance {
-  color: #34d399 !important; font-weight: 700; font-size: 0.95rem;
-  background: rgba(16, 185, 129, 0.1); padding: 0.3rem 0.6rem;
-  border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-/* ═══ Deposit Cell ═══ */
-.ma-deposit-cell {
-  display: flex; align-items: center; gap: 0.5rem;
-}
-.ma-deposit-cell i {
-  color: #60a5fa; font-size: 0.85rem;
-}
-.ma-table__deposit {
-  color: #60a5fa !important; font-weight: 700; font-size: 0.95rem;
-  background: rgba(59, 130, 246, 0.1); padding: 0.3rem 0.6rem;
-  border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-/* ═══ Status Cell ═══ */
-.ma-status-cell {
-  display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
-}
-.ma-status-cell .ma-badge {
-  display: inline-flex; align-items: center; gap: 0.3rem;
-  padding: 0.25rem 0.5rem; font-size: 0.7rem;
-}
-.ma-status-cell .ma-badge i {
-  font-size: 0.65rem;
-}
-.ma-table__date { color: #64748b; font-size: 0.82rem; white-space: nowrap; }
-.ma-table__loading, .ma-table__empty {
-  text-align: center; padding: 3rem 1rem !important; color: #64748b;
-}
-.ma-table__empty i { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; color: #475569; }
-.ma-table__empty p { margin: 0; }
-.ma-table__loading { display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
-
-/* ═══ Password Cell ═══ */
-.ma-password-cell {
-  display: flex; align-items: center; gap: 0.5rem;
-}
-.ma-password-wrapper {
-  flex: 1; min-width: 0;
-}
-.ma-password-masked {
-  color: #64748b; font-family: 'Courier New', monospace; font-size: 0.9rem;
-  letter-spacing: 0.15em; font-weight: 600;
-}
-.ma-password-text {
-  color: #f1f5f9; font-family: 'Courier New', monospace; font-size: 0.8rem;
-  word-break: break-all; max-width: 250px; display: inline-block;
-  background: rgba(15, 23, 42, 0.5); padding: 0.3rem 0.6rem;
-  border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
-}
-.ma-btn-toggle-password, .ma-btn-copy {
-  width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(15, 23, 42, 0.6); color: #94a3b8; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
-  transition: all 0.2s; flex-shrink: 0;
-}
-.ma-btn-toggle-password:hover {
-  background: rgba(99,102,241,0.2); color: #a5b4fc; border-color: rgba(99,102,241,0.3);
-  transform: translateY(-1px);
-}
-.ma-btn-copy {
-  background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.2);
-}
-.ma-btn-copy:hover {
-  background: rgba(59, 130, 246, 0.25); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3);
-  transform: translateY(-1px);
-}
-
-/* ═══ Action Buttons ═══ */
-.ma-action-buttons {
-  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
-  position: relative;
-}
-.ma-action-btn {
-  width: 36px; height: 36px; border-radius: 10px; border: none;
-  background: rgba(15, 23, 42, 0.6); color: #94a3b8; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); flex-shrink: 0;
-  position: relative; border: 1px solid rgba(255,255,255,0.08);
-}
-.ma-action-btn:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-}
-.ma-action-btn:active { transform: translateY(0) scale(0.98); }
-.ma-action-tooltip {
-  position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.95); color: #f1f5f9; padding: 0.3rem 0.6rem;
-  border-radius: 6px; font-size: 0.7rem; white-space: nowrap;
-  opacity: 0; pointer-events: none; transition: opacity 0.2s;
-  border: 1px solid rgba(255,255,255,0.1); z-index: 10;
-}
-.ma-action-btn:hover .ma-action-tooltip {
-  opacity: 1;
-}
-.ma-action-btn--view {
-  background: rgba(59, 130, 246, 0.15); color: #60a5fa;
-}
-
-.ma-doc-card {
-  background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px; overflow: hidden; height: 100%;
-}
-.ma-doc-header {
-  padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex; justify-content: space-between; align-items: center;
-}
-.ma-doc-header h6 { margin: 0; color: #e2e8f0; font-size: 0.9rem; }
-.ma-doc-preview {
-  padding: 1rem; display: flex; align-items: center; justify-content: center;
-  min-height: 200px; background: rgba(0, 0, 0, 0.2);
-}
-.ma-doc-link img { display: block; max-width: 100%; transition: transform 0.3s; }
-
-.ma-modal--lg { max-width: 800px; }
-.ma-reject-form textarea { width: 100%; border-radius: 8px; padding: 1rem; }
-
-.ma-action-btn--view:hover {
-  background: rgba(59, 130, 246, 0.25); color: #93c5fd;
-  border-color: rgba(59, 130, 246, 0.3);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
-}
-.ma-action-btn--edit {
-  background: rgba(245, 158, 11, 0.15); color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.2);
-}
-.ma-action-btn--edit:hover {
-  background: rgba(245, 158, 11, 0.25); color: #fcd34d;
-  border-color: rgba(245, 158, 11, 0.3);
-  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
-}
-.ma-action-btn--ban {
-  background: rgba(239, 68, 68, 0.15); color: #f87171;
-  border-color: rgba(239, 68, 68, 0.2);
-}
-.ma-action-btn--ban:hover {
-  background: rgba(239, 68, 68, 0.25); color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.3);
-  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
-}
-.ma-action-btn--unban {
-  background: rgba(16, 185, 129, 0.15); color: #34d399;
-  border-color: rgba(16, 185, 129, 0.2);
-}
-.ma-action-btn--unban:hover {
-  background: rgba(16, 185, 129, 0.25); color: #6ee7b7;
-  border-color: rgba(16, 185, 129, 0.3);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
-}
-.ma-action-btn--bank {
-  background: rgba(139, 92, 246, 0.15); color: #a78bfa;
-  border-color: rgba(139, 92, 246, 0.2);
-}
-.ma-action-btn--bank:hover {
-  background: rgba(139, 92, 246, 0.25); color: #c4b5fd;
-  border-color: rgba(139, 92, 246, 0.3);
-  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
-}
-
-/* ═══ User Cell ═══ */
 .ma-user-cell { display: flex; align-items: center; gap: 0.75rem; }
-.ma-user-avatar {
-  width: 36px; height: 36px; border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff; font-weight: 700; font-size: 0.8rem;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.ma-user-name { display: block; color: #f1f5f9; font-weight: 600; font-size: 0.9rem; }
-.ma-user-username { display: block; color: #64748b; font-size: 0.78rem; }
+.ma-user-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; }
+.ma-user-name { font-weight: 600; color: #f1f5f9; display: block; }
 
-/* ═══ Badges ═══ */
-.ma-badge {
-  display: inline-block; padding: 0.2rem 0.6rem; border-radius: 6px;
-  font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
-}
+.ma-id-badge { display: flex; align-items: center; gap: 0.5rem; background: rgba(99,102,241,0.15); padding: 0.35rem 0.6rem; border-radius: 8px; color: #a5b4fc; font-weight: 700; font-size: 0.85rem; }
+.ma-badge { display: inline-flex; align-items: center; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
 .ma-badge--success { background: rgba(16,185,129,0.15); color: #34d399; }
 .ma-badge--danger { background: rgba(239,68,68,0.15); color: #f87171; }
 .ma-badge--warning { background: rgba(245,158,11,0.15); color: #fbbf24; }
 .ma-badge--secondary { background: rgba(100,116,139,0.15); color: #94a3b8; }
+.ma-badge--indigo { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+.ma-badge--blue { background: rgba(59,130,246,0.15); color: #93c5fd; }
 
-/* ═══ Pagination ═══ */
-.ma-pagination {
-  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-  padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap;
-}
-.ma-page-btn {
-  width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);
-  background: transparent; color: #94a3b8; cursor: pointer; font-size: 0.85rem; font-weight: 600;
-  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-}
-.ma-page-btn:hover:not(:disabled):not(.ma-page-dots) { background: rgba(99,102,241,0.15); color: #a5b4fc; border-color: rgba(99,102,241,0.3); }
-.ma-page-btn--active { background: #6366f1 !important; color: #fff !important; border-color: #6366f1 !important; }
-.ma-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.ma-page-dots { border: none; }
-.ma-page-info { color: #475569; font-size: 0.8rem; margin-left: 0.75rem; }
+.ma-pkg-badge { display: inline-flex; align-items: center; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+.ma-pkg-badge--course { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+.ma-pkg-badge--ads { background: rgba(16,185,129,0.15); color: #34d399; }
 
-/* ═══ Spinner ═══ */
-.ma-spinner {
-  width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.1);
-  border-top-color: #818cf8; border-radius: 50%; animation: maSpin 0.7s linear infinite;
-}
-@keyframes maSpin { to { transform: rotate(360deg); } }
+.ma-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.25rem; border-radius: 10px; border: none; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+.ma-btn--primary { background: #6366f1; color: #fff; }
+.ma-btn--primary:hover:not(:disabled) { background: #4f46e5; transform: translateY(-1px); }
+.ma-btn--secondary { background: rgba(255,255,255,0.08); color: #cbd5e1; }
+.ma-btn--danger { background: #ef4444; color: #fff; }
 
-/* ═══ Modal ═══ */
-.ma-modal-overlay {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 9999; padding: 1rem; animation: maFade 0.2s ease-out;
+.ma-action-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.6); color: #94a3b8; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.ma-action-btn:hover { background: rgba(255,255,255,0.1); color: #f1f5f9; }
+.ma-action-btn--view:hover { border-color: #6366f1; color: #6366f1; }
+.ma-action-btn--ban:hover { border-color: #ef4444; color: #ef4444; }
+
+.ma-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+.ma-modal { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+.ma-modal--lg { max-width: 850px; }
+.ma-modal__header { padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+.ma-modal__title { margin: 0; color: #f1f5f9; font-weight: 700; font-size: 1.1rem; }
+.ma-modal__close { background: none; border: none; color: #94a3b8; font-size: 1.25rem; cursor: pointer; }
+.ma-modal__body { padding: 1.5rem; overflow-y: auto; flex: 1; }
+.ma-form-label { display: block; color: #94a3b8; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.ma-form-input, .ma-select { 
+  width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); 
+  border-radius: 10px; padding: 0.75rem 1rem; color: #f1f5f9; font-size: 0.9rem; transition: all 0.2s; 
+  outline: none;
 }
-.ma-modal {
-  background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 18px; width: 100%; max-width: 600px; max-height: 90vh;
-  overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
-  display: flex; flex-direction: column; animation: maSlideUp 0.3s ease-out;
+.ma-form-input:hover, .ma-select:hover { background: rgba(15, 23, 42, 0.8); border-color: rgba(255,255,255,0.2); }
+.ma-form-input:focus, .ma-select:focus { outline: none; border-color: #6366f1; background: #0f172a; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
+
+/* Force dark theme for select options */
+.ma-form-input option, .ma-select option {
+  background: #1e293b !important;
+  color: #f1f5f9 !important;
+  padding: 10px;
 }
-@keyframes maSlideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.ma-modal__header {
-  padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);
-  display: flex; align-items: center; justify-content: space-between;
-  background: linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(99,102,241,0.1) 100%);
-}
-.ma-modal__title {
-  margin: 0; color: #f1f5f9; font-weight: 700; font-size: 1.2rem;
-  display: flex; align-items: center;
-}
-.ma-modal__title i { color: #a78bfa; }
-.ma-modal__close {
-  width: 36px; height: 36px; border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.6);
-  color: #94a3b8; cursor: pointer; display: flex;
-  align-items: center; justify-content: center; transition: all 0.2s;
-}
-.ma-modal__close:hover {
-  background: rgba(239, 68, 68, 0.2); color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
-}
-.ma-modal__body {
-  padding: 1.5rem; overflow-y: auto; flex: 1;
-}
-.ma-modal__footer {
-  padding: 1.25rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);
-  display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem;
-  background: rgba(15, 23, 42, 0.4);
+/* Remove white hover/background on focus for some browsers */
+.ma-form-input:autofill,
+.ma-form-input:-webkit-autofill {
+  -webkit-text-fill-color: #f1f5f9;
+  -webkit-box-shadow: 0 0 0px 1000px #0f172a inset;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
-/* ═══ Form ═══ */
-.ma-form-group {
-  margin-bottom: 1.25rem;
-}
-.ma-form-label {
-  display: block; color: #cbd5e1; font-size: 0.9rem; font-weight: 600;
-  margin-bottom: 0.5rem; display: flex; align-items: center;
-}
-.ma-form-label i { color: #818cf8; margin-right: 0.4rem; }
-.ma-form-input {
-  width: 100%; padding: 0.75rem 1rem; background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
-  color: #f1f5f9; font-size: 0.9rem; outline: none; transition: all 0.2s;
-}
-.ma-form-input:focus {
-  border-color: rgba(99,102,241,0.5); background: rgba(15, 23, 42, 0.8);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
-}
-.ma-form-input::placeholder { color: #64748b; }
+.ma-soft-box { background: rgba(15, 23, 42, 0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 1.25rem; }
+.ma-doc-card { background: rgba(15, 23, 42, 0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; }
+.ma-doc-header { padding: 0.75rem 1rem; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.06); }
+.ma-doc-header h6 { margin: 0; font-size: 0.85rem; color: #f1f5f9; }
+.ma-doc-preview { height: 200px; display: flex; align-items: center; justify-content: center; background: #000; padding: 1rem; }
+.ma-doc-preview img { max-height: 100%; max-width: 100%; object-fit: contain; }
 
-/* Fix Chrome autofill (white background on dark modals) */
-.ma-form-input:-webkit-autofill,
-.ma-form-input:-webkit-autofill:hover,
-.ma-form-input:-webkit-autofill:focus,
-.ma-form-input:-webkit-autofill:active {
-  -webkit-text-fill-color: #f1f5f9 !important;
-  caret-color: #f1f5f9 !important;
-  transition: background-color 9999s ease-in-out 0s;
-  box-shadow: 0 0 0px 1000px rgba(15, 23, 42, 0.85) inset !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
-}
-
-/* Ensure selects match input theme */
-select.ma-form-input {
-  background-color: rgba(15, 23, 42, 0.6);
-  color: #f1f5f9;
-}
-
-/* Make small helper text more readable on dark bg */
-.ma-modal__body .text-muted {
-  color: #94a3b8 !important;
-}
-.ma-btn {
-  padding: 0.75rem 1.5rem; border-radius: 10px; border: none;
-  font-size: 0.9rem; font-weight: 600; cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center;
-  transition: all 0.25s; outline: none;
-}
-.ma-btn:disabled {
-  opacity: 0.5; cursor: not-allowed;
-}
-.ma-btn--primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff; border: 1px solid rgba(99,102,241,0.3);
-}
-.ma-btn--primary:hover:not(:disabled) {
-  transform: translateY(-2px); box-shadow: 0 6px 16px rgba(99,102,241,0.4);
-}
-.ma-btn--secondary {
-  background: rgba(15, 23, 42, 0.6); color: #94a3b8;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-.ma-btn--secondary:hover:not(:disabled) {
-  background: rgba(15, 23, 42, 0.8); color: #cbd5e1;
-}
-
-@media (max-width: 1200px) {
-  .ma-table { font-size: 0.8rem; }
-  .ma-table th, .ma-table td { padding: 0.75rem 0.6rem; }
-  .ma-user-name { font-size: 0.85rem; }
-  .ma-user-username { font-size: 0.72rem; }
-  .ma-table__email { max-width: 150px; }
-}
+.ma-spinner { width: 24px; height: 24px; border: 3px solid rgba(99,102,241,0.2); border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 768px) {
-  .ma-card__header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-  .ma-card__subtitle { display: none; }
-  .ma-table { font-size: 0.75rem; }
-  .ma-table th, .ma-table td { padding: 0.6rem 0.4rem; }
-  .ma-table th { font-size: 0.65rem; }
-  .ma-user-avatar { width: 28px; height: 28px; font-size: 0.7rem; }
-  .ma-user-name { font-size: 0.8rem; }
-  .ma-user-username { font-size: 0.68rem; }
-  .ma-table__email { max-width: 100px; font-size: 0.75rem; }
-  .ma-password-text { max-width: 100px; font-size: 0.7rem; }
-  .ma-action-buttons { gap: 0.3rem; }
-  .ma-action-btn { width: 30px; height: 30px; font-size: 0.7rem; }
-  .ma-id-badge { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
-  .ma-table__deposit, .ma-table__balance { font-size: 0.75rem; padding: 0.2rem 0.4rem; }
-  .ma-badge { font-size: 0.65rem; padding: 0.2rem 0.4rem; }
-  .ma-status-cell { gap: 0.3rem; }
-  .ma-modal { max-width: 95%; margin: 1rem; }
-  .ma-modal__header, .ma-modal__body, .ma-modal__footer { padding: 1rem; }
-  .ma-form-group { margin-bottom: 1rem; }
+  .ma-modal--lg { max-width: 100%; }
+  .ma-tabs { gap: 0.35rem; }
+  .ma-tab { padding: 0.35rem 0.75rem; font-size: 0.75rem; }
 }
 </style>

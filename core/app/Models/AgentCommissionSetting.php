@@ -36,6 +36,9 @@ class AgentCommissionSetting extends Model
         'certificate_enabled',
         'certificate_mode',
         'certificate_value',
+        'special_discount_enabled',
+        'special_discount_mode',
+        'special_discount_value',
         'granular_settings'
     ];
 
@@ -49,6 +52,7 @@ class AgentCommissionSetting extends Model
         'course_enabled'       => 'boolean',
         'partner_enabled'      => 'boolean',
         'certificate_enabled'  => 'boolean',
+        'special_discount_enabled' => 'boolean',
         'granular_settings'    => 'object',
     ];
 

@@ -2,67 +2,58 @@
   <DashboardLayout page-title="Certificates" :dark-theme="true">
     <div class="tw-max-w-7xl tw-mx-auto tw-pb-10">
       
-      <!-- Premium Hero Header -->
-      <div class="tw-relative tw-mb-10 tw-overflow-hidden tw-rounded-3xl tw-bg-gradient-to-br tw-from-slate-900 tw-via-indigo-950 tw-to-slate-900 tw-p-8 tw-border tw-border-white/10 tw-shadow-2xl">
-        <!-- Abstract Decorations -->
-        <div class="tw-absolute -tw-top-24 -tw-right-24 tw-w-64 tw-h-64 tw-bg-indigo-500/20 tw-rounded-full tw-blur-3xl"></div>
-        <div class="tw-absolute -tw-bottom-24 -tw-left-24 tw-w-64 tw-h-64 tw-bg-amber-500/10 tw-rounded-full tw-blur-3xl"></div>
-        
-        <div class="tw-relative tw-z-10 tw-flex tw-flex-col md:tw-flex-row tw-items-center tw-justify-between tw-gap-8">
-          <div class="tw-max-w-2xl">
-            <div class="tw-flex tw-items-center tw-gap-3 tw-mb-4">
-              <span class="tw-px-3 tw-py-1 tw-bg-amber-500/20 tw-text-amber-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest tw-rounded-full tw-border tw-border-amber-500/30">
-                Official Credentials
-              </span>
+      <!-- Simplified Header -->
+      <div class="tw-mb-8 tw-rounded-2xl tw-overflow-hidden tw-border tw-border-indigo-500/30 tw-bg-gradient-to-r tw-from-indigo-600/20 tw-to-purple-600/20 tw-backdrop-blur-md">
+        <div class="tw-px-6 tw-py-5 tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-4">
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <div class="tw-w-14 tw-h-14 tw-rounded-xl tw-bg-indigo-500/30 tw-flex tw-items-center tw-justify-center tw-text-2xl tw-text-indigo-300">
+              <i class="fas fa-certificate"></i>
             </div>
-            <h1 class="tw-text-3xl md:tw-text-4xl tw-font-extrabold tw-text-white tw-mb-4">Course Certificates</h1>
-            <p class="tw-text-slate-300 tw-text-lg tw-leading-relaxed">
-              Celebrate your achievements. Complete courses to unlock professional certificates that validate your skills and boost your career profile.
-            </p>
+            <div>
+              <h1 class="tw-text-white tw-font-bold tw-text-2xl tw-m-0 tw-tracking-tight">Course Certificates</h1>
+              <p class="tw-text-white/70 tw-text-sm tw-mt-1 tw-mb-0">Celebrate your achievements • {{ earnedCount }} certificates earned of {{ certificates.length }} available</p>
+            </div>
           </div>
-          
-          <!-- Quick Stats -->
-          <div class="tw-flex tw-gap-4 tw-shrink-0">
-            <div class="tw-bg-white/5 tw-backdrop-blur-md tw-border tw-border-white/10 tw-rounded-2xl tw-p-5 tw-text-center tw-min-w-[120px]">
-              <div class="tw-text-3xl tw-font-bold tw-text-amber-400">{{ earnedCount }}</div>
-              <div class="tw-text-slate-400 tw-text-xs tw-uppercase tw-font-bold tw-mt-1">Earned</div>
+          <div class="tw-flex tw-gap-3">
+             <div class="tw-bg-white/5 tw-backdrop-blur-sm tw-border tw-border-white/10 tw-rounded-xl tw-px-4 tw-py-2 tw-text-center">
+              <div class="tw-text-xl tw-font-bold tw-text-amber-400">{{ earnedCount }}</div>
+              <div class="tw-text-slate-400 tw-text-[10px] tw-uppercase tw-font-bold">Earned</div>
             </div>
-            <div class="tw-bg-white/5 tw-backdrop-blur-md tw-border tw-border-white/10 tw-rounded-2xl tw-p-5 tw-text-center tw-min-w-[120px]">
-              <div class="tw-text-3xl tw-font-bold tw-text-slate-300">{{ certificates.length }}</div>
-              <div class="tw-text-slate-400 tw-text-xs tw-uppercase tw-font-bold tw-mt-1">Available</div>
+            <div class="tw-bg-white/5 tw-backdrop-blur-sm tw-border tw-border-white/10 tw-rounded-xl tw-px-4 tw-py-2 tw-text-center">
+              <div class="tw-text-xl tw-font-bold tw-text-slate-300">{{ certificates.length }}</div>
+              <div class="tw-text-slate-400 tw-text-[10px] tw-uppercase tw-font-bold">Total</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Ad Certificate Gate (Premium Version) -->
-      <div v-if="requiresAdCertificate && !hasAdCertificate" 
-        class="tw-mb-10 tw-bg-gradient-to-r tw-from-amber-900/40 tw-to-orange-900/40 tw-backdrop-blur-xl tw-border tw-border-amber-500/30 tw-rounded-3xl tw-p-8 tw-shadow-xl"
-      >
-        <div class="tw-flex tw-flex-col lg:tw-flex-row tw-items-center tw-gap-8">
-          <div class="tw-w-24 tw-h-24 tw-rounded-full tw-bg-amber-500/20 tw-flex tw-items-center tw-justify-center tw-text-4xl tw-text-amber-400 tw-animate-pulse tw-shrink-0 tw-border tw-border-amber-500/20">
+      <!-- Simplified Ad Certificate Gate -->
+      <div v-if="requiresAdCertificate && !hasAdCertificate" class="tw-mb-8 tw-rounded-2xl tw-p-6 tw-backdrop-blur-md tw-border tw-border-amber-500/30 tw-bg-amber-500/10">
+        <div class="tw-flex tw-items-start tw-gap-6 tw-flex-wrap">
+          <div class="tw-w-14 tw-h-14 tw-rounded-xl tw-bg-amber-500/20 tw-text-amber-400 tw-flex tw-items-center tw-justify-center tw-text-2xl tw-shrink-0">
             <i class="fas fa-lock"></i>
           </div>
-          <div class="tw-flex-1 tw-text-center lg:tw-text-left">
-            <h2 class="tw-text-2xl tw-font-bold tw-text-amber-200 tw-mb-2">Unlock Your Professional Journey</h2>
-            <p class="tw-text-amber-100/70 tw-text-lg tw-max-w-2xl">
+          <div class="tw-flex-1">
+            <h5 class="tw-text-white tw-font-bold tw-text-xl tw-mb-2">Unlock Your Professional Journey</h5>
+            <p class="tw-text-white/90 tw-m-0 tw-text-base tw-leading-relaxed">
               To view and download your course certificates, you need to active your <b>Ad Certificate</b> subscription. 
               This also grants you access to premium learning materials.
             </p>
-          </div>
-          <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-4 tw-shrink-0">
-            <button
-              @click="purchaseAdCertificate"
-              :disabled="purchasingAdCert"
-              class="tw-group tw-px-8 tw-py-4 tw-bg-amber-500 hover:tw-bg-amber-400 tw-text-slate-900 tw-font-black tw-text-lg tw-rounded-2xl tw-shadow-2xl tw-shadow-amber-500/40 tw-transition-all tw-duration-300 tw-border-0 tw-cursor-pointer disabled:tw-opacity-60 tw-flex tw-items-center tw-justify-center"
-            >
-              <i v-if="purchasingAdCert" class="fas fa-spinner fa-spin tw-mr-3"></i>
-              <i v-else class="fas fa-crown tw-mr-3 tw-transition-transform group-hover:tw-scale-125"></i>
-              Unlock Now – ₹{{ formatAmount(adCertificatePrice) }}
-            </button>
-            <router-link to="/user/courses" class="tw-px-8 tw-py-4 tw-bg-white/10 hover:tw-bg-white/20 tw-text-white tw-font-bold tw-rounded-2xl tw-border tw-border-white/10 tw-backdrop-blur-md tw-no-underline tw-inline-flex tw-items-center tw-justify-center tw-transition-all">
-              <i class="fas fa-play tw-mr-3"></i>Continue Learning
-            </router-link>
+            <div class="tw-mt-4 tw-flex tw-flex-col sm:tw-flex-row tw-gap-3">
+              <button
+                type="button"
+                @click="purchaseAdCertificate"
+                :disabled="purchasingAdCert"
+                class="tw-px-6 tw-py-3 tw-bg-amber-500 hover:tw-bg-amber-600 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-transition-all tw-border-0 tw-cursor-pointer disabled:tw-opacity-60 disabled:tw-cursor-not-allowed"
+              >
+                <i v-if="purchasingAdCert" class="fas fa-spinner fa-spin tw-mr-2"></i>
+                <i v-else class="fas fa-crown tw-mr-2"></i>
+                Unlock Now – ₹{{ formatAmount(adCertificatePrice) }}
+              </button>
+              <router-link to="/user/courses" class="tw-px-6 tw-py-3 tw-bg-white/10 hover:tw-bg-white/20 tw-text-white tw-font-bold tw-rounded-xl tw-backdrop-blur-sm tw-transition-all tw-no-underline tw-inline-flex tw-items-center tw-justify-center">
+                <i class="fas fa-play tw-mr-2"></i>Continue Learning
+              </router-link>
+            </div>
           </div>
         </div>
       </div>
@@ -72,18 +63,18 @@
         <div v-for="i in 3" :key="i" class="tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-3xl tw-h-80 tw-animate-pulse"></div>
       </div>
 
-      <div v-else-if="certificates.length > 0" class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-8">
+      <div v-else-if="certificates.length > 0" class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 tw-gap-6">
         <div v-for="item in certificates" :key="item.course_id + (item.certificate_id || '')" 
-          class="tw-group tw-relative tw-flex tw-flex-col tw-h-full tw-bg-slate-900/50 tw-backdrop-blur-md tw-rounded-[2.5rem] tw-border-2 tw-transition-all tw-duration-500 hover:-tw-translate-y-2"
+          class="tw-group tw-relative tw-flex tw-flex-col tw-h-full tw-bg-slate-900/50 tw-backdrop-blur-md tw-rounded-3xl tw-border-2 tw-transition-all tw-duration-500 hover:-tw-translate-y-2"
           :class="item.locked ? 'tw-border-slate-800 tw-opacity-70' : 'tw-border-white/5 hover:tw-border-indigo-500/50 hover:tw-bg-indigo-950/20 hover:tw-shadow-2xl hover:tw-shadow-indigo-500/10'"
         >
           <!-- Card Background Pattern (visible only on hover unlocked) -->
-          <div v-if="!item.locked" class="tw-absolute tw-inset-0 tw-bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] tw-opacity-[0.03] tw-rounded-[2.5rem]"></div>
+          <div v-if="!item.locked" class="tw-absolute tw-inset-0 tw-bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] tw-opacity-[0.03] tw-rounded-3xl"></div>
           
-          <div class="tw-relative tw-p-8 tw-flex-1 tw-flex tw-flex-col">
+          <div class="tw-relative tw-p-6 tw-flex-1 tw-flex tw-flex-col">
             <!-- Top Badge -->
-            <div class="tw-flex tw-justify-between tw-items-start tw-mb-8">
-              <div class="tw-w-16 tw-h-16 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-text-2xl tw-shadow-inner"
+            <div class="tw-flex tw-justify-between tw-items-start tw-mb-6">
+              <div class="tw-w-14 tw-h-14 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-text-xl tw-shadow-inner"
                 :class="item.locked ? 'tw-bg-slate-800 tw-text-slate-600' : 'tw-bg-gradient-to-br tw-from-amber-400 tw-to-orange-600 tw-text-white tw-shadow-amber-500/20'"
               >
                 <i class="fas" :class="item.locked ? 'fa-lock' : 'fa-certificate'"></i>
@@ -96,14 +87,14 @@
               </span>
             </div>
             
-            <h3 class="tw-text-xl tw-font-bold tw-text-white tw-mb-4 tw-line-clamp-2 tw-min-h-[3.5rem] tw-leading-tight">
+            <h3 class="tw-text-lg tw-font-bold tw-text-white tw-mb-4 tw-line-clamp-2 tw-min-h-[3rem] tw-leading-tight">
               {{ item.course_name }}
             </h3>
             
             <div class="tw-mt-auto">
               <template v-if="item.locked">
-                <div class="tw-bg-white/5 tw-rounded-2xl tw-p-4 tw-mb-6 tw-border tw-border-white/5">
-                  <p class="tw-text-slate-400 tw-text-xs tw-mb-2 tw-flex tw-justify-between">
+                <div class="tw-bg-white/5 tw-rounded-xl tw-p-3 tw-mb-5 tw-border tw-border-white/5">
+                  <p class="tw-text-slate-400 tw-text-[10px] tw-mb-2 tw-flex tw-justify-between">
                     <span>Progress to unlock</span>
                     <span>0%</span>
                   </p>
@@ -111,28 +102,28 @@
                     <div class="tw-h-full tw-w-0 tw-bg-indigo-500"></div>
                   </div>
                 </div>
-                <router-link :to="`/user/courses/${item.course_id}`" class="tw-w-full tw-py-4 tw-bg-indigo-600/10 hover:tw-bg-indigo-600 tw-text-indigo-400 hover:tw-text-white tw-font-bold tw-rounded-2xl tw-transition-all tw-duration-300 tw-no-underline tw-flex tw-items-center tw-justify-center tw-border tw-border-indigo-500/20 hover:tw-border-indigo-500">
+                <router-link :to="`/user/courses/${item.course_id}`" class="tw-w-full tw-py-3.5 tw-bg-indigo-600/10 hover:tw-bg-indigo-600 tw-text-indigo-400 hover:tw-text-white tw-font-bold tw-rounded-xl tw-transition-all tw-duration-300 tw-no-underline tw-flex tw-items-center tw-justify-center tw-border tw-border-indigo-500/20 hover:tw-border-indigo-500 tw-text-sm">
                   <i class="fas fa-play tw-mr-2"></i>Resume Course
                 </router-link>
               </template>
               
               <template v-else>
-                <div class="tw-flex tw-items-center tw-gap-4 tw-mb-6">
+                <div class="tw-flex tw-items-center tw-gap-3 tw-mb-5">
                   <div class="tw-flex-1">
-                    <p class="tw-text-slate-500 tw-text-[10px] tw-uppercase tw-font-bold tw-tracking-wider tw-mb-1">Credential ID</p>
-                    <p class="tw-text-slate-300 tw-text-sm tw-font-mono tw-truncate">{{ item.certificate_number }}</p>
+                    <p class="tw-text-slate-500 tw-text-[9px] tw-uppercase tw-font-bold tw-tracking-wider tw-mb-1">Credential ID</p>
+                    <p class="tw-text-slate-300 tw-text-xs tw-font-mono tw-truncate">{{ item.certificate_number }}</p>
                   </div>
                   <div class="tw-text-right">
-                    <p class="tw-text-slate-500 tw-text-[10px] tw-uppercase tw-font-bold tw-tracking-wider tw-mb-1">Issued</p>
-                    <p class="tw-text-slate-300 tw-text-sm">{{ formatDate(item.issued_at) }}</p>
+                    <p class="tw-text-slate-500 tw-text-[9px] tw-uppercase tw-font-bold tw-tracking-wider tw-mb-1">Issued</p>
+                    <p class="tw-text-slate-300 tw-text-xs">{{ formatDate(item.issued_at) }}</p>
                   </div>
                 </div>
                 
-                <div class="tw-grid tw-grid-cols-2 tw-gap-4">
-                  <button type="button" class="tw-py-3 tw-bg-indigo-500/10 hover:tw-bg-indigo-500/20 tw-text-indigo-400 tw-font-bold tw-rounded-2xl tw-transition-all tw-border tw-border-indigo-500/20 tw-cursor-pointer tw-flex tw-items-center tw-justify-center tw-gap-2" @click="openViewModal(item)">
+                <div class="tw-grid tw-grid-cols-2 tw-gap-3">
+                  <button type="button" class="tw-py-2.5 tw-bg-indigo-500/10 hover:tw-bg-indigo-500/20 tw-text-indigo-400 tw-font-bold tw-rounded-xl tw-transition-all tw-border tw-border-indigo-500/20 tw-cursor-pointer tw-flex tw-items-center tw-justify-center tw-gap-2 tw-text-xs" @click="openViewModal(item)">
                     <i class="fas fa-eye"></i> View
                   </button>
-                  <button type="button" class="tw-py-3 tw-bg-emerald-500 hover:tw-bg-emerald-400 tw-text-slate-900 tw-font-black tw-rounded-2xl tw-shadow-xl tw-shadow-emerald-500/20 tw-transition-all tw-border-0 tw-cursor-pointer tw-flex tw-items-center tw-justify-center tw-gap-2" @click="downloadCertificate(item)">
+                  <button type="button" class="tw-py-2.5 tw-bg-emerald-500 hover:tw-bg-emerald-400 tw-text-slate-900 tw-font-black tw-rounded-xl tw-shadow-xl tw-shadow-emerald-500/20 tw-transition-all tw-border-0 tw-cursor-pointer tw-flex tw-items-center tw-justify-center tw-gap-2 tw-text-xs" @click="downloadCertificate(item)">
                     <i class="fas fa-download"></i> Save
                   </button>
                 </div>
@@ -311,7 +302,8 @@ export default {
     const purchaseAdCertificate = async () => {
       purchasingAdCert.value = true
       try {
-        const redirectUrl = `/user/payment-redirect?flow=ad_certificate&back=${encodeURIComponent('/user/certificates')}`
+        const amount = adCertificatePrice.value
+        const redirectUrl = `/user/payment-redirect?flow=ad_certificate&amount=${amount}&plan_name=Ad%20Certificate&back=${encodeURIComponent('/user/certificates')}`
         const w = window.open(redirectUrl, '_blank')
         if (!w) {
           window.location.href = redirectUrl

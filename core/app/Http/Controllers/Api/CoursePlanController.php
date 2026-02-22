@@ -124,11 +124,19 @@ class CoursePlanController extends Controller
         ]);
 
         $user = auth()->user();
-        $plan = CoursePlan::where('id', $request->plan_id)->active()->first();
-        $gateway = $request->gateway == 'simplypay' ? 'simplypay' : 'watchpay';
-
+        $plan = CoursePlan::where('id', (int)$request->plan_id)->active()->first();
         if (!$plan) {
             return responseError('plan_not_found', ['Course plan not found']);
+        }
+
+        $gateway = $request->input('gateway', 'watchpay');
+        if (!in_array($gateway, ['simplypay', 'watchpay', 'rupeerush', 'custom_qr'])) {
+             $gateway = 'watchpay';
+        }
+        
+        $gw = \App\Models\Gateway::where('alias', $gateway)->first();
+        if (!$gw || $gw->status != 1) {
+            return responseError('gateway_unavailable', ['Selected payment gateway is currently unavailable.']);
         }
 
         // If already active, block duplicate purchase (lifetime)
@@ -141,7 +149,12 @@ class CoursePlanController extends Controller
         }
 
         $trx = getTrx();
-        cache()->put($gateway . '_payment_' . $trx, [
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $cacheKey = $cachePrefix . $trx;
+        cache()->put($cacheKey, [
             'type' => 'course_plan',
             'user_id' => $user->id,
             'plan_id' => $plan->id,
@@ -150,21 +163,39 @@ class CoursePlanController extends Controller
             'created_at' => now()->format('Y-m-d H:i:s'),
         ], now()->addHours(2));
 
+        $gw_param = 'watchpay_trx=';
+        if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
+        if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
-        $pageUrl = $base . '/user/packages?' . $gateway . '_trx=' . urlencode($trx) . '&course_plan_id=' . $plan->id;
+        $pageUrl = $base . '/user/packages?' . $gw_param . urlencode($trx) . '&course_plan_id=' . $plan->id;
         $notifyUrl = $base . '/ipn/' . $gateway;
 
         try {
             if ($gateway == 'simplypay') {
                 $sp = \App\Lib\SimplyPayGateway::createPayment([
-                    'mchOrderNo' => $trx,
+                    'merOrderNo' => $trx,
                     'amount' => (float) $plan->price,
                     'goodsName' => 'Course Plan: ' . $plan->name,
-                    'pageUrl' => $pageUrl,
+                    'returnUrl' => $pageUrl,
                     'notifyUrl' => $notifyUrl,
-                    'remark' => 'user_id:' . $user->id
+                    'name' => $user->fullname ?: $user->username,
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'attach' => 'user_id:' . $user->id
                 ]);
                 $paymentUrl = $sp['pay_link'];
+            } elseif ($gateway == 'rupeerush') {
+                $ap = \App\Lib\RupeeRushGateway::createPayment([
+                    'outTradeNo' => $trx,
+                    'totalAmount' => (float) $plan->price,
+                    'notifyUrl' => $notifyUrl,
+                    'payViewUrl' => $pageUrl,
+                    'payName' => $user->fullname ?: $user->username,
+                    'payEmail' => $user->email,
+                    'payPhone' => $user->mobile,
+                ]);
+                $paymentUrl = $ap['pay_link'];
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -176,6 +207,7 @@ class CoursePlanController extends Controller
                 $paymentUrl = $wp['pay_link'];
             }
         } catch (\Throwable $e) {
+            \Log::error('Payment initiation error: ' . $e->getMessage(), ['exception' => $e]);
             return responseError('payment_gateway_error', ['Payment gateway init failed. Please try again.']);
         }
 
@@ -185,7 +217,7 @@ class CoursePlanController extends Controller
             'amount' => (float) $plan->price,
             'plan_id' => $plan->id,
             'plan_name' => $plan->name,
-            'gateway_name' => $gateway == 'simplypay' ? 'SimplyPay' : 'WatchPay',
+            'gateway_name' => $gateway == 'simplypay' ? 'SimplyPay' : ($gateway == 'rupeerush' ? 'RupeeRush' : 'WatchPay'),
         ]);
     }
 
@@ -198,8 +230,15 @@ class CoursePlanController extends Controller
 
         $user = auth()->user();
         $trx = (string) $request->trx;
-        $gateway = $request->gateway == 'simplypay' ? 'simplypay' : 'watchpay';
-        $session = cache()->get($gateway . '_payment_' . $trx);
+        $gateway = $request->gateway;
+        if (!in_array($gateway, ['simplypay', 'watchpay', 'rupeerush', 'custom_qr'])) {
+            $gateway = 'watchpay';
+        }
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        
+        $session = cache()->get($cachePrefix . $trx);
 
         if (!is_array($session) || ($session['type'] ?? '') !== 'course_plan' || (int)($session['user_id'] ?? 0) !== (int)$user->id) {
             return responseError('payment_not_found', ['Payment session not found. Please initiate payment again.']);
@@ -247,7 +286,7 @@ class CoursePlanController extends Controller
         $t->post_balance = $user->balance;
         $t->charge = 0;
         $t->trx_type = '-';
-        $t->details = 'Purchase course plan via ' . ($gateway == 'simplypay' ? 'SimplyPay' : 'WatchPay') . ': ' . $plan->name;
+        $t->details = 'Purchase course plan via ' . ($gateway == 'simplypay' ? 'SimplyPay' : ($gateway == 'rupeerush' ? 'RupeeRush' : 'WatchPay')) . ': ' . $plan->name;
         $t->trx = $trx;
         $t->remark = 'course_plan_purchase_gateway';
         $t->wallet = 'main';
@@ -259,7 +298,7 @@ class CoursePlanController extends Controller
             if ($agentId > 0) {
                 AgentCommission::process(
                     $agentId,
-                    $commissionType,
+                    'course',
                     (float) $plan->price,
                     $trx,
                     'Agent commission from User#' . $user->id . ' – Course package: ' . $plan->name . ' | Base: ₹' . (float) $plan->price,

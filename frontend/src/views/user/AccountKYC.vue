@@ -282,20 +282,9 @@
             <div class="tw-w-28 tw-h-28 tw-rounded-full tw-bg-sky-500/10 tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-8 tw-border-2 tw-border-sky-500/30">
               <i class="fas fa-clock tw-text-5xl tw-text-sky-400"></i>
             </div>
-            <h3 class="tw-text-3xl tw-font-extrabold tw-text-white tw-mb-3">Application Pending</h3>
-            <p class="tw-text-slate-400 tw-leading-relaxed tw-mb-10">We have received your documents and fee. Your application is now in the verification queue. This usually takes 24-48 hours.</p>
+            <h3 class="tw-text-3xl tw-font-extrabold tw-text-white tw-mb-3">KYC Under Review</h3>
+            <p class="tw-text-slate-400 tw-leading-relaxed tw-mb-10">Your KYC has been submitted successfully and is currently under review. Please wait for approval, it will be verified within 1 hour.</p>
             
-            <div v-if="hasPaidKYCFee" class="tw-bg-emerald-500/10 tw-border tw-border-emerald-500/20 tw-rounded-2xl tw-p-6 tw-text-left">
-              <div class="tw-flex tw-items-center tw-gap-3 tw-mb-2">
-                <i class="fas fa-check-circle tw-text-emerald-500"></i>
-                <span class="tw-text-emerald-400 tw-font-bold tw-text-sm">Payment Confirmed</span>
-              </div>
-              <div class="tw-text-slate-400 tw-text-xs tw-space-y-1">
-                <p><strong>Amount:</strong> ₹{{ formatAmount(kycFee) }}</p>
-                <p v-if="kycFeeTrx"><strong>TRX ID:</strong> {{ kycFeeTrx }}</p>
-                <p v-if="kycFeePaidAt"><strong>Paid On:</strong> {{ kycFeePaidAt }}</p>
-              </div>
-            </div>
           </div>
 
           <!-- Verified -->
@@ -532,40 +521,17 @@ export default {
             window.notify('success', 'Bank details saved successfully.')
           }
         } else {
-           let msg = 'Unknown error';
-           const m = response.data.message;
-           if (m) {
-               if (Array.isArray(m)) {
-                   msg = m[0];
-               } else if (typeof m === 'object') {
-                   const keys = Object.keys(m);
-                   if (keys.length > 0) msg = m[keys[0]][0];
-               } else {
-                   msg = m;
-               }
+           if (window.notify) {
+              const m = response.data.message;
+              const msg = (m?.success?.[0] || m?.error?.[0] || (Array.isArray(m) ? m[0] : m) || 'Unknown error');
+              window.notify('error', msg);
            }
-           if (window.notify) window.notify('error', msg);
         }
       } catch (error) {
         console.error('Error saving bank details:', error)
-        let msg = 'Failed to save bank details';
-        if (error.response && error.response.data) {
-            const m = error.response.data.message; // Use safe access
-            if (m) { // Check if m exists
-                if (Array.isArray(m)) {
-                    msg = m[0];
-                } else if (typeof m === 'object') {
-                     // specific field errors
-                     const keys = Object.keys(m);
-                     if (keys.length > 0) {
-                         msg = m[keys[0]][0] || m[keys[0]]; // Handle if it's not an array
-                     }
-                } else {
-                    msg = m;
-                }
-            }
-        }
         if (window.notify) {
+          const m = error.response?.data?.message;
+          const msg = (m?.error?.[0] || m?.success?.[0] || (Array.isArray(m) ? m[0] : m) || 'Failed to save bank details');
           window.notify('error', msg)
         }
       }
@@ -632,9 +598,10 @@ export default {
         }
       } catch (error) {
         console.error('Error submitting KYC:', error)
-        const errorMsg = error.response?.data?.message?.[0] || error.response?.data?.message || 'Failed to submit KYC'
         if (window.notify) {
-          window.notify('error', errorMsg)
+          const m = error.response?.data?.message;
+          const msg = (m?.error?.[0] || m?.success?.[0] || (Array.isArray(m) ? m[0] : m) || error.response?.data?.message || 'Failed to submit KYC');
+          window.notify('error', msg)
         }
       } finally {
         processing.value = false
@@ -660,7 +627,8 @@ export default {
           if (window.notify) window.notify('error', 'Please accept Terms & Privacy Policy before payment.')
           return
         }
-        const redirectUrl = `/user/payment-redirect?flow=kyc_fee&back=${encodeURIComponent('/user/account-kyc')}`
+        const amount = kycFee.value || 990
+        const redirectUrl = `/user/payment-redirect?flow=kyc_fee&amount=${amount}&plan_name=${encodeURIComponent('KYC Verification Fee')}&back=${encodeURIComponent('/user/account-kyc')}`
         const w = window.open(redirectUrl, '_blank')
         if (!w) {
           router.push(redirectUrl)
@@ -669,9 +637,10 @@ export default {
         }
       } catch (error) {
         console.error('Error processing payment:', error)
-        const errorMsg = error.response?.data?.message?.[0] || error.response?.data?.message || 'Payment failed. Please try again.'
         if (window.notify) {
-          window.notify('error', errorMsg)
+          const m = error.response?.data?.message;
+          const msg = (m?.error?.[0] || m?.success?.[0] || (Array.isArray(m) ? m[0] : m) || error.response?.data?.message || 'Payment failed. Please try again.');
+          window.notify('error', msg)
         }
       } finally {
         processingPayment.value = false
@@ -762,16 +731,22 @@ export default {
           currentStep.value = 1
 
           if (window.notify) {
-            window.notify('success', response.data.message?.[0] || 'Old KYC deleted. Please add new details.')
+            const m = response.data.message;
+            const msg = (m?.success?.[0] || m?.error?.[0] || (Array.isArray(m) ? m[0] : m) || 'Old KYC deleted. Please add new details.');
+            window.notify('success', msg)
           }
           await fetchAccountData()
         } else if (window.notify) {
-          window.notify('error', response.data.message?.[0] || 'Failed to delete old KYC')
+          const m = response.data.message;
+          const msg = (m?.error?.[0] || m?.success?.[0] || (Array.isArray(m) ? m[0] : m) || 'Failed to delete old KYC');
+          window.notify('error', msg)
         }
       } catch (error) {
         console.error('Error resetting KYC:', error)
         if (window.notify) {
-          window.notify('error', error.response?.data?.message?.[0] || error.response?.data?.message || 'Failed to delete old KYC')
+          const m = error.response?.data?.message;
+          const msg = (m?.error?.[0] || m?.success?.[0] || (Array.isArray(m) ? m[0] : m) || error.response?.data?.message || 'Failed to delete old KYC');
+          window.notify('error', msg)
         }
       } finally {
         processing.value = false
