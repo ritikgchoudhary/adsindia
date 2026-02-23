@@ -3,68 +3,83 @@
     <div class="ma-users">
 
       <!-- Stats Row -->
-      <div class="row g-3 mb-4">
-        <div class="col-md-3 col-6">
-          <div class="ma-stat-mini" @click="filterStatus = ''; fetchUsers(1)">
-            <div class="ma-stat-mini__icon ma-stat-mini__icon--blue"><i class="fas fa-users"></i></div>
-            <div><span class="ma-stat-mini__val">{{ totalUsers }}</span><span class="ma-stat-mini__lbl">Total</span></div>
+      <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-4 tw-mb-8">
+        <div class="tw-bg-slate-900/80 tw-border tw-border-white/10 tw-rounded-2xl tw-p-5 tw-cursor-pointer hover:tw-bg-slate-800 tw-transition-all" @click="filterStatus = ''; fetchUsers(1)">
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <div class="tw-w-12 tw-h-12 tw-bg-blue-500/10 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-text-blue-400">
+              <i class="fas fa-users tw-text-xl"></i>
+            </div>
+            <div>
+              <div class="tw-text-2xl tw-font-black tw-text-white">{{ totalUsers }}</div>
+              <div class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider">Total Users</div>
+            </div>
           </div>
         </div>
-        <div class="col-md-3 col-6">
-          <div class="ma-stat-mini" @click="filterStatus = 'active'; fetchUsers(1)">
-            <div class="ma-stat-mini__icon ma-stat-mini__icon--green"><i class="fas fa-check-circle"></i></div>
-            <div><span class="ma-stat-mini__val">{{ activeCount }}</span><span class="ma-stat-mini__lbl">Active</span></div>
+        <div class="tw-bg-slate-900/80 tw-border tw-border-white/10 tw-rounded-2xl tw-p-5 tw-cursor-pointer hover:tw-bg-slate-800 tw-transition-all" @click="filterStatus = 'active'; fetchUsers(1)">
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <div class="tw-w-12 tw-h-12 tw-bg-emerald-500/10 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-text-emerald-400">
+              <i class="fas fa-check-circle tw-text-xl"></i>
+            </div>
+            <div>
+              <div class="tw-text-2xl tw-font-black tw-text-white">{{ activeCount }}</div>
+              <div class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider">Active</div>
+            </div>
           </div>
         </div>
-        <div class="col-md-3 col-6">
-          <div class="ma-stat-mini" @click="filterStatus = 'banned'; fetchUsers(1)">
-            <div class="ma-stat-mini__icon ma-stat-mini__icon--red"><i class="fas fa-ban"></i></div>
-            <div><span class="ma-stat-mini__val">{{ bannedCount }}</span><span class="ma-stat-mini__lbl">Banned</span></div>
+        <div class="tw-bg-slate-900/80 tw-border tw-border-white/10 tw-rounded-2xl tw-p-5 tw-cursor-pointer hover:tw-bg-slate-800 tw-transition-all" @click="filterStatus = 'banned'; fetchUsers(1)">
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <div class="tw-w-12 tw-h-12 tw-bg-rose-500/10 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-text-rose-400">
+              <i class="fas fa-ban tw-text-xl"></i>
+            </div>
+            <div>
+              <div class="tw-text-2xl tw-font-black tw-text-white">{{ bannedCount }}</div>
+              <div class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider">Banned</div>
+            </div>
           </div>
         </div>
-        <div class="col-md-3 col-6">
-          <div class="ma-stat-mini" @click="filterStatus = 'kyc_pending'; fetchUsers(1)">
-            <div class="ma-stat-mini__icon ma-stat-mini__icon--amber"><i class="fas fa-clock"></i></div>
-            <div><span class="ma-stat-mini__val">{{ kycPendingCount }}</span><span class="ma-stat-mini__lbl">KYC P.</span></div>
-          </div>
-        </div>
-        <div class="col-md-3 col-6">
-          <div class="ma-stat-mini" @click="filterStatus = 'partner'; fetchUsers(1)">
-            <div class="ma-stat-mini__icon ma-stat-mini__icon--indigo"><i class="fas fa-crown"></i></div>
-            <div><span class="ma-stat-mini__val">{{ partnerCount }}</span><span class="ma-stat-mini__lbl">Partners</span></div>
-          </div>
-        </div>
-        <div class="col-md-3 col-6">
-          <div class="ma-stat-mini" @click="filterStatus = 'agent'; fetchUsers(1)">
-            <div class="ma-stat-mini__icon ma-stat-mini__icon--blue"><i class="fas fa-user-tie"></i></div>
-            <div><span class="ma-stat-mini__val">{{ agentCount }}</span><span class="ma-stat-mini__lbl">Agents</span></div>
+        <div class="tw-bg-slate-900/80 tw-border tw-border-white/10 tw-rounded-2xl tw-p-5 tw-cursor-pointer hover:tw-bg-slate-800 tw-transition-all" @click="filterStatus = 'agent'; fetchUsers(1)">
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <div class="tw-w-12 tw-h-12 tw-bg-indigo-500/10 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-text-indigo-400">
+              <i class="fas fa-user-tie tw-text-xl"></i>
+            </div>
+            <div>
+              <div class="tw-text-2xl tw-font-black tw-text-white">{{ agentCount }}</div>
+              <div class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider">Agents</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Search & Filter -->
-      <div class="ma-card mb-4">
-        <div class="ma-card__body d-flex flex-wrap gap-3 align-items-center">
-          <div class="flex-grow-1" style="min-width: 200px;">
-            <div class="ma-search-box">
-              <i class="fas fa-search"></i>
-              <input type="text" v-model="searchQuery" placeholder="Search by name, email, mobile..." @input="debounceSearch" class="ma-search-input">
-            </div>
+      <!-- Unified Search & Filter Bench -->
+      <div class="tw-bg-slate-900/80 tw-backdrop-blur-md tw-border tw-border-white/10 tw-rounded-3xl tw-p-5 tw-mb-8 tw-flex tw-flex-col lg:tw-flex-row tw-items-center tw-gap-4">
+        <div class="tw-relative tw-flex-grow tw-w-full">
+          <div class="tw-absolute tw-left-5 tw-top-1/2 tw--translate-y-1/2 tw-text-slate-500">
+            <i class="fas fa-search"></i>
           </div>
-          <select v-model="filterStatus" @change="fetchUsers(1)" class="ma-select">
-            <option value="">All Users</option>
-            <option value="active">Active</option>
-            <option value="banned">Banned</option>
-            <option value="email_unverified">Email Unverified</option>
-            <option value="kyc_pending">KYC Pending</option>
-            <option value="partner">Partners</option>
-            <option value="agent">Agents</option>
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="Search by name, email, username, mobile..." 
+            @input="debounceSearch"
+            class="tw-w-full tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-pl-12 tw-pr-5 tw-py-3.5 tw-text-white tw-text-sm tw-font-bold focus:tw-border-indigo-500 tw-outline-none tw-transition-all"
+          >
+        </div>
+
+        <div class="tw-flex tw-items-center tw-gap-3 tw-w-full lg:tw-w-auto">
+          <select v-model="filterStatus" @change="fetchUsers(1)" class="tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-px-5 tw-py-3.5 tw-text-white tw-text-xs tw-font-black tw-uppercase tw-tracking-widest focus:tw-border-indigo-500 tw-outline-none tw-min-w-[160px]">
+            <option value="" class="tw-bg-slate-950">All Users</option>
+            <option value="active" class="tw-bg-slate-950">Active</option>
+            <option value="banned" class="tw-bg-slate-950">Banned</option>
+            <option value="agent" class="tw-bg-slate-950">Agents</option>
           </select>
-          <button class="ma-btn ma-btn--primary" @click="openCreateUserModal">
-            <i class="fas fa-user-plus me-1"></i> Create User
+
+          <button @click="openCreateUserModal" class="tw-whitespace-nowrap tw-px-6 tw-py-3.5 tw-bg-white tw-text-slate-950 tw-font-black tw-rounded-2xl tw-text-sm tw-flex tw-items-center tw-gap-2 hover:tw-bg-indigo-50 tw-transition-all active:tw-scale-95">
+            <i class="fas fa-plus tw-text-xs"></i>
+            Create User
           </button>
-          <button class="ma-btn-refresh" @click="fetchUsers()">
-            <i class="fas fa-sync-alt"></i>
+
+          <button @click="fetchUsers(1)" class="tw-p-4 tw-bg-white/5 hover:tw-bg-white/10 tw-border tw-border-white/10 tw-rounded-2xl tw-text-white tw-transition-all active:tw-scale-95">
+            <i class="fas fa-sync-alt" :class="{ 'tw-animate-spin': loading }"></i>
           </button>
         </div>
       </div>
@@ -135,80 +150,119 @@
         </div>
       </div>
 
-      <!-- Users Table -->
-      <div class="ma-card ma-table-card">
-        <div class="ma-card__header ma-card__header--gradient">
+      <!-- Main Users Card -->
+      <div class="tw-bg-slate-900 tw-border tw-border-white/10 tw-rounded-[2.5rem] tw-overflow-hidden tw-relative tw-shadow-2xl">
+        <div class="tw-p-8 tw-border-b tw-border-white/5 tw-flex tw-justify-between tw-items-center">
           <div>
-            <h5 class="ma-card__title"><i class="fas fa-users me-2"></i>Users List</h5>
-            <p class="ma-card__subtitle">Manage and monitor all registered users</p>
+            <h5 class="tw-text-xl tw-font-black tw-text-white tw-m-0 tw-flex tw-items-center tw-gap-3">
+               <i class="fas fa-users tw-text-indigo-400"></i> Users Management
+            </h5>
+            <p class="tw-text-slate-500 tw-text-xs tw-font-medium tw-mt-1">Manage and monitor all platform subscribers</p>
           </div>
-          <span class="ma-card__count">{{ totalUsers }} users</span>
+          <div class="tw-px-4 tw-py-1.5 tw-bg-indigo-500/10 tw-border tw-border-indigo-500/20 tw-rounded-full tw-text-[10px] tw-text-indigo-400 tw-font-black tw-uppercase tw-tracking-tighter">
+             Total: {{ totalUsers }} Registered
+          </div>
         </div>
-        <div class="table-responsive ma-table-wrapper">
-          <table class="ma-table">
+        <div class="tw-overflow-x-auto">
+          <table class="tw-w-full tw-border-collapse">
             <thead>
-              <tr>
-                <th>ADS ID</th>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Mobile</th>
-                <th>Password</th>
-                <th>Balance</th>
-                <th>Total Paid</th>
-                <th>Status</th>
-                <th>Action</th>
+              <tr class="tw-bg-white/[0.02]">
+                <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest"># ID</th>
+                <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">User</th>
+                <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Email</th>
+                <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Mobile</th>
+                <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Password</th>
+                <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Balance</th>
+                <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Affiliate Balance</th>
+                <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Total Paid</th>
+                <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Status</th>
+                <th class="tw-px-6 tw-py-5 tw-text-right tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Action</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="9" class="ma-table__loading"><div class="ma-spinner"></div></td>
+                <td colspan="10" class="tw-py-20 tw-text-center">
+                  <div class="tw-inline-flex tw-flex-col tw-items-center tw-gap-4">
+                    <div class="tw-w-10 tw-h-10 tw-border-4 tw-border-indigo-500/20 tw-border-t-indigo-500 tw-rounded-full tw-animate-spin"></div>
+                    <span class="tw-text-slate-500 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Loading Users...</span>
+                  </div>
+                </td>
               </tr>
               <tr v-else-if="users.length === 0">
-                <td colspan="9" class="ma-table__empty">
-                  <i class="fas fa-users-slash"></i>
-                  <p>No users found</p>
+                <td colspan="11" class="tw-py-24 tw-text-center">
+                  <div class="tw-w-16 tw-h-16 tw-bg-white/5 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
+                    <i class="fas fa-users-slash tw-text-2xl tw-text-slate-600"></i>
+                  </div>
+                  <h4 class="tw-text-white tw-font-black tw-text-lg">No Users Found</h4>
                 </td>
               </tr>
-              <tr v-else v-for="user in users" :key="user.id" class="ma-table-row">
-                <td>
-                  <div class="ma-id-badge">
-                    <span>ADS{{ user.id }}</span>
+              <tr v-else v-for="user in users" :key="user.id" class="tw-group hover:tw-bg-white/[0.02] tw-transition-all tw-border-b tw-border-white/5 last:tw-border-0">
+                <td class="tw-px-6 tw-py-5">
+                   <div class="tw-flex tw-flex-col tw-gap-1">
+                      <code class="tw-text-[11px] tw-text-indigo-400 tw-font-mono tw-bg-indigo-500/10 tw-px-2 tw-py-0.5 tw-rounded tw-font-bold">ADS{{ user.id }}</code>
+                      <span class="tw-text-slate-600 tw-text-[9px] tw-font-black">{{ user.id }}</span>
+                   </div>
+                </td>
+                <td class="tw-px-6 tw-py-5">
+                  <div class="tw-flex tw-items-center tw-gap-3">
+                    <div class="tw-w-9 tw-h-9 tw-bg-slate-800 tw-border tw-border-white/10 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-text-indigo-400 tw-font-black tw-text-xs">
+                      {{ getInitials(user) }}
+                    </div>
+                    <div class="tw-text-white tw-font-bold tw-text-sm">{{ user.firstname }} {{ user.lastname }}</div>
                   </div>
                 </td>
-                <td>{{ user.firstname }} {{ user.lastname }}</td>
-                <td>{{ user.email || 'N/A' }}</td>
-                <td>{{ user.mobile || 'N/A' }}</td>
-                <td>{{ user.password || 'N/A' }}</td>
-                <td>
-                  <span class="ma-table__balance fw-bold">₹{{ formatAmount(user.balance || 0) }}</span>
+                <td class="tw-px-6 tw-py-5">
+                  <span class="tw-text-slate-400 tw-text-[13px]">{{ user.email || 'N/A' }}</span>
                 </td>
-                <td>
-                  <span class="ma-table__paid text-info fw-bold">₹{{ formatAmount(user.total_deposit || 0) }}</span>
-                </td>
-                <td>
-                  <div class="ma-status-cell">
-                    <span class="ma-badge" :class="user.status === 'active' ? 'ma-badge--success' : 'ma-badge--danger'">
-                      {{ user.status === 'active' ? 'Active' : 'Banned' }}
-                    </span>
-                    <span v-if="user.kv === 2" class="ma-badge ma-badge--warning ms-1">KYC P.</span>
-                    <span v-else-if="user.kv === 1" class="ma-badge ma-badge--success ms-1">KYC V.</span>
-                    <span v-if="user.is_partner" class="ma-badge ma-badge--indigo ms-1" title="Active Partner Program">Partner</span>
-                    <span v-if="user.is_agent" class="ma-badge ma-badge--blue ms-1" title="Agent Portal Access">Agent</span>
+                <td class="tw-px-6 tw-py-5">
+                  <div class="tw-flex tw-items-center tw-gap-2">
+                    <i class="fas fa-phone tw-text-[10px] tw-text-slate-600"></i>
+                    <span class="tw-text-slate-300 tw-text-sm tw-font-bold">{{ user.mobile || 'N/A' }}</span>
                   </div>
                 </td>
-                <td>
-                  <div class="ma-action-buttons">
-                    <button class="ma-action-btn ma-action-btn--view" @click="openManageUser(user)" title="Manage">
-                      <i class="fas fa-cog"></i>
+                <td class="tw-px-6 tw-py-5">
+                   <div class="tw-flex tw-items-center tw-gap-2">
+                      <span class="tw-text-slate-500 tw-text-xs tw-font-mono">{{ showPassword[user.id] ? user.password : '••••••••' }}</span>
+                      <button @click="togglePassword(user.id)" class="tw-text-slate-600 hover:tw-text-white">
+                         <i :class="`fas ${showPassword[user.id] ? 'fa-eye-slash' : 'fa-eye'} tw-text-[10px]`"></i>
+                      </button>
+                   </div>
+                </td>
+                <td class="tw-px-6 tw-py-5">
+                  <div class="tw-bg-emerald-500/5 tw-border tw-border-emerald-500/10 tw-rounded-lg tw-px-3 tw-py-1.5 tw-inline-block">
+                    <span class="tw-text-emerald-400 tw-font-black tw-text-sm">₹{{ formatAmount(user.balance || 0) }}</span>
+                  </div>
+                </td>
+                <td class="tw-px-6 tw-py-5">
+                  <div class="tw-bg-indigo-500/5 tw-border tw-border-indigo-500/10 tw-rounded-lg tw-px-3 tw-py-1.5 tw-inline-block">
+                    <span class="tw-text-indigo-400 tw-font-black tw-text-sm">₹{{ formatAmount(user.affiliate_balance || 0) }}</span>
+                  </div>
+                </td>
+                <td class="tw-px-6 tw-py-5">
+                  <div class="tw-flex tw-items-center tw-gap-1.5 tw-text-indigo-400 tw-font-bold tw-text-sm">
+                    <span class="tw-text-slate-600 text-[10px] uppercase tracking-tighter">Rs</span>
+                    ₹{{ formatAmount(user.total_deposit || 0) }}
+                  </div>
+                </td>
+                <td class="tw-px-6 tw-py-5">
+                  <span :class="`tw-px-2 tw-py-1 tw-rounded-md tw-text-[9px] tw-font-black tw-uppercase tw-tracking-widest ${
+                    user.status === 'active' ? 'tw-bg-emerald-500/10 tw-text-emerald-400' : 'tw-bg-rose-500/10 tw-text-rose-400'
+                  }`">
+                    {{ user.status === 'active' ? 'Active' : 'Banned' }}
+                  </span>
+                </td>
+                <td class="tw-px-6 tw-py-5 tw-text-right">
+                  <div class="tw-flex tw-justify-end tw-gap-2">
+                    <button @click="openManageUser(user)" class="tw-w-8 tw-h-8 tw-bg-indigo-500/10 tw-text-indigo-400 tw-rounded-lg hover:tw-bg-indigo-500 tw-hover:tw-text-white tw-transition-all">
+                      <i class="fas fa-cog tw-text-xs"></i>
                     </button>
-                    <button class="ma-action-btn" style="color: #3b82f6" @click="viewBank(user)" title="Bank Details">
-                      <i class="fas fa-university"></i>
+                    <button @click="viewKYC(user)" class="tw-w-8 tw-h-8 tw-bg-blue-500/10 tw-text-blue-400 tw-rounded-lg hover:tw-bg-blue-500 tw-hover:tw-text-white tw-transition-all">
+                      <i class="fas fa-university tw-text-xs"></i>
                     </button>
-                    <button v-if="user.kv === 2 || user.kv === 1" class="ma-action-btn ma-action-btn--edit" @click="viewKYC(user)" title="KYC">
-                      <i class="fas fa-user-shield"></i>
-                    </button>
-                    <button class="ma-action-btn" :class="user.status === 'active' ? 'ma-action-btn--ban' : 'ma-action-btn--unban'" @click="toggleUserStatus(user)">
-                      <i :class="user.status === 'active' ? 'fas fa-ban' : 'fas fa-check-circle'"></i>
+                    <button @click="toggleUserStatus(user)" :class="`tw-w-8 tw-h-8 tw-rounded-lg tw-transition-all ${
+                      user.status === 'active' ? 'tw-bg-rose-500/10 tw-text-rose-400 hover:tw-bg-rose-500' : 'tw-bg-emerald-500/10 tw-text-emerald-400 hover:tw-bg-emerald-500'
+                    }`">
+                      <i :class="`fas ${user.status === 'active' ? 'fa-ban' : 'fa-check-circle'} tw-text-xs`" class="hover:tw-text-white"></i>
                     </button>
                   </div>
                 </td>
@@ -217,15 +271,28 @@
           </table>
         </div>
 
-        <!-- Pagination -->
-        <div v-if="lastPage > 1" class="ma-pagination">
-          <button class="ma-page-btn" :disabled="currentPage === 1" @click="fetchUsers(currentPage - 1)">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <span class="ma-page-info">Page {{ currentPage }} of {{ lastPage }}</span>
-          <button class="ma-page-btn" :disabled="currentPage === lastPage" @click="fetchUsers(currentPage + 1)">
-            <i class="fas fa-chevron-right"></i>
-          </button>
+        <!-- Modern Pagination -->
+        <div v-if="lastPage > 1" class="tw-p-8 tw-bg-white/[0.02] tw-border-t tw-border-white/5 tw-flex tw-flex-col md:tw-flex-row tw-items-center tw-justify-between tw-gap-4">
+          <div class="tw-text-slate-500 tw-text-xs tw-font-bold">
+            Displaying page <span class="tw-text-indigo-400">{{ currentPage }}</span> of <span class="tw-text-white">{{ lastPage }}</span>
+          </div>
+          <div class="tw-flex tw-items-center tw-gap-2">
+            <button 
+              @click="fetchUsers(currentPage - 1)" 
+              :disabled="currentPage === 1"
+              class="tw-w-10 tw-h-10 tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-xl tw-text-slate-400 tw-transition-all hover:tw-bg-indigo-500/20 hover:tw-text-indigo-400 disabled:tw-opacity-30 disabled:tw-cursor-not-allowed"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="tw-text-white tw-font-black tw-text-sm tw-px-4">Page {{ currentPage }}</span>
+            <button 
+              @click="fetchUsers(currentPage + 1)" 
+              :disabled="currentPage === lastPage"
+              class="tw-w-10 tw-h-10 tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-xl tw-text-slate-400 tw-transition-all hover:tw-bg-indigo-500/20 hover:tw-text-indigo-400 disabled:tw-opacity-30 disabled:tw-cursor-not-allowed"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -507,54 +574,80 @@
             <button class="ma-modal__close" @click="closeKYCModal"><i class="fas fa-times"></i></button>
           </div>
           <div class="ma-modal__body">
-            <div class="row g-4">
-              <div class="col-12">
-                <div class="ma-soft-box">
-                  <div class="fw-bold mb-3"><i class="fas fa-university me-2"></i>Bank Details</div>
-                  <div class="row g-3">
-                    <div class="col-md-4">
-                      <div class="text-muted small">Account Holder</div>
-                      <div class="text-white">{{ selectedUser?.bank_details?.account_holder_name || 'N/A' }}</div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="text-muted small">Account Number</div>
-                      <div class="text-white">{{ selectedUser?.bank_details?.account_number || 'N/A' }}</div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="text-muted small">IFSC Code</div>
-                      <div class="text-white">{{ selectedUser?.bank_details?.ifsc_code || 'N/A' }}</div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="text-muted small">Bank Name</div>
-                      <div class="text-white">{{ selectedUser?.bank_details?.bank_name || 'N/A' }}</div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="text-muted small">UPI ID</div>
-                      <div class="text-white">{{ selectedUser?.bank_details?.upi_id || 'N/A' }}</div>
-                    </div>
+            <div class="tw-space-y-6">
+              <!-- Bank Information Box -->
+              <div class="tw-bg-slate-900/50 tw-border tw-border-white/10 tw-rounded-3xl tw-p-8">
+                <div class="tw-flex tw-items-center tw-gap-3 tw-mb-6">
+                  <i class="fas fa-university tw-text-indigo-400"></i>
+                  <h6 class="tw-text-slate-400 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest tw-m-0">Bank Information</h6>
+                </div>
+                <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-3 tw-gap-y-6 tw-gap-x-8">
+                  <div>
+                    <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Account Holder Name</div>
+                    <div class="tw-text-white tw-font-black tw-text-sm">{{ selectedUser?.bank_details?.account_holder_name || '—' }}</div>
+                  </div>
+                  <div>
+                    <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Account Number</div>
+                    <div class="tw-text-white tw-font-black tw-text-sm">{{ selectedUser?.bank_details?.account_number || '—' }}</div>
+                  </div>
+                  <div>
+                    <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">IFSC Code</div>
+                    <div class="tw-text-white tw-font-black tw-text-sm">{{ selectedUser?.bank_details?.ifsc_code || '—' }}</div>
+                  </div>
+                  <div>
+                    <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Bank Name</div>
+                    <div class="tw-text-white tw-font-black tw-text-sm">{{ selectedUser?.bank_details?.bank_name || '—' }}</div>
+                  </div>
+                  <div>
+                    <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">UPI ID</div>
+                    <div class="tw-text-white tw-font-black tw-text-sm">{{ selectedUser?.bank_details?.upi_id || '—' }}</div>
+                  </div>
+                  <div>
+                    <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Bank Registered Number</div>
+                    <div class="tw-text-white tw-font-black tw-text-sm">{{ selectedUser?.bank_details?.bank_registered_no || '—' }}</div>
                   </div>
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="ma-doc-card">
-                  <div class="ma-doc-header"><h6>Aadhaar Card</h6></div>
-                  <div class="ma-doc-preview">
-                    <img v-if="selectedUser?.kyc_data?.aadhaar_image" :src="selectedUser.kyc_data.aadhaar_image" class="img-fluid rounded" />
-                    <div v-else class="text-muted">No Image</div>
+
+              <!-- Documents Row -->
+              <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-6">
+                <!-- Aadhaar Box -->
+                <div class="tw-bg-slate-900/50 tw-border tw-border-white/10 tw-rounded-3xl tw-p-8 tw-flex tw-flex-col">
+                  <div class="tw-flex tw-items-center tw-justify-between tw-mb-6">
+                    <div class="tw-flex tw-items-center tw-gap-3">
+                      <i class="fas fa-address-card tw-text-indigo-400"></i>
+                      <h6 class="tw-text-slate-400 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest tw-m-0">Aadhaar Card</h6>
+                    </div>
+                    <div class="tw-px-3 tw-py-1 tw-bg-white/5 tw-rounded-lg tw-text-white tw-font-mono tw-text-xs tw-border tw-border-white/5">
+                      {{ selectedUser?.kyc_data?.aadhaar_number || 'N/A' }}
+                    </div>
+                  </div>
+                  <div class="tw-aspect-video tw-bg-white/5 tw-rounded-2xl tw-overflow-hidden tw-border tw-border-white/10 tw-group tw-relative">
+                    <img v-if="selectedUser?.kyc_data?.aadhaar_image" :src="selectedUser.kyc_data.aadhaar_image" class="tw-w-full tw-h-full tw-object-contain tw-transition-transform group-hover:tw-scale-110" />
+                    <div v-else class="tw-h-full tw-flex tw-items-center tw-justify-center tw-text-slate-600 tw-text-xs">No Document Uploaded</div>
                   </div>
                 </div>
-              </div>
-              <div class="col-md-6">
-                <div class="ma-doc-card">
-                  <div class="ma-doc-header"><h6>PAN Card</h6></div>
-                  <div class="ma-doc-preview">
-                    <img v-if="selectedUser?.kyc_data?.pan_image" :src="selectedUser.kyc_data.pan_image" class="img-fluid rounded" />
-                    <div v-else class="text-muted">No Image</div>
+
+                <!-- PAN Box -->
+                <div class="tw-bg-slate-900/50 tw-border tw-border-white/10 tw-rounded-3xl tw-p-8 tw-flex tw-flex-col">
+                  <div class="tw-flex tw-items-center tw-justify-between tw-mb-6">
+                    <div class="tw-flex tw-items-center tw-gap-3">
+                      <i class="fas fa-id-badge tw-text-indigo-400"></i>
+                      <h6 class="tw-text-slate-400 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest tw-m-0">PAN Card</h6>
+                    </div>
+                    <div class="tw-px-3 tw-py-1 tw-bg-white/5 tw-rounded-lg tw-text-white tw-font-mono tw-text-xs tw-border tw-border-white/5">
+                      {{ selectedUser?.kyc_data?.pan_number || 'N/A' }}
+                    </div>
+                  </div>
+                  <div class="tw-aspect-video tw-bg-white/5 tw-rounded-2xl tw-overflow-hidden tw-border tw-border-white/10 tw-group tw-relative">
+                    <img v-if="selectedUser?.kyc_data?.pan_image" :src="selectedUser.kyc_data.pan_image" class="tw-w-full tw-h-full tw-object-contain tw-transition-transform group-hover:tw-scale-110" />
+                    <div v-else class="tw-h-full tw-flex tw-items-center tw-justify-center tw-text-slate-600 tw-text-xs">No Document Uploaded</div>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="ma-form-actions mt-4 gap-3">
+          </div>
+            <div class="ma-form-actions tw-px-8 tw-pb-8 tw-flex tw-flex-wrap tw-gap-3">
               <!-- If Pending (kv=2) -->
               <template v-if="selectedUser?.kv === 2">
                 <button class="ma-btn ma-btn--primary" @click="approveKYC">Verify KYC</button>
@@ -571,17 +664,15 @@
               <button class="ma-btn ma-btn--secondary" style="background: #475569; color: white" @click="deleteKYCFromReview">Delete KYC</button>
             </div>
 
-            <div v-if="showRejectForm" class="mt-4 ma-reject-form">
+            <div v-if="showRejectForm" class="tw-px-8 tw-pb-8 ma-reject-form">
               <textarea v-model="rejectionReason" class="ma-form-input mb-3" placeholder="Enter reason for rejection..."></textarea>
-              <div class="d-flex gap-2">
+              <div class="tw-flex tw-gap-2">
                 <button class="ma-btn ma-btn--danger" :disabled="!rejectionReason" @click="rejectKYC">Submit Rejection</button>
                 <button class="ma-btn ma-btn--secondary" @click="showRejectForm = false">Cancel</button>
               </div>
             </div>
           </div>
-        </div>
       </div>
-
     </div>
   </MasterAdminLayout>
 </template>
@@ -784,6 +875,17 @@ export default {
       userCoursePlanId.value = user.active_course_plan_id || 0
       userAdsPlanId.value = user.active_ads_plan_id || 0
       agentForm.value = { is_agent: !!user.is_agent }
+      
+      bankForm.value = {
+        account_holder_name: user.bank_details?.account_holder_name || '',
+        account_number: user.bank_details?.account_number || '',
+        ifsc_code: user.bank_details?.ifsc_code || '',
+        bank_name: user.bank_details?.bank_name || '',
+        bank_registered_no: user.bank_details?.bank_registered_no || '',
+        branch_name: user.bank_details?.branch_name || '',
+        upi_id: user.bank_details?.upi_id || '',
+        mobile: user.bank_details?.mobile || user.mobile || ''
+      }
       await nextTick()
       showManageModal.value = true
     }

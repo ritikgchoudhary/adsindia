@@ -1,126 +1,128 @@
 <template>
   <MasterAdminLayout page-title="Courses & Video Links">
-    <div class="ma-courses">
-      <!-- Error loading courses -->
-      <div v-if="loadError" class="ma-card mb-4" style="border-left: 4px solid #ef4444;">
-        <div class="ma-card__body d-flex align-items-center justify-content-between flex-wrap gap-3">
-          <div>
-            <strong class="text-danger"><i class="fas fa-exclamation-circle me-2"></i>{{ loadError }}</strong>
-            <p class="text-muted mb-0 mt-1 small">Ensure you are logged in as Master Admin. The courses API is at /api/admin/course</p>
-          </div>
-          <button type="button" class="ma-btn ma-btn--primary" @click="fetchCourses">
-            <i class="fas fa-sync-alt me-1"></i> Retry
+      <!-- Glassmorphic Header -->
+      <div class="tw-bg-slate-900/50 tw-backdrop-blur-xl tw-border tw-border-white/10 tw-rounded-3xl tw-p-8 tw-mb-8 tw-flex tw-flex-col md:tw-flex-row tw-justify-between tw-items-center tw-gap-6">
+        <div>
+          <h1 class="tw-text-3xl tw-font-black tw-text-white tw-flex tw-items-center tw-gap-3 tw-m-0">
+            <span class="tw-p-3 tw-bg-indigo-500/10 tw-rounded-2xl tw-text-indigo-400">
+              <i class="fas fa-play-circle"></i>
+            </span>
+            Course Management
+          </h1>
+          <p class="tw-text-slate-400 tw-mt-2 tw-text-sm tw-font-medium">Maintain your database of video courses and package associations.</p>
+        </div>
+        <div class="tw-flex tw-items-center tw-gap-4">
+          <button @click="fetchCourses" class="tw-p-4 tw-bg-white/5 hover:tw-bg-white/10 tw-border tw-border-white/10 tw-rounded-2xl tw-text-white tw-transition-all active:tw-scale-95">
+            <i class="fas fa-sync-alt" :class="{ 'tw-animate-spin': loading }"></i>
           </button>
+          <router-link to="/admin/courses/create" class="tw-group tw-px-6 tw-py-3.5 tw-bg-gradient-to-r tw-from-indigo-600 tw-to-violet-600 tw-text-white tw-font-black tw-rounded-2xl tw-no-underline tw-flex tw-items-center tw-gap-3 tw-transition-all hover:tw-scale-105 hover:tw-shadow-xl hover:tw-shadow-indigo-500/30">
+            <i class="fas fa-plus tw-text-xs"></i>
+            <span>Create New Course</span>
+            <i class="fas fa-arrow-right tw-text-[10px] tw-opacity-50 tw-transition-transform group-hover:tw-translate-x-1"></i>
+          </router-link>
         </div>
       </div>
 
       <!-- Stats Row -->
-      <div class="row g-3 mb-4">
-        <div class="col-md-3 col-6">
-          <div class="ma-kpi ma-kpi--indigo">
-            <div class="ma-kpi__icon"><i class="fas fa-graduation-cap"></i></div>
-            <div>
-              <div class="ma-kpi__val">{{ courses.length }}</div>
-              <div class="ma-kpi__lbl">Total Courses</div>
+      <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-6 tw-mb-8">
+        <div v-for="stat in [
+          { label: 'Total Courses', val: courses.length, icon: 'fa-graduation-cap', color: 'tw-from-indigo-500 tw-to-blue-600', bg: 'tw-bg-indigo-500/10' },
+          { label: 'Active Status', val: activeCount, icon: 'fa-check-circle', color: 'tw-from-emerald-400 tw-to-teal-600', bg: 'tw-bg-emerald-500/10' },
+          { label: 'Paused/Draft', val: inactiveCount, icon: 'fa-pause-circle', color: 'tw-from-slate-400 tw-to-slate-600', bg: 'tw-bg-slate-500/10' },
+          { label: 'Hyperlinked', val: withVideoCount, icon: 'fa-link', color: 'tw-from-amber-400 tw-to-orange-600', bg: 'tw-bg-amber-500/10' }
+        ]" :key="stat.label" class="tw-bg-slate-900/50 tw-backdrop-blur-xl tw-border tw-border-white/10 tw-rounded-3xl tw-p-6 tw-group hover:tw-bg-slate-900/80 tw-transition-all">
+          <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
+            <div :class="`tw-w-12 tw-h-12 ${stat.bg} tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-transition-transform group-hover:tw-scale-110`">
+              <i :class="`fas ${stat.icon} tw-text-xl tw-bg-gradient-to-br ${stat.color} tw-bg-clip-text tw-text-transparent`"></i>
             </div>
+            <div class="tw-w-1.5 tw-h-1.5 tw-bg-white/20 tw-rounded-full"></div>
           </div>
-        </div>
-        <div class="col-md-3 col-6">
-          <div class="ma-kpi ma-kpi--green">
-            <div class="ma-kpi__icon"><i class="fas fa-check-circle"></i></div>
-            <div>
-              <div class="ma-kpi__val">{{ activeCount }}</div>
-              <div class="ma-kpi__lbl">Active</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 col-6">
-          <div class="ma-kpi ma-kpi--slate">
-            <div class="ma-kpi__icon"><i class="fas fa-pause-circle"></i></div>
-            <div>
-              <div class="ma-kpi__val">{{ inactiveCount }}</div>
-              <div class="ma-kpi__lbl">Inactive</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3 col-6">
-          <div class="ma-kpi ma-kpi--amber">
-            <div class="ma-kpi__icon"><i class="fas fa-link"></i></div>
-            <div>
-              <div class="ma-kpi__val">{{ withVideoCount }}</div>
-              <div class="ma-kpi__lbl">With Video URL</div>
-            </div>
-          </div>
+          <div class="tw-text-2xl tw-font-black tw-text-white tw-mb-1">{{ stat.val }}</div>
+          <div class="tw-text-slate-500 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">{{ stat.label }}</div>
         </div>
       </div>
 
-      <div class="ma-card mb-4">
-        <div class="ma-card__header ma-card__header--gradient">
-          <div>
-            <h5 class="ma-card__title"><i class="fas fa-play-circle me-2"></i>Courses (Packages)</h5>
-            <p class="ma-card__subtitle">Update course video links. These courses appear on User → Packages / User → Courses.</p>
-          </div>
-          <div class="ma-header-actions">
-            <router-link to="/admin/courses/create" class="ma-btn ma-btn--primary ma-btn--glow">
-              <i class="fas fa-plus me-1"></i> Add Course
-            </router-link>
-            <button type="button" class="ma-btn ma-btn--secondary" @click="fetchCourses">
-              <i class="fas fa-sync-alt me-1"></i> Refresh
-            </button>
-            <span class="ma-card__count">{{ courses.length }} courses</span>
+      <!-- Main Content Card -->
+      <div class="tw-bg-slate-900/50 tw-backdrop-blur-xl tw-border tw-border-white/10 tw-rounded-[2.5rem] tw-overflow-hidden tw-relative">
+        <div class="tw-p-8 tw-border-b tw-border-white/5 tw-flex tw-justify-between tw-items-center">
+          <h5 class="tw-text-xl tw-font-black tw-text-white tw-m-0 tw-flex tw-items-center tw-gap-3">
+             <i class="fas fa-list-ul tw-text-indigo-400"></i> Course Registry
+          </h5>
+          <div class="tw-flex tw-items-center tw-gap-3">
+             <div class="tw-px-4 tw-py-1.5 tw-bg-indigo-500/10 tw-border tw-border-indigo-500/20 tw-rounded-full tw-text-[10px] tw-text-indigo-400 tw-font-black tw-uppercase tw-tracking-tighter">
+                Live Catalog
+             </div>
           </div>
         </div>
-        <div class="table-responsive ma-table-wrapper">
-          <table class="ma-table">
+
+        <div class="tw-overflow-x-auto">
+          <table class="tw-w-full tw-border-collapse">
             <thead>
-              <tr>
-                <th>#</th>
-                <th>Course Name</th>
-                <th>Package</th>
-                <th>Category</th>
-                <th>Video URL</th>
-                <th>Duration</th>
-                <th>Status</th>
-                <th>Action</th>
+              <tr class="tw-bg-white/[0.02]">
+                <th class="tw-px-8 tw-py-6 tw-text-left tw-text-[11px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">#</th>
+                <th class="tw-px-8 tw-py-6 tw-text-left tw-text-[11px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Course Details</th>
+                <th class="tw-px-8 tw-py-6 tw-text-left tw-text-[11px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Package Allocation</th>
+                <th class="tw-px-8 tw-py-6 tw-text-left tw-text-[11px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Digital Content</th>
+                <th class="tw-px-8 tw-py-6 tw-text-left tw-text-[11px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Status</th>
+                <th class="tw-px-8 tw-py-6 tw-text-right tw-text-[11px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="8" class="ma-table__loading"><div class="ma-spinner"></div></td>
-              </tr>
-              <tr v-else-if="courses.length === 0">
-                <td colspan="8" class="ma-table__empty">
-                  <i class="fas fa-graduation-cap"></i>
-                  <p>No courses found</p>
+                <td colspan="6" class="tw-py-20 text-center">
+                  <div class="tw-inline-flex tw-flex-col tw-items-center tw-gap-4">
+                    <div class="tw-w-12 tw-h-12 tw-border-4 tw-border-indigo-500/20 tw-border-t-indigo-500 tw-rounded-full tw-animate-spin"></div>
+                    <span class="tw-text-slate-500 tw-text-sm tw-font-bold tw-uppercase">Syncing Data...</span>
+                  </div>
                 </td>
               </tr>
-              <tr v-else v-for="(c, i) in courses" :key="c.id" class="ma-table-row">
-                <td>{{ i + 1 }}</td>
-                <td>
-                  <strong>{{ c.name }}</strong>
+              <tr v-else-if="courses.length === 0" class="tw-border-b tw-border-white/5">
+                <td colspan="6" class="tw-py-24 text-center">
+                  <div class="tw-w-20 tw-h-20 tw-bg-white/5 tw-rounded-3xl tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-6">
+                    <i class="fas fa-ghost tw-text-4xl tw-text-slate-700"></i>
+                  </div>
+                  <h4 class="tw-text-white tw-font-black tw-text-xl tw-mb-2">No Records Found</h4>
+                  <p class="tw-text-slate-500 tw-text-sm">Start your catalog by adding your first course.</p>
                 </td>
-                <td>
-                  <span class="ma-badge ma-badge--info">{{ getPackageName(c) }}</span>
+              </tr>
+              <tr v-else v-for="(c, i) in courses" :key="c.id" class="tw-group hover:tw-bg-white/[0.03] tw-transition-all tw-border-b tw-border-white/5 last:tw-border-0">
+                <td class="tw-px-8 tw-py-6 tw-text-slate-600 tw-text-sm tw-font-bold">{{ i + 1 }}</td>
+                <td class="tw-px-8 tw-py-6">
+                  <div class="tw-flex tw-flex-col">
+                    <span class="tw-text-white tw-font-black tw-text-base group-hover:tw-text-indigo-400 tw-transition-colors">{{ c.name }}</span>
+                    <span class="tw-text-slate-500 tw-text-[10px] tw-uppercase tw-font-bold tw-mt-1">{{ c.category || 'Standard' }} • {{ c.duration || 'Flexible' }}</span>
+                  </div>
                 </td>
-                <td>{{ c.category || '–' }}</td>
-                <td>
-                  <span class="ma-video-url" :title="c.video_url || 'No link'">
-                    {{ truncateUrl(c.video_url) }}
+                <td class="tw-px-8 tw-py-6">
+                  <span class="tw-px-3 tw-py-1.5 tw-bg-indigo-500/10 tw-border tw-border-indigo-500/20 tw-rounded-xl tw-text-indigo-300 tw-text-[11px] tw-font-black tw-uppercase">
+                    {{ getPackageName(c) }}
                   </span>
                 </td>
-                <td>{{ c.duration || '–' }}</td>
-                <td>
-                  <span class="ma-badge" :class="c.status === 1 ? 'ma-badge--success' : 'ma-badge--muted'">
-                    {{ c.status === 1 ? 'Active' : 'Inactive' }}
-                  </span>
+                <td class="tw-px-8 tw-py-6">
+                  <div class="tw-flex tw-items-center tw-gap-3">
+                    <div class="tw-w-8 tw-h-8 tw-bg-white/5 tw-rounded-lg tw-flex tw-items-center tw-justify-center">
+                      <i class="fas fa-video tw-text-xs" :class="c.video_url ? 'tw-text-emerald-400' : 'tw-text-slate-600'"></i>
+                    </div>
+                    <span class="tw-text-slate-400 tw-text-xs tw-font-mono tw-max-w-[150px] tw-truncate">
+                      {{ c.video_url || 'No link added' }}
+                    </span>
+                  </div>
                 </td>
-                <td>
-                  <div class="ma-action-row">
-                    <button type="button" class="ma-btn-action ma-btn-action--primary" @click="openEdit(c)" title="Quick edit (video + details)">
-                      <i class="fas fa-pen"></i> Quick Edit
+                <td class="tw-px-8 tw-py-6">
+                  <div class="tw-flex tw-items-center tw-gap-2">
+                    <div :class="`tw-w-2 tw-h-2 tw-rounded-full ${c.status === 1 ? 'tw-bg-emerald-400 tw-animate-pulse' : 'tw-bg-slate-500'}`"></div>
+                    <span :class="`${c.status === 1 ? 'tw-text-emerald-400' : 'tw-text-slate-500'} tw-text-[10px] tw-font-black tw-uppercase tw-tracking-tighter text-glow`">
+                      {{ c.status === 1 ? 'Published' : 'Paused' }}
+                    </span>
+                  </div>
+                </td>
+                <td class="tw-px-8 tw-py-6 tw-text-right">
+                  <div class="tw-flex tw-items-center tw-justify-end tw-gap-2">
+                    <button @click="openEdit(c)" class="tw-w-10 tw-h-10 tw-bg-white/5 hover:tw-bg-indigo-500/20 tw-border tw-border-white/10 hover:tw-border-indigo-500/30 tw-rounded-xl tw-text-slate-400 hover:tw-text-indigo-400 tw-transition-all" title="Quick Update">
+                      <i class="fas fa-bolt tw-text-sm"></i>
                     </button>
-                    <router-link :to="`/admin/courses/edit/${c.id}`" class="ma-btn-action ma-btn-action--outline" title="Full edit page">
-                      <i class="fas fa-edit"></i> Full Edit
+                    <router-link :to="`/admin/courses/edit/${c.id}`" class="tw-w-10 tw-h-10 tw-bg-white/5 hover:tw-bg-violet-500/20 tw-border tw-border-white/10 hover:tw-border-violet-500/30 tw-rounded-xl tw-text-slate-400 hover:tw-text-violet-400 tw-transition-all tw-flex tw-items-center tw-justify-center" title="Advanced Edit">
+                      <i class="fas fa-cog tw-text-sm"></i>
                     </router-link>
                   </div>
                 </td>
@@ -130,110 +132,85 @@
         </div>
       </div>
 
-      <!-- Edit Course Modal -->
-      <div v-if="showModal" class="ma-modal-backdrop" @click.self="closeEdit">
-        <div class="ma-modal ma-modal--wide">
-          <div class="ma-modal__header">
-            <div class="ma-modal__title">
-              <div class="ma-modal__title-icon"><i class="fas fa-video"></i></div>
-              <div>
-                <div class="ma-modal__title-top">Edit Course</div>
-                <div class="ma-modal__title-sub">Video link & details</div>
+      <!-- Premium Edit Modal -->
+      <div v-if="showModal" class="tw-fixed tw-inset-0 tw-z-[100] tw-flex tw-items-center tw-justify-center tw-px-4">
+        <div class="tw-absolute tw-inset-0 tw-bg-black/80 tw-backdrop-blur-md" @click="closeEdit"></div>
+        <div class="tw-bg-slate-900 tw-border tw-border-white/10 tw-rounded-[2.5rem] tw-shadow-2xl tw-w-full tw-max-w-2xl tw-relative tw-z-10 tw-overflow-hidden tw-animate-fade-in-up">
+          <div class="tw-bg-gradient-to-br tw-from-indigo-500 tw-to-purple-700 tw-p-8">
+            <div class="tw-flex tw-justify-between tw-items-center">
+              <div class="tw-flex tw-items-center tw-gap-4">
+                <div class="tw-w-14 tw-h-14 tw-bg-white/10 tw-backdrop-blur-xl tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-border tw-border-white/10">
+                  <i class="fas fa-pen-nib tw-text-white tw-text-2xl"></i>
+                </div>
+                <div>
+                   <h3 class="tw-text-white tw-font-black tw-text-2xl tw-m-0">Quick Course Update</h3>
+                   <p class="tw-text-indigo-100/60 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest tw-mt-1">Synchronizing Catalog State</p>
+                </div>
               </div>
+              <button @click="closeEdit" class="tw-w-10 tw-h-10 tw-bg-white/5 hover:tw-bg-white/10 tw-rounded-xl tw-text-white tw-transition-all">
+                <i class="fas fa-times"></i>
+              </button>
             </div>
-            <button type="button" class="ma-modal__close" @click="closeEdit" aria-label="Close">&times;</button>
           </div>
-          <div class="ma-modal__body">
-            <form v-if="form" @submit.prevent="saveCourse" class="ma-form">
-              <div class="ma-edit-card ma-edit-card--indigo">
-                <div class="ma-edit-card__title"><i class="fas fa-heading me-1"></i>Basics</div>
-                <div class="ma-form-group">
-                  <label class="ma-form-label">Course name <span class="text-danger">*</span></label>
-                  <input v-model="form.name" type="text" class="ma-form-input" required maxlength="255" placeholder="Course name">
-                </div>
-                <div class="ma-form-group">
-                  <label class="ma-form-label">Description</label>
-                  <textarea v-model="form.description" class="ma-form-input" rows="3" placeholder="Short description"></textarea>
+          
+          <div class="tw-p-8 tw-max-h-[70vh] tw-overflow-y-auto custom-scrollbar">
+            <form v-if="form" @submit.prevent="saveCourse" class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-6">
+              <!-- Grid Layout for Inputs -->
+              <div class="tw-col-span-full">
+                <label class="tw-text-slate-500 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest tw-mb-2 tw-block">Course Title</label>
+                <input v-model="form.name" type="text" class="tw-w-full tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-px-5 tw-py-4 tw-text-white tw-font-bold focus:tw-border-indigo-500 tw-outline-none tw-transition-all" required>
+              </div>
+
+              <div class="tw-col-span-full">
+                <label class="tw-text-slate-500 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest tw-mb-2 tw-block">Video Content Link</label>
+                <div class="tw-relative">
+                   <div class="tw-absolute tw-left-5 tw-top-1/2 tw--translate-y-1/2 tw-text-indigo-400">
+                      <i class="fas fa-link"></i>
+                   </div>
+                   <input v-model="form.video_url" type="url" class="tw-w-full tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-pl-12 tw-pr-5 tw-py-4 tw-text-indigo-300 tw-font-mono tw-text-sm focus:tw-border-indigo-500 tw-outline-none tw-transition-all" placeholder="https://youtube.com/embed/...">
                 </div>
               </div>
 
-              <div class="ma-edit-card ma-edit-card--emerald">
-                <div class="ma-edit-card__title"><i class="fas fa-link me-1"></i>Video Link</div>
-                <div class="ma-form-group">
-                  <label class="ma-form-label">Video URL</label>
-                  <input v-model="form.video_url" type="url" class="ma-form-input" maxlength="500" placeholder="https://... (YouTube, Vimeo, or direct video link)">
-                  <small class="text-muted">Direct video link or embed URL. Leave empty to remove.</small>
-                </div>
+              <div>
+                <label class="tw-text-slate-500 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest tw-mb-2 tw-block">Niche / Category</label>
+                <input v-model="form.category" type="text" class="tw-w-full tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-px-5 tw-py-4 tw-text-white tw-font-bold focus:tw-border-indigo-500 tw-outline-none tw-transition-all">
               </div>
 
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <div class="ma-edit-card ma-edit-card--slate">
-                    <div class="ma-edit-card__title"><i class="fas fa-clock me-1"></i>Duration</div>
-                    <div class="ma-form-group mb-0">
-                      <label class="ma-form-label">Duration</label>
-                      <input v-model="form.duration" type="text" class="ma-form-input" maxlength="50" placeholder="e.g. 10 hours">
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="ma-edit-card ma-edit-card--violet">
-                    <div class="ma-edit-card__title"><i class="fas fa-tags me-1"></i>Category</div>
-                    <div class="ma-form-group mb-0">
-                      <label class="ma-form-label">Category</label>
-                      <input v-model="form.category" type="text" class="ma-form-input" maxlength="100" placeholder="e.g. Video Editing">
-                    </div>
-                  </div>
-                </div>
+              <div>
+                <label class="tw-text-slate-500 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest tw-mb-2 tw-block">Duration Estimate</label>
+                <input v-model="form.duration" type="text" class="tw-w-full tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-px-5 tw-py-4 tw-text-white tw-font-bold focus:tw-border-indigo-500 tw-outline-none tw-transition-all">
               </div>
-              <div class="row g-3">
-                <div class="col-md-4">
-                  <div class="ma-edit-card ma-edit-card--amber">
-                    <div class="ma-edit-card__title"><i class="fas fa-rupee-sign me-1"></i>Price</div>
-                    <div class="ma-form-group mb-0">
-                      <label class="ma-form-label">Price</label>
-                      <input v-model.number="form.price" type="number" step="0.01" min="0" class="ma-form-input" required>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="ma-edit-card ma-edit-card--blue">
-                    <div class="ma-edit-card__title"><i class="fas fa-box-open me-1"></i>Package</div>
-                    <div class="ma-form-group mb-0">
-                      <label class="ma-form-label">Package (Course Plan)</label>
-                      <select v-model.number="form.required_course_plan_id" class="ma-form-input" required>
-                        <option v-for="pkg in packages" :key="pkg.id" :value="pkg.id">{{ pkg.name }} (Level {{ pkg.level }})</option>
-                        <option v-if="packages.length === 0" value="1">– Load packages –</option>
-                      </select>
-                      <small class="text-muted">Is course kis package me dikhega (User → Packages)</small>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="ma-edit-card ma-edit-card--green">
-                    <div class="ma-edit-card__title"><i class="fas fa-toggle-on me-1"></i>Status</div>
-                    <div class="ma-form-group mb-0">
-                      <label class="ma-form-label">Status</label>
-                      <select v-model.number="form.status" class="ma-form-input">
-                        <option :value="1">Active</option>
-                        <option :value="0">Inactive</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
+
+              <div>
+                <label class="tw-text-slate-500 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest tw-mb-2 tw-block">Assigned Package</label>
+                <select v-model.number="form.required_course_plan_id" class="tw-w-full tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-px-5 tw-py-4 tw-text-white tw-font-bold focus:tw-border-indigo-500 tw-outline-none tw-transition-all">
+                   <option v-for="pkg in packages" :key="pkg.id" :value="pkg.id">{{ pkg.name }} (Lvl {{ pkg.level }})</option>
+                </select>
               </div>
-              <div class="ma-modal__footer">
-                <button type="button" class="ma-btn ma-btn--secondary" @click="closeEdit">Cancel</button>
-                <button type="submit" class="ma-btn ma-btn--primary">
-                  <i class="fas fa-save me-1"></i>
-                  Save
+
+              <div>
+                <label class="tw-text-slate-500 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest tw-mb-2 tw-block">Visibility Status</label>
+                <select v-model.number="form.status" class="tw-w-full tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-px-5 tw-py-4 tw-text-white tw-font-bold focus:tw-border-indigo-500 tw-outline-none tw-transition-all">
+                   <option :value="1">Public (Active)</option>
+                   <option :value="0">Draft (Inactive)</option>
+                </select>
+              </div>
+
+              <div class="tw-col-span-full tw-pt-6 tw-flex tw-gap-4">
+                <button type="submit" class="tw-flex-1 tw-py-4 tw-bg-gradient-to-r tw-from-indigo-600 tw-to-purple-600 tw-text-white tw-font-black tw-rounded-2xl tw-transition-all active:tw-scale-[0.98] hover:tw-shadow-xl hover:tw-shadow-indigo-500/20 tw-flex tw-items-center tw-justify-center tw-gap-3" :disabled="saving">
+                  <span v-if="!saving">Commit Changes</span>
+                  <span v-else>Processing...</span>
+                  <i v-if="!saving" class="fas fa-paper-plane tw-text-xs"></i>
+                  <div v-else class="tw-w-4 tw-h-4 tw-border-2 tw-border-white/30 tw-border-t-white tw-rounded-full tw-animate-spin"></div>
+                </button>
+                <button type="button" @click="closeEdit" class="tw-px-8 tw-py-4 tw-bg-white/5 hover:tw-bg-white/10 tw-text-slate-400 tw-font-bold tw-rounded-2xl tw-transition-all">
+                  Cancel
                 </button>
               </div>
             </form>
           </div>
         </div>
       </div>
-    </div>
   </MasterAdminLayout>
 </template>
 
@@ -420,187 +397,11 @@ export default {
 </script>
 
 <style scoped>
-.ma-header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-.ma-btn--glow { box-shadow: 0 10px 30px rgba(99,102,241,0.25); }
-
-.ma-kpi{
-  display:flex; align-items:center; gap:12px;
-  border-radius: 18px;
-  padding: 14px 16px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(30,41,59,0.75);
-  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+.text-glow {
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
 }
-.ma-kpi:hover{ transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.35); background: rgba(30,41,59,0.9); }
-.ma-kpi__icon{
-  width: 44px; height: 44px; border-radius: 14px;
-  display:flex; align-items:center; justify-content:center;
-  color: #fff; flex: 0 0 auto;
-}
-.ma-kpi__val{ font-size: 1.35rem; font-weight: 800; color: #f1f5f9; line-height: 1.1; }
-.ma-kpi__lbl{ font-size: .78rem; font-weight: 700; color: rgba(255,255,255,0.55); }
-.ma-kpi--indigo .ma-kpi__icon{ background: linear-gradient(135deg,#6366f1,#8b5cf6); }
-.ma-kpi--green .ma-kpi__icon{ background: linear-gradient(135deg,#10b981,#059669); }
-.ma-kpi--slate .ma-kpi__icon{ background: linear-gradient(135deg,#64748b,#334155); }
-.ma-kpi--amber .ma-kpi__icon{ background: linear-gradient(135deg,#f59e0b,#d97706); }
-
-.ma-action-row { display: flex; gap: 8px; flex-wrap: wrap; }
-
-.ma-table__loading, .ma-table__empty {
-  padding: 3rem 1rem !important;
-  text-align: center;
-  color: #94a3b8;
-}
-.ma-table__empty i { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; color: #475569; }
-.ma-table__empty p { margin: 0; }
-.ma-table__loading { display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
-.ma-spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid rgba(255,255,255,0.2);
-  border-top-color: #6366f1;
-  border-radius: 50%;
-  animation: ma-spin 0.8s linear infinite;
-}
-@keyframes ma-spin { to { transform: rotate(360deg); } }
-
-.ma-video-url {
-  font-size: 0.85rem;
-  color: #94a3b8;
-  max-width: 200px;
-  display: inline-block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.ma-badge {
-  padding: 4px 10px;
-  border-radius: 9999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-.ma-badge--success { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
-.ma-badge--muted { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
-.ma-badge--info { background: rgba(99, 102, 241, 0.25); color: #a5b4fc; }
-.ma-btn-action {
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-}
-.ma-btn-action--primary { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
-.ma-btn-action--primary:hover { background: rgba(99, 102, 241, 0.35); }
-.ma-btn-action--outline{
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.8);
-  border: 1px solid rgba(255,255,255,0.10);
-}
-.ma-btn-action--outline:hover{ background: rgba(255,255,255,0.10); }
-.ma-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: 20px;
-}
-.ma-modal {
-  background: rgba(15,23,42,0.92);
-  border-radius: 16px;
-  max-width: 560px;
-  width: 100%;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255,255,255,0.10);
-}
-.ma-modal--wide { max-width: 640px; }
-.ma-modal__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.18) 100%);
-}
-.ma-modal__title { display:flex; align-items:center; gap:12px; }
-.ma-modal__title-icon{
-  width: 42px; height: 42px; border-radius: 14px;
-  display:flex; align-items:center; justify-content:center;
-  background: rgba(255,255,255,0.10);
-  border: 1px solid rgba(255,255,255,0.10);
-  color: #fff;
-}
-.ma-modal__title-top{ font-size: 1.05rem; font-weight: 800; color: #f1f5f9; line-height: 1.1; }
-.ma-modal__title-sub{ font-size: 0.8rem; color: rgba(255,255,255,0.65); margin-top: 2px; }
-.ma-modal__close {
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 1.5rem;
-  cursor: pointer;
-  line-height: 1;
-}
-.ma-modal__body { padding: 24px; overflow-y: auto; }
-.ma-form-group { margin-bottom: 1rem; }
-.ma-form-label { display: block; margin-bottom: 6px; color: #cbd5e1; font-size: 0.9rem; }
-.ma-form-input {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(15, 23, 42, 0.6);
-  color: #f1f5f9;
-  font-size: 0.95rem;
-}
-.ma-form-input:focus {
-  outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-}
-.ma-modal__footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-.ma-btn { padding: 10px 20px; border-radius: 10px; font-weight: 600; border: none; cursor: pointer; }
-.ma-btn--primary { background: #6366f1; color: white; }
-.ma-btn--secondary { background: rgba(255, 255, 255, 0.1); color: #e2e8f0; }
-
-.ma-edit-card{
-  border-radius: 16px;
-  padding: 14px 14px 6px;
-  margin-bottom: 12px;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(30,41,59,0.45);
-}
-.ma-edit-card__title{
-  font-weight: 800;
-  font-size: 0.9rem;
-  margin-bottom: 10px;
-  color: #e2e8f0;
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.ma-edit-card--indigo{ border-left: 4px solid rgba(99,102,241,0.9); }
-.ma-edit-card--emerald{ border-left: 4px solid rgba(16,185,129,0.9); }
-.ma-edit-card--slate{ border-left: 4px solid rgba(148,163,184,0.7); }
-.ma-edit-card--violet{ border-left: 4px solid rgba(139,92,246,0.85); }
-.ma-edit-card--amber{ border-left: 4px solid rgba(245,158,11,0.9); }
-.ma-edit-card--blue{ border-left: 4px solid rgba(59,130,246,0.9); }
-.ma-edit-card--green{ border-left: 4px solid rgba(34,197,94,0.9); }
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 </style>

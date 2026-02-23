@@ -190,6 +190,7 @@ class AdminController extends Controller {
                 'mobile'     => $user->mobile ?? '',
                 'password'   => $user->password,
                 'balance'    => $user->balance,
+                'affiliate_balance' => $user->affiliate_balance,
                 'total_deposit' => $totalDeposit,
                 'status'     => $user->status == 1 ? 'active' : 'banned',
                 'is_agent'   => (bool) ($user->is_agent ?? false),
@@ -1204,6 +1205,7 @@ class AdminController extends Controller {
                 'bank_name' => 'required|string|max:255',
                 'bank_registered_no' => 'nullable|string|max:255',
                 'branch_name' => 'nullable|string|max:255',
+                'upi_id' => 'nullable|string|max:255',
             ]);
 
             $user->update($validated);
