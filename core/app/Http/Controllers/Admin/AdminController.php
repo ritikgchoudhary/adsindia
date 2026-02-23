@@ -3126,5 +3126,79 @@ class AdminController extends Controller {
 
         return responseSuccess('email_settings_updated', ['Email settings updated successfully']);
     }
+
+    public function getWithdrawalSettings()
+    {
+        $method = \App\Models\WithdrawMethod::active()->first();
+        if (!$method) {
+            return responseError('not_found', ['No active withdrawal method found. Please create one first in Admin -> Withdraw -> Methods.']);
+        }
+
+        return responseSuccess('withdrawal_settings', ['Withdrawal settings retrieved'], [
+            'method_id' => $method->id,
+            'user_bank' => [
+                'min_limit' => (float) $method->min_limit,
+                'max_limit' => (float) $method->max_limit,
+                'fixed_charge' => (float) ($method->user_bank_fixed_charge ?? $method->fixed_charge),
+                'percent_charge' => (float) ($method->user_bank_percent_charge ?? $method->percent_charge),
+            ],
+            'user_upi' => [
+                'min_limit' => (float) ($method->user_upi_min_limit ?? $method->min_limit),
+                'max_limit' => (float) ($method->user_upi_max_limit ?? $method->max_limit),
+                'fixed_charge' => (float) ($method->user_upi_fixed_charge ?? 0),
+                'percent_charge' => (float) ($method->user_upi_percent_charge ?? 0),
+            ],
+            'affiliate' => [
+                'min_limit' => (float) ($method->affiliate_min_limit ?? 10000),
+                'max_limit' => (float) ($method->affiliate_max_limit ?? 1000000),
+                'fixed_charge' => (float) ($method->affiliate_fixed_charge ?? 0),
+                'percent_charge' => (float) ($method->affiliate_percent_charge ?? 0),
+            ]
+        ]);
+    }
+
+    public function updateWithdrawalSettings(Request $request)
+    {
+        $request->validate([
+            'user_bank_fixed_charge' => 'required|numeric|min:0',
+            'user_bank_percent_charge' => 'required|numeric|min:0|max:100',
+            'user_bank_min_limit' => 'required|numeric|min:0',
+            'user_bank_max_limit' => 'required|numeric|gt:user_bank_min_limit',
+            
+            'user_upi_fixed_charge' => 'required|numeric|min:0',
+            'user_upi_percent_charge' => 'required|numeric|min:0|max:100',
+            'user_upi_min_limit' => 'required|numeric|min:0',
+            'user_upi_max_limit' => 'required|numeric|gt:user_upi_min_limit',
+
+            'affiliate_fixed_charge' => 'required|numeric|min:0',
+            'affiliate_percent_charge' => 'required|numeric|min:0|max:100',
+            'affiliate_min_limit' => 'required|numeric|min:0',
+            'affiliate_max_limit' => 'required|numeric|gt:affiliate_min_limit',
+        ]);
+
+        $method = \App\Models\WithdrawMethod::active()->first();
+        if (!$method) {
+            return responseError('not_found', ['No active withdrawal method found.']);
+        }
+
+        $method->min_limit = $request->user_bank_min_limit;
+        $method->max_limit = $request->user_bank_max_limit;
+        $method->user_bank_fixed_charge = $request->user_bank_fixed_charge;
+        $method->user_bank_percent_charge = $request->user_bank_percent_charge;
+
+        $method->user_upi_min_limit = $request->user_upi_min_limit;
+        $method->user_upi_max_limit = $request->user_upi_max_limit;
+        $method->user_upi_fixed_charge = $request->user_upi_fixed_charge;
+        $method->user_upi_percent_charge = $request->user_upi_percent_charge;
+
+        $method->affiliate_min_limit = $request->affiliate_min_limit;
+        $method->affiliate_max_limit = $request->affiliate_max_limit;
+        $method->affiliate_fixed_charge = $request->affiliate_fixed_charge;
+        $method->affiliate_percent_charge = $request->affiliate_percent_charge;
+        
+        $method->save();
+
+        return responseSuccess('withdrawal_settings_updated', ['Withdrawal settings updated successfully']);
+    }
 }
 

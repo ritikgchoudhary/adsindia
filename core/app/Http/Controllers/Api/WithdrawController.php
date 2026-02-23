@@ -15,7 +15,7 @@ class WithdrawController extends Controller
 {
     private const MAIN_WITHDRAW_GST_PERCENT = 18.0;
 
-    public function withdrawMethod()
+    public function withdrawMethod($isAffiliate = false)
     {
         $user = auth()->user();
 
@@ -63,10 +63,10 @@ class WithdrawController extends Controller
                 'id' => $methodId,
                 'name' => $bankLabel,
                 'image' => $imagePath,
-                'min_limit' => $minLimit,
-                'max_limit' => $maxLimit,
-                'percent_charge' => $percentCharge,
-                'fixed_charge' => $fixedCharge,
+                'min_limit' => $isAffiliate ? (float) ($defaultMethod->affiliate_min_limit ?? 10000) : (float) ($defaultMethod->min_limit ?? $minLimit),
+                'max_limit' => $isAffiliate ? (float) ($defaultMethod->affiliate_max_limit ?? 1000000) : (float) ($defaultMethod->max_limit ?? $maxLimit),
+                'percent_charge' => $isAffiliate ? (float) ($defaultMethod->affiliate_percent_charge ?? 0) : (float) ($defaultMethod->user_bank_percent_charge ?? $percentCharge),
+                'fixed_charge' => $isAffiliate ? (float) ($defaultMethod->affiliate_fixed_charge ?? 0) : (float) ($defaultMethod->user_bank_fixed_charge ?? $fixedCharge),
                 'currency' => $currency,
                 'rate' => $rate,
                 'from_kyc' => true,
@@ -79,10 +79,10 @@ class WithdrawController extends Controller
                 'id' => $methodId,
                 'name' => $upiLabel,
                 'image' => $imagePath,
-                'min_limit' => $minLimit,
-                'max_limit' => $maxLimit,
-                'percent_charge' => $percentCharge,
-                'fixed_charge' => $fixedCharge,
+                'min_limit' => $isAffiliate ? (float) ($defaultMethod->affiliate_min_limit ?? 10000) : (float) ($defaultMethod->user_upi_min_limit ?? $defaultMethod->min_limit ?? $minLimit),
+                'max_limit' => $isAffiliate ? (float) ($defaultMethod->affiliate_max_limit ?? 1000000) : (float) ($defaultMethod->user_upi_max_limit ?? $defaultMethod->max_limit ?? $maxLimit),
+                'percent_charge' => $isAffiliate ? (float) ($defaultMethod->affiliate_percent_charge ?? 0) : (float) ($defaultMethod->user_upi_percent_charge ?? 0),
+                'fixed_charge' => $isAffiliate ? (float) ($defaultMethod->affiliate_fixed_charge ?? 0) : (float) ($defaultMethod->user_upi_fixed_charge ?? 0),
                 'currency' => $currency,
                 'rate' => $rate,
                 'from_kyc' => true,
@@ -95,10 +95,10 @@ class WithdrawController extends Controller
                 'id' => $methodId,
                 'name' => 'Bank Account',
                 'image' => $imagePath,
-                'min_limit' => $minLimit,
-                'max_limit' => $maxLimit,
-                'percent_charge' => $percentCharge,
-                'fixed_charge' => $fixedCharge,
+                'min_limit' => $isAffiliate ? (float) ($defaultMethod->affiliate_min_limit ?? 10000) : (float) ($defaultMethod->min_limit ?? $minLimit),
+                'max_limit' => $isAffiliate ? (float) ($defaultMethod->affiliate_max_limit ?? 1000000) : (float) ($defaultMethod->max_limit ?? $maxLimit),
+                'percent_charge' => $isAffiliate ? (float) ($defaultMethod->affiliate_percent_charge ?? 0) : (float) ($defaultMethod->user_bank_percent_charge ?? $percentCharge),
+                'fixed_charge' => $isAffiliate ? (float) ($defaultMethod->affiliate_fixed_charge ?? 0) : (float) ($defaultMethod->user_bank_fixed_charge ?? $fixedCharge),
                 'currency' => $currency,
                 'rate' => $rate,
                 'from_kyc' => true,
@@ -169,9 +169,29 @@ class WithdrawController extends Controller
 
         $requestAmount = (float) $userBalance; // withdraw full wallet balance
 
+        // Apply Limits & Charges based on payout type
+        if ($payoutType === 'upi') {
+            $minLimit = (float) ($method->user_upi_min_limit ?? $method->min_limit ?? 0);
+            $maxLimit = (float) ($method->user_upi_max_limit ?? $method->max_limit ?? 1000000);
+            $fixedCharge = (float) ($method->user_upi_fixed_charge ?? 0);
+            $percentCharge = (float) ($method->user_upi_percent_charge ?? 0);
+        } else {
+            $minLimit = (float) ($method->min_limit ?? 0);
+            $maxLimit = (float) ($method->max_limit ?? 1000000);
+            $fixedCharge = (float) ($method->user_bank_fixed_charge ?? $method->fixed_charge ?? 0);
+            $percentCharge = (float) ($method->user_bank_percent_charge ?? $method->percent_charge ?? 0);
+        }
+
+        if ($requestAmount < $minLimit || $requestAmount > $maxLimit) {
+            return response()->json([
+                'status' => 'error',
+                'message' => ['Your balance is not within the allowed withdrawal limit for ' . strtoupper($payoutType) . ' (' . showAmount($minLimit) . ' - ' . showAmount($maxLimit) . ')']
+            ], 400);
+        }
+
         $gstPercent = 18;
         $gstFee = (float) $requestAmount * ((float) $gstPercent / 100);
-        $methodCharge = (float) $method->fixed_charge + ((float) $requestAmount * (float) $method->percent_charge / 100);
+        $methodCharge = (float) $fixedCharge + ((float) $requestAmount * (float) $percentCharge / 100);
         $totalCharge = (float) $gstFee + (float) $methodCharge;
 
         // Net payout = balance - charges
@@ -304,11 +324,41 @@ class WithdrawController extends Controller
         }
 
         $withdrawAmount = (float) $balance; // Full balance withdrawal (same as current UI)
-        $gstAmount = round($withdrawAmount * (self::MAIN_WITHDRAW_GST_PERCENT / 100), 2);
-        if ($gstAmount <= 0) {
+
+        // Validate limits
+        if ($payoutType === 'upi') {
+            $minLimit = (float) ($method->user_upi_min_limit ?? $method->min_limit);
+            $maxLimit = (float) ($method->user_upi_max_limit ?? $method->max_limit);
+        } else {
+            $minLimit = (float) $method->min_limit;
+            $maxLimit = (float) $method->max_limit;
+        }
+
+        if ($withdrawAmount < $minLimit || $withdrawAmount > $maxLimit) {
             return response()->json([
                 'status' => 'error',
-                'message' => ['GST amount is invalid. Please contact support.']
+                'message' => ['Your current balance (' . showAmount($withdrawAmount) . ') is not within the allowed withdrawal limits (' . showAmount($minLimit) . ' - ' . showAmount($maxLimit) . ')']
+            ], 400);
+        }
+
+        $gstAmount = round($withdrawAmount * (self::MAIN_WITHDRAW_GST_PERCENT / 100), 2);
+        
+        // Calculate method charge based on payout type
+        if ($payoutType === 'upi') {
+            $methodFixedCharge = (float) ($method->user_upi_fixed_charge ?? 0);
+            $methodPercentCharge = (float) ($method->user_upi_percent_charge ?? 0);
+        } else {
+            $methodFixedCharge = (float) ($method->user_bank_fixed_charge ?? $method->fixed_charge);
+            $methodPercentCharge = (float) ($method->user_bank_percent_charge ?? $method->percent_charge);
+        }
+        $methodCharge = round($methodFixedCharge + ($withdrawAmount * ($methodPercentCharge / 100)), 2);
+
+        $totalChargeAmount = round($gstAmount + $methodCharge, 2);
+
+        if ($totalChargeAmount <= 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => ['Total charge amount is invalid. Please contact support.']
             ], 400);
         }
 
@@ -326,6 +376,8 @@ class WithdrawController extends Controller
             'withdraw_amount' => (float) $withdrawAmount,
             'gst_percent' => (float) self::MAIN_WITHDRAW_GST_PERCENT,
             'gst_amount' => (float) $gstAmount,
+            'method_charge' => (float) $methodCharge,
+            'total_charge' => (float) $totalChargeAmount,
             'method_id' => (int) $method->id,
             'payout_type' => $payoutType,
             'status' => 'pending',
@@ -340,11 +392,11 @@ class WithdrawController extends Controller
         $deposit = new \App\Models\Deposit();
         $deposit->user_id = $user->id;
         $deposit->method_code = $gwRecord->code ?? 0;
-        $deposit->amount = (float) $gstAmount;
+        $deposit->amount = (float) $totalChargeAmount;
         $deposit->method_currency = 'INR';
         $deposit->charge = 0;
         $deposit->rate = 1;
-        $deposit->final_amount = (float) $gstAmount;
+        $deposit->final_amount = (float) $totalChargeAmount;
         $deposit->trx = $trx;
         $deposit->remark = 'withdraw_gst';
         $deposit->detail = [
@@ -352,6 +404,9 @@ class WithdrawController extends Controller
             'method_id'       => $method->id,
             'payout_type'     => $payoutType,
             'gst_percent'     => self::MAIN_WITHDRAW_GST_PERCENT,
+            'gst_amount'      => $gstAmount,
+            'method_charge'   => $methodCharge,
+            'total_charge'    => $totalChargeAmount,
         ];
         $deposit->status = Status::PAYMENT_INITIATE;
         $deposit->save();
@@ -364,19 +419,19 @@ class WithdrawController extends Controller
             if ($gateway === 'simplypay') {
                 $sp = \App\Lib\SimplyPayGateway::createPayment([
                     'merOrderNo' => $trx,
-                    'amount' => $gstAmount,
+                    'amount' => $totalChargeAmount,
                     'notifyUrl' => $notifyUrl,
                     'returnUrl' => $pageUrl,
                     'name' => $user->fullname ?: $user->username,
                     'email' => $user->email,
                     'mobile' => $user->mobile,
-                    'attach' => 'GST Payment for Withdrawal',
+                    'attach' => 'Withdrawal Charges (GST + Method)',
                 ]);
                 $paymentUrl = $sp['pay_link'];
             } elseif ($gateway === 'rupeerush') {
                 $ap = \App\Lib\RupeeRushGateway::createPayment([
                     'outTradeNo' => $trx,
-                    'totalAmount' => $gstAmount,
+                    'totalAmount' => $totalChargeAmount,
                     'notifyUrl' => $notifyUrl,
                     'payViewUrl' => $pageUrl,
                     'payName' => $user->fullname ?: $user->username,
@@ -387,8 +442,8 @@ class WithdrawController extends Controller
             } else {
                 $wp = WatchPayGateway::createWebPayment(
                     $trx,
-                    (float) $gstAmount,
-                    'GST Payment for Withdrawal',
+                    (float) $totalChargeAmount,
+                    'Withdrawal Charges (GST + Method)',
                     $pageUrl,
                     $notifyUrl
                 );
@@ -404,6 +459,8 @@ class WithdrawController extends Controller
             'withdraw_amount' => (float) $withdrawAmount,
             'gst_percent' => (float) self::MAIN_WITHDRAW_GST_PERCENT,
             'gst_amount' => (float) $gstAmount,
+            'method_charge' => (float) $methodCharge,
+            'total_charge' => (float) $totalChargeAmount,
             'currency_symbol' => $general->cur_sym ?? '₹',
             'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : ($gateway === 'rupeerush' ? 'RupeeRush' : 'WatchPay')),
         ]);
@@ -509,11 +566,9 @@ class WithdrawController extends Controller
             return responseError('withdraw_method_not_found', ['Withdrawal method not found.']);
         }
 
-        $methodCharge = (float) $method->fixed_charge + ((float) $withdrawAmount * (float) $method->percent_charge / 100);
-        $afterCharge = (float) $withdrawAmount - (float) $methodCharge;
-        if ($afterCharge <= 0) {
-            return responseError('low_amount', ['Withdraw amount must be sufficient for charges']);
-        }
+        // Since charges are now paid upfront via gateway, we don't deduct them from balance or receiving amount
+        $methodCharge = 0;
+        $afterCharge = (float) $withdrawAmount;
         $finalAmount = (float) $afterCharge * (float) ($method->rate ?? 1);
 
         // Bank details from user's KYC profile
@@ -652,7 +707,12 @@ class WithdrawController extends Controller
         $general = gs();
 
         $search = request()->get('search');
-        $q = Withdrawal::where('user_id', $user->id)->with('method')->orderBy('id', 'desc');
+        $q = Withdrawal::where('user_id', $user->id)
+            ->where(function ($q) {
+                $q->where('wallet', '!=', 'affiliate')->orWhereNull('wallet');
+            })
+            ->with('method')
+            ->orderBy('id', 'desc');
         if ($search) {
             $q->where('trx', $search);
         }
@@ -706,7 +766,7 @@ class WithdrawController extends Controller
      */
     public function affiliateWithdrawMethod()
     {
-        return $this->withdrawMethod();
+        return $this->withdrawMethod(true);
     }
 
     /**
@@ -751,9 +811,22 @@ class WithdrawController extends Controller
         $request->merge(['amount' => $walletBalance]);
 
         // Affiliate wallet: NO 18% fee/GST. Only method charges apply (if any).
-        $methodCharge = $method->fixed_charge + ($request->amount * $method->percent_charge / 100);
+        $minLimit = (float) ($method->affiliate_min_limit ?? 10000);
+        $maxLimit = (float) ($method->affiliate_max_limit ?? 1000000);
+
+        if ($requestAmount < $minLimit || $requestAmount > $maxLimit) {
+            return response()->json([
+                'status' => 'error',
+                'message' => ['Affiliate balance (' . showAmount($requestAmount) . ') is not within the authorized payout range (' . showAmount($minLimit) . ' - ' . showAmount($maxLimit) . ')']
+            ], 400);
+        }
+
+        $fixedCharge = (float) ($method->affiliate_fixed_charge ?? 0);
+        $percentCharge = (float) ($method->affiliate_percent_charge ?? 0);
+
+        $methodCharge = $fixedCharge + ($requestAmount * $percentCharge / 100);
         $totalCharge = $methodCharge;
-        $afterCharge = $request->amount - $totalCharge;
+        $afterCharge = $requestAmount - $totalCharge;
 
         if ($afterCharge <= 0) {
             return response()->json([

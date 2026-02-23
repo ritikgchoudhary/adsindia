@@ -94,18 +94,18 @@
 
                 <div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-200 tw-p-4 sm:tw-p-5 tw-mb-6">
                   <div class="tw-flex tw-justify-between tw-items-center tw-gap-3 tw-mb-3 tw-pb-3 tw-border-b tw-border-slate-100">
-                    <span class="tw-text-slate-500 tw-text-sm tw-font-medium">18% GST (Pay via Gateway)</span>
+                    <span class="tw-text-slate-500 tw-text-sm tw-font-medium">18% GST Fee</span>
                     <span class="tw-text-slate-800 tw-font-bold">{{ currencySymbol }}{{ gstFee }}</span>
                   </div>
                   <div class="tw-flex tw-justify-between tw-items-center tw-gap-3 tw-mb-3 tw-pb-3 tw-border-b tw-border-slate-100">
-                    <span class="tw-text-slate-500 tw-text-sm tw-font-medium">Method Charges</span>
+                    <span class="tw-text-slate-500 tw-text-sm tw-font-medium">Method Processing Fee</span>
                     <span class="tw-text-slate-800 tw-font-bold">{{ currencySymbol }}{{ methodFee }}</span>
                   </div>
-                  <div class="tw-flex tw-justify-between tw-items-center tw-gap-3 tw-mb-3 tw-pb-3 tw-border-b tw-border-slate-100">
-                    <span class="tw-text-slate-500 tw-text-sm tw-font-medium">Total Charges (For Info)</span>
-                    <span class="tw-text-slate-800 tw-font-bold">{{ currencySymbol }}{{ processingFee }}</span>
+                  <div class="tw-flex tw-justify-between tw-items-center tw-gap-3 tw-mb-3 tw-pb-3 tw-border-b tw-border-slate-100 tw-bg-slate-50 tw-p-2 tw-rounded-lg">
+                    <span class="tw-text-indigo-600 tw-text-sm tw-font-bold">Total Payable via Gateway</span>
+                    <span class="tw-text-indigo-600 tw-font-black">{{ currencySymbol }}{{ processingFee }}</span>
                   </div>
-                  <div class="tw-flex tw-justify-between tw-items-center tw-gap-3 tw-mb-0">
+                  <div class="tw-flex tw-justify-between tw-items-center tw-gap-3 tw-mb-0 tw-mt-2">
                     <span class="tw-text-slate-800 tw-text-sm tw-font-bold">You will receive</span>
                     <span class="tw-text-green-600 tw-font-extrabold tw-text-base sm:tw-text-lg">{{ currencySymbol }}{{ finalAmount }}</span>
                   </div>
@@ -114,10 +114,10 @@
                 <button 
                   type="submit" 
                   class="tw-w-full tw-py-3.5 sm:tw-py-4 tw-rounded-xl tw-font-bold tw-text-white tw-text-base sm:tw-text-lg tw-transition-all tw-shadow-lg disabled:tw-opacity-60 disabled:tw-cursor-not-allowed tw-flex tw-items-center tw-justify-center tw-gap-2"
-                  :class="canSubmit && !isLoading ? 'tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-shadow-indigo-500/30' : 'tw-bg-slate-400'"
-                  :disabled="!canSubmit || isLoading"
+                  :class="canSubmit && !isLoading ? 'tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-shadow-indigo-500/30 tw-scale-[1.01]' : 'tw-bg-slate-400'"
+                  :disabled="isLoading"
                 >
-                  <span>Pay 18% GST & Withdraw</span>
+                  <span>Pay Total Charges & Withdraw</span>
                 </button>
 
                 <p class="tw-mt-4 tw-text-center tw-text-xs tw-text-slate-400 tw-leading-relaxed">
@@ -131,38 +131,136 @@
     </div>
 
     <!-- KYC Error Modal -->
-    <div v-if="showKYCErrorModal" class="tw-fixed tw-inset-0 tw-z-[60] tw-flex tw-items-center tw-justify-center tw-px-4">
-      <div class="tw-absolute tw-inset-0 tw-bg-black/60 tw-backdrop-blur-sm" @click="showKYCErrorModal = false"></div>
-      <div class="tw-bg-white tw-rounded-2xl tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden tw-animate-fade-in-up">
-        <div class="tw-bg-gradient-to-r tw-from-red-500 tw-to-rose-600 tw-p-6 tw-text-center">
-          <div class="tw-w-16 tw-h-16 tw-bg-white/20 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-3">
-             <i class="fas fa-user-shield tw-text-white tw-text-3xl"></i>
+    <div v-if="showKYCErrorModal" class="tw-fixed tw-inset-0 tw-z-[100] tw-flex tw-items-center tw-justify-center tw-px-4">
+      <div class="tw-absolute tw-inset-0 tw-bg-black/80 tw-backdrop-blur-md" @click="showKYCErrorModal = false"></div>
+      <div class="tw-bg-slate-900 tw-border tw-border-white/10 tw-rounded-[2.5rem] tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden tw-animate-fade-in-up">
+        <div class="tw-bg-gradient-to-br tw-from-rose-500 tw-to-red-700 tw-p-10 tw-text-center">
+          <div class="tw-w-20 tw-h-20 tw-bg-white/10 tw-backdrop-blur-xl tw-rounded-3xl tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-6 tw-shadow-inner tw-border tw-border-white/10">
+            <i class="fas fa-fingerprint tw-text-white tw-text-4xl"></i>
           </div>
-          <h3 class="tw-text-white tw-font-bold tw-text-xl tw-mb-1">KYC Verification Required</h3>
-          <p class="tw-text-red-100 tw-text-sm">Complete your verification to withdraw funds</p>
+          <h3 class="tw-text-white tw-font-black tw-text-2xl tw-mb-2">Identity Required</h3>
+          <p class="tw-text-rose-100 tw-text-sm tw-opacity-80">KYC verification is mandatory</p>
         </div>
         
-        <div class="tw-p-6">
-          <div class="tw-bg-red-50 tw-border tw-border-red-100 tw-rounded-xl tw-p-4 tw-text-center tw-mb-6">
-            <p class="tw-text-red-800 tw-text-sm tw-font-medium tw-leading-relaxed">
+        <div class="tw-p-10">
+          <div class="tw-bg-white/5 tw-rounded-3xl tw-p-6 tw-text-center tw-mb-8 tw-border tw-border-white/5">
+            <p class="tw-text-slate-300 tw-text-sm tw-font-medium tw-leading-relaxed tw-m-0">
                {{ kycErrorMessage || 'You are unable to withdraw due to pending KYC verification.' }}
             </p>
           </div>
 
-          <div class="tw-flex tw-flex-col tw-gap-3">
+          <div class="tw-flex tw-flex-col tw-gap-4">
             <router-link 
               to="/user/account-kyc" 
-              class="tw-w-full tw-py-3 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-semibold tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-gap-2 tw-no-underline tw-transition-colors"
+              class="tw-w-full tw-py-4 tw-bg-gradient-to-r tw-from-indigo-600 tw-to-violet-600 hover:tw-shadow-xl hover:tw-shadow-indigo-500/20 tw-text-white tw-font-black tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-gap-3 tw-no-underline tw-transition-all hover:tw-scale-[1.02]"
             >
-              <i class="fas fa-user-check"></i> Complete KYC Now
+              <i class="fas fa-shield-alt"></i> Verify Identity Now
             </router-link>
             <button 
               @click="showKYCErrorModal = false"
-              class="tw-w-full tw-py-3 tw-bg-slate-100 hover:tw-bg-slate-200 tw-text-slate-700 tw-font-semibold tw-rounded-xl tw-transition-colors"
+              class="tw-w-full tw-py-4 tw-bg-white/5 hover:tw-bg-white/10 tw-text-slate-400 tw-font-bold tw-rounded-2xl tw-transition-all"
             >
-              Close
+              Maybe Later
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Withdrawal Limit Error Modal (New Premium Design) -->
+    <div v-if="showLimitErrorModal" class="tw-fixed tw-inset-0 tw-z-[100] tw-flex tw-items-center tw-justify-center tw-px-4">
+      <div class="tw-absolute tw-inset-0 tw-bg-black/80 tw-backdrop-blur-md" @click="showLimitErrorModal = false"></div>
+      <div class="tw-bg-slate-900 tw-border tw-border-white/10 tw-rounded-[2.5rem] tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden tw-animate-fade-in-up">
+        <div class="tw-bg-gradient-to-br tw-from-amber-400 tw-to-orange-600 tw-p-10 tw-text-center">
+          <div class="tw-w-20 tw-h-20 tw-bg-white/10 tw-backdrop-blur-xl tw-rounded-3xl tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-6 tw-shadow-inner tw-border tw-border-white/10">
+            <i class="fas fa-wallet tw-text-white tw-text-4xl"></i>
+          </div>
+          <h3 class="tw-text-white tw-font-black tw-text-2xl tw-mb-2">Limit Not Reached</h3>
+          <p class="tw-text-amber-100 tw-text-sm tw-opacity-80">Threshold Required for Payout</p>
+        </div>
+        
+        <div class="tw-p-10">
+          <div class="tw-bg-white/5 tw-rounded-3xl tw-p-8 tw-text-center tw-mb-8 tw-border tw-border-white/5">
+            <p class="tw-text-slate-300 tw-text-base tw-font-medium tw-leading-relaxed tw-m-0">
+               {{ limitErrorMessage }}
+            </p>
+            <div class="tw-mt-6 tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-bg-amber-500/10 tw-rounded-full tw-border tw-border-amber-500/20">
+              <span class="tw-w-2 tw-h-2 tw-bg-amber-500 tw-rounded-full tw-animate-pulse"></span>
+              <span class="tw-text-amber-400 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest">Growth in Progress</span>
+            </div>
+          </div>
+
+          <button 
+            @click="showLimitErrorModal = false"
+            class="tw-group tw-w-full tw-py-4 tw-bg-gradient-to-r tw-from-slate-700 tw-to-slate-800 hover:tw-from-indigo-600 hover:tw-to-violet-600 tw-text-white tw-font-black tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-gap-3 tw-transition-all hover:tw-scale-[1.02] hover:tw-shadow-xl hover:tw-shadow-indigo-500/20"
+          >
+            <span>Got It, Back to Dashboard</span>
+            <i class="fas fa-arrow-right tw-text-sm tw-transition-transform group-hover:tw-translate-x-1"></i>
+          </button>
+          
+          <p class="tw-mt-6 tw-text-center tw-text-slate-500 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-opacity-50">Secure Withdrawal Policy</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Withdrawal Confirmation Modal (New Premium Design) -->
+    <div v-if="showConfirmModal" class="tw-fixed tw-inset-0 tw-z-[100] tw-flex tw-items-center tw-justify-center tw-px-4">
+      <div class="tw-absolute tw-inset-0 tw-bg-black/80 tw-backdrop-blur-md" @click="showConfirmModal = false"></div>
+      <div class="tw-bg-slate-900 tw-border tw-border-white/10 tw-rounded-[2.5rem] tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden tw-animate-fade-in-up">
+        <div class="tw-bg-gradient-to-br tw-from-indigo-500 tw-to-purple-700 tw-p-10 tw-text-center">
+          <div class="tw-w-20 tw-h-20 tw-bg-white/10 tw-backdrop-blur-xl tw-rounded-3xl tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-6 tw-shadow-inner tw-border tw-border-white/10">
+            <i class="fas fa-paper-plane tw-text-white tw-text-4xl"></i>
+          </div>
+          <h3 class="tw-text-white tw-font-black tw-text-2xl tw-mb-2">Confirm Request</h3>
+          <p class="tw-text-indigo-100 tw-text-sm tw-opacity-80">Review your withdrawal summary</p>
+        </div>
+        
+        <div class="tw-p-10">
+          <div class="tw-bg-white/5 tw-rounded-3xl tw-p-6 tw-mb-8 tw-border tw-border-white/5">
+            <div class="tw-space-y-4">
+              <div class="tw-flex tw-justify-between tw-items-center">
+                <span class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Withdrawal</span>
+                <span class="tw-text-white tw-font-black">{{ currencySymbol }}{{ formatAmount(amount) }}</span>
+              </div>
+              <div class="tw-flex tw-justify-between tw-items-center">
+                <span class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Payout Type</span>
+                <span class="tw-text-indigo-400 tw-font-black tw-uppercase">{{ selectedMethodData?.payout_type }}</span>
+              </div>
+              <div class="tw-h-px tw-bg-white/10 tw-my-2"></div>
+              <div class="tw-flex tw-justify-between tw-items-center">
+                <span class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">18% GST Fee</span>
+                <span class="tw-text-white tw-font-black">{{ currencySymbol }}{{ gstFee }}</span>
+              </div>
+              <div class="tw-flex tw-justify-between tw-items-center">
+                <span class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Method Fee</span>
+                <span class="tw-text-white tw-font-black">{{ currencySymbol }}{{ methodFee }}</span>
+              </div>
+              <div class="tw-bg-indigo-500/10 tw-p-4 tw-rounded-2xl tw-mt-4 tw-border tw-border-indigo-500/20">
+                <div class="tw-flex tw-justify-between tw-items-center">
+                  <span class="tw-text-indigo-300 tw-text-xs tw-font-black tw-uppercase tw-tracking-widest">Total Payable</span>
+                  <span class="tw-text-indigo-400 tw-text-xl tw-font-black">{{ currencySymbol }}{{ processingFee }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tw-flex tw-flex-col tw-gap-4">
+            <button 
+              @click="confirmAndRedirect"
+              class="tw-w-full tw-py-4 tw-bg-gradient-to-r tw-from-indigo-600 tw-to-violet-600 hover:tw-shadow-xl hover:tw-shadow-indigo-500/20 tw-text-white tw-font-black tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-gap-3 tw-transition-all hover:tw-scale-[1.02]"
+            >
+              <span>Verify & Pay Fees</span>
+              <i class="fas fa-shield-check"></i>
+            </button>
+            <button 
+              @click="showConfirmModal = false"
+              class="tw-w-full tw-py-4 tw-bg-white/5 hover:tw-bg-white/10 tw-text-slate-400 tw-font-bold tw-rounded-2xl tw-transition-all"
+            >
+              Cancel
+            </button>
+          </div>
+          
+          <p class="tw-mt-8 tw-text-center tw-text-slate-600 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-opacity-50">Secure Transaction Verified</p>
         </div>
       </div>
     </div>
@@ -209,14 +307,20 @@ export default {
       } catch (_) {}
     }
 
+    const showConfirmModal = ref(false)
+
     const canSubmit = computed(() => {
       if (!selectedMethodData.value) return false
       const balance = parseFloat(availableBalance.value) || 0
       const amt = parseFloat(amount.value) || 0
       const charges = parseFloat(processingFee.value) || 0
+      
       // Full balance withdrawal: amount must equal balance, and charges must be less than balance
       return balance > 0 && amt > 0 && Math.abs(amt - balance) < 0.01 && charges < balance
     })
+
+    const showLimitErrorModal = ref(false)
+    const limitErrorMessage = ref('')
 
     const methodKey = (m) => `${m?.id || 0}:${m?.payout_type || 'bank'}`
 
@@ -248,9 +352,10 @@ export default {
       const gstCharge = (amt / 100) * 18
       const totalCharge = gstCharge + methodCharge
 
-      // GST is paid separately via gateway; user receives after method charges only
-      const receiveAmount = Math.max(0, amt - methodCharge)
-      const totalDeduct = Math.max(0, amt)
+      // Both GST and method charges are now paid upfront via gateway.
+      // User receives full balance into their bank/upi.
+      const receiveAmount = amt 
+      const totalDeduct = amt
 
       gstFee.value = gstCharge.toFixed(2)
       methodFee.value = methodCharge.toFixed(2)
@@ -260,42 +365,37 @@ export default {
     }
 
     const handleSubmit = async () => {
-      if (!canSubmit.value || isLoading.value) return
-      isLoading.value = true
-      const amt = parseFloat(amount.value) || 0
-      const methodPercentCharge = parseFloat(selectedMethodData.value?.percent_charge) || 0
-      const methodFixedCharge = parseFloat(selectedMethodData.value?.fixed_charge) || 0
-      const methodPercentChargeAmount = (amt / 100) * methodPercentCharge
-      const methodCharge = methodPercentChargeAmount + methodFixedCharge
-      const gstCharge = (amt / 100) * 18
-      const totalCharge = gstCharge + methodCharge
-      const totalAmount = Math.max(0, amt - methodCharge) // net received (GST paid separately)
-      const payoutType = selectedMethodData.value?.payout_type || 'bank'
-
-      const confirmed = confirm(
-        `Withdrawal Request\n\n` +
-        `Withdrawal Amount (Full Balance): ${currencySymbol.value}${formatAmount(amt)}\n` +
-        `Payout Type: ${String(payoutType).toUpperCase()}\n` +
-        `18% GST (Pay via Gateway): ${currencySymbol.value}${formatAmount(gstCharge)}\n` +
-        `Method Charges: ${currencySymbol.value}${formatAmount(methodCharge)}\n` +
-        `Total Charges: ${currencySymbol.value}${formatAmount(totalCharge)}\n` +
-        `You will receive (Net): ${currencySymbol.value}${formatAmount(totalAmount)}\n` +
-        `Next step: Pay GST in gateway. After payment, your withdrawal will be submitted.\n\n` +
-        `Do you want to continue?`
-      )
+      if (isLoading.value) return
       
-      if (!confirmed) {
-        isLoading.value = false
-        return
+      // Limit validation
+      if (selectedMethodData.value) {
+        const balance = parseFloat(availableBalance.value) || 0
+        const min = parseFloat(selectedMethodData.value.min_limit) || 0
+        const max = parseFloat(selectedMethodData.value.max_limit) || 0
+        
+        if (balance < min || balance > max) {
+          limitErrorMessage.value = `To withdraw via ${String(selectedMethodData.value.payout_type || 'BANK').toUpperCase()}, your balance must be between ${currencySymbol.value}${formatAmount(min)} and ${currencySymbol.value}${formatAmount(max)}. Keep growing your balance to reach this goal!`
+          showLimitErrorModal.value = true
+          return
+        }
       }
+
+      if (!canSubmit.value) return
+      showConfirmModal.value = true
+    }
+
+    const confirmAndRedirect = async () => {
+      showConfirmModal.value = false
+      isLoading.value = true
+      const payoutType = selectedMethodData.value?.payout_type || 'bank'
 
       try {
         const methodCode = Number(String(selectedMethodKey.value || '0').split(':')[0] || 0)
         const redirectUrl =
           `/user/payment-redirect?flow=withdraw_gst&method_code=${encodeURIComponent(methodCode)}` +
           `&payout_type=${encodeURIComponent(payoutType)}` +
-          `&amount=${gstFee.value}` +
-          `&plan_name=${encodeURIComponent('18% GST Fee')}` +
+          `&amount=${processingFee.value}` +
+          `&plan_name=${encodeURIComponent('Withdrawal Service Fees')}` +
           `&back=${encodeURIComponent('/user/withdraw')}`
 
         const w = window.open(redirectUrl, '_blank')
@@ -422,7 +522,8 @@ export default {
       withdrawMethods, selectedMethodKey, methodKey, amount, currencySymbol,
       processingFee, finalAmount, gstFee, methodFee, totalDeduction,
       availableBalance, canSubmit, onMethodChange,
-      calculateAmount, handleSubmit, showKYCErrorModal, kycErrorMessage,
+      calculateAmount, handleSubmit, confirmAndRedirect, showKYCErrorModal, kycErrorMessage,
+      showLimitErrorModal, limitErrorMessage, showConfirmModal,
       isLoading, isLoadingMethods, formatAmount,
       fallbackMethodIcon, onMethodImageError
     }

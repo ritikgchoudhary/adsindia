@@ -137,6 +137,135 @@
         </div>
       </div>
 
+      <!-- Withdrawal Settings -->
+      <div class="ma-card mb-4 animate__animated animate__fadeIn">
+        <div class="ma-card__header ma-card__header--gradient">
+          <div class="d-flex align-items-center">
+            <div class="ma-icon-box me-3 icon-orange">
+              <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div>
+              <h5 class="ma-card__title">Withdrawal Configuration</h5>
+              <p class="ma-card__subtitle">Manage limits and service charges for different payout destinations.</p>
+            </div>
+          </div>
+        </div>
+        <div class="ma-card__body">
+          <div v-if="withdrawLoadError" class="alert alert-danger mb-4">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ withdrawLoadError }}
+            <button type="button" class="btn btn-sm btn-outline-danger ms-2" @click="fetchWithdrawalSettings">Retry</button>
+          </div>
+
+          <form v-else class="ma-form" @submit.prevent="saveWithdrawalSettings">
+            
+            <!-- User Bank Settings -->
+            <div class="section-divider mb-4">
+              <span class="section-title">User Withdrawal: Bank Transfer</span>
+            </div>
+            <div class="row g-4 mb-4">
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Min Limit (₹)</label>
+                  <input v-model.number="withdrawForm.user_bank_min_limit" type="number" class="ma-form-input" required>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Max Limit (₹)</label>
+                  <input v-model.number="withdrawForm.user_bank_max_limit" type="number" class="ma-form-input" required>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Fixed Charge (₹)</label>
+                  <input v-model.number="withdrawForm.user_bank_fixed_charge" type="number" class="ma-form-input" required>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Percent Charge (%)</label>
+                  <input v-model.number="withdrawForm.user_bank_percent_charge" type="number" step="0.01" class="ma-form-input" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- User UPI Settings -->
+            <div class="section-divider mb-4">
+              <span class="section-title">User Withdrawal: UPI Transfer</span>
+            </div>
+            <div class="row g-4 mb-4">
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Min Limit (₹)</label>
+                  <input v-model.number="withdrawForm.user_upi_min_limit" type="number" class="ma-form-input" required>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Max Limit (₹)</label>
+                  <input v-model.number="withdrawForm.user_upi_max_limit" type="number" class="ma-form-input" required>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Fixed Charge (₹)</label>
+                  <input v-model.number="withdrawForm.user_upi_fixed_charge" type="number" class="ma-form-input" required>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Percent Charge (%)</label>
+                  <input v-model.number="withdrawForm.user_upi_percent_charge" type="number" step="0.01" class="ma-form-input" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Affiliate Settings -->
+            <div class="section-divider mb-4">
+              <span class="section-title">Affiliate Wallet Withdrawals</span>
+            </div>
+            <div class="row g-4 mb-4">
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Min Limit (₹)</label>
+                  <input v-model.number="withdrawForm.affiliate_min_limit" type="number" class="ma-form-input" required>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Max Limit (₹)</label>
+                  <input v-model.number="withdrawForm.affiliate_max_limit" type="number" class="ma-form-input" required>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Fixed Charge (₹)</label>
+                  <input v-model.number="withdrawForm.affiliate_fixed_charge" type="number" class="ma-form-input" required>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Percent Charge (%)</label>
+                  <input v-model.number="withdrawForm.affiliate_percent_charge" type="number" step="0.01" class="ma-form-input" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="ma-form-actions mt-4 bg-dark p-3 rounded-4 border border-1 border-secondary">
+              <button type="submit" class="ma-btn ma-btn--primary px-5" :disabled="withdrawSaving">
+                <i v-if="withdrawSaving" class="fas fa-spinner fa-spin me-2"></i>
+                <i v-else class="fas fa-save me-2"></i>
+                Save Withdrawal Settings
+              </button>
+              <span v-if="withdrawSaveMessage" class="ms-3" :class="withdrawSaveSuccess ? 'text-success' : 'text-danger'">
+                {{ withdrawSaveMessage }}
+              </span>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- Gateway Test -->
       <div class="ma-card mb-4 animate__animated animate__fadeIn">
         <div class="ma-card__header ma-card__header--gradient">
@@ -360,7 +489,75 @@ export default {
       }
     }
 
-    onMounted(fetchAdsSettings)
+    // Withdrawal settings state
+    const withdrawLoadError = ref('')
+    const withdrawSaving = ref(false)
+    const withdrawSaveMessage = ref('')
+    const withdrawSaveSuccess = ref(false)
+
+    const withdrawForm = reactive({
+      user_bank_min_limit: 10000,
+      user_bank_max_limit: 1000000,
+      user_bank_fixed_charge: 0,
+      user_bank_percent_charge: 0,
+      user_upi_min_limit: 10000,
+      user_upi_max_limit: 1000000,
+      user_upi_fixed_charge: 0,
+      user_upi_percent_charge: 0,
+      affiliate_min_limit: 10000,
+      affiliate_max_limit: 1000000,
+      affiliate_fixed_charge: 0,
+      affiliate_percent_charge: 0
+    })
+
+    const fetchWithdrawalSettings = async () => {
+      withdrawLoadError.value = ''
+      try {
+        const res = await api.get('/admin/withdrawal-settings')
+        if (res.data?.status === 'success' && res.data.data) {
+          const d = res.data.data
+          withdrawForm.user_bank_min_limit = d.user_bank.min_limit
+          withdrawForm.user_bank_max_limit = d.user_bank.max_limit
+          withdrawForm.user_bank_fixed_charge = d.user_bank.fixed_charge
+          withdrawForm.user_bank_percent_charge = d.user_bank.percent_charge
+
+          withdrawForm.user_upi_min_limit = d.user_upi.min_limit
+          withdrawForm.user_upi_max_limit = d.user_upi.max_limit
+          withdrawForm.user_upi_fixed_charge = d.user_upi.fixed_charge
+          withdrawForm.user_upi_percent_charge = d.user_upi.percent_charge
+
+          withdrawForm.affiliate_min_limit = d.affiliate.min_limit
+          withdrawForm.affiliate_max_limit = d.affiliate.max_limit
+          withdrawForm.affiliate_fixed_charge = d.affiliate.fixed_charge
+          withdrawForm.affiliate_percent_charge = d.affiliate.percent_charge
+        }
+      } catch (e) {
+        withdrawLoadError.value = 'Failed to load withdrawal settings'
+      }
+    }
+
+    const saveWithdrawalSettings = async () => {
+      withdrawSaving.value = true
+      withdrawSaveMessage.value = ''
+      withdrawSaveSuccess.value = false
+      try {
+        const res = await api.post('/admin/withdrawal-settings', withdrawForm)
+        if (res.data?.status === 'success') {
+          withdrawSaveSuccess.value = true
+          withdrawSaveMessage.value = 'Withdrawal settings updated.'
+          setTimeout(() => { withdrawSaveMessage.value = '' }, 4000)
+        }
+      } catch (e) {
+        withdrawSaveMessage.value = e.response?.data?.message?.[0] || 'Save failed'
+      } finally {
+        withdrawSaving.value = false
+      }
+    }
+
+    onMounted(() => {
+      fetchAdsSettings()
+      fetchWithdrawalSettings()
+    })
 
     return {
       gatewayTest,
@@ -374,6 +571,13 @@ export default {
       adsBulletsText,
       fetchAdsSettings,
       saveAdsSettings,
+      withdrawLoadError,
+      withdrawSaving,
+      withdrawSaveMessage,
+      withdrawSaveSuccess,
+      withdrawForm,
+      fetchWithdrawalSettings,
+      saveWithdrawalSettings
     }
   }
 }
@@ -416,6 +620,11 @@ export default {
 .icon-purple {
   background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
   box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+}
+
+.icon-orange {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .ma-card__title { font-size: 1.25rem; font-weight: 800; color: white; margin: 0; letter-spacing: -0.5px; }

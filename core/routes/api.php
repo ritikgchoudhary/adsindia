@@ -374,6 +374,10 @@ Route::namespace('Api')->name('api.')->group(function(){
             // Reports & Analytics (Master Admin)
             Route::get('reports', [\App\Http\Controllers\Admin\AdminController::class, 'reports']);
 
+            // Withdrawal Settings (Master Admin)
+            Route::get('withdrawal-settings', [\App\Http\Controllers\Admin\AdminController::class, 'getWithdrawalSettings']);
+            Route::post('withdrawal-settings', [\App\Http\Controllers\Admin\AdminController::class, 'updateWithdrawalSettings']);
+
             // Email Settings
             Route::get('email-settings', [\App\Http\Controllers\Admin\AdminController::class, 'getEmailSettings']);
             Route::post('email-settings', [\App\Http\Controllers\Admin\AdminController::class, 'updateEmailSettings']);

@@ -1,111 +1,187 @@
 <template>
   <DashboardLayout page-title="Affiliate Withdraw" :dark-theme="true">
-    <div class="tw-flex tw-justify-center">
-      <div class="tw-w-full lg:tw-w-3/4 xl:tw-w-2/3">
-        <form @submit.prevent="handleSubmit">
-          <div class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-overflow-hidden">
-            <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-2 tw-max-h-[800px]">
+    <div class="tw-min-h-screen tw-py-8 tw-px-4">
+      <div class="tw-max-w-5xl tw-mx-auto">
+        <!-- Header Section -->
+        <div class="tw-mb-8 tw-flex tw-flex-col md:tw-flex-row md:tw-items-center tw-justify-between tw-gap-4">
+          <div>
+            <h1 class="tw-text-3xl tw-font-extrabold tw-text-white tw-tracking-tight tw-mb-2">Affiliate Withdrawal</h1>
+            <p class="tw-text-slate-400 tw-text-sm">Transfer your affiliate earnings to your linked bank account securely.</p>
+          </div>
+          <router-link to="/user/affiliate-income" class="tw-group tw-flex tw-items-center tw-gap-2 tw-px-5 tw-py-2.5 tw-bg-white/5 hover:tw-bg-white/10 tw-border tw-border-white/10 tw-rounded-xl tw-text-white tw-font-semibold tw-transition-all tw-no-underline">
+            <i class="fas fa-arrow-left tw-text-xs tw-transition-transform group-hover:tw--translate-x-1"></i>
+            <span>Back to Income</span>
+          </router-link>
+        </div>
 
-              <!-- Left: Methods -->
-              <div class="tw-p-6 tw-border-b lg:tw-border-b-0 lg:tw-border-r tw-border-slate-200 tw-overflow-y-auto custom-scrollbar tw-max-h-[600px] lg:tw-h-auto">
-                <div class="tw-flex tw-items-center tw-justify-between tw-gap-3 tw-mb-4">
-                  <h5 class="tw-text-slate-800 tw-font-bold tw-text-lg tw-mb-0">Select Withdrawal Method</h5>
-                  <router-link to="/user/affiliate-income" class="tw-text-sm tw-font-bold tw-text-indigo-600 tw-no-underline hover:tw-underline">
-                    Back
-                  </router-link>
+        <form @submit.prevent="handleSubmit" class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-8">
+          <!-- Left: Selection & Tools (2/3 width) -->
+          <div class="lg:tw-col-span-2 tw-space-y-6">
+            <!-- Method Selection (Moved to Top) -->
+            <div class="tw-bg-slate-900/50 tw-backdrop-blur-xl tw-border tw-border-white/10 tw-rounded-3xl tw-p-6 md:tw-p-8">
+              <div class="tw-flex tw-items-center tw-justify-between tw-mb-6">
+                <div class="tw-flex tw-items-center tw-gap-3">
+                  <div class="tw-w-10 tw-h-10 tw-bg-indigo-500/20 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
+                    <i class="fas fa-university tw-text-indigo-400"></i>
+                  </div>
+                  <h2 class="tw-text-xl tw-font-bold tw-text-white tw-m-0">Select Destination</h2>
                 </div>
+                <span class="tw-hidden md:tw-block tw-px-3 tw-py-1 tw-bg-white/5 tw-rounded-full tw-text-[10px] tw-text-slate-400 tw-font-bold tw-uppercase">KYC Verified Required</span>
+              </div>
 
-
-                <!-- Loading State -->
-                <div v-if="isLoadingMethods" class="tw-flex tw-justify-center tw-py-12">
-                  <div class="tw-w-10 tw-h-10 tw-border-4 tw-border-indigo-500 tw-border-t-transparent tw-rounded-full tw-animate-spin"></div>
+              <!-- Loading State -->
+              <div v-if="isLoadingMethods" class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-py-12">
+                <div class="tw-relative tw-w-16 tw-h-16">
+                  <div class="tw-absolute tw-inset-0 tw-border-4 tw-border-indigo-500/20 tw-rounded-full"></div>
+                  <div class="tw-absolute tw-inset-0 tw-border-4 tw-border-indigo-500 tw-border-t-transparent tw-rounded-full tw-animate-spin"></div>
                 </div>
+                <p class="tw-text-slate-400 tw-text-sm tw-mt-4">Loading secure methods...</p>
+              </div>
 
-                <div v-else-if="withdrawMethods.length === 0" class="tw-text-center tw-py-12 tw-bg-amber-50 tw-rounded-xl tw-border tw-border-amber-100">
-                  <i class="fas fa-exclamation-circle tw-text-amber-500 tw-text-4xl tw-mb-3"></i>
-                  <p class="tw-text-slate-700 tw-font-semibold">No withdrawal methods available.</p>
-                  <p class="tw-text-slate-500 tw-text-sm">Please check back later or contact support.</p>
+              <div v-else-if="withdrawMethods.length === 0" class="tw-text-center tw-py-12 tw-bg-white/5 tw-rounded-2xl tw-border tw-border-dashed tw-border-white/10">
+                <div class="tw-w-16 tw-h-16 tw-bg-amber-500/10 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
+                  <i class="fas fa-exclamation-triangle tw-text-amber-500 tw-text-2xl"></i>
                 </div>
+                <p class="tw-text-white tw-font-semibold">No methods found</p>
+                <p class="tw-text-slate-500 tw-text-sm tw-max-w-xs tw-mx-auto">We couldn't find any available withdrawal methods for your region.</p>
+              </div>
 
-                <div v-else class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
-                  <label
-                    v-for="(method, index) in withdrawMethods"
-                    :key="method?.id || index"
-                    class="tw-relative tw-cursor-pointer tw-bg-slate-50 tw-border-2 tw-rounded-xl tw-p-4 tw-transition-all hover:tw-bg-white hover:tw-shadow-md hover:tw-border-indigo-200"
-                    :class="selectedMethod === method.id ? 'tw-border-indigo-600 tw-bg-white tw-shadow-md' : 'tw-border-transparent'"
+              <div v-else class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+                <label
+                  v-for="(method, index) in withdrawMethods"
+                  :key="method?.id || index"
+                  class="tw-group tw-relative tw-cursor-pointer tw-transition-all tw-duration-300"
+                >
+                  <input
+                    type="radio"
+                    name="method_code"
+                    :value="method.id"
+                    v-model="selectedMethod"
+                    @change="onMethodChange(method)"
+                    class="tw-hidden"
                   >
-                    <input
-                      type="radio"
-                      name="method_code"
-                      :value="method.id"
-                      v-model="selectedMethod"
-                      @change="onMethodChange(method)"
-                      class="tw-hidden"
+                  <div 
+                    class="tw-bg-white/5 tw-border-2 tw-rounded-2xl tw-p-5 tw-flex tw-items-center tw-gap-4 tw-transition-all tw-duration-300 group-hover:tw-bg-white/10"
+                    :class="selectedMethod === method.id ? 'tw-border-indigo-500 tw-bg-indigo-500/5 tw-shadow-lg tw-shadow-indigo-500/10' : 'tw-border-white/5'"
+                  >
+                    <div class="tw-relative tw-w-14 tw-h-14 tw-bg-white tw-rounded-xl tw-p-2 tw-flex tw-items-center tw-justify-center tw-shadow-sm">
+                      <img
+                        :src="method.image || fallbackMethodIcon"
+                        :alt="method.name"
+                        class="tw-w-full tw-h-full tw-object-contain"
+                        @error="onMethodImageError"
+                      >
+                    </div>
+                    <div class="tw-flex-1">
+                      <span class="tw-block tw-text-white tw-font-bold tw-text-sm">{{ method.name }}</span>
+                      <span class="tw-block tw-text-slate-400 tw-text-[10px] tw-mt-1">Default Payout Method</span>
+                    </div>
+                    <div class="tw-w-6 tw-h-6 tw-rounded-full tw-border-2 tw-flex tw-items-center tw-justify-center tw-transition-all"
+                      :class="selectedMethod === method.id ? 'tw-bg-indigo-500 tw-border-indigo-500' : 'tw-border-white/20'"
                     >
-                    <div class="tw-flex tw-flex-col tw-items-center tw-gap-3">
-                      <div class="tw-w-16 tw-h-16 tw-object-contain tw-bg-white tw-rounded-lg tw-p-2 tw-shadow-sm tw-flex tw-items-center tw-justify-center">
-                        <img
-                          :src="method.image || fallbackMethodIcon"
-                          :alt="method.name"
-                          class="tw-w-full tw-h-full tw-object-contain"
-                          @error="onMethodImageError"
-                        >
-                      </div>
-                      <span class="tw-font-bold tw-text-slate-700 tw-text-sm tw-text-center">{{ method.name }}</span>
+                      <i v-if="selectedMethod === method.id" class="fas fa-check tw-text-white tw-text-[10px]"></i>
                     </div>
-                    <div v-if="selectedMethod === method.id" class="tw-absolute tw-top-3 tw-right-3 tw-w-6 tw-h-6 tw-bg-indigo-600 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-white tw-text-xs">
-                      <i class="fas fa-check"></i>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Balance Card (Now Below Selection) -->
+            <div class="tw-relative tw-overflow-hidden tw-rounded-3xl tw-bg-gradient-to-br tw-from-slate-800 tw-to-slate-900 tw-p-8 tw-shadow-2xl tw-border tw-border-white/5">
+              <div class="tw-relative tw-z-10">
+                <div class="tw-flex tw-justify-between tw-items-start tw-mb-8">
+                  <div class="tw-w-12 tw-h-12 tw-bg-indigo-500/20 tw-backdrop-blur-md tw-rounded-xl tw-flex tw-items-center tw-justify-center">
+                    <i class="fas fa-wallet tw-text-indigo-400 tw-text-xl"></i>
+                  </div>
+                  <div class="tw-text-right">
+                    <span class="tw-text-white/60 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Affiliate Wallet</span>
+                    <div class="tw-flex tw-items-center tw-gap-1 tw-justify-end tw-mt-1">
+                      <div class="tw-w-2 tw-h-2 tw-bg-emerald-400 tw-rounded-full tw-animate-pulse"></div>
+                      <span class="tw-text-emerald-400 tw-text-[10px] tw-font-bold tw-uppercase">Active</span>
                     </div>
-                  </label>
+                  </div>
+                </div>
+                
+                <div class="tw-mb-2">
+                  <span class="tw-text-white/80 tw-text-sm tw-font-medium">Total Withdrawable Balance</span>
+                  <div class="tw-flex tw-items-baseline tw-gap-2 tw-mt-1">
+                    <span class="tw-text-white tw-text-4xl md:tw-text-5xl tw-font-black">{{ currencySymbol }}{{ formatAmount(availableBalance) }}</span>
+                  </div>
+                </div>
+                
+                <div class="tw-mt-6 tw-pt-6 tw-border-t tw-border-white/10 tw-flex tw-items-center tw-justify-between">
+                  <p class="tw-text-slate-400 tw-text-xs tw-max-w-[250px]">Withdrawals are processed within 24-48 business hours after request.</p>
+                  <div class="tw-flex tw-items-center tw-gap-2">
+                    <i class="fas fa-shield-alt tw-text-indigo-400/50 tw-text-2xl"></i>
+                    <span class="tw-text-[10px] tw-text-slate-500 tw-font-bold tw-uppercase">Secure Gateway</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Decorative elements -->
+              <div class="tw-absolute tw-top-[-20%] tw-right-[-10%] tw-w-64 tw-h-64 tw-bg-indigo-500/5 tw-rounded-full tw-blur-3xl"></div>
+              <div class="tw-absolute tw-bottom-[-10%] tw-left-[-5%] tw-w-48 tw-h-48 tw-bg-white/5 tw-rounded-full tw-blur-2xl"></div>
+            </div>
+          </div>
+
+          <!-- Right: Summary (1/3 width) -->
+          <div class="tw-space-y-6">
+            <div class="tw-bg-slate-900/50 tw-backdrop-blur-xl tw-border tw-border-white/10 tw-rounded-3xl tw-p-6 tw-sticky tw-top-8">
+              <h3 class="tw-text-lg tw-font-bold tw-text-white tw-mb-6 tw-flex tw-items-center tw-gap-2">
+                <i class="fas fa-file-invoice-dollar tw-text-indigo-400"></i>
+                Withdrawal Summary
+              </h3>
+
+              <div class="tw-space-y-4 tw-mb-8">
+                <div class="tw-flex tw-justify-between tw-items-center tw-pb-3 tw-border-b tw-border-white/5">
+                  <span class="tw-text-slate-400 tw-text-sm">Request Amount</span>
+                  <span class="tw-text-white tw-font-bold">{{ currencySymbol }}{{ formatAmount(availableBalance) }}</span>
+                </div>
+                <div class="tw-flex tw-justify-between tw-items-center tw-pb-3 tw-border-b tw-border-white/5">
+                  <span class="tw-text-slate-400 tw-text-sm">Service Fee</span>
+                  <span class="tw-text-rose-400 tw-font-bold">- {{ currencySymbol }}{{ processingFee }}</span>
+                </div>
+                <div class="tw-flex tw-justify-between tw-items-center tw-pb-3 tw-border-b tw-border-white/5">
+                  <span class="tw-text-slate-400 tw-text-sm">Handling Charges</span>
+                  <span class="tw-text-rose-400 tw-font-bold">Free</span>
+                </div>
+                
+                <div class="tw-pt-2 tw-mt-4 tw-p-4 tw-bg-indigo-500/10 tw-rounded-2xl tw-border tw-border-indigo-500/20">
+                  <div class="tw-flex tw-justify-between tw-items-center">
+                    <span class="tw-text-indigo-200 tw-text-xs tw-font-bold tw-uppercase">Net Payout</span>
+                    <span class="tw-text-white tw-text-2xl tw-font-black">{{ currencySymbol }}{{ finalAmount }}</span>
+                  </div>
                 </div>
               </div>
 
-              <!-- Right: Full wallet withdraw + fee -->
-              <div class="tw-p-6 tw-bg-slate-50/50">
-                <div class="tw-bg-emerald-600 tw-rounded-xl tw-p-5 tw-text-white tw-mb-6 tw-shadow-lg tw-shadow-emerald-500/20">
-                  <p class="tw-text-emerald-100 tw-font-semibold tw-text-xs tw-uppercase tw-tracking-wider tw-mb-1">Withdrawable Amount (affiliate wallet)</p>
-                  <h3 class="tw-text-3xl tw-font-bold tw-mb-0">{{ currencySymbol }}{{ formatAmount(availableBalance) }}</h3>
-                  <p class="tw-text-emerald-100 tw-text-sm tw-mt-2 tw-mb-0">Your entire affiliate wallet balance will be withdrawn at once.</p>
-                </div>
-
-                <div class="tw-bg-slate-100 tw-rounded-xl tw-border tw-border-slate-200 tw-p-4 tw-mb-4">
-                  <p class="tw-text-slate-800 tw-text-sm tw-font-semibold tw-mb-1">
-                    <i class="fas fa-info-circle tw-mr-1"></i> No 18% GST on affiliate withdrawals
-                  </p>
-                  <p class="tw-text-slate-600 tw-text-sm tw-m-0">
-                    Affiliate users can withdraw directly. Only method charges (if any) may apply.
+              <div class="tw-bg-blue-500/10 tw-border tw-border-blue-500/20 tw-rounded-2xl tw-p-4 tw-mb-6">
+                <div class="tw-flex tw-gap-3">
+                  <i class="fas fa-info-circle tw-text-blue-400 tw-mt-1"></i>
+                  <p class="tw-text-blue-100 tw-text-[11px] tw-m-0 tw-leading-relaxed">
+                    <strong>Zero Tax Benefit:</strong> Affiliate withdrawals are exempt from 18% GST deduction. Enjoy your full earnings!
                   </p>
                 </div>
+              </div>
 
-                <div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-200 tw-p-5 tw-mb-6">
-                  <div class="tw-flex tw-justify-between tw-items-center tw-mb-3 tw-pb-3 tw-border-b tw-border-slate-100">
-                    <span class="tw-text-slate-500 tw-text-sm tw-font-medium">Method Charges (if any)</span>
-                    <span class="tw-text-slate-800 tw-font-bold">{{ currencySymbol }}{{ processingFee }}</span>
-                  </div>
-                  <div class="tw-flex tw-justify-between tw-items-center">
-                    <span class="tw-text-slate-800 tw-text-sm tw-font-bold">You will receive</span>
-                    <span class="tw-text-green-600 tw-font-extrabold tw-text-lg">{{ currencySymbol }}{{ finalAmount }}</span>
-                  </div>
-                </div>
+              <button
+                type="submit"
+                class="tw-group tw-w-full tw-relative tw-overflow-hidden tw-py-4 tw-rounded-2xl tw-font-black tw-text-white tw-text-lg tw-transition-all tw-duration-300 disabled:tw-opacity-50 disabled:tw-cursor-not-allowed tw-flex tw-items-center tw-justify-center tw-gap-3"
+                :class="canSubmit && !isLoading ? 'tw-bg-gradient-to-r tw-from-indigo-600 tw-to-violet-600 hover:tw-shadow-xl hover:tw-shadow-indigo-500/40 hover:tw-scale-[1.02]' : 'tw-bg-white/10 tw-text-white/30'"
+                :disabled="!canSubmit || isLoading"
+              >
+                <span class="tw-relative tw-z-10">{{ isLoading ? 'Verifying...' : 'Submit Request' }}</span>
+                <i v-if="!isLoading" class="fas fa-paper-plane tw-text-sm tw-relative tw-z-10 tw-transition-transform group-hover:tw-translate-x-1 group-hover:tw--translate-y-1"></i>
+                <div v-else class="tw-w-5 tw-h-5 tw-border-2 tw-border-white/30 tw-border-t-white tw-rounded-full tw-animate-spin"></div>
+                
+                <!-- Shine animation -->
+                <div class="tw-absolute tw-top-0 tw-left-[-100%] tw-w-full tw-h-full tw-bg-gradient-to-r tw-from-transparent tw-via-white/20 tw-to-transparent tw-skew-x-[-25deg] tw-transition-all tw-duration-1000 group-hover:tw-left-[100%]"></div>
+              </button>
 
-                <button
-                  type="submit"
-                  class="tw-w-full tw-py-4 tw-rounded-xl tw-font-bold tw-text-white tw-text-lg tw-transition-all tw-shadow-lg disabled:tw-opacity-60 disabled:tw-cursor-not-allowed tw-flex tw-items-center tw-justify-center tw-gap-2"
-                  :class="canSubmit && !isLoading ? 'tw-bg-emerald-600 hover:tw-bg-emerald-700 tw-shadow-emerald-500/30' : 'tw-bg-slate-400'"
-                  :disabled="!canSubmit || isLoading"
-                >
-                  <span>Withdraw (Affiliate)</span>
-                </button>
-
-                <p class="tw-mt-4 tw-text-center tw-text-xs tw-text-slate-400 tw-leading-relaxed">
-                  Funds will be sent to your KYC bank account after admin review.
-                </p>
-
-                <div class="tw-mt-4 tw-text-center">
-                  <router-link to="/user/affiliate-withdraw/history" class="tw-text-sm tw-font-bold tw-text-indigo-600 tw-no-underline hover:tw-underline">
-                    View Affiliate Withdraw History
-                  </router-link>
-                </div>
+              <div class="tw-mt-8 tw-text-center">
+                <router-link to="/user/affiliate-withdraw/history" class="tw-text-xs tw-font-bold tw-text-indigo-400 hover:tw-text-indigo-300 tw-no-underline tw-flex tw-items-center tw-justify-center tw-gap-2">
+                  <i class="fas fa-history"></i>
+                  <span>View Withdrawal History</span>
+                </router-link>
               </div>
             </div>
           </div>
@@ -113,37 +189,127 @@
       </div>
     </div>
 
-    <!-- KYC Error Modal -->
-    <div v-if="showKYCErrorModal" class="tw-fixed tw-inset-0 tw-z-[60] tw-flex tw-items-center tw-justify-center tw-px-4">
-      <div class="tw-absolute tw-inset-0 tw-bg-black/60 tw-backdrop-blur-sm" @click="showKYCErrorModal = false"></div>
-      <div class="tw-bg-white tw-rounded-2xl tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden tw-animate-fade-in-up">
-        <div class="tw-bg-gradient-to-r tw-from-red-500 tw-to-rose-600 tw-p-6 tw-text-center">
-          <div class="tw-w-16 tw-h-16 tw-bg-white/20 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-3">
-            <i class="fas fa-user-shield tw-text-white tw-text-3xl"></i>
+    <!-- KYC Error Modal (Modernized) -->
+    <div v-if="showKYCErrorModal" class="tw-fixed tw-inset-0 tw-z-[100] tw-flex tw-items-center tw-justify-center tw-px-4">
+      <div class="tw-absolute tw-inset-0 tw-bg-black/80 tw-backdrop-blur-md" @click="showKYCErrorModal = false"></div>
+      <div class="tw-bg-slate-900 tw-border tw-border-white/10 tw-rounded-[2.5rem] tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden tw-animate-fade-in-up">
+        <div class="tw-bg-gradient-to-br tw-from-rose-500 tw-to-red-700 tw-p-10 tw-text-center">
+          <div class="tw-w-20 tw-h-20 tw-bg-white/10 tw-backdrop-blur-xl tw-rounded-3xl tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-6 tw-shadow-inner tw-border tw-border-white/10">
+            <i class="fas fa-fingerprint tw-text-white tw-text-4xl"></i>
           </div>
-          <h3 class="tw-text-white tw-font-bold tw-text-xl tw-mb-1">KYC Verification Required</h3>
-          <p class="tw-text-red-100 tw-text-sm">Complete your verification to withdraw affiliate funds</p>
+          <h3 class="tw-text-white tw-font-black tw-text-2xl tw-mb-2">Identity Required</h3>
+          <p class="tw-text-rose-100 tw-text-sm tw-opacity-80">KYC verification is mandatory</p>
         </div>
-
-        <div class="tw-p-6">
-          <div class="tw-bg-red-50 tw-border tw-border-red-100 tw-rounded-xl tw-p-4 tw-text-center tw-mb-6">
-            <p class="tw-text-red-800 tw-text-sm tw-font-medium tw-leading-relaxed">
-              {{ kycErrorMessage || 'You are unable to withdraw due to pending KYC verification.' }}
+        
+        <div class="tw-p-10">
+          <div class="tw-bg-white/5 tw-rounded-3xl tw-p-6 tw-text-center tw-mb-8 tw-border tw-border-white/5">
+            <p class="tw-text-slate-300 tw-text-sm tw-font-medium tw-leading-relaxed tw-m-0">
+               {{ kycErrorMessage || 'You are unable to withdraw due to pending KYC verification.' }}
             </p>
           </div>
 
-          <div class="tw-flex tw-flex-col tw-gap-3">
-            <router-link
-              to="/user/account-kyc"
-              class="tw-w-full tw-py-3 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-semibold tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-gap-2 tw-no-underline tw-transition-colors"
+          <div class="tw-flex tw-flex-col tw-gap-4">
+            <router-link 
+              to="/user/account-kyc" 
+              class="tw-w-full tw-py-4 tw-bg-gradient-to-r tw-from-indigo-600 tw-to-violet-600 hover:tw-shadow-xl hover:tw-shadow-indigo-500/20 tw-text-white tw-font-black tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-gap-3 tw-no-underline tw-transition-all hover:tw-scale-[1.02]"
             >
-              <i class="fas fa-user-check"></i> Complete KYC Now
+              <i class="fas fa-shield-alt"></i> Verify Identity Now
             </router-link>
-            <button
+            <button 
               @click="showKYCErrorModal = false"
-              class="tw-w-full tw-py-3 tw-bg-slate-100 hover:tw-bg-slate-200 tw-text-slate-700 tw-font-semibold tw-rounded-xl tw-transition-colors"
+              class="tw-w-full tw-py-4 tw-bg-white/5 hover:tw-bg-white/10 tw-text-slate-400 tw-font-bold tw-rounded-2xl tw-transition-all"
             >
-              Close
+              Maybe Later
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Withdrawal Limit Error Modal (Premium Design) -->
+    <div v-if="showLimitErrorModal" class="tw-fixed tw-inset-0 tw-z-[100] tw-flex tw-items-center tw-justify-center tw-px-4">
+      <div class="tw-absolute tw-inset-0 tw-bg-black/80 tw-backdrop-blur-md" @click="showLimitErrorModal = false"></div>
+      <div class="tw-bg-slate-900 tw-border tw-border-white/10 tw-rounded-[2.5rem] tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden tw-animate-fade-in-up">
+        <div class="tw-bg-gradient-to-br tw-from-amber-400 tw-to-orange-600 tw-p-10 tw-text-center">
+          <div class="tw-w-20 tw-h-20 tw-bg-white/10 tw-backdrop-blur-xl tw-rounded-3xl tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-6 tw-shadow-inner tw-border tw-border-white/10">
+            <i class="fas fa-wallet tw-text-white tw-text-4xl"></i>
+          </div>
+          <h3 class="tw-text-white tw-font-black tw-text-2xl tw-mb-2">Limit Not Reached</h3>
+          <p class="tw-text-amber-100 tw-text-sm tw-opacity-80">Threshold Required for Payout</p>
+        </div>
+        
+        <div class="tw-p-10">
+          <div class="tw-bg-white/5 tw-rounded-3xl tw-p-8 tw-text-center tw-mb-8 tw-border tw-border-white/5">
+            <p class="tw-text-slate-300 tw-text-base tw-font-medium tw-leading-relaxed tw-m-0">
+               {{ limitErrorMessage }}
+            </p>
+            <div class="tw-mt-6 tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-bg-amber-500/10 tw-rounded-full tw-border tw-border-amber-500/20">
+              <span class="tw-w-2 tw-h-2 tw-bg-amber-500 tw-rounded-full tw-animate-pulse"></span>
+              <span class="tw-text-amber-400 tw-text-[10px] tw-font-black tw-uppercase tw-tracking-widest">Growth in Progress</span>
+            </div>
+          </div>
+
+          <button 
+            @click="showLimitErrorModal = false"
+            class="tw-group tw-w-full tw-py-4 tw-bg-gradient-to-r tw-from-slate-700 tw-to-slate-800 hover:tw-from-indigo-600 hover:tw-to-violet-600 tw-text-white tw-font-black tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-gap-3 tw-transition-all hover:tw-scale-[1.02] hover:tw-shadow-xl hover:tw-shadow-indigo-500/20"
+          >
+            <span>Got It, Back to Dashboard</span>
+            <i class="fas fa-arrow-right tw-text-sm tw-transition-transform group-hover:tw-translate-x-1"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Withdrawal Confirmation Modal (Premium Design) -->
+    <div v-if="showConfirmModal" class="tw-fixed tw-inset-0 tw-z-[100] tw-flex tw-items-center tw-justify-center tw-px-4">
+      <div class="tw-absolute tw-inset-0 tw-bg-black/80 tw-backdrop-blur-md" @click="showConfirmModal = false"></div>
+      <div class="tw-bg-slate-900 tw-border tw-border-white/10 tw-rounded-[2.5rem] tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden tw-animate-fade-in-up">
+        <div class="tw-bg-gradient-to-br tw-from-indigo-500 tw-to-purple-700 tw-p-10 tw-text-center">
+          <div class="tw-w-20 tw-h-20 tw-bg-white/10 tw-backdrop-blur-xl tw-rounded-3xl tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-6 tw-shadow-inner tw-border tw-border-white/10">
+            <i class="fas fa-paper-plane tw-text-white tw-text-4xl"></i>
+          </div>
+          <h3 class="tw-text-white tw-font-black tw-text-2xl tw-mb-2">Confirm Request</h3>
+          <p class="tw-text-indigo-100 tw-text-sm tw-opacity-80">Review your affiliate payout</p>
+        </div>
+        
+        <div class="tw-p-10">
+          <div class="tw-bg-white/5 tw-rounded-3xl tw-p-6 tw-mb-8 tw-border tw-border-white/5">
+            <div class="tw-space-y-4">
+              <div class="tw-flex tw-justify-between tw-items-center">
+                <span class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Affiliate Pay</span>
+                <span class="tw-text-white tw-font-black">{{ currencySymbol }}{{ formatAmount(availableBalance) }}</span>
+              </div>
+              <div class="tw-flex tw-justify-between tw-items-center">
+                <span class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Payout Method</span>
+                <span class="tw-text-indigo-400 tw-font-black tw-uppercase">{{ selectedMethodData?.name }}</span>
+              </div>
+              <div class="tw-h-px tw-bg-white/10 tw-my-2"></div>
+              <div class="tw-flex tw-justify-between tw-items-center">
+                <span class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Processing Fee</span>
+                <span class="tw-text-rose-400 tw-font-black">{{ currencySymbol }}{{ processingFee }}</span>
+              </div>
+              <div class="tw-bg-emerald-500/10 tw-p-4 tw-rounded-2xl tw-mt-4 tw-border tw-border-emerald-500/20">
+                <div class="tw-flex tw-justify-between tw-items-center">
+                  <span class="tw-text-emerald-300 tw-text-xs tw-font-black tw-uppercase tw-tracking-widest">Net Payout</span>
+                  <span class="tw-text-emerald-400 tw-text-xl tw-font-black">{{ currencySymbol }}{{ finalAmount }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tw-flex tw-flex-col tw-gap-4">
+            <button 
+              @click="confirmAndSubmit"
+              class="tw-w-full tw-py-4 tw-bg-gradient-to-r tw-from-indigo-600 tw-to-violet-600 hover:tw-shadow-xl hover:tw-shadow-indigo-500/20 tw-text-white tw-font-black tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-gap-3 tw-transition-all hover:tw-scale-[1.02]"
+            >
+              <span>Verify & Submit</span>
+              <i class="fas fa-check-circle"></i>
+            </button>
+            <button 
+              @click="showConfirmModal = false"
+              class="tw-w-full tw-py-4 tw-bg-white/5 hover:tw-bg-white/10 tw-text-slate-400 tw-font-bold tw-rounded-2xl tw-transition-all"
+            >
+              Cancel
             </button>
           </div>
         </div>
@@ -174,6 +340,9 @@ export default {
     const kycErrorMessage = ref('')
     const isLoading = ref(false)
     const isLoadingMethods = ref(true)
+    const showConfirmModal = ref(false)
+    const showLimitErrorModal = ref(false)
+    const limitErrorMessage = ref('')
     const fallbackMethodIcon = '/assets/images/default.png'
 
     const onMethodImageError = (e) => {
@@ -275,29 +444,29 @@ export default {
     }
 
     const handleSubmit = async () => {
-      if (!canSubmit.value || isLoading.value) return
-      isLoading.value = true
+      if (isLoading.value) return
 
-      const amt = parseFloat(availableBalance.value) || 0
-      const methodPercentCharge = parseFloat(selectedMethodData.value?.percent_charge) || 0
-      const methodFixedCharge = parseFloat(selectedMethodData.value?.fixed_charge) || 0
-      const methodPercentChargeAmount = (amt / 100) * methodPercentCharge
-      const totalCharge = methodPercentChargeAmount + methodFixedCharge
-      const totalAmount = amt - totalCharge
-
-      const confirmed = confirm(
-        `Affiliate Wallet Withdrawal\n\n` +
-        `Withdrawal Amount: ${currencySymbol.value}${formatAmount(amt)}\n` +
-        `Method Charges: ${currencySymbol.value}${formatAmount(methodPercentChargeAmount + methodFixedCharge)}\n` +
-        `Total Charges: ${currencySymbol.value}${formatAmount(totalCharge)}\n\n` +
-        `You will receive: ${currencySymbol.value}${formatAmount(totalAmount)}\n\n` +
-        `Do you want to continue?`
-      )
-
-      if (!confirmed) {
-        isLoading.value = false
-        return
+      // Limit validation
+      if (selectedMethodData.value) {
+        const balance = parseFloat(availableBalance.value) || 0
+        const min = parseFloat(selectedMethodData.value.min_limit) || 10000
+        const max = parseFloat(selectedMethodData.value.max_limit) || 1000000
+        
+        if (balance < min || balance > max) {
+          limitErrorMessage.value = `To withdraw your affiliate earnings, your balance must be between ${currencySymbol.value}${formatAmount(min)} and ${currencySymbol.value}${formatAmount(max)}. Keep refering and earning to reach this goal!`
+          showLimitErrorModal.value = true
+          return
+        }
       }
+
+      if (!canSubmit.value) return
+      showConfirmModal.value = true
+    }
+
+    const confirmAndSubmit = async () => {
+      showConfirmModal.value = false
+      isLoading.value = true
+      const amt = parseFloat(availableBalance.value) || 0
 
       try {
         const response = await api.post('/affiliate/withdraw-request', {
@@ -338,8 +507,12 @@ export default {
       isLoadingMethods,
       showKYCErrorModal,
       kycErrorMessage,
+      showConfirmModal,
+      showLimitErrorModal,
+      limitErrorMessage,
       onMethodChange,
       handleSubmit,
+      confirmAndSubmit,
       formatAmount,
       fallbackMethodIcon,
       onMethodImageError,

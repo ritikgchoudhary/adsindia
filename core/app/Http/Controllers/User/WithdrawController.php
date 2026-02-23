@@ -60,6 +60,7 @@ class WithdrawController extends Controller {
         $withdraw->final_amount = $finalAmount;
         $withdraw->after_charge = $afterCharge;
         $withdraw->trx          = getTrx();
+        $withdraw->wallet       = 'main';
         $withdraw->save();
         session()->put('wtrx', $withdraw->trx);
         return to_route('user.withdraw.preview');
@@ -141,6 +142,9 @@ class WithdrawController extends Controller {
     public function withdrawLog(Request $request) {
         $pageTitle = "Withdrawal Log";
         $withdraws = Withdrawal::where('user_id', auth()->id())->where('status', '!=', Status::PAYMENT_INITIATE);
+        $withdraws = $withdraws->where(function ($q) {
+            $q->where('wallet', '!=', 'affiliate')->orWhereNull('wallet');
+        });
         if ($request->search) {
             $withdraws = $withdraws->where('trx', $request->search);
         }

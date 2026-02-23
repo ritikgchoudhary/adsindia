@@ -1,34 +1,72 @@
 <template>
   <DashboardLayout page-title="Affiliate Withdraw History" :dark-theme="true">
-    <div class="ma-withdraw-wrap tw-animate-fade-in">
+    <div class="ma-withdraw-wrap tw-animate-fade-in tw-py-6">
       
+      <!-- Premium Stats Header -->
+      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-3 tw-gap-4 tw-mb-8">
+        <div class="ma-stat-card">
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <div class="stat-icon-box tw-bg-indigo-500/20 tw-text-indigo-400">
+              <i class="fas fa-history"></i>
+            </div>
+            <div>
+              <p class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-m-0">Total Requests</p>
+              <h3 class="tw-text-white tw-font-black tw-text-2xl tw-m-0">{{ withdraws.length }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="ma-stat-card">
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <div class="stat-icon-box tw-bg-cyan-500/20 tw-text-cyan-400">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+              <p class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-m-0">Approved</p>
+              <h3 class="tw-text-white tw-font-black tw-text-2xl tw-m-0">{{ withdraws.filter(w => w.status === 1).length }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="ma-stat-card">
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <div class="stat-icon-box tw-bg-rose-500/20 tw-text-rose-400">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div>
+              <p class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-m-0">Pending</p>
+              <h3 class="tw-text-white tw-font-black tw-text-2xl tw-m-0">{{ withdraws.filter(w => w.status === 2).length }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Main Log Card -->
       <div class="ma-glass-card">
         <div class="ma-card-header">
           <div class="tw-flex tw-items-center tw-gap-3">
              <div class="header-icon-box text-glow-primary">
-                <i class="fas fa-history"></i>
+                <i class="fas fa-list-ul"></i>
              </div>
              <div>
-                <h5 class="tw-text-white tw-font-bold tw-text-lg tw-m-0">Affiliate Payout Log</h5>
-                <p class="tw-text-slate-400 tw-text-sm tw-m-0">Your referral commission withdrawals</p>
+                <h5 class="tw-text-white tw-font-black tw-text-xl tw-m-0">Payout Records</h5>
+                <p class="tw-text-slate-400 tw-text-sm tw-m-0">Tracking your affiliate commission flow</p>
              </div>
           </div>
           
           <div class="header-actions">
-            <form @submit.prevent="handleSearch" class="tw-relative tw-w-full md:tw-w-auto">
+            <form @submit.prevent="handleSearch" class="tw-relative tw-w-full md:tw-w-72">
               <input 
                 type="search" 
                 v-model="searchQuery" 
-                placeholder="TRX..." 
+                placeholder="Search by Transaction ID..." 
                 class="search-input"
               >
-              <button type="submit" class="search-btn text-primary-color">
+              <button type="submit" class="search-btn">
                 <i class="fas fa-search"></i>
               </button>
             </form>
-            <router-link to="/user/affiliate-withdraw" class="ma-btn-primary-sm">
-               <i class="fas fa-plus tw-mr-1"></i> New Request
+            <router-link to="/user/affiliate-withdraw" class="ma-btn-create">
+               <i class="fas fa-plus"></i>
+               <span>New Request</span>
             </router-link>
           </div>
         </div>
@@ -39,46 +77,60 @@
             <thead>
               <tr>
                 <th>Gateway & TRX</th>
-                <th>Timeline</th>
+                <th>Requested At</th>
                 <th>Amount</th>
-                <th>Status</th>
-                <th class="tw-text-right">Reason</th>
+                <th class="tw-text-left">Status</th>
+                <th class="tw-text-right tw-pr-8">Action</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="withdraw in withdraws" :key="withdraw?.id" class="ma-table-row">
                 <td>
-                  <div class="tw-flex tw-items-center tw-gap-3">
-                    <div class="method-icon-primary">
-                      <i :class="getMethodIcon(withdraw.method?.name)"></i>
+                  <div class="tw-flex tw-items-center tw-gap-4">
+                    <div class="method-icon-wrapper">
+                      <div class="method-icon-circle">
+                        <i :class="getMethodIcon(withdraw.method?.name)"></i>
+                      </div>
                     </div>
                     <div>
-                      <div class="tw-text-white tw-font-bold">{{ withdraw.method?.name || 'Gateway' }}</div>
-                      <div class="tw-text-indigo-400/80 tw-text-xs tw-font-mono">{{ withdraw.trx }}</div>
+                      <div class="tw-text-white tw-font-bold tw-text-base">{{ withdraw.method?.name || 'Gateway' }}</div>
+                      <div class="tw-text-indigo-400/70 tw-text-xs tw-font-mono tw-flex tw-items-center tw-gap-1">
+                        <i class="fas fa-hashtag tw-text-[10px]"></i> {{ withdraw.trx }}
+                      </div>
                     </div>
                   </div>
                 </td>
                 <td>
-                  <div class="tw-text-slate-200 tw-font-medium tw-text-sm">{{ formatDateTime(withdraw.created_at) }}</div>
-                  <div class="tw-text-slate-500 tw-text-xs tw-mt-0.5">{{ withdraw.created_at_human }}</div>
+                  <div class="tw-text-slate-200 tw-font-semibold tw-text-sm">{{ formatDateTime(withdraw.created_at) }}</div>
+                  <div class="tw-text-slate-500 tw-text-[11px] tw-mt-1 tw-flex tw-items-center tw-gap-1">
+                    <i class="far fa-clock"></i> {{ withdraw.created_at_human }}
+                  </div>
                 </td>
                 <td>
-                  <div class="tw-text-white tw-font-bold tw-text-lg">{{ currencySymbol }}{{ formatAmount(withdraw.amount) }}</div>
+                  <div class="tw-text-white tw-font-black tw-text-xl">
+                    <span class="tw-text-indigo-400 tw-text-sm tw-font-bold tw-mr-1">{{ currencySymbol }}</span>{{ formatAmount(withdraw.amount) }}
+                  </div>
                 </td>
-                <td>
+                <td class="tw-text-left">
                    <div class="status-badge-container" v-html="withdraw.status_badge"></div>
                 </td>
-                <td class="tw-text-right">
-                   <button @click="showDetails(withdraw)" class="ma-action-btn-primary" title="View Reason">
-                      <i class="fas fa-eye"></i>
+                <td class="tw-text-right tw-pr-8">
+                   <button @click="showDetails(withdraw)" class="action-btn-view" title="View Details">
+                      <i class="fas fa-info-circle"></i>
                    </button>
                 </td>
               </tr>
               <tr v-if="withdraws.length === 0 && !loading">
                  <td colspan="5">
-                    <div class="empty-state">
-                       <i class="fas fa-folder-open empty-icon"></i>
-                       <p>No affiliate payouts yet</p>
+                    <div class="empty-state-container">
+                       <div class="empty-state-icon">
+                         <i class="fas fa-inbox"></i>
+                       </div>
+                       <h4>No Records Found</h4>
+                       <p>You haven't made any withdrawal requests yet.</p>
+                       <router-link to="/user/affiliate-withdraw" class="ma-btn-primary-ghost">
+                         Start Payout
+                       </router-link>
                     </div>
                  </td>
               </tr>
@@ -87,74 +139,96 @@
         </div>
 
         <!-- Mobile Card Layout -->
-        <div class="lg:tw-hidden tw-p-3 tw-space-y-4">
-           <div v-for="withdraw in withdraws" :key="withdraw.id" class="ma-mobile-card primary-border">
-              <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
-                 <div class="tw-flex tw-items-center tw-gap-2">
-                    <div class="method-icon-mini-primary">
+        <div class="lg:tw-hidden tw-p-4 tw-space-y-4">
+           <div v-for="withdraw in withdraws" :key="withdraw.id" class="mobile-payout-card">
+              <div class="tw-flex tw-justify-between tw-items-start tw-mb-5">
+                 <div class="tw-flex tw-items-center tw-gap-3">
+                    <div class="method-icon-mini">
                        <i :class="getMethodIcon(withdraw.method?.name)"></i>
                     </div>
                     <div>
                        <div class="tw-text-white tw-font-bold tw-text-sm">{{ withdraw.method?.name }}</div>
-                       <div class="tw-text-[10px] tw-text-indigo-500 tw-font-mono">{{ withdraw.trx }}</div>
+                       <div class="tw-text-[10px] tw-text-indigo-400/80 tw-font-mono">{{ withdraw.trx }}</div>
                     </div>
                  </div>
-                 <div class="status-badge-container scale-75" v-html="withdraw.status_badge"></div>
+                 <div class="status-badge-container scale-90" v-html="withdraw.status_badge"></div>
               </div>
-              <div class="tw-flex tw-justify-between tw-items-end">
-                 <div>
-                    <div class="tw-text-white tw-font-black tw-text-xl">{{ currencySymbol }}{{ formatAmount(withdraw.amount) }}</div>
-                    <div class="tw-text-[10px] tw-text-slate-500 tw-mt-1">{{ formatDateTime(withdraw.created_at) }}</div>
+              
+              <div class="tw-flex tw-items-center tw-justify-between">
+                <div>
+                  <div class="tw-text-slate-500 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wider tw-mb-1">Amount</div>
+                  <div class="tw-text-white tw-font-black tw-text-2xl">{{ currencySymbol }}{{ formatAmount(withdraw.amount) }}</div>
+                </div>
+                <button @click="showDetails(withdraw)" class="mobile-action-btn">
+                  DETAILS
+                </button>
+              </div>
+
+              <div class="tw-mt-4 tw-pt-4 tw-border-t tw-border-white/5 tw-flex tw-justify-between tw-items-center">
+                 <div class="tw-text-[10px] tw-text-slate-500">
+                    <i class="far fa-calendar-alt tw-mr-1"></i> {{ formatDateTime(withdraw.created_at) }}
                  </div>
-                 <button @click="showDetails(withdraw)" class="ma-action-payout-btn">
-                    REASON
-                 </button>
+                 <div class="tw-text-[10px] tw-text-indigo-500/60">
+                    {{ withdraw.created_at_human }}
+                 </div>
               </div>
            </div>
         </div>
 
         <!-- Loader -->
-        <div v-if="loading" class="loading-overlay">
-           <div class="primary-spinner"></div>
+        <div v-if="loading" class="loading-full-overlay">
+           <div class="modern-loader">
+             <div class="loader-ring"></div>
+             <p>Syncing Payouts...</p>
+           </div>
         </div>
       </div>
     </div>
 
     <!-- Modal -->
-    <div v-if="showModal" class="ma-modal-overlay">
-      <div class="ma-modal-content primary-modal-border tw-animate-modal-in">
-        <div class="ma-modal-header primary-header-bg">
-           <div class="modal-title-box">
-              <i class="fas fa-shield-alt tw-text-indigo-300"></i>
-              <h5 class="tw-m-0 tw-text-white tw-font-bold">Withdrawal Remark</h5>
-           </div>
-           <button @click="showModal = false" class="modal-close-btn">
-              <i class="fas fa-times"></i>
-           </button>
-        </div>
-        
-        <div class="ma-modal-body text-center">
-           <div v-if="selectedWithdrawFeedback" class="professional-remark-primary">
-              <div class="remark-header">
-                 <div class="remark-dot-primary"></div>
-                 <span>Official Remark</span>
-              </div>
-              <div class="remark-content-primary">
-                 {{ selectedWithdrawFeedback }}
-              </div>
-           </div>
-           <div v-else class="tw-py-8">
-              <div class="tw-w-16 tw-h-16 tw-bg-indigo-900/20 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
-                 <i class="fas fa-check-circle tw-text-indigo-600 tw-text-2xl"></i>
-              </div>
-              <p class="tw-text-slate-400 tw-m-0">Your request is being processed. No remarks available yet.</p>
-           </div>
-           
-           <div class="tw-mt-8">
-              <button @click="showModal = false" class="ma-btn-primary tw-w-full">
-                 GOT IT
-              </button>
-           </div>
+    <div v-if="showModal" class="ma-modal-overlay" @click.self="showModal = false">
+      <div class="ma-modal-box tw-animate-modal-in">
+        <div class="modal-glow"></div>
+        <div class="modal-inner">
+          <div class="ma-modal-header-modern">
+             <div class="tw-flex tw-items-center tw-gap-3">
+                <div class="modal-header-icon">
+                  <i class="fas fa-file-invoice"></i>
+                </div>
+                <div>
+                  <h5 class="tw-m-0 tw-text-white tw-font-black">Request Details</h5>
+                  <p class="tw-m-0 tw-text-[10px] tw-text-slate-400 tw-uppercase tw-tracking-widest">Withdrawal Audit</p>
+                </div>
+             </div>
+             <button @click="showModal = false" class="modal-x-btn">
+                <i class="fas fa-times"></i>
+             </button>
+          </div>
+          
+          <div class="ma-modal-body text-center">
+             <div v-if="selectedWithdrawFeedback" class="feedback-container">
+                <div class="feedback-label">
+                   <div class="feedback-pulse"></div>
+                   <span>Official Feedback</span>
+                </div>
+                <div class="feedback-text">
+                   {{ selectedWithdrawFeedback }}
+                </div>
+             </div>
+             <div v-else class="tw-py-10">
+                <div class="no-remark-icon">
+                   <i class="fas fa-tasks"></i>
+                </div>
+                <h4 class="tw-text-white tw-font-bold tw-mb-2">Processing Request</h4>
+                <p class="tw-text-slate-500 tw-text-sm tw-max-w-[280px] tw-mx-auto">Our financial team is currently auditing this withdrawal. No specific remarks generated yet.</p>
+             </div>
+             
+             <div class="tw-mt-10">
+                <button @click="showModal = false" class="ma-btn-confirm">
+                   UNDERSTOOD
+                </button>
+             </div>
+          </div>
         </div>
       </div>
     </div>
@@ -240,187 +314,171 @@ export default {
 
 <style scoped>
 .ma-withdraw-wrap {
-  --primary-main: #6366f1;
+  --primary: #6366f1;
+  --primary-bright: #818cf8;
   --primary-glow: rgba(99, 102, 241, 0.4);
-  --glass-bg: rgba(15, 23, 42, 0.7);
+  --dark-glass: rgba(15, 23, 42, 0.8);
   --border-glass: rgba(255, 255, 255, 0.08);
 }
 
-.ma-glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
+/* Stats Cards */
+.ma-stat-card {
+  background: var(--dark-glass);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--border-glass);
-  border-radius: 28px;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.stat-icon-box {
+  width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+
+/* Main Card */
+.ma-glass-card {
+  background: var(--dark-glass);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--border-glass);
+  border-radius: 32px;
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
 }
 
 .ma-card-header {
-  padding: 24px 30px;
+  padding: 30px;
   border-bottom: 1px solid var(--border-glass);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 25px;
 }
-
-@media (min-width: 768px) {
-  .ma-card-header {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
+@media (min-width: 1024px) {
+  .ma-card-header { flex-direction: row; justify-content: space-between; align-items: center; }
 }
 
 .header-icon-box {
-  width: 50px;
-  height: 50px;
+  width: 54px; height: 54px;
   background: linear-gradient(135deg, #4f46e5, #6366f1);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 22px;
-  box-shadow: 0 5px 20px rgba(79, 70, 229, 0.3);
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 22px;
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.header-actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
 
 .search-input {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-glass);
-  border-radius: 12px;
-  padding: 12px 18px;
-  color: white;
-  font-size: 14px;
-  width: 100%;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: var(--primary-main);
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.ma-btn-primary-sm {
-  background: var(--primary-main);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 13px;
-  text-decoration: none;
+  border-radius: 15px;
+  padding: 12px 20px 12px 45px;
+  color: white; font-size: 14px; width: 100%;
   transition: all 0.3s;
-  white-space: nowrap;
 }
+.search-input:focus { outline: none; border-color: var(--primary); background: rgba(255,255,255,0.06); box-shadow: 0 0 15px var(--primary-glow); }
+.search-btn { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #64748b; border: 0; background: transparent; }
+
+.ma-btn-create {
+  background: linear-gradient(to right, #6366f1, #4f46e5);
+  color: white; padding: 12px 24px; border-radius: 15px; font-weight: 800; font-size: 14px;
+  text-decoration: none; transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4);
+}
+.ma-btn-create:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(79, 70, 229, 0.6); }
 
 /* Modern Table */
 .ma-modern-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-.ma-modern-table th { padding: 20px 30px; text-align: left; font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 1px; border-bottom: 1px solid var(--border-glass); }
-.ma-modern-table td { padding: 24px 30px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+.ma-modern-table th { padding: 22px 30px; text-align: left; font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid var(--border-glass); }
+.ma-modern-table td { padding: 25px 30px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
 .ma-table-row:hover td { background: rgba(99, 102, 241, 0.05); }
 
-.method-icon-primary {
-  width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-  background: rgba(99, 102, 241, 0.1); color: #818cf8; font-size: 18px;
+.method-icon-wrapper { position: relative; width: 48px; height: 48px; }
+.method-icon-circle { 
+  width: 100%; height: 100%; border-radius: 16px; 
+  background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2);
+  display: flex; align-items: center; justify-content: center; color: var(--primary-bright); font-size: 20px;
 }
 
-.ma-action-btn-primary {
-  width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass);
+/* Force Column Alignments */
+.ma-modern-table th.tw-text-right,
+.ma-modern-table td.tw-text-right {
+  text-align: right !important;
+  padding-right: 40px !important;
+}
+
+.ma-modern-table th.tw-text-left,
+.ma-modern-table td.tw-text-left {
+  text-align: left !important;
+}
+
+.action-btn-view {
+  width: 44px; height: 44px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass);
   color: #94a3b8; cursor: pointer; transition: all 0.3s;
 }
+.action-btn-view:hover { background: var(--primary); color: white; border-color: var(--primary); transform: scale(1.1); }
 
-.ma-action-btn-primary:hover { background: var(--primary-main); color: white; transform: rotate(15deg); }
+/* Empty State */
+.empty-state-container { padding: 80px 0; text-align: center; }
+.empty-state-icon { font-size: 60px; color: rgba(255,255,255,0.05); margin-bottom: 20px; }
+.empty-state-container h4 { color: white; font-weight: 800; margin-bottom: 10px; }
+.empty-state-container p { color: #64748b; margin-bottom: 25px; }
+.ma-btn-primary-ghost {
+  display: inline-block; padding: 12px 30px; border: 2px solid var(--primary); border-radius: 12px;
+  color: var(--primary); font-weight: 800; text-decoration: none; transition: all 0.3s;
+}
+.ma-btn-primary-ghost:hover { background: var(--primary); color: white; }
 
 /* Mobile Cards */
-.ma-mobile-card {
-  background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; border: 1px solid var(--border-glass);
+.mobile-payout-card {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 24px; padding: 20px;
 }
-.primary-border { border-left: 4px solid var(--primary-main); }
-
-.ma-action-payout-btn {
-  background: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2);
-  padding: 8px 16px; border-radius: 10px; font-size: 10px; font-weight: 800;
+.method-icon-mini {
+  width: 40px; height: 40px; border-radius: 12px; background: rgba(99, 102, 241, 0.1); 
+  display: flex; align-items: center; justify-content: center; color: var(--primary-bright);
 }
-
-/* Modal */
-.ma-modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; padding: 20px; }
-.ma-modal-content { background: #0a0f1d; border-radius: 32px; width: 100%; max-width: 480px; overflow: hidden; }
-.primary-modal-border { border: 1px solid rgba(99, 102, 241, 0.2); }
-.primary-header-bg { background: linear-gradient(to right, #4338ca, #312e81); }
-.ma-modal-header { padding: 28px; display: flex; justify-content: space-between; align-items: center; }
-.modal-title-box { display: flex; align-items: center; gap: 12px; font-size: 18px; }
-.modal-close-btn { background: rgba(255, 255, 255, 0.05); border: 0; width: 36px; height: 36px; border-radius: 10px; color: #94a3b8; cursor: pointer; }
-.ma-modal-body { padding: 30px; }
-
-.professional-remark-primary {
-  background: rgba(99, 102, 241, 0.05);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-left: 4px solid #6366f1;
-  border-radius: 14px;
-  padding: 20px;
-  text-align: left;
+.mobile-action-btn {
+  background: var(--primary); color: white; border: 0; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 11px;
 }
 
-.remark-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+/* Modal Modern */
+.ma-modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.ma-modal-box { position: relative; width: 100%; max-width: 450px; }
+.modal-glow { position: absolute; inset: -10px; background: var(--primary); border-radius: 40px; filter: blur(30px); opacity: 0.15; }
+.modal-inner { background: #0c1120; border: 1px solid rgba(255,255,255,0.1); border-radius: 35px; overflow: hidden; position: relative; z-index: 10; }
+.ma-modal-header-modern { padding: 30px; border-bottom: 1px solid var(--border-glass); display: flex; justify-content: space-between; align-items: center; }
+.modal-header-icon { width: 45px; height: 45px; border-radius: 12px; background: rgba(99, 102, 241, 0.15); color: #818cf8; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.modal-x-btn { background: rgba(255,255,255,0.05); color: #64748b; border: 0; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; transition: all 0.3s; }
+.modal-x-btn:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+.feedback-container { background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.1); border-radius: 20px; padding: 25px; text-align: left; }
+.feedback-label { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.feedback-pulse { width: 8px; height: 8px; border-radius: 50%; background: #6366f1; box-shadow: 0 0 10px #6366f1; animation: pulse 2s infinite; }
+.feedback-label span { font-size: 11px; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; }
+.feedback-text { color: #e0e7ff; font-size: 15px; line-height: 1.6; font-weight: 500; }
+
+.no-remark-icon { font-size: 40px; color: #334155; margin-bottom: 20px; }
+.ma-btn-confirm {
+  width: 100%; background: var(--primary); color: white; border: 0; padding: 18px; border-radius: 20px; font-weight: 900; 
+  letter-spacing: 1px; cursor: pointer; transition: all 0.3s;
 }
+.ma-btn-confirm:hover { transform: translateY(-3px); box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.5); }
 
-.remark-dot-primary {
-  width: 6px;
-  height: 6px;
-  background: #6366f1;
-  border-radius: 50%;
-  box-shadow: 0 0 10px #6366f1;
-}
+/* Loader */
+.loading-full-overlay { padding: 100px 0; display: flex; align-items: center; justify-content: center; }
+.modern-loader { text-align: center; }
+.loader-ring { width: 50px; height: 50px; border: 4px solid rgba(99, 102, 241, 0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+.modern-loader p { color: #818cf8; font-weight: 700; font-size: 14px; letter-spacing: 1px; }
 
-.remark-header span {
-  font-size: 10px;
-  font-weight: 800;
-  color: #818cf8;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.remark-content-primary {
-  color: #e0e7ff;
-  font-size: 14px;
-  line-height: 1.5;
-  font-weight: 500;
-}
-
-.ma-btn-primary {
-  background: var(--primary-main); color: white; border: 0; padding: 16px; border-radius: 18px; font-weight: 800;
-  box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4); cursor: pointer;
-}
-
-/* Spinners */
-.primary-spinner { width: 34px; height: 34px; border: 3px solid rgba(99, 102, 241, 0.1); border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.loading-overlay { display: flex; align-items: center; justify-content: center; padding: 80px 0; }
-
-/* Clean Status Badges - Remove Icons/Dots */
-:deep(.status-badge-container .badge i),
-:deep(.status-badge-container .badge::before) {
-  display: none !important;
-}
-
+/* Status Badges Override */
 :deep(.status-badge-container .badge) {
-  padding: 6px 14px !important; border-radius: 10px !important; font-size: 10px !important; font-weight: 900 !important;
+  padding: 8px 16px !important; border-radius: 12px !important; font-size: 10px !important; font-weight: 900 !important;
   text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid transparent; display: inline-flex;
 }
-:deep(.badge-success) { background: rgba(16, 185, 129, 0.1) !important; color: #10b981 !important; border-color: rgba(16, 185, 129, 0.2) !important; }
-:deep(.badge-warning) { background: rgba(245, 158, 11, 0.1) !important; color: #fbbf24 !important; border-color: rgba(245, 158, 11, 0.2) !important; }
-:deep(.badge-danger) { background: rgba(239, 68, 68, 0.1) !important; color: #fb7185 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+:deep(.badge-success) { background: rgba(56, 189, 248, 0.1) !important; color: #38bdf8 !important; border-color: rgba(56, 189, 248, 0.2) !important; }
+:deep(.badge-warning) { background: rgba(244, 63, 94, 0.1) !important; color: #f43f5e !important; border-color: rgba(244, 63, 94, 0.2) !important; }
+:deep(.badge-danger) { background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
 
-.text-glow-primary { text-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+.text-glow-primary { text-shadow: 0 0 15px var(--primary-glow); }
 </style>

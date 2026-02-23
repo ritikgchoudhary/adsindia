@@ -41,6 +41,12 @@
   <link href="/assets/global/css/iziToast.min.css" rel="stylesheet">
   <link href="/assets/global/css/iziToast_custom.css" rel="stylesheet">
 
+  <!-- Pre-load color CSS immediately to prevent flash-of-orange on hard refresh.
+       This uses the same fallback color as DynamicColorCSS.vue so there is no visible jump.
+       Vue will update this href once it fetches the real admin-chosen color. -->
+  <link id="preload-color-css" rel="stylesheet"
+    href="/assets/templates/basic/css/color.php?color=1a73e8&secondColor=1565c0">
+
   <!-- Dynamic Color CSS will be loaded via API -->
 </head>
 

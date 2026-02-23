@@ -127,18 +127,27 @@ class WithdrawalController extends Controller {
         $withdraw->save();
 
         $user = $withdraw->user;
-        $user->balance += $withdraw->amount;
+        if ($withdraw->wallet == 'affiliate') {
+            $user->affiliate_balance += $withdraw->amount;
+            $postBalance = $user->affiliate_balance;
+            $wallet = 'affiliate';
+        } else {
+            $user->balance += $withdraw->amount;
+            $postBalance = $user->balance;
+            $wallet = 'main';
+        }
         $user->save();
 
         $transaction               = new Transaction();
         $transaction->user_id      = $withdraw->user_id;
         $transaction->amount       = $withdraw->amount;
-        $transaction->post_balance = $user->balance;
+        $transaction->post_balance = $postBalance;
         $transaction->charge       = 0;
         $transaction->trx_type     = '+';
         $transaction->remark       = 'withdraw_reject';
         $transaction->details      = 'Refunded for withdrawal rejection';
         $transaction->trx          = $withdraw->trx;
+        $transaction->wallet       = $wallet;
         $transaction->save();
 
         notify($user, 'WITHDRAW_REJECT', [

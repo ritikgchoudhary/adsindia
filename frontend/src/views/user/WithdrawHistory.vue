@@ -42,8 +42,8 @@
                 <th>Gateway & TRX</th>
                 <th>Date & Time</th>
                 <th>Amount</th>
-                <th>Status</th>
-                <th class="tw-text-right">Reason</th>
+                <th class="tw-text-left">Status</th>
+                <th class="tw-text-right tw-pr-8">Reason</th>
               </tr>
             </thead>
             <tbody>
@@ -66,10 +66,10 @@
                 <td>
                   <div class="tw-text-white tw-font-bold tw-text-lg">{{ currencySymbol }}{{ formatAmount(withdraw.amount) }}</div>
                 </td>
-                <td>
+                <td class="tw-text-left">
                    <div class="status-badge-container" v-html="withdraw.status_badge"></div>
                 </td>
-                <td class="tw-text-right">
+                <td class="tw-text-right tw-pr-8">
                    <button @click="showDetails(withdraw)" class="ma-action-btn" title="View Reason">
                       <i class="fas fa-comment-alt"></i>
                    </button>
@@ -430,6 +430,17 @@ export default {
 .method-upi { color: #818cf8; box-shadow: inset 0 0 10px rgba(129, 140, 248, 0.1); }
 .method-bank { color: #4ade80; box-shadow: inset 0 0 10px rgba(74, 222, 128, 0.1); }
 .method-other { color: #fbbf24; }
+
+.ma-modern-table th.tw-text-right,
+.ma-modern-table td.tw-text-right {
+  text-align: right !important;
+  padding-right: 40px !important;
+}
+
+.ma-modern-table th.tw-text-left,
+.ma-modern-table td.tw-text-left {
+  text-align: left !important;
+}
 
 .ma-action-btn {
   width: 40px;

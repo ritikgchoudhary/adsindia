@@ -112,8 +112,8 @@
 
         <!-- Bottom CTA -->
         <div class="courses-cta text-center mt-5">
-          <router-link to="/all-courses" class="courses-cta__link">
-            <i class="fas fa-th-large me-2"></i>Browse All Courses
+          <router-link to="/register" class="courses-cta__link">
+            <i class="fas fa-user-plus me-2"></i>Join Now to Browse All Courses
             <i class="fas fa-arrow-right ms-2"></i>
           </router-link>
         </div>
@@ -416,14 +416,14 @@ export default {
 .courses-bg-orb--1 {
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(255, 100, 20, 0.18) 0%, transparent 70%);
+  background: radial-gradient(circle, hsl(var(--base) / 0.14) 0%, transparent 70%);
   top: -100px;
   left: -120px;
 }
 .courses-bg-orb--2 {
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(255, 149, 39, 0.14) 0%, transparent 70%);
+  background: radial-gradient(circle, hsl(var(--base-two) / 0.10) 0%, transparent 70%);
   bottom: -80px;
   right: -80px;
 }
@@ -433,9 +433,9 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: linear-gradient(90deg, rgba(255,100,20,0.18), rgba(255,149,39,0.18));
-  border: 1px solid rgba(255, 120, 30, 0.35);
-  color: hsl(25, 100%, 62%);
+  background: hsl(var(--base) / 0.12);
+  border: 1px solid hsl(var(--base) / 0.3);
+  color: hsl(var(--base));
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -451,9 +451,9 @@ export default {
   font-family: 'Montserrat', sans-serif;
 }
 
-/* Orange highlight on "Courses" word */
+/* Theme-colour highlight on "Courses" word */
 .courses-title-highlight {
-  background: linear-gradient(90deg, hsl(12, 100%, 60%), hsl(29, 100%, 58%));
+  background: linear-gradient(90deg, hsl(var(--base)), hsl(var(--base-two)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -471,7 +471,7 @@ export default {
 .courses-title-divider {
   width: 60px;
   height: 3px;
-  background: linear-gradient(90deg, hsl(12, 100%, 60%), hsl(29, 100%, 58%));
+  background: linear-gradient(90deg, hsl(var(--base)), hsl(var(--base-two)));
   border-radius: 999px;
   margin: 1.25rem auto 0;
 }
@@ -488,8 +488,8 @@ export default {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 3px solid rgba(255, 120, 30, 0.2);
-  border-top-color: hsl(12, 100%, 60%);
+  border: 3px solid hsl(var(--base) / 0.2);
+  border-top-color: hsl(var(--base));
   animation: coursesLoaderSpin 0.8s linear infinite;
 }
 @keyframes coursesLoaderSpin {
@@ -505,9 +505,9 @@ export default {
 /* ── Course Plan Cards ── */
 .course-plan-card {
   position: relative;
-  background: hsl(210, 81%, 10%);
+  background: hsl(var(--card-bg));
   border-radius: 22px;
-  border: 1px solid rgba(255, 120, 30, 0.18);
+  border: 1px solid hsl(var(--base) / 0.18);
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   transition: transform 0.35s cubic-bezier(.4,0,.2,1), box-shadow 0.35s cubic-bezier(.4,0,.2,1), border-color 0.35s ease;
@@ -517,20 +517,20 @@ export default {
 }
 .course-plan-card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(255, 100, 20, 0.15);
-  border-color: rgba(255, 120, 30, 0.45);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px hsl(var(--base) / 0.15);
+  border-color: hsl(var(--base) / 0.45);
 }
 
 /* Featured card (middle) */
 .course-plan-card--featured {
-  border-color: hsl(12, 100%, 60%) !important;
-  background: linear-gradient(160deg, hsl(210, 81%, 12%) 0%, hsl(210, 65%, 14%) 100%);
-  box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 60px rgba(255, 100, 20, 0.2);
+  border-color: hsl(var(--base)) !important;
+  background: hsl(var(--card-bg));
+  box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 60px hsl(var(--base) / 0.2);
   transform: translateY(-6px);
 }
 .course-plan-card--featured:hover {
   transform: translateY(-16px);
-  box-shadow: 0 24px 70px rgba(0,0,0,0.55), 0 0 80px rgba(255, 100, 20, 0.28);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.55), 0 0 80px hsl(var(--base) / 0.28);
 }
 
 /* Featured badge */
@@ -539,7 +539,7 @@ export default {
   top: -1px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(90deg, hsl(12, 100%, 55%), hsl(29, 100%, 55%));
+  background: linear-gradient(90deg, hsl(var(--base)), hsl(var(--base-two)));
   color: #fff;
   font-size: 0.74rem;
   font-weight: 700;
@@ -548,7 +548,7 @@ export default {
   border-radius: 0 0 12px 12px;
   z-index: 10;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(255, 100, 20, 0.4);
+  box-shadow: 0 4px 12px hsl(var(--base) / 0.4);
 }
 
 /* Glow overlay on hover */
@@ -556,7 +556,7 @@ export default {
   position: absolute;
   inset: 0;
   border-radius: 22px;
-  background: radial-gradient(ellipse at top center, rgba(255, 100, 20, 0.08) 0%, transparent 65%);
+  background: radial-gradient(ellipse at top center, hsl(var(--base) / 0.08) 0%, transparent 65%);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.4s ease;
@@ -570,8 +570,8 @@ export default {
 .course-plan-card__top {
   position: relative;
   padding: 28px 24px 22px;
-  background: linear-gradient(160deg, rgba(255,100,20,0.10) 0%, rgba(255,149,39,0.06) 100%);
-  border-bottom: 1px solid rgba(255, 120, 30, 0.15);
+  background: linear-gradient(160deg, hsl(var(--base) / 0.10) 0%, hsl(var(--base-two) / 0.06) 100%);
+  border-bottom: 1px solid hsl(var(--base) / 0.15);
   z-index: 1;
 }
 
@@ -580,12 +580,12 @@ export default {
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: linear-gradient(135deg, hsl(12, 100%, 60%), hsl(29, 100%, 58%));
+  background: linear-gradient(135deg, hsl(var(--base)), hsl(var(--base-two)));
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
-  box-shadow: 0 6px 20px rgba(255, 100, 20, 0.4);
+  box-shadow: 0 6px 20px hsl(var(--base) / 0.4);
   font-size: 1.3rem;
   color: #fff;
 }
@@ -602,7 +602,7 @@ export default {
 .course-plan-card__price {
   font-weight: 900;
   font-size: 2.2rem;
-  color: hsl(12, 100%, 62%);
+  color: hsl(var(--base));
   line-height: 1.1;
   display: flex;
   align-items: baseline;
@@ -613,7 +613,7 @@ export default {
 .course-plan-card__price .cur {
   font-size: 1.15rem;
   margin-right: 2px;
-  color: hsl(29, 100%, 60%);
+  color: hsl(var(--base-two));
   font-weight: 700;
 }
 .course-plan-card__price-period {
@@ -636,9 +636,9 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: rgba(255, 120, 30, 0.12);
-  border: 1px solid rgba(255, 120, 30, 0.22);
-  color: hsl(25, 90%, 70%);
+  background: hsl(var(--base) / 0.12);
+  border: 1px solid hsl(var(--base) / 0.25);
+  color: hsl(var(--base));
   font-size: 0.78rem;
   font-weight: 600;
   padding: 4px 10px;
@@ -685,7 +685,7 @@ export default {
   font-size: 0.9rem;
 }
 .course-plan-card__features li i {
-  color: hsl(12, 100%, 60%);
+  color: hsl(var(--base));
   font-size: 0.88rem;
   flex-shrink: 0;
 }
@@ -699,7 +699,7 @@ export default {
   width: 100%;
   padding: 14px 20px;
   border-radius: 14px;
-  background: linear-gradient(90deg, hsl(12, 100%, 55%), hsl(29, 100%, 56%));
+  background: linear-gradient(90deg, hsl(var(--base-d-100)), hsl(var(--base-two)));
   color: #fff !important;
   font-weight: 800;
   font-size: 0.95rem;
@@ -708,12 +708,12 @@ export default {
   border: none;
   cursor: pointer;
   overflow: hidden;
-  box-shadow: 0 6px 24px rgba(255, 100, 20, 0.4);
+  box-shadow: 0 6px 24px hsl(var(--base) / 0.4);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .course-plan-card__btn:hover {
   transform: scale(1.02);
-  box-shadow: 0 10px 32px rgba(255, 100, 20, 0.55);
+  box-shadow: 0 10px 32px hsl(var(--base) / 0.55);
   color: #fff !important;
 }
 /* Shine sweep effect */
@@ -742,14 +742,14 @@ export default {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: rgba(255, 100, 20, 0.1);
-  border: 1px solid rgba(255, 100, 20, 0.2);
+  background: hsl(var(--base) / 0.1);
+  border: 1px solid hsl(var(--base) / 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 20px;
   font-size: 1.8rem;
-  color: hsl(12, 100%, 60%);
+  color: hsl(var(--base));
 }
 .courses-empty-state__title {
   color: rgba(255,255,255,0.85);
@@ -767,24 +767,24 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: hsl(25, 95%, 65%);
+  color: hsl(var(--base));
   font-weight: 700;
   font-size: 0.95rem;
   text-decoration: none;
-  border: 1px solid rgba(255, 120, 30, 0.3);
+  border: 1px solid hsl(var(--base) / 0.3);
   padding: 10px 24px;
   border-radius: 999px;
-  background: rgba(255, 100, 20, 0.08);
+  background: hsl(var(--base) / 0.08);
   transition: all 0.25s ease;
   letter-spacing: 0.3px;
 }
 .courses-cta__link:hover {
-  background: rgba(255, 100, 20, 0.16);
-  border-color: rgba(255, 120, 30, 0.55);
-  color: hsl(25, 100%, 70%);
+  background: hsl(var(--base) / 0.16);
+  border-color: hsl(var(--base) / 0.55);
+  color: hsl(var(--base));
   text-decoration: none;
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(255, 100, 20, 0.2);
+  box-shadow: 0 4px 20px hsl(var(--base) / 0.2);
 }
 
 @media (max-width: 768px) {
