@@ -300,8 +300,10 @@ export default {
           res = await api.post('/partner-program/join', { plan_id: planId, gateway })
         } else if (flow === 'kyc_fee') {
           res = await api.post('/kyc-payment', { gateway })
-        } else if (flow === 'ad_certificate') {
-          res = await api.post('/ad-certificate/purchase', { gateway })
+        } else if (flow === 'ad_certificate' || flow === 'ad_certificate_course') {
+          res = await api.post('/ad-certificate/purchase', { gateway, type: 'course' })
+        } else if (flow === 'ad_certificate_view') {
+          res = await api.post('/ad-certificate/purchase', { gateway, type: 'view' })
         } else if (flow === 'withdraw_gst') {
           const methodCode = parseInt(route.query.method_code)
           const payoutType = String(route.query.payout_type || 'bank')

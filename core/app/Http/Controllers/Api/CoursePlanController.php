@@ -75,15 +75,8 @@ class CoursePlanController extends Controller
         $order = CoursePlanOrder::where('user_id', $user->id)
             ->active()
             ->with('plan')
-            ->orderByDesc('course_plan_id')
+            ->orderByDesc('id')
             ->first();
-
-        if (!$order) {
-            $order = CoursePlanOrder::where('user_id', $user->id)
-                ->with('plan')
-                ->orderByDesc('id')
-                ->first();
-        }
 
         if (!$order || !$order->plan) {
             return responseSuccess('course_plan_current', ['No course plan'], [

@@ -176,6 +176,7 @@
                 <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Affiliate Balance</th>
                 <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Total Paid</th>
                 <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Status</th>
+                <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Ad Cert</th>
                 <th class="tw-px-6 tw-py-5 tw-text-right tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase tw-tracking-widest">Action</th>
               </tr>
             </thead>
@@ -251,6 +252,14 @@
                     {{ user.status === 'active' ? 'Active' : 'Banned' }}
                   </span>
                 </td>
+                <td class="tw-px-6 tw-py-5">
+                   <div class="tw-flex tw-items-center tw-justify-center">
+                      <div class="tw-flex tw-flex-col tw-gap-1">
+                        <span class="tw-text-[11px] tw-font-black tw-uppercase tw-tracking-widest" :class="user.has_ad_certificate ? 'tw-text-emerald-500' : 'tw-text-slate-600'">C: {{ user.has_ad_certificate ? '✔' : '✘' }}</span>
+                        <span class="tw-text-[11px] tw-font-black tw-uppercase tw-tracking-widest" :class="user.has_ad_certificate_view ? 'tw-text-purple-500' : 'tw-text-slate-600'">V: {{ user.has_ad_certificate_view ? '✔' : '✘' }}</span>
+                      </div>
+                   </div>
+                </td>
                 <td class="tw-px-6 tw-py-5 tw-text-right">
                   <div class="tw-flex tw-justify-end tw-gap-2">
                     <button @click="openManageUser(user)" class="tw-w-8 tw-h-8 tw-bg-indigo-500/10 tw-text-indigo-400 tw-rounded-lg hover:tw-bg-indigo-500 tw-hover:tw-text-white tw-transition-all">
@@ -310,8 +319,11 @@
           <div class="ma-modal__body">
             <div class="ma-tabs">
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'basic' }" @click="manageTab = 'basic'">Basic</button>
-              <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'bank' }" @click="manageTab = 'bank'">Bank</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'packages' }" @click="manageTab = 'packages'">Packages</button>
+              <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'bank' }" @click="manageTab = 'bank'">Bank & KYC</button>
+              <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'referrals' }" @click="manageTab = 'referrals'; fetchUserDetail('referrals')">Referrals</button>
+              <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'commissions' }" @click="manageTab = 'commissions'; fetchUserDetail('commissions')">Affiliate Income</button>
+              <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'payments' }" @click="manageTab = 'payments'; fetchUserDetail('payments')">Payment History</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'financials' }" @click="manageTab = 'financials'">Financials</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'sponsor' }" @click="manageTab = 'sponsor'">Sponsor</button>
               <button class="ma-tab" :class="{ 'ma-tab--active': manageTab === 'agent' }" @click="manageTab = 'agent'; fetchAgentSettings()">Agent</button>
@@ -419,6 +431,116 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Ad Certificate: Course Menu -->
+              <div class="ma-soft-box mt-4 tw-bg-emerald-500/5 tw-border-emerald-500/10">
+                <div class="tw-flex tw-items-center tw-justify-between">
+                  <div>
+                    <h6 class="tw-text-emerald-400 tw-font-bold tw-mb-1">Ad Certificate (Course Menu)</h6>
+                    <p class="tw-text-xs tw-text-slate-400 tw-m-0">Required to unlock and watch video courses.</p>
+                  </div>
+                  <div class="tw-flex tw-items-center tw-gap-3">
+                    <span v-if="manageUser?.has_ad_certificate" class="tw-text-[10px] tw-font-bold tw-text-emerald-500 tw-uppercase tw-tracking-wider tw-bg-emerald-500/10 tw-px-2 tw-py-1 tw-rounded">Activated</span>
+                    <button @click="toggleAdCertificate('course')" class="ma-btn" :class="manageUser?.has_ad_certificate ? 'ma-btn--danger' : 'ma-btn--primary'">
+                      {{ manageUser?.has_ad_certificate ? 'Remove Access' : 'Mark as Purchased' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ad Certificate: Certificate Menu -->
+              <div class="ma-soft-box mt-3 tw-bg-purple-500/5 tw-border-purple-500/10">
+                <div class="tw-flex tw-items-center tw-justify-between">
+                  <div>
+                    <h6 class="tw-text-purple-400 tw-font-bold tw-mb-1">Ad Certificate (Certificate Menu)</h6>
+                    <p class="tw-text-xs tw-text-slate-400 tw-m-0">Required to view and download certificates.</p>
+                  </div>
+                  <div class="tw-flex tw-items-center tw-gap-3">
+                    <span v-if="manageUser?.has_ad_certificate_view" class="tw-text-[10px] tw-font-bold tw-text-purple-500 tw-uppercase tw-tracking-wider tw-bg-purple-500/10 tw-px-2 tw-py-1 tw-rounded">Activated</span>
+                    <button @click="toggleAdCertificate('view')" class="ma-btn" :class="manageUser?.has_ad_certificate_view ? 'ma-btn--danger' : 'ma-btn--primary'">
+                      {{ manageUser?.has_ad_certificate_view ? 'Remove Access' : 'Mark as Purchased' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Referrals Pane -->
+            <div v-else-if="manageTab === 'referrals'" class="ma-pane">
+              <div v-if="detailLoading" class="tw-flex tw-justify-center tw-py-8"><div class="ma-spinner"></div></div>
+              <div v-else-if="referrals.length === 0" class="tw-text-center tw-py-8 tw-text-slate-500">No referrals found</div>
+              <div v-else class="ma-table-container">
+                <table class="ma-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Username</th>
+                      <th>Mobile</th>
+                      <th>Joined</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="r in referrals" :key="r.id">
+                      <td>{{ r.firstname }} {{ r.lastname }}</td>
+                      <td><span class="ma-id-badge">ADS{{ r.id }}</span></td>
+                      <td>{{ r.mobile }}</td>
+                      <td>{{ r.created_at }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Commissions Pane -->
+            <div v-else-if="manageTab === 'commissions'" class="ma-pane">
+              <div v-if="detailLoading" class="tw-flex tw-justify-center tw-py-8"><div class="ma-spinner"></div></div>
+              <div v-else-if="commissions.length === 0" class="tw-text-center tw-py-8 tw-text-slate-500">No affiliate income history</div>
+              <div v-else class="ma-table-container">
+                <table class="ma-table">
+                  <thead>
+                    <tr>
+                      <th>Amount</th>
+                      <th>Type</th>
+                      <th>Details</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="c in commissions" :key="c.id">
+                      <td class="tw-text-emerald-500 tw-font-bold">+₹{{ formatAmount(c.amount) }}</td>
+                      <td><span class="ma-badge ma-badge--success">{{ c.remark.replace('agent_', '').replace('_commission', '') }}</span></td>
+                      <td class="tw-text-xs">{{ c.details }}</td>
+                      <td class="tw-text-xs">{{ c.created_at }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Payments History Pane -->
+            <div v-else-if="manageTab === 'payments'" class="ma-pane">
+              <div v-if="detailLoading" class="tw-flex tw-justify-center tw-py-8"><div class="ma-spinner"></div></div>
+              <div v-else-if="paymentsHistory.length === 0" class="tw-text-center tw-py-8 tw-text-slate-500">No payment history found</div>
+              <div v-else class="ma-table-container">
+                <table class="ma-table">
+                  <thead>
+                    <tr>
+                      <th>Amount</th>
+                      <th>Service</th>
+                      <th>Trx</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="p in paymentsHistory" :key="p.id">
+                      <td class="tw-text-rose-500 tw-font-bold">-₹{{ formatAmount(p.amount) }}</td>
+                      <td><span class="ma-badge ma-badge--secondary">{{ p.remark.replace('_purchase_gateway', '').replace('_purchase', '').replace('_gateway', '').replace('_fee', '') }}</span></td>
+                      <td class="tw-text-xs">{{ p.trx }}</td>
+                      <td class="tw-text-xs">{{ p.created_at }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <!-- Financials Pane -->
@@ -448,10 +570,14 @@
               </div>
               <div class="row g-3 mt-3">
                 <div class="col-md-6">
-                  <button class="ma-btn ma-btn--secondary w-100" :disabled="resettingUser" @click="resetUserData">Reset All User Data</button>
+                  <button class="tw-w-full tw-py-3 tw-bg-amber-500 hover:tw-bg-amber-600 tw-text-white tw-font-bold tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-transition-all active:tw-scale-95" :disabled="resettingUser" @click="resetUserData">
+                    <i class="fas fa-undo"></i> Reset All User Data
+                  </button>
                 </div>
                 <div class="col-md-6">
-                  <button class="ma-btn ma-btn--danger w-100" :disabled="deletingUser" @click="deleteUser">Delete User Permanently</button>
+                  <button class="tw-w-full tw-py-3 tw-bg-rose-600 hover:tw-bg-rose-700 tw-text-white tw-font-bold tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-transition-all active:tw-scale-95 shadow-lg shadow-rose-500/20" :disabled="deletingUser" @click="deleteUser">
+                    <i class="fas fa-trash-alt"></i> Delete User Permanently
+                  </button>
                 </div>
               </div>
             </div>
@@ -724,6 +850,11 @@ export default {
     const trxLoading = ref(false)
     const trxPage = ref(1)
     const trxLastPage = ref(1)
+    
+    const detailLoading = ref(false)
+    const referrals = ref([])
+    const commissions = ref([])
+    const paymentsHistory = ref([])
 
     const balanceForm = ref({ amount: 0, type: 'add', reason: '' })
     const adjustingBalance = ref(false)
@@ -864,6 +995,9 @@ export default {
 
     const openManageUser = async (user) => {
       manageUser.value = user
+      referrals.value = []
+      commissions.value = []
+      paymentsHistory.value = []
       basicForm.value = {
         name: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
         email: user.email || '',
@@ -983,6 +1117,59 @@ export default {
         if (window.notify) window.notify('error', 'Failed to update agent')
       } finally {
         savingAgent.value = false
+      }
+    }
+
+    const fetchUserDetail = async (tab) => {
+      manageTab.value = tab
+      detailLoading.value = true
+      try {
+        const res = await api.get(`/admin/user/${manageUser.value.id}/details`)
+        if (res.data?.status === 'success') {
+          referrals.value = res.data.data.referrals || []
+          commissions.value = res.data.data.commissions || []
+          paymentsHistory.value = res.data.data.payments || []
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', 'Failed to fetch details')
+      } finally {
+        detailLoading.value = false
+      }
+    }
+
+    const toggleAdCertificate = async (type = 'course') => {
+      if (!manageUser.value) return
+      
+      const isCourse = type === 'course'
+      const currentVal = isCourse ? manageUser.value.has_ad_certificate : manageUser.value.has_ad_certificate_view
+      const newVal = !currentVal
+      
+      const label = isCourse ? 'Course Menu' : 'Certificate Menu'
+      const msg = newVal ? `Mark user as having purchased Ad Certificate for ${label}?` : `Remove ${label} Ad Certificate?`
+      if (!confirm(msg)) return
+      
+      try {
+        const payload = isCourse 
+          ? { has_ad_certificate: newVal } 
+          : { has_ad_certificate_view: newVal }
+          
+        const res = await api.post(`/admin/user/${manageUser.value.id}/update-ad-certificate`, payload)
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', `${label} status updated`)
+          if (isCourse) {
+            manageUser.value.has_ad_certificate = newVal
+          } else {
+            manageUser.value.has_ad_certificate_view = newVal
+          }
+          // Update in main list if needed (main list only shows course cert for now)
+          const u = users.value.find(x => x.id === manageUser.value.id)
+          if (u) {
+            if (isCourse) u.has_ad_certificate = newVal
+            u.has_ad_certificate_view = manageUser.value.has_ad_certificate_view
+          }
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', 'Update failed')
       }
     }
 
@@ -1191,7 +1378,8 @@ export default {
         showRejectForm.value = false; 
         rejectionReason.value = ''; 
       },
-      showCreateUserModal, creatingUser, createForm, openCreateUserModal, closeCreateUserModal, createUser
+      showCreateUserModal, creatingUser, createForm, openCreateUserModal, closeCreateUserModal, createUser,
+      detailLoading, referrals, commissions, paymentsHistory: paymentsHistory, fetchUserDetail, toggleAdCertificate
     }
   }
 }

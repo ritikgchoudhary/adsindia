@@ -16,13 +16,9 @@ class CourseController extends Controller
     private const AD_CERT_PRICE = 1250.0;
     private const AD_CERT_REMARK = 'ad_certificate_fee';
 
-    private function hasAdCertificate(int $userId): bool
+    private function hasAdCertificate($user): bool
     {
-        return Transaction::where('user_id', $userId)
-            ->where('remark', self::AD_CERT_REMARK)
-            ->where('trx_type', '-')
-            ->where('amount', self::AD_CERT_PRICE)
-            ->exists();
+        return (bool) $user->has_ad_certificate;
     }
 
     /**
@@ -44,8 +40,9 @@ class CourseController extends Controller
     public function getCourses()
     {
         $user = auth()->user();
+        if ($user) $user->refresh();
         $general = gs();
-        $hasAdCertificate = $this->hasAdCertificate((int) $user->id);
+        $hasAdCertificate = $this->hasAdCertificate($user);
         $planIdToLevel = CoursePlan::query()->pluck('level', 'id')->map(fn ($v) => (int) $v)->toArray();
 
         // User's current course plan (same as Packages: active first, else latest order so "jo plan liya hai" is consistent)
@@ -186,7 +183,7 @@ class CourseController extends Controller
         $request->validate(['course_id' => 'required|integer']);
 
         $user = auth()->user();
-        if (!$this->hasAdCertificate((int) $user->id)) {
+        if (!$this->hasAdCertificate($user)) {
             return responseError('ad_certificate_required', ['Please purchase Ad Certificate (₹1250) to unlock courses and certificates.']);
         }
         $courseId = (int) $request->course_id;

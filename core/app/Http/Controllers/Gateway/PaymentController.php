@@ -233,9 +233,10 @@ class PaymentController extends Controller {
                         } catch (\Throwable $e) {}
                     }
                 }
-                // 3. Handle Ad Plan Purchase
+                // 3. Handle Ad Plan Purchase (The 2999, 4999, 7499, 9999 plans)
                 elseif ($deposit->remark == 'ad_plan_purchase') {
-                    $planId = $deposit->detail->plan_id ?? null;
+                    $detailsObj = is_string($deposit->detail) ? json_decode($deposit->detail) : (object)$deposit->detail;
+                    $planId = $detailsObj->plan_id ?? null;
                     if ($planId) {
                         $plan = \App\Models\AdPackage::find($planId);
                         if ($plan) {
@@ -253,7 +254,7 @@ class PaymentController extends Controller {
                                 'expires_at' => now()->addDays($validityDays),
                             ]);
 
-                            $transaction = new Transaction();
+                            $transaction = new \App\Models\Transaction();
                             $transaction->user_id = $user->id;
                             $transaction->amount = $plan->price;
                             $transaction->post_balance = $user->balance;
@@ -264,21 +265,213 @@ class PaymentController extends Controller {
                             $transaction->remark = 'ad_plan_purchase';
                             $transaction->save();
 
-                            // Process Agent Commission
+                            if ($isManual) {
+                                try {
+                                    $agentId = (int) ($user->ref_by ?? 0);
+                                    if ($agentId > 0) {
+                                        \App\Lib\AgentCommission::process(
+                                            $agentId, 'adplan', (float)$plan->price, $deposit->trx,
+                                            'Agent commission from User#' . $user->id . ' – Ad Plan: ' . $plan->name,
+                                            ['plan_type' => 'ad_plan', 'plan_id' => (int)$plan->id]
+                                        );
+                                    }
+                                } catch (\Throwable $e) {}
+                            }
+                        }
+                    }
+                }
+                // 4. Handle Partner Program
+                elseif ($deposit->remark == 'partner_program_gateway') {
+                    $detailsObj = is_string($deposit->detail) ? json_decode($deposit->detail) : (object)$deposit->detail;
+                    $planId = (int)($detailsObj->plan_id ?? 0);
+                    if ($planId > 0) {
+                        $user->partner_plan_id = $planId;
+                        $user->partner_plan_valid_until = now()->addDays(30);
+                        $user->save();
+                        
+                        $transaction = new \App\Models\Transaction();
+                        $transaction->user_id = $user->id;
+                        $transaction->amount = $deposit->amount;
+                        $transaction->post_balance = $user->balance;
+                        $transaction->charge = 0;
+                        $transaction->trx_type = '-';
+                        $transaction->details = $details;
+                        $transaction->trx = $deposit->trx;
+                        $transaction->remark = 'partner_program_gateway';
+                        $transaction->save();
+                        
+                        if ($isManual) {
                             try {
                                 $agentId = (int) ($user->ref_by ?? 0);
                                 if ($agentId > 0) {
                                     \App\Lib\AgentCommission::process(
-                                        $agentId, 'adplan', (float)$plan->price, $deposit->trx,
-                                        'Agent commission from User#' . $user->id . ' – Ad Plan: ' . $plan->name,
-                                        ['plan_type' => 'ad_plan', 'plan_id' => (int)$plan->id]
+                                        $agentId, 'partner', (float)$deposit->amount, $deposit->trx,
+                                        'Agent commission from User#' . $user->id . ' (Partner Program) | Base: ₹' . $deposit->amount
                                     );
                                 }
                             } catch (\Throwable $e) {}
                         }
                     }
                 }
-                // 4. Handle GST Withdrawal Fee
+                // 5. Handle Ad Certificate (Course)
+                elseif ($deposit->remark == 'ad_certificate_fee') {
+                    if (!$user->has_ad_certificate) {
+                        $user->has_ad_certificate = true;
+                        $user->save();
+                        
+                        $transaction = new \App\Models\Transaction();
+                        $transaction->user_id = $user->id;
+                        $transaction->amount = $deposit->amount;
+                        $transaction->post_balance = $user->balance;
+                        $transaction->charge = 0;
+                        $transaction->trx_type = '-';
+                        $transaction->details = $details;
+                        $transaction->trx = $deposit->trx;
+                        $transaction->remark = 'ad_certificate_fee';
+                        $transaction->save();
+                        
+                        if ($isManual) {
+                            try {
+                                $agentId = (int) ($user->ref_by ?? 0);
+                                if ($agentId > 0) {
+                                    \App\Lib\AgentCommission::process(
+                                        $agentId, 'certificate', (float)$deposit->amount, $deposit->trx,
+                                        'Agent commission from User#' . $user->id . ' (Ad Cert Course) | Base: ₹' . $deposit->amount
+                                    );
+                                }
+                            } catch (\Throwable $e) {}
+                        }
+                    }
+                }
+                // 5b. Handle Ad Certificate (View/Certificate)
+                elseif ($deposit->remark == 'ad_certificate_view_fee') {
+                    if (!$user->has_ad_certificate_view) {
+                        $user->has_ad_certificate_view = true;
+                        $user->save();
+                        
+                        $transaction = new \App\Models\Transaction();
+                        $transaction->user_id = $user->id;
+                        $transaction->amount = $deposit->amount;
+                        $transaction->post_balance = $user->balance;
+                        $transaction->charge = 0;
+                        $transaction->trx_type = '-';
+                        $transaction->details = $details;
+                        $transaction->trx = $deposit->trx;
+                        $transaction->remark = 'ad_certificate_view_fee';
+                        $transaction->save();
+                        
+                        if ($isManual) {
+                            try {
+                                $agentId = (int) ($user->ref_by ?? 0);
+                                if ($agentId > 0) {
+                                    \App\Lib\AgentCommission::process(
+                                        $agentId, 'certificate', (float)$deposit->amount, $deposit->trx,
+                                        'Agent commission from User#' . $user->id . ' (Ad Cert View) | Base: ₹' . $deposit->amount
+                                    );
+                                }
+                            } catch (\Throwable $e) {}
+                        }
+                    }
+                }
+                // 6. Handle Course Package Purchase
+                elseif ($deposit->remark == 'course_plan_purchase_gateway') {
+                    $detailsObj = is_string($deposit->detail) ? json_decode($deposit->detail) : (object)$deposit->detail;
+                    $planId = (int)($detailsObj->plan_id ?? 0);
+                    if ($planId > 0) {
+                        $plan = \App\Models\CoursePlan::find($planId);
+                        if ($plan) {
+                            \App\Models\CoursePlanOrder::create([
+                                'user_id' => $user->id,
+                                'course_plan_id' => $plan->id,
+                                'amount' => $plan->price,
+                                'status' => 1,
+                                'expires_at' => null, // Lifetime
+                            ]);
+
+                            $transaction = new \App\Models\Transaction();
+                            $transaction->user_id = $user->id;
+                            $transaction->amount = $plan->price;
+                            $transaction->post_balance = $user->balance;
+                            $transaction->charge = 0;
+                            $transaction->trx_type = '-';
+                            $transaction->details = $details . ': ' . $plan->name;
+                            $transaction->trx = $deposit->trx;
+                            $transaction->remark = 'course_plan_purchase_gateway';
+                            $transaction->save();
+
+                            if ($isManual) {
+                                try {
+                                    $agentId = (int) ($user->ref_by ?? 0);
+                                    if ($agentId > 0) {
+                                        \App\Lib\AgentCommission::process(
+                                            $agentId, 'course', (float)$plan->price, $deposit->trx,
+                                            'Agent commission from User#' . $user->id . ' – Course package: ' . $plan->name,
+                                            ['plan_type' => 'course_plan', 'plan_id' => (int)$plan->id]
+                                        );
+                                    }
+                                } catch (\Throwable $e) {}
+                            }
+                        }
+                    }
+                }
+                // 7. Handle Ads Package Purchase/Upgrade (AdsLite, AdsPro, etc.)
+                elseif ($deposit->remark == 'package_upgrade_gateway') {
+                    $detailsObj = is_string($deposit->detail) ? json_decode($deposit->detail) : (object)$deposit->detail;
+                    $pkgId = (int)($detailsObj->package_id ?? 0);
+                    if ($pkgId > 0) {
+                        $packagesData = [
+                            1 => ['name' => 'AdsLite', 'price' => 1499],
+                            2 => ['name' => 'AdsPro', 'price' => 2999],
+                            3 => ['name' => 'AdsSupreme', 'price' => 5999],
+                            4 => ['name' => 'AdsPremium', 'price' => 9999],
+                            5 => ['name' => 'AdsPremium+', 'price' => 15999],
+                        ];
+                        $pkgInfo = $packagesData[$pkgId] ?? null;
+                        if ($pkgInfo) {
+                            $currentOrder = \App\Models\AdPackageOrder::where('user_id', $user->id)->active()->latest()->first();
+                            if ($currentOrder) {
+                                $currentOrder->package_id = $pkgId;
+                                $currentOrder->amount = $pkgInfo['price'];
+                                $currentOrder->expires_at = now()->addDays(30);
+                                $currentOrder->save();
+                            } else {
+                                \App\Models\AdPackageOrder::create([
+                                    'user_id' => $user->id,
+                                    'package_id' => $pkgId,
+                                    'amount' => $pkgInfo['price'],
+                                    'status' => 1,
+                                    'expires_at' => now()->addDays(30),
+                                ]);
+                            }
+
+                            $transaction = new \App\Models\Transaction();
+                            $transaction->user_id = $user->id;
+                            $transaction->amount = $deposit->amount;
+                            $transaction->post_balance = $user->balance;
+                            $transaction->charge = 0;
+                            $transaction->trx_type = '-';
+                            $transaction->details = $details . ': ' . $pkgInfo['name'];
+                            $transaction->trx = $deposit->trx;
+                            $transaction->remark = 'package_upgrade_gateway';
+                            $transaction->save();
+                            
+                            if ($isManual) {
+                                try {
+                                    $agentId = (int) ($user->ref_by ?? 0);
+                                    if ($agentId > 0) {
+                                        $hadAnyPlanBefore = (bool)$currentOrder;
+                                        \App\Lib\AgentCommission::process(
+                                            $agentId, $hadAnyPlanBefore ? 'upgrade' : 'registration', (float)$deposit->amount, $deposit->trx,
+                                            'Agent commission from User#' . $user->id . ' – Package: ' . $pkgInfo['name'],
+                                            ['plan_type' => 'package', 'plan_id' => (int)$pkgId]
+                                        );
+                                    }
+                                } catch (\Throwable $e) {}
+                            }
+                        }
+                    }
+                }
+                // 8. Handle GST Withdrawal Fee
                 elseif ($deposit->remark == 'withdraw_gst') {
                     \App\Http\Controllers\Api\WithdrawController::processWithdrawalAfterGst($user, $deposit, (bool)$isManual);
                 }

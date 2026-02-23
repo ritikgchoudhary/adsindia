@@ -160,7 +160,7 @@ class AdminController extends Controller {
 
         // Active course plans (batch) – pick the most recent active order per user
         $activeCourseOrders = \App\Models\CoursePlanOrder::whereIn('user_id', $userIds)
-            ->where('status', 1)
+            ->active()
             ->with('plan:id,name,price')
             ->orderBy('id', 'desc')
             ->get()
@@ -169,7 +169,7 @@ class AdminController extends Controller {
 
         // Active ads plans (batch)
         $activeAdsOrders = \App\Models\AdPackageOrder::whereIn('user_id', $userIds)
-            ->where('status', 1)
+            ->active()
             ->with('package:id,name,price')
             ->orderBy('id', 'desc')
             ->get()
@@ -200,6 +200,8 @@ class AdminController extends Controller {
                 'ev' => $user->ev,
                 'sv' => $user->sv,
                 'kv' => $user->kv,
+                'has_ad_certificate' => (bool)$user->has_ad_certificate,
+                'has_ad_certificate_view' => (bool)$user->has_ad_certificate_view,
                 'kyc_data'   => $this->normalizeKycData($user->kyc_data ?? null),
                 'kyc_rejection_reason' => $user->kyc_rejection_reason ?? null,
                 'referral_code' => $user->referral_code ?? '',
@@ -479,6 +481,60 @@ class AdminController extends Controller {
         } catch (\Exception $e) {
             return responseError('error', ['Failed to unban user']);
         }
+    }
+
+    public function userDetail($id) {
+        $user = User::findOrFail($id);
+        
+        // 1. Downline/Referrals
+        $referrals = User::where('ref_by', $user->id)
+            ->select('id', 'firstname', 'lastname', 'username', 'email', 'mobile', 'created_at')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        // 2. Affiliate History (Commissions earned FROM others)
+        $commissions = Transaction::where('user_id', $user->id)
+            ->where('wallet', 'affiliate')
+            ->where('trx_type', '+')
+            ->where('remark', 'like', 'agent_%_commission')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        // 3. Payment History (What this user PAID)
+        $payments = Transaction::where('user_id', $user->id)
+            ->where('trx_type', '-')
+            ->whereIn('remark', [
+                'ad_certificate_fee', 
+                'ad_certificate_view_fee', 
+                'course_plan_purchase_gateway', 
+                'ad_plan_purchase', 
+                'kyc_fee', 
+                'partner_program_gateway',
+                'registration_fee'
+            ])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return responseSuccess('user_detail', ['User details retrieved'], [
+            'referrals' => $referrals,
+            'commissions' => $commissions,
+            'payments' => $payments,
+            'has_ad_certificate' => (bool)$user->has_ad_certificate,
+            'has_ad_certificate_view' => (bool)$user->has_ad_certificate_view
+        ]);
+    }
+
+    public function updateAdCertificate(Request $request, $id) {
+        $user = User::findOrFail($id);
+        if ($request->has('has_ad_certificate')) {
+            $user->has_ad_certificate = $request->boolean('has_ad_certificate');
+        }
+        if ($request->has('has_ad_certificate_view')) {
+            $user->has_ad_certificate_view = $request->boolean('has_ad_certificate_view');
+        }
+        $user->save();
+        
+        return responseSuccess('ad_certificate_updated', ["Ad Certificate permissions updated successfully"]);
     }
 
     /**
@@ -1159,9 +1215,10 @@ class AdminController extends Controller {
             $user->kv = Status::KYC_UNVERIFIED;
             $user->kyc_rejection_reason = $request->reason;
             // Reset KYC fee flag — user must pay ₹990 again on resubmission
-            $user->has_paid_kyc_fee = false;
+            $user->has_paid_kyc_fee = 0;
             $user->kyc_fee_trx = null;
             $user->kyc_fee_paid_at = null;
+            \Log::info("RESET KYC FEE (REJECT) FOR USER $id", ['has_paid' => $user->has_paid_kyc_fee]);
             $user->save();
             notify($user, 'KYC_REJECT', ['reason' => $request->reason]);
             return responseSuccess('kyc_rejected', ['KYC rejected successfully']);
@@ -1180,9 +1237,10 @@ class AdminController extends Controller {
             $user->kv = Status::KYC_UNVERIFIED;
             $user->kyc_rejection_reason = null;
             // Reset KYC fee flag — user must pay ₹990 again
-            $user->has_paid_kyc_fee = false;
+            $user->has_paid_kyc_fee = 0;
             $user->kyc_fee_trx = null;
             $user->kyc_fee_paid_at = null;
+            \Log::info("RESET KYC FEE (UNAPPROVE) FOR USER $id", ['has_paid' => $user->has_paid_kyc_fee]);
             $user->save();
             return responseSuccess('kyc_unapproved', ['KYC unapproved successfully']);
         } catch (\Exception $e) {
@@ -1642,7 +1700,8 @@ class AdminController extends Controller {
             'ad_plan_purchase'            => 'Ad Plan Purchase',
             'partner_program_gateway'     => 'Partner Program',
             'course_plan_purchase_gateway' => 'Course Plan Purchase',
-            'ad_certificate_fee'          => 'Certificate Payment',
+            'ad_certificate_fee'          => 'Ad Certificate (Course)',
+            'ad_certificate_view_fee'     => 'Ad Certificate (View)',
             'deposit'                     => 'Deposit',
             'campaign_payment'            => 'Campaign Payment',
         ];
@@ -2553,8 +2612,15 @@ class AdminController extends Controller {
             $user->new_user_ads_watched = 0;
             $user->kv = Status::KYC_UNVERIFIED;
             $user->kyc_data = null;
+            
+            // Reset KYC fee flag
+            $user->has_paid_kyc_fee = 0;
+            $user->kyc_fee_trx = null;
+            $user->kyc_fee_paid_at = null;
+            \Log::info("RESET KYC FEE (USER DATA RESET) FOR USER $id");
             $user->profile_complete = 0;
             $user->is_agent = 0;
+            $user->has_ad_certificate = false;
             $user->save();
         });
 
@@ -2611,6 +2677,13 @@ class AdminController extends Controller {
         $user->upi_id = null;
         $user->kv = Status::KYC_UNVERIFIED;
         $user->kyc_data = null;
+        
+        // Reset KYC fee flag — user must pay ₹990 again
+        $user->has_paid_kyc_fee = 0;
+        $user->kyc_fee_trx = null;
+        $user->kyc_fee_paid_at = null;
+        
+        \Log::info("RESET KYC FEE FOR USER $id", ['has_paid' => $user->has_paid_kyc_fee]);
         $user->save();
 
         return responseSuccess('bank_deleted', ['Bank details deleted successfully. User must re-KYC.']);
@@ -2635,17 +2708,17 @@ class AdminController extends Controller {
     }
 
     public function updateCoursePackage(Request $request, $id) {
-        $request->validate([
-            'course_plan_id' => 'nullable|exists:course_plans,id',
-        ]);
-
         $user = User::findOrFail($id);
-        CoursePlanOrder::where('user_id', $user->id)->update(['status' => 0]);
+        $planId = (int)$request->course_plan_id;
 
-        if ($request->course_plan_id) {
-            CoursePlanOrder::create([
+        // Deactivate all existing course plans
+        \App\Models\CoursePlanOrder::where('user_id', $user->id)->update(['status' => 0]);
+
+        if ($planId > 0) {
+            $plan = \App\Models\CoursePlan::findOrFail($planId);
+            \App\Models\CoursePlanOrder::create([
                 'user_id' => $user->id,
-                'course_plan_id' => $request->course_plan_id,
+                'course_plan_id' => $planId,
                 'amount' => 0,
                 'status' => 1,
             ]);
@@ -2655,19 +2728,28 @@ class AdminController extends Controller {
     }
 
     public function updateAdsPlan(Request $request, $id) {
-        $request->validate([
-            'ads_plan_id' => 'nullable|exists:ad_packages,id',
-        ]);
-
         $user = User::findOrFail($id);
+        $planId = (int)$request->ads_plan_id;
+
+        // Deactivate all existing ad packages
         AdPackageOrder::where('user_id', $user->id)->update(['status' => 0]);
 
-        if ($request->ads_plan_id) {
+        if ($planId > 0) {
+            $plan = AdPackage::findOrFail($planId);
+            
+            // Calculate validity based on plan price/details
+            $validityDays = 30;
+            if ($plan->price == 2999) $validityDays = 30;
+            elseif ($plan->price == 4999) $validityDays = 60;
+            elseif ($plan->price == 7499) $validityDays = 180;
+            elseif ($plan->price == 9999) $validityDays = 365;
+
             AdPackageOrder::create([
                 'user_id' => $user->id,
-                'package_id' => $request->ads_plan_id,
+                'package_id' => $planId,
                 'amount' => 0,
                 'status' => 1,
+                'expires_at' => now()->addDays($validityDays),
             ]);
         }
 

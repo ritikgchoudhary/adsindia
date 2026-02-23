@@ -60,8 +60,8 @@
                 <i class="fas fa-credit-card tw-mr-2"></i>
                 Buy Ad Certificate – {{ currencySymbol }}{{ formatAmount(adCertificatePrice) }}
               </button>
-              <router-link to="/user/packages" class="tw-px-6 tw-py-3 tw-bg-white/10 hover:tw-bg-white/20 tw-text-white tw-font-bold tw-rounded-xl tw-backdrop-blur-sm tw-transition-all tw-no-underline tw-inline-flex tw-items-center tw-justify-center">
-                <i class="fas fa-box-open tw-mr-2"></i>View Packages
+              <router-link to="/user/courses" class="tw-px-6 tw-py-3 tw-bg-white/10 hover:tw-bg-white/20 tw-text-white tw-font-bold tw-rounded-xl tw-backdrop-blur-sm tw-transition-all tw-no-underline tw-inline-flex tw-items-center tw-justify-center">
+                <i class="fas fa-play tw-mr-2"></i>Browse Courses
               </router-link>
             </div>
           </div>
@@ -181,16 +181,16 @@
                 class="tw-bg-white/95 tw-backdrop-blur-xl tw-rounded-2xl tw-overflow-hidden tw-shadow-xl hover:tw-shadow-2xl hover:-tw-translate-y-2 tw-transition-all tw-duration-300 tw-flex tw-flex-col tw-border tw-border-amber-200 tw-cursor-pointer"
                 role="button"
                 tabindex="0"
-                @click="openPackages"
-                @keydown.enter.prevent="openPackages"
-                @keydown.space.prevent="openPackages"
+                @click="handleLockedClick(course)"
+                @keydown.enter.prevent="handleLockedClick(course)"
+                @keydown.space.prevent="handleLockedClick(course)"
               >
                 <div class="tw-relative tw-h-64 tw-bg-gradient-to-br tw-from-slate-400 tw-to-slate-500 tw-overflow-hidden group">
                   <img :src="course.thumbnail || 'https://picsum.photos/400/250?random=' + (course.id || idx)" :alt="course.title || course.name" class="tw-w-full tw-h-full tw-object-cover tw-transition-transform tw-duration-500 group-hover:tw-scale-110" @error="handleImageError">
                   <div class="tw-absolute tw-inset-0 tw-bg-black/50 tw-flex tw-items-center tw-justify-center tw-transition-opacity group-hover:tw-bg-black/60">
-                    <router-link to="/user/packages" class="tw-px-6 tw-py-3 tw-bg-amber-500 hover:tw-bg-amber-600 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-transition-all hover:tw-scale-105 tw-no-underline tw-flex tw-items-center">
-                      <i class="fas fa-lock tw-mr-2"></i>Upgrade to Unlock
-                    </router-link>
+                    <div class="tw-px-6 tw-py-3 tw-bg-amber-500 hover:tw-bg-amber-600 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-transition-all hover:tw-scale-105 tw-no-underline tw-flex tw-items-center">
+                      <i class="fas fa-lock tw-mr-2"></i>{{ (planIsActive && !hasAdCertificate) ? 'Unlock Courses' : 'Upgrade to Unlock' }}
+                    </div>
                   </div>
                   <div class="tw-absolute tw-top-4 tw-right-4 tw-z-10"><span class="tw-px-4 tw-py-2 tw-rounded-full tw-text-xs tw-font-bold tw-text-white tw-shadow-md tw-backdrop-blur-sm" :class="getCategoryBadgeClass(course.category)">{{ course.category || 'General' }}</span></div>
                   <div class="tw-absolute tw-top-4 tw-left-4 tw-bg-amber-500/90 tw-text-white tw-px-3 tw-py-1.5 tw-rounded-full tw-text-xs tw-font-bold tw-shadow-md tw-backdrop-blur-sm tw-z-10"><i class="fas fa-lock tw-mr-1"></i>Locked</div>
@@ -306,6 +306,22 @@ export default {
       const id = getCourseId(course)
       if (!id) return
       router.push(`/user/courses/${id}`)
+    }
+
+    const handleLockedClick = (course) => {
+      if (planIsActive.value && requiresAdCertificate.value && !hasAdCertificate.value) {
+        if (window.iziToast) {
+          window.iziToast.info({
+            title: 'Access Required',
+            message: 'Please purchase Ad Certificate to watch courses.',
+            position: 'topRight'
+          })
+        } else if (window.notify) {
+          window.notify('info', 'Please purchase Ad Certificate to watch courses.')
+        }
+        return
+      }
+      router.push('/user/packages')
     }
 
     const openPackages = () => {
@@ -444,7 +460,7 @@ export default {
           return
         }
         const amount = adCertificatePrice.value
-        const redirectUrl = `/user/payment-redirect?flow=ad_certificate&amount=${amount}&plan_name=Ad%20Certificate&back=${encodeURIComponent('/user/courses')}`
+        const redirectUrl = `/user/payment-redirect?flow=ad_certificate_course&amount=${amount}&plan_name=Ad%20Certificate&back=${encodeURIComponent('/user/courses')}`
         const w = window.open(redirectUrl, '_blank')
         if (!w) {
           router.push(redirectUrl)
@@ -497,6 +513,7 @@ export default {
       formatAmount,
       getCategoryBadgeClass,
       openCourse,
+      handleLockedClick,
       openPackages,
       handleImageError,
       fetchCourses,

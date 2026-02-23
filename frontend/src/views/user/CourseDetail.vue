@@ -318,11 +318,11 @@ export default {
               if (window.iziToast) {
                 window.iziToast.error({
                   title: 'Locked',
-                  message: 'This course is locked. Please purchase/renew a course package to unlock it.',
+                  message: 'This course is locked. Please ensure you have an active package and Ad Certificate to watch courses.',
                   position: 'topRight'
                 })
               }
-              router.push('/user/packages')
+              router.push('/user/courses')
               course.value = null
               return
             }

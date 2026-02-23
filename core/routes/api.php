@@ -263,6 +263,8 @@ Route::namespace('Api')->name('api.')->group(function(){
             Route::post('users/create', [\App\Http\Controllers\Admin\AdminController::class, 'createUser']);
             Route::post('user/{id}/ban', [\App\Http\Controllers\Admin\AdminController::class, 'banUser']);
             Route::post('user/{id}/unban', [\App\Http\Controllers\Admin\AdminController::class, 'unbanUser']);
+            Route::get('user/{id}/details', [\App\Http\Controllers\Admin\AdminController::class, 'userDetail']);
+            Route::post('user/{id}/update-ad-certificate', [\App\Http\Controllers\Admin\AdminController::class, 'updateAdCertificate']);
             Route::post('user/{id}/basic-update', [\App\Http\Controllers\Admin\AdminController::class, 'updateUserBasic']);
             Route::post('user/{id}/reset-password', [\App\Http\Controllers\Admin\AdminController::class, 'resetUserPassword']);
             Route::post('user/{id}/change-sponsor', [\App\Http\Controllers\Admin\AdminController::class, 'changeUserSponsor']);

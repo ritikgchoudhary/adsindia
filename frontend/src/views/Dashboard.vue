@@ -93,7 +93,7 @@
 
             <!-- Badge -->
             <div class="tw-bg-[#007bff] tw-text-white tw-px-5 sm:tw-px-6 tw-py-2 sm:tw-py-2.5 tw-rounded-2xl tw-font-bold tw-text-sm sm:tw-text-base tw-shadow-lg tw-tracking-wide">
-              Ads Skill India
+              ADS SKILL INDIA
             </div>
           </div>
         </div>

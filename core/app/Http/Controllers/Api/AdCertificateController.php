@@ -13,22 +13,20 @@ class AdCertificateController extends Controller
     private const PRICE = 1250.0;
     private const REMARK = 'ad_certificate_fee';
 
-    private function hasAdCertificate(int $userId): bool
+    private function hasAdCertificate($user, $type = 'course'): bool
     {
-        return Transaction::where('user_id', $userId)
-            ->where('remark', self::REMARK)
-            ->where('trx_type', '-')
-            ->where('amount', self::PRICE)
-            ->exists();
+        return $type === 'view' ? (bool)$user->has_ad_certificate_view : (bool)$user->has_ad_certificate;
     }
 
-    public function status()
+    public function status(Request $request)
     {
         $user = auth()->user();
+        if ($user) $user->refresh();
+        $type = $request->input('type', 'course');
         $general = gs();
 
         return responseSuccess('ad_certificate_status', ['Ad Certificate status'], [
-            'has_ad_certificate' => $this->hasAdCertificate((int) $user->id),
+            'has_ad_certificate' => $this->hasAdCertificate($user, $type),
             'price' => (float) self::PRICE,
             'currency_symbol' => $general->cur_sym ?? '₹',
         ]);
@@ -39,17 +37,20 @@ class AdCertificateController extends Controller
         $user = auth()->user();
         $general = gs();
         $gateway = $request->input('gateway', 'watchpay');
+        $type = $request->input('type', 'course'); // 'course' or 'view'
         
         $gw = \App\Models\Gateway::where('alias', $gateway)->first();
         if (!$gw || $gw->status != 1) {
             return responseError('gateway_unavailable', ['Selected payment gateway is currently unavailable.']);
         }
 
-        if ($this->hasAdCertificate((int) $user->id)) {
-            return responseError('already_purchased', ['Ad Certificate is already purchased.']);
+        if ($this->hasAdCertificate($user, $type)) {
+            return responseError('already_purchased', ['This Ad Certificate is already purchased.']);
         }
 
         $trx = getTrx();
+        $remark = ($type === 'view') ? 'ad_certificate_view_fee' : 'ad_certificate_fee';
+        
         $deposit = new \App\Models\Deposit();
         $deposit->user_id = $user->id;
         $deposit->method_code = $gw->code;
@@ -61,28 +62,32 @@ class AdCertificateController extends Controller
         $deposit->btc_amount = 0;
         $deposit->btc_wallet = '';
         $deposit->trx = $trx;
-        $deposit->remark = self::REMARK;
+        $deposit->remark = $remark;
         $deposit->status = Status::PAYMENT_INITIATE;
         $deposit->save();
 
         cache()->put($gateway . '_payment_' . $trx, [
             'type' => 'ad_certificate',
+            'cert_type' => $type,
             'user_id' => $user->id,
             'amount' => (float) self::PRICE,
             'status' => 'pending',
             'created_at' => now()->format('Y-m-d H:i:s'),
         ], now()->addHours(2));
 
+        $backPath = ($type === 'view') ? '/user/certificates' : '/user/courses';
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
-        $pageUrl = $base . '/user/certificates?' . $gateway . '_trx=' . urlencode($trx) . '&ad_certificate=1';
+        $pageUrl = $base . $backPath . '?' . $gateway . '_trx=' . urlencode($trx) . '&ad_certificate=1';
         $notifyUrl = $base . '/ipn/' . $gateway;
+
+        $goodsName = ($type === 'view') ? 'Ad Certificate (View)' : 'Ad Certificate (Course)';
 
         try {
             if ($gateway == 'simplypay') {
                 $sp = \App\Lib\SimplyPayGateway::createPayment([
                     'merOrderNo' => $trx,
                     'amount' => (float) self::PRICE,
-                    'goodsName' => 'Ad Certificate',
+                    'goodsName' => $goodsName,
                     'returnUrl' => $pageUrl,
                     'notifyUrl' => $notifyUrl,
                     'name' => $user->fullname ?: $user->username,
@@ -106,7 +111,7 @@ class AdCertificateController extends Controller
                 $wp = WatchPayGateway::createWebPayment(
                     $trx,
                     (float) self::PRICE,
-                    'Ad Certificate',
+                    $goodsName,
                     $pageUrl,
                     $notifyUrl
                 );
@@ -146,17 +151,27 @@ class AdCertificateController extends Controller
             return responseError('payment_pending', ['Payment not verified yet. Please complete payment and try again.']);
         }
 
+        $type = $session['cert_type'] ?? 'course';
+        $remark = ($type === 'view') ? 'ad_certificate_view_fee' : 'ad_certificate_fee';
+
         // Idempotent transaction record (no wallet deduction)
-        if (!$this->hasAdCertificate((int) $user->id)) {
+        if (!$this->hasAdCertificate($user, $type)) {
+            if ($type === 'view') {
+                $user->has_ad_certificate_view = true;
+            } else {
+                $user->has_ad_certificate = true;
+            }
+            $user->save();
+            
             $t = new Transaction();
             $t->user_id = $user->id;
             $t->amount = (float) self::PRICE;
             $t->post_balance = $user->balance;
             $t->charge = 0;
             $t->trx_type = '-';
-            $t->details = 'Ad Certificate purchase via ' . ($gateway == 'simplypay' ? 'SimplyPay' : ($gateway == 'rupeerush' ? 'RupeeRush' : 'WatchPay'));
+            $t->details = "Ad Certificate ($type) purchase via " . ($gateway == 'simplypay' ? 'SimplyPay' : ($gateway == 'rupeerush' ? 'RupeeRush' : 'WatchPay'));
             $t->trx = $trx;
-            $t->remark = self::REMARK;
+            $t->remark = $remark;
             $t->save();
 
             // Agent commission
@@ -168,14 +183,14 @@ class AdCertificateController extends Controller
                         'certificate',
                         (float) self::PRICE,
                         $trx,
-                        'Agent commission from User#' . $user->id . ' (Ad Certificate) | Base: ₹' . self::PRICE
+                        'Agent commission from User#' . $user->id . ' (Ad Certificate ' . $type . ') | Base: ₹' . self::PRICE
                     );
                 }
             } catch (\Throwable $e) {}
         }
 
-        return responseSuccess('ad_certificate_purchased', ['Ad Certificate purchased successfully. Courses and certificates are now unlocked.'], [
-            'has_ad_certificate' => true,
+        return responseSuccess('ad_certificate_purchased', ['Ad Certificate purchased successfully.'], [
+            'has_ad_certificate' => $this->hasAdCertificate($user, $type),
         ]);
     }
 }
