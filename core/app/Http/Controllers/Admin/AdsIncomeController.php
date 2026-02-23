@@ -23,20 +23,29 @@ class AdsIncomeController extends Controller
                 if (is_array($decoded)) $bullets = array_values(array_filter($decoded, fn($v) => is_string($v) && trim($v) !== ''));
             }
         } catch (\Throwable $e) {}
+
+        $newUserRewards = [];
+        try {
+            $rawRewards = $general->new_user_offer_rewards ?? null;
+            if ($rawRewards) {
+                $newUserRewards = json_decode((string) $rawRewards, true) ?: [];
+            }
+        } catch (\Throwable $e) {}
+
         return responseSuccess('ads_income_settings', ['Ads income settings retrieved'], [
             'ads_enabled' => (int)($general->ads_enabled ?? 1),
             'ads_reward_mode' => (string)($general->ads_reward_mode ?? 'random'),
             'ads_reward_fixed' => (float)($general->ads_reward_fixed ?? 0),
-            'ads_reward_min' => (float)($general->ads_reward_min ?? 1000),
-            'ads_reward_max' => (float)($general->ads_reward_max ?? 5000),
-            'ads_reward_step' => (float)($general->ads_reward_step ?? 100),
+            'ads_reward_min' => (float)($general->ads_reward_min ?? 25),
+            'ads_reward_max' => (float)($general->ads_reward_max ?? 70),
+            'ads_reward_step' => (float)($general->ads_reward_step ?? 1),
             'ads_reward_multiplier' => (float)($general->ads_reward_multiplier ?? 1),
             'new_user_offer_enabled' => (int)($general->new_user_offer_enabled ?? 1),
             'new_user_offer_ads' => (int)($general->new_user_offer_ads ?? 2),
             'new_user_offer_reward' => (float)($general->new_user_offer_reward ?? 5000),
+            'new_user_offer_rewards' => $newUserRewards,
             // Ad Plans UI Text
             'ad_plans_info_title' => (string)($general->ad_plans_info_title ?? ''),
-            'ad_plans_info_description' => (string)($general->ad_plans_info_description ?? ''),
             'ad_plans_info_bullets' => $bullets,
         ]);
     }
@@ -54,8 +63,8 @@ class AdsIncomeController extends Controller
             'new_user_offer_enabled' => 'required|in:0,1',
             'new_user_offer_ads' => 'nullable|integer|min:0|max:1000',
             'new_user_offer_reward' => 'nullable|numeric|min:0',
+            'new_user_offer_rewards' => 'nullable|array',
             'ad_plans_info_title' => 'nullable|string|max:255',
-            'ad_plans_info_description' => 'nullable|string|max:5000',
             'ad_plans_info_bullets' => 'nullable|array',
             'ad_plans_info_bullets.*' => 'nullable|string|max:500',
         ]);
@@ -71,10 +80,10 @@ class AdsIncomeController extends Controller
         $general->new_user_offer_enabled = (int)$request->new_user_offer_enabled;
         $general->new_user_offer_ads = (int)($request->new_user_offer_ads ?? 2);
         $general->new_user_offer_reward = (float)($request->new_user_offer_reward ?? 5000);
+        $general->new_user_offer_rewards = json_encode($request->new_user_offer_rewards ?: []);
 
         // Ad Plans UI text
         $general->ad_plans_info_title = (string)($request->ad_plans_info_title ?? '');
-        $general->ad_plans_info_description = (string)($request->ad_plans_info_description ?? '');
         $bullets = $request->ad_plans_info_bullets;
         if (is_array($bullets)) {
             $clean = [];

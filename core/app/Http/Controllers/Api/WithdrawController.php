@@ -335,9 +335,29 @@ class WithdrawController extends Controller
         $gw_param = 'watchpay_trx=';
         if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
         if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+
+        $gwRecord = \App\Models\Gateway::where('alias', $gateway)->first();
+        $deposit = new \App\Models\Deposit();
+        $deposit->user_id = $user->id;
+        $deposit->method_code = $gwRecord->code ?? 0;
+        $deposit->amount = (float) $gstAmount;
+        $deposit->method_currency = 'INR';
+        $deposit->charge = 0;
+        $deposit->rate = 1;
+        $deposit->final_amount = (float) $gstAmount;
+        $deposit->trx = $trx;
+        $deposit->remark = 'withdraw_gst';
+        $deposit->detail = [
+            'withdraw_amount' => $withdrawAmount,
+            'method_id'       => $method->id,
+            'payout_type'     => $payoutType,
+            'gst_percent'     => self::MAIN_WITHDRAW_GST_PERCENT,
+        ];
+        $deposit->status = Status::PAYMENT_INITIATE;
+        $deposit->save();
         
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
-        $pageUrl = $base . '/user/withdraw?' . $gw_param . urlencode($trx) . '&withdraw_gst=1';
+        $pageUrl = $base . '/user/withdraw?' . $gw_param . urlencode($trx) . '&withdraw_gst=1&gateway=' . $gateway;
         $notifyUrl = $base . '/ipn/' . $gateway;
 
         try {
@@ -412,89 +432,138 @@ class WithdrawController extends Controller
             return responseError('payment_pending', ['GST payment not verified yet. Please complete payment and try again.']);
         }
 
-        // Idempotent: if withdrawal already created for this trx, return success
+        return self::processWithdrawalAfterGst($user, $trx, (bool)($request->gateway === 'custom_qr' || $request->input('manual')));
+    }
+
+    /**
+     * Shared logic to create withdrawal after GST is paid.
+     * Can be called from API confirm or from PaymentController (IPN/Manual).
+     */
+    public static function processWithdrawalAfterGst($user, $trxOrDeposit, bool $isManual = false)
+    {
+        $trx = is_string($trxOrDeposit) ? $trxOrDeposit : $trxOrDeposit->trx;
+        $deposit = is_object($trxOrDeposit) ? $trxOrDeposit : \App\Models\Deposit::where('trx', $trx)->first();
+
+        // Idempotent: check if already created
         $existing = Withdrawal::where('trx', $trx)->where('user_id', $user->id)->first();
         if ($existing) {
-            return responseSuccess('withdrawal_already_created', ['Withdrawal already created for this payment.'], [
+            return responseSuccess('withdrawal_already_created', ['Withdrawal already created.'], [
                 'withdraw_id' => $existing->id,
                 'trx' => $existing->trx,
             ]);
         }
 
-        // Re-check KYC (safety)
+        // Re-check KYC
         if ((int) ($user->kv ?? 0) !== Status::KYC_VERIFIED) {
-            return responseError('kyc_required', ['KYC verification is required before withdrawal.']);
+            return responseError('kyc_required', ['KYC verification is required.']);
         }
 
-        $withdrawAmount = (float) ($session['withdraw_amount'] ?? 0);
-        $gstPercent = (float) ($session['gst_percent'] ?? self::MAIN_WITHDRAW_GST_PERCENT);
-        $gstAmount = (float) ($session['gst_amount'] ?? 0);
-        $methodId = (int) ($session['method_id'] ?? 0);
-        $payoutType = (string) ($session['payout_type'] ?? 'bank');
+        // Try to get data from deposit detail first, then cache
+        $withdrawAmount = 0;
+        $gstAmount = 0;
+        $methodId = 0;
+        $payoutType = 'bank';
+        $gstPercent = self::MAIN_WITHDRAW_GST_PERCENT;
 
-        if ($withdrawAmount <= 0 || $gstAmount <= 0 || $methodId <= 0) {
-            return responseError('invalid_session', ['Invalid payment session data. Please initiate payment again.']);
+        if ($deposit && !empty($deposit->detail)) {
+            $detRaw = $deposit->detail;
+            if (is_string($detRaw)) {
+                $det = json_decode($detRaw, true) ?? [];
+            } elseif (is_object($detRaw)) {
+                $det = (array) $detRaw;
+            } else {
+                $det = (array) $detRaw;
+            }
+            $withdrawAmount = (float) ($det['withdraw_amount'] ?? 0);
+            $methodId = (int) ($det['method_id'] ?? 0);
+            $payoutType = (string) ($det['payout_type'] ?? 'bank');
+            $gstPercent = (float) ($det['gst_percent'] ?? self::MAIN_WITHDRAW_GST_PERCENT);
+            $gstAmount = (float) $deposit->amount;
+        } else {
+            // Fallback to cache (for older flows or if deposit record is missing/incomplete)
+            // Need to check multiple possible prefixes
+            $session = cache()->get('watchpay_payment_' . $trx) 
+                    ?? cache()->get('simplypay_payment_' . $trx) 
+                    ?? cache()->get('rupeerush_payment_' . $trx);
+            
+            if (is_array($session)) {
+                $withdrawAmount = (float) ($session['withdraw_amount'] ?? 0);
+                $gstPercent = (float) ($session['gst_percent'] ?? self::MAIN_WITHDRAW_GST_PERCENT);
+                $gstAmount = (float) ($session['gst_amount'] ?? 0);
+                $methodId = (int) ($session['method_id'] ?? 0);
+                $payoutType = (string) ($session['payout_type'] ?? 'bank');
+            }
         }
 
-        // User must still have the same/full balance available
+        if ($withdrawAmount <= 0 || $methodId <= 0) {
+            return responseError('invalid_data', ['Invalid withdrawal data.']);
+        }
+
+        // User must have balance
         if (((float) ($user->balance ?? 0)) < $withdrawAmount) {
-            return response()->json([
-                'status' => 'error',
-                'message' => ['Insufficient balance to withdraw. Please refresh and try again.']
-            ], 400);
+            return responseError('insufficient_balance', ['Insufficient balance to withdraw.']);
         }
 
         $method = WithdrawMethod::where('id', $methodId)->active()->first();
         if (!$method) {
-            return responseError('withdraw_method_not_found', ['Withdrawal method not found. Please select a method and try again.']);
+            return responseError('withdraw_method_not_found', ['Withdrawal method not found.']);
         }
 
-        // Method charges apply in withdrawal; GST is paid separately via gateway
         $methodCharge = (float) $method->fixed_charge + ((float) $withdrawAmount * (float) $method->percent_charge / 100);
         $afterCharge = (float) $withdrawAmount - (float) $methodCharge;
         if ($afterCharge <= 0) {
-            return response()->json([
-                'status' => 'error',
-                'message' => ['Withdraw amount must be sufficient for charges']
-            ], 400);
+            return responseError('low_amount', ['Withdraw amount must be sufficient for charges']);
         }
         $finalAmount = (float) $afterCharge * (float) ($method->rate ?? 1);
 
-        // Create withdrawal (pending review) and deduct wallet now
+        // Bank details from user's KYC profile
+        $accountHolderName = (string) ($user->account_holder_name ?? '');
+        $bankName = (string) ($user->bank_name ?? 'N/A');
+        $accNo = (string) ($user->account_number ?? 'N/A');
+        $upiId = (string) ($user->upi_id ?? 'N/A');
+        $ifsc = (string) ($user->ifsc_code ?? 'N/A');
+        $bankMobile = (string) ($user->bank_registered_no ?? '');
+
         $withdraw = new Withdrawal();
         $withdraw->method_id = $method->id;
         $withdraw->user_id = $user->id;
         $withdraw->amount = $withdrawAmount;
         $withdraw->currency = $method->currency;
         $withdraw->rate = $method->rate;
-        $withdraw->charge = $methodCharge; // GST NOT included here (paid externally)
+        $withdraw->charge = $methodCharge;
         $withdraw->final_amount = $finalAmount;
         $withdraw->after_charge = $afterCharge;
-        $withdraw->trx = $trx; // link withdrawal to payment trx
+        $withdraw->trx = $trx;
         $withdraw->status = Status::PAYMENT_PENDING;
         $withdraw->wallet = 'main';
         $withdraw->withdraw_information = [
-            ['name' => 'payout_type', 'type' => 'text', 'value' => $payoutType],
-            ['name' => 'gst_percent', 'type' => 'text', 'value' => (string) $gstPercent],
-            ['name' => 'gst_amount', 'type' => 'text', 'value' => (string) $gstAmount],
-            ['name' => 'gst_paid_trx', 'type' => 'text', 'value' => $trx],
-            ['name' => 'gst_paid_at', 'type' => 'text', 'value' => now()->format('Y-m-d H:i:s')],
-            ['name' => 'agent_id', 'type' => 'text', 'value' => (string) ((int) ($user->ref_by ?? 0))],
+            ['name' => 'payout_type',          'type' => 'text', 'value' => $payoutType],
+            ['name' => 'gst_percent',           'type' => 'text', 'value' => (string) $gstPercent],
+            ['name' => 'gst_amount',            'type' => 'text', 'value' => (string) $gstAmount],
+            ['name' => 'gst_paid_trx',          'type' => 'text', 'value' => $trx],
+            ['name' => 'gst_paid_at',           'type' => 'text', 'value' => now()->format('Y-m-d H:i:s')],
+            ['name' => 'approval_mode',         'type' => 'text', 'value' => $isManual ? 'Manual Admin Approval' : 'Auto Gateway Verified'],
+            ['name' => 'account_holder_name',   'type' => 'text', 'value' => $accountHolderName],
+            ['name' => 'bank_name',             'type' => 'text', 'value' => $bankName],
+            ['name' => 'account_number',        'type' => 'text', 'value' => $accNo],
+            ['name' => 'ifsc_code',             'type' => 'text', 'value' => $ifsc],
+            ['name' => 'bank_registered_no',    'type' => 'text', 'value' => $bankMobile],
+            ['name' => 'upi_id',                'type' => 'text', 'value' => $upiId],
         ];
         $withdraw->save();
 
-        // Deduct full withdrawal amount from wallet
+        // Deduct balance
         $user->balance = (float) $user->balance - (float) $withdrawAmount;
         $user->save();
 
-        // Transaction record (main wallet)
+        // Transaction record
         $withdrawTransaction = new Transaction();
         $withdrawTransaction->user_id = $user->id;
         $withdrawTransaction->amount = $withdraw->amount;
         $withdrawTransaction->post_balance = $user->balance;
         $withdrawTransaction->charge = $withdraw->charge;
         $withdrawTransaction->trx_type = '-';
-        $withdrawTransaction->details = 'Withdraw request (' . strtoupper($payoutType) . ') - GST paid separately via gateway, trx ' . $trx;
+        $withdrawTransaction->details = 'Withdraw request (' . strtoupper($payoutType) . ') - GST paid separately, trx ' . $trx . ($isManual ? ' (Admin Approved)' : '');
         $withdrawTransaction->trx = $withdraw->trx;
         $withdrawTransaction->remark = 'withdraw';
         $withdrawTransaction->wallet = 'main';

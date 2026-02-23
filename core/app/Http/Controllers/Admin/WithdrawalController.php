@@ -50,6 +50,11 @@ class WithdrawalController extends Controller {
             $withdrawals = $withdrawals->where('user_id', $userId);
         }
 
+        $gs = gs();
+        if ($gs->admin_withdrawals_cleared_at) {
+            $withdrawals = $withdrawals->where('created_at', '>', $gs->admin_withdrawals_cleared_at);
+        }
+
         $withdrawals = $withdrawals->searchable(['trx', 'user:username', 'advertiser:username'])->dateFilter();
 
         $request = request();

@@ -63,6 +63,11 @@ class DepositController extends Controller {
             $deposits = $deposits->where('user_id', $userId);
         }
 
+        $gs = gs();
+        if ($gs->admin_deposits_cleared_at) {
+            $deposits = $deposits->where('created_at', '>', $gs->admin_deposits_cleared_at);
+        }
+
         $deposits = $deposits->searchable(['trx', 'user:username'])->dateFilter();
 
         $request = request();

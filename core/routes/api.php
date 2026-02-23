@@ -351,9 +351,9 @@ Route::namespace('Api')->name('api.')->group(function(){
             Route::get('policy-pages', [\App\Http\Controllers\Admin\PolicyPagesController::class, 'index']);
             Route::post('policy-pages/{slug}', [\App\Http\Controllers\Admin\PolicyPagesController::class, 'update']);
 
-            // WatchPay Gateway Test (Master Admin)
-            Route::post('watchpay/test-payment', [\App\Http\Controllers\Admin\WatchPayTestController::class, 'initiate']);
-            Route::get('watchpay/test-payment/status', [\App\Http\Controllers\Admin\WatchPayTestController::class, 'status']);
+            // Gateway Test (Master Admin)
+            Route::post('gateway-test/initiate', [\App\Http\Controllers\Admin\GatewayTestController::class, 'initiate']);
+            Route::get('gateway-test/status', [\App\Http\Controllers\Admin\GatewayTestController::class, 'status']);
 
             // Packages Management
             Route::prefix('packages')->group(function () {

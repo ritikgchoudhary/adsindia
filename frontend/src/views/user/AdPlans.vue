@@ -28,10 +28,6 @@
         </div>
         <div>
           <h5 class="tw-text-white tw-font-bold tw-text-xl tw-mb-3">{{ infoTitle }}</h5>
-          <p v-if="infoDescription" class="tw-text-slate-300 tw-m-0 tw-leading-relaxed tw-mb-3" v-html="infoDescription"></p>
-          <p v-else class="tw-text-slate-300 tw-m-0 tw-leading-relaxed tw-mb-3">
-            Purchase an ad plan to unlock the ability to watch ads and earn money. After purchase, go to <strong class="tw-text-white">Ads Work</strong> page to watch ads.
-          </p>
           <ul class="tw-text-slate-300 tw-m-0 tw-pl-5 tw-space-y-2">
             <li v-for="(b, idx) in infoBullets" :key="idx" v-html="renderBullet(b)"></li>
           </ul>

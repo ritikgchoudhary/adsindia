@@ -825,6 +825,11 @@ class UserController extends Controller
         $user->branch_name = null;
         $user->upi_id = null;
 
+        // Reset KYC fee — user must pay ₹990 again before resubmitting
+        $user->has_paid_kyc_fee = false;
+        $user->kyc_fee_trx = null;
+        $user->kyc_fee_paid_at = null;
+
         $user->save();
 
         return responseSuccess('account_kyc_reset', ['Old KYC deleted. You can now add new bank details and submit KYC again.']);

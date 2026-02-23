@@ -17,13 +17,21 @@ class AdsController extends Controller
         $g = gs();
         $mode = (string) ($g->ads_reward_mode ?? 'random'); // random|fixed
         $mult = (float) ($g->ads_reward_multiplier ?? 1);
-        $min = (float) ($g->ads_reward_min ?? 1000);
-        $max = (float) ($g->ads_reward_max ?? 5000);
+        $min = (float) ($g->ads_reward_min ?? 25);
+        $max = (float) ($g->ads_reward_max ?? 70);
         $fixed = (float) ($g->ads_reward_fixed ?? 0);
-        $step = (float) ($g->ads_reward_step ?? 100);
+        $step = (float) ($g->ads_reward_step ?? 1);
         if ($min > $max) [$min, $max] = [$max, $min];
         if ($step <= 0) $step = 1;
         if ($mult <= 0) $mult = 1;
+
+        $newUserRewards = [];
+        try {
+            $rawRewards = $g->new_user_offer_rewards ?? null;
+            if ($rawRewards) {
+                $newUserRewards = json_decode((string) $rawRewards, true) ?: [];
+            }
+        } catch (\Throwable $e) {}
 
         return [
             'enabled' => (int) ($g->ads_enabled ?? 1) === 1,
@@ -36,6 +44,7 @@ class AdsController extends Controller
             'new_user_offer_enabled' => (int) ($g->new_user_offer_enabled ?? 1) === 1,
             'new_user_offer_ads' => max(0, (int) ($g->new_user_offer_ads ?? 2)),
             'new_user_offer_reward' => (float) ($g->new_user_offer_reward ?? 5000),
+            'new_user_offer_rewards' => $newUserRewards,
         ];
     }
 
@@ -201,14 +210,17 @@ class AdsController extends Controller
         $watched = (int) ($user->new_user_ads_watched ?? 0);
         $expectedAdId = $watched + 1;
         $limit = max(0, (int) ($settings['new_user_offer_ads'] ?? 2));
-        $realAds = $this->getRealLookingAds(max(1, $limit));
-        $ads = [];
-        $earningPerAd = round(((float) ($settings['new_user_offer_reward'] ?? 5000)) * (float) ($settings['mult'] ?? 1), 2);
         $durationSeconds = 30 * 60; // 30 minutes per ad for new users
+        $newUserRewards = $settings['new_user_offer_rewards'] ?? [];
 
         for ($i = 1; $i <= $limit; $i++) {
             $isWatched = $watched >= $i;
             $adData = $realAds[$i - 1] ?? $this->getFallbackAd($i);
+            
+            // Use specific reward if set, else fallback to global new user reward
+            $earningPerAd = (float)($newUserRewards[$i - 1] ?? ($settings['new_user_offer_reward'] ?? 5000));
+            $earningPerAd = round($earningPerAd * (float) ($settings['mult'] ?? 1), 2);
+
             $ads[] = [
                 'id' => $i,
                 'title' => $adData['title'],
@@ -387,9 +399,12 @@ class AdsController extends Controller
             return responseError('incomplete_watch', ['Please watch the complete video to earn reward']);
         }
 
-        $earning = round(((float) ($settings['new_user_offer_reward'] ?? 5000)) * (float) ($settings['mult'] ?? 1), 2);
+        $newUserRewards = $settings['new_user_offer_rewards'] ?? [];
+        $earning = (float)($newUserRewards[$expectedAdId - 1] ?? ($settings['new_user_offer_reward'] ?? 5000));
+        $earning = round($earning * (float) ($settings['mult'] ?? 1), 2);
+
         $user->balance = ($user->balance ?? 0) + $earning;
-        $user->new_user_ads_watched = $watched + 1;
+        $user->new_user_ads_watched = $expectedAdId;
         $user->save();
 
         $trx = getTrx();

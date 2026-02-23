@@ -50,7 +50,6 @@
             <option value="ad_plan_purchase">Ad Plan</option>
             <option value="ad_certificate_fee">Certificate</option>
             <option value="kyc_fee">KYC</option>
-            <option value="withdrawal">Withdrawal</option>
             <option value="package_upgrade_gateway">Package</option>
             <option value="partner_program_gateway">Partner Program</option>
             <option value="registration_fee">Registration</option>
@@ -175,28 +174,6 @@
                 <td>
                   <div class="ma-action-buttons">
                     <button
-                      v-if="isPending(o)"
-                      type="button"
-                      class="ma-action-pill ma-action-pill--approve"
-                      @click="approveOrder(o)"
-                      :disabled="loading"
-                      title="Approve Order"
-                    >
-                      <i class="fas fa-check"></i>
-                      <span>Approve</span>
-                    </button>
-                    <button
-                      v-if="isPending(o)"
-                      type="button"
-                      class="ma-action-pill ma-action-pill--reject"
-                      @click="rejectOrder(o)"
-                      :disabled="loading"
-                      title="Reject Order"
-                    >
-                      <i class="fas fa-times"></i>
-                      <span>Reject</span>
-                    </button>
-                    <button
                       type="button"
                       class="ma-action-btn ma-action-btn--view"
                       @click="viewOrder(o)"
@@ -204,15 +181,6 @@
                     >
                       <i class="fas fa-eye"></i>
                       <span class="ma-action-tooltip">View</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="ma-action-btn ma-action-btn--delete"
-                      @click="deleteOrder(o)"
-                      title="Delete Order"
-                    >
-                      <i class="fas fa-trash-alt"></i>
-                      <span class="ma-action-tooltip">Delete</span>
                     </button>
                   </div>
                 </td>
@@ -284,9 +252,21 @@
              </div>
           </div>
         </div>
-        <div class="ma-modal__footer d-flex justify-content-end gap-2 p-3 border-top border-white-5">
-           <button v-if="isPending(selectedOrder)" class="ma-btn ma-btn--reject" @click="rejectOrder(selectedOrder)">Reject</button>
-           <button v-if="isPending(selectedOrder)" class="ma-btn ma-btn--approve" @click="approveOrder(selectedOrder)">Approve</button>
+        <div class="ma-modal__footer d-flex justify-content-between align-items-center gap-2 p-3 border-top border-white-5">
+           <div>
+             <button class="ma-btn ma-btn--delete" @click="deleteOrder(selectedOrder); selectedOrder = null">
+               <i class="fas fa-trash-alt me-1"></i>Delete
+             </button>
+           </div>
+           <div class="d-flex gap-2">
+             <button class="ma-btn ma-btn--secondary" @click="selectedOrder = null">Close</button>
+             <button v-if="isPending(selectedOrder)" class="ma-btn ma-btn--reject" @click="rejectOrder(selectedOrder); selectedOrder = null">
+               <i class="fas fa-times me-1"></i>Reject
+             </button>
+             <button v-if="isPending(selectedOrder)" class="ma-btn ma-btn--approve" @click="approveOrder(selectedOrder); selectedOrder = null">
+               <i class="fas fa-check me-1"></i>Approve
+             </button>
+           </div>
         </div>
       </div>
     </div>
@@ -661,6 +641,10 @@ export default {
 .ma-btn--approve:hover { background: #059669; transform: translateY(-1px); }
 .ma-btn--reject { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
 .ma-btn--reject:hover { background: #dc2626; transform: translateY(-1px); }
+.ma-btn--delete { background: rgba(220,38,38,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+.ma-btn--delete:hover { background: rgba(220,38,38,0.25); transform: translateY(-1px); }
+.ma-btn--secondary { background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); }
+.ma-btn--secondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
 
 .border-white-5 { border-color: rgba(255,255,255,0.1) !important; }
 .text-white-50 { color: rgba(255,255,255,0.7) !important; }

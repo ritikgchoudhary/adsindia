@@ -1157,6 +1157,10 @@ class AdminController extends Controller {
             $user = User::findOrFail($id);
             $user->kv = Status::KYC_UNVERIFIED;
             $user->kyc_rejection_reason = $request->reason;
+            // Reset KYC fee flag — user must pay ₹990 again on resubmission
+            $user->has_paid_kyc_fee = false;
+            $user->kyc_fee_trx = null;
+            $user->kyc_fee_paid_at = null;
             $user->save();
             notify($user, 'KYC_REJECT', ['reason' => $request->reason]);
             return responseSuccess('kyc_rejected', ['KYC rejected successfully']);
@@ -1174,6 +1178,10 @@ class AdminController extends Controller {
             $user = User::findOrFail($id);
             $user->kv = Status::KYC_UNVERIFIED;
             $user->kyc_rejection_reason = null;
+            // Reset KYC fee flag — user must pay ₹990 again
+            $user->has_paid_kyc_fee = false;
+            $user->kyc_fee_trx = null;
+            $user->kyc_fee_paid_at = null;
             $user->save();
             return responseSuccess('kyc_unapproved', ['KYC unapproved successfully']);
         } catch (\Exception $e) {
@@ -1220,6 +1228,11 @@ class AdminController extends Controller {
         $perPage = $request->get('per_page', 20);
 
         $query = Transaction::with('user')->orderBy('id', 'desc');
+
+        $gs = gs();
+        if ($gs->admin_transactions_cleared_at) {
+            $query->where('created_at', '>', $gs->admin_transactions_cleared_at);
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -1297,6 +1310,11 @@ class AdminController extends Controller {
 
         // Joined with gateways to get method name correctly
         $query = Deposit::with(['user', 'gateway'])->orderBy('id', 'desc');
+
+        $gs = gs();
+        if ($gs->admin_deposits_cleared_at) {
+            $query->where('created_at', '>', $gs->admin_deposits_cleared_at);
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -1616,16 +1634,15 @@ class AdminController extends Controller {
         $endDate = $request->get('end_date');
 
         $remarkLabels = [
-            'registration_fee' => 'Registration Fee',
-            'kyc_fee' => 'KYC Fee',
-            'package_upgrade_gateway' => 'Package Purchase',
-            'ad_plan_purchase' => 'Ad Plan Purchase',
-            'partner_program_gateway' => 'Partner Program',
+            'registration_fee'            => 'Registration Fee',
+            'kyc_fee'                     => 'KYC Fee',
+            'package_upgrade_gateway'     => 'Package Purchase',
+            'ad_plan_purchase'            => 'Ad Plan Purchase',
+            'partner_program_gateway'     => 'Partner Program',
             'course_plan_purchase_gateway' => 'Course Plan Purchase',
-            'ad_certificate_fee' => 'Certificate Payment',
-            'deposit' => 'Deposit',
-            'campaign_payment' => 'Campaign Payment',
-            'withdrawal' => 'Withdrawal',
+            'ad_certificate_fee'          => 'Certificate Payment',
+            'deposit'                     => 'Deposit',
+            'campaign_payment'            => 'Campaign Payment',
         ];
 
         $type = $request->get('type');
@@ -1673,39 +1690,13 @@ class AdminController extends Controller {
                 DB::raw("CASE WHEN d.status IN ({$pending}, {$init}) THEN 1 ELSE 0 END as approvable"),
             ]);
 
-        $withdrawalQ = DB::table('withdrawals as w')
-            ->leftJoin('users as u', 'u.id', '=', 'w.user_id')
-            ->leftJoin('withdraw_methods as m', 'm.id', '=', 'w.method_id')
-            ->select([
-                DB::raw("'withdrawal' as source"),
-                DB::raw('w.id as source_id'),
-                DB::raw('w.trx as trx'),
-                DB::raw('w.amount as amount'),
-                DB::raw('COALESCE(w.charge, 0) as charge'),
-                DB::raw('(w.amount - COALESCE(w.charge, 0)) as after_charge'),
-                DB::raw('COALESCE(m.name, "Withdrawal") as method_name'),
-                DB::raw('w.status as status'),
-                DB::raw("CASE
-                    WHEN w.status = {$pending} THEN 'Pending'
-                    WHEN w.status = {$success} THEN 'Approved'
-                    WHEN w.status = {$reject} THEN 'Rejected'
-                    ELSE 'Unknown' END as status_text"),
-                DB::raw("CASE
-                    WHEN w.status = {$pending} THEN 'warning'
-                    WHEN w.status = {$success} THEN 'success'
-                    WHEN w.status = {$reject} THEN 'danger'
-                    ELSE 'secondary' END as status_class"),
-                DB::raw("'withdrawal' as remark"),
-                DB::raw('w.user_id as user_id'),
-                DB::raw('NULL as detail'),
-                DB::raw('u.username as username'),
-                DB::raw('u.email as email'),
-                DB::raw('u.firstname as firstname'),
-                DB::raw('u.lastname as lastname'),
-                DB::raw('u.mobile as mobile'),
-                DB::raw('w.created_at as created_at'),
-                DB::raw("CASE WHEN w.status = {$pending} THEN 1 ELSE 0 END as approvable"),
-            ]);
+        // Withdrawals are managed separately in the Withdrawals section.
+        // Only deposit/payment gateway records appear in All Orders.
+
+        $gs = gs();
+        if ($gs->admin_orders_cleared_at) {
+            $depositQ->where('d.created_at', '>', $gs->admin_orders_cleared_at);
+        }
 
         if ($search) {
             $depositQ->where(function ($q) use ($search) {
@@ -1714,52 +1705,34 @@ class AdminController extends Controller {
                   ->orWhere('u.email', 'like', "%{$search}%")
                   ->orWhere('d.detail', 'like', "%{$search}%");
             });
-            $withdrawalQ->where(function ($q) use ($search) {
-                $q->where('w.trx', 'like', "%{$search}%")
-                  ->orWhere('u.username', 'like', "%{$search}%")
-                  ->orWhere('u.email', 'like', "%{$search}%");
-            });
         }
         if ($userId) {
             $depositQ->where('d.user_id', (int) $userId);
-            $withdrawalQ->where('w.user_id', (int) $userId);
         }
         if ($status === 'pending') {
             $depositQ->where('d.status', $pending);
-            $withdrawalQ->where('w.status', $pending);
         } elseif ($status === 'approved' || $status === 'successful') {
             $depositQ->where('d.status', $success);
-            $withdrawalQ->where('w.status', $success);
         } elseif ($status === 'rejected') {
             $depositQ->where('d.status', $reject);
-            $withdrawalQ->where('w.status', $reject);
         } elseif ($status === 'initiated') {
             $depositQ->where('d.status', $init);
-            $withdrawalQ->where('w.id', -1);
         }
 
         if ($type) {
-            if ($type === 'withdrawal') {
-                $depositQ->where('d.id', -1);
-            } else {
-                $depositQ->where('d.remark', $type);
-                $withdrawalQ->where('w.id', -1);
-            }
+            $depositQ->where('d.remark', $type);
         }
 
         try {
             if ($startDate) {
                 $depositQ->whereDate('d.created_at', '>=', Carbon::parse($startDate)->toDateString());
-                $withdrawalQ->whereDate('w.created_at', '>=', Carbon::parse($startDate)->toDateString());
             }
             if ($endDate) {
                 $depositQ->whereDate('d.created_at', '<=', Carbon::parse($endDate)->toDateString());
-                $withdrawalQ->whereDate('w.created_at', '<=', Carbon::parse($endDate)->toDateString());
             }
         } catch (\Throwable $e) {}
 
-        $union = $depositQ->unionAll($withdrawalQ);
-        $base = DB::query()->fromSub($union, 'x');
+        $base = DB::query()->fromSub($depositQ, 'x');
 
         $page = $base->orderByDesc('x.created_at')->paginate($perPage);
 
@@ -1857,10 +1830,11 @@ class AdminController extends Controller {
 
         $remarkLabels = [
             'registration_fee' => 'Registration Fee',
-            'kyc_fee' => 'KYC Fee',
-            'package_upgrade_gateway' => 'Package Purchase',
             'ad_plan_purchase' => 'Ad Plan Purchase',
+            'package_upgrade_gateway' => 'Package Upgrade',
             'partner_program_gateway' => 'Partner Program',
+            'kyc_fee' => 'KYC Fee',
+            'withdraw_gst' => 'Withdrawal GST Fee',
             'course_plan_purchase_gateway' => 'Course Plan Purchase',
             'deposit' => 'Deposit',
             'campaign_payment' => 'Campaign Payment',
@@ -1934,6 +1908,11 @@ class AdminController extends Controller {
         $query = Withdrawal::with(['user', 'method'])
             ->where('status', '!=', Status::PAYMENT_INITIATE)
             ->orderBy('id', 'desc');
+
+        $gs = gs();
+        if ($gs->admin_withdrawals_cleared_at) {
+            $query->where('created_at', '>', $gs->admin_withdrawals_cleared_at);
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -2020,19 +1999,19 @@ class AdminController extends Controller {
         } catch (\Throwable $e) {}
 
         $summary = [
-            'total' => (clone $summaryQuery)->count(),
-            'processing' => (clone $summaryQuery)->where('status', Status::PAYMENT_PENDING)->sum('amount'),
-            'success' => (clone $summaryQuery)->where('status', Status::PAYMENT_SUCCESS)->sum('amount'),
-            'rejected' => (clone $summaryQuery)->where('status', Status::PAYMENT_REJECT)->sum('amount'),
+            'total'      => (clone $summaryQuery)->count(),
+            'pending'    => (clone $summaryQuery)->where('status', Status::PAYMENT_PENDING)->count(),
+            'successful' => (clone $summaryQuery)->where('status', Status::PAYMENT_SUCCESS)->count(),
+            'rejected'   => (clone $summaryQuery)->where('status', Status::PAYMENT_REJECT)->count(),
         ];
 
         return responseSuccess('withdrawals', ['Withdrawals retrieved successfully'], [
-            'withdrawals' => $withdrawals->items(),
-            'summary' => $summary,
-            'total' => $withdrawals->total(),
-            'per_page' => $withdrawals->perPage(),
+            'withdrawals'  => $withdrawals->items(),
+            'summary'      => $summary,
+            'total'        => $withdrawals->total(),
+            'per_page'     => $withdrawals->perPage(),
             'current_page' => $withdrawals->currentPage(),
-            'last_page' => $withdrawals->lastPage(),
+            'last_page'    => $withdrawals->lastPage(),
         ]);
     }
 
@@ -2993,17 +2972,29 @@ class AdminController extends Controller {
             ->get()
             ->map(fn($r) => ['date' => $r->date, 'total' => (float)$r->total]);
 
-        // Summary stats
-        $totalDeposits      = Deposit::successful()->sum('amount');
-        $totalWithdrawals   = Withdrawal::approved()->sum('amount');
-        $pendingDeposits    = Deposit::pending()->count();
+        $gs = gs();
+
+        // Summary stats with clearing support
+        $totalDepositsQuery = Deposit::successful();
+        if ($gs->admin_deposits_cleared_at) $totalDepositsQuery->where('created_at', '>', $gs->admin_deposits_cleared_at);
+        $totalDeposits = $totalDepositsQuery->sum('amount');
+
+        $totalWithdrawalsQuery = Withdrawal::approved();
+        if ($gs->admin_withdrawals_cleared_at) $totalWithdrawalsQuery->where('created_at', '>', $gs->admin_withdrawals_cleared_at);
+        $totalWithdrawals = $totalWithdrawalsQuery->sum('amount');
+
+        $pendingDeposits = Deposit::pending()->count();
         $pendingWithdrawals = Withdrawal::pending()->count();
         $totalUsers         = User::count();
         $activeUsers        = User::where('status', 1)->count();
         $bannedUsers        = User::where('status', 0)->count();
         $kycPending         = User::where('kv', \App\Constants\Status::KYC_PENDING)->count();
         $kycVerified        = User::where('kv', \App\Constants\Status::KYC_VERIFIED)->count();
-        $totalTransactions  = Transaction::count();
+        
+        $totalTransactionsQuery = Transaction::query();
+        if ($gs->admin_transactions_cleared_at) $totalTransactionsQuery->where('created_at', '>', $gs->admin_transactions_cleared_at);
+        $totalTransactions  = $totalTransactionsQuery->count();
+
         $newUsersToday      = User::whereDate('created_at', Carbon::today())->count();
         $depositsToday      = Deposit::successful()->whereDate('created_at', Carbon::today())->sum('amount');
 
@@ -3056,56 +3047,42 @@ class AdminController extends Controller {
     }
 
     /**
-     * History Clearing Methods (Master Admin only)
+     * History Clearing Methods (Master Admin only) - Sets timestamps to hide logs from Admin
      */
     public function clearTransactions()
     {
-        Transaction::truncate();
-        return responseSuccess('cleared', ['All transactions history cleared']);
+        $gs = gs();
+        $gs->admin_transactions_cleared_at = now();
+        $gs->save();
+        \Cache::forget('GeneralSetting');
+        return responseSuccess('cleared', ['Master Admin transaction history cleared (logs hidden)']);
     }
 
     public function clearOrders()
     {
-        // For this project, orders are tracked in Deposits and Transactions
-        // We will clear both gateway-related deposit attempts and plan orders
-        DB::table('deposits')->where('method_code', '>=', 500)->where('method_code', '<', 5000)->delete();
-        \App\Models\AdPackageOrder::truncate();
-        \App\Models\CoursePlanOrder::truncate();
-        return responseSuccess('cleared', ['All orders history cleared']);
+        $gs = gs();
+        $gs->admin_orders_cleared_at = now();
+        $gs->save();
+        \Cache::forget('GeneralSetting');
+        return responseSuccess('cleared', ['Master Admin orders history cleared (logs hidden)']);
     }
 
     public function clearDeposits()
     {
-        Deposit::truncate();
-        return responseSuccess('cleared', ['All deposit history cleared']);
+        $gs = gs();
+        $gs->admin_deposits_cleared_at = now();
+        $gs->save();
+        \Cache::forget('GeneralSetting');
+        return responseSuccess('cleared', ['Master Admin deposit history cleared (logs hidden)']);
     }
 
     public function clearWithdrawals()
     {
-        Withdrawal::truncate();
-        return responseSuccess('cleared', ['All withdrawal history cleared']);
-    }
-
-    public function clearCommissions()
-    {
-        // Clear affiliate wallet transactions which are commissions
-        Transaction::where('wallet', 'affiliate')->delete();
-        // Reset affiliate_balance for all users
-        User::query()->update(['affiliate_balance' => 0]);
-        return responseSuccess('cleared', ['All commission history cleared and balances reset']);
-    }
-
-    public function clearUserLogins()
-    {
-        UserLogin::truncate();
-        return responseSuccess('cleared', ['All user login history cleared']);
-    }
-
-    public function clearNotifications()
-    {
-        AdminNotification::truncate();
-        NotificationLog::truncate();
-        return responseSuccess('cleared', ['All notification history cleared']);
+        $gs = gs();
+        $gs->admin_withdrawals_cleared_at = now();
+        $gs->save();
+        \Cache::forget('GeneralSetting');
+        return responseSuccess('cleared', ['Master Admin withdrawal history cleared (logs hidden)']);
     }
 
     public function getEmailSettings()

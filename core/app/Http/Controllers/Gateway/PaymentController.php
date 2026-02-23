@@ -278,6 +278,10 @@ class PaymentController extends Controller {
                         }
                     }
                 }
+                // 4. Handle GST Withdrawal Fee
+                elseif ($deposit->remark == 'withdraw_gst') {
+                    \App\Http\Controllers\Api\WithdrawController::processWithdrawalAfterGst($user, $deposit, (bool)$isManual);
+                }
 
                 if (!$isManual) {
                     $adminNotification            = new AdminNotification();

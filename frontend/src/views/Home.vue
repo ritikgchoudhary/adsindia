@@ -13,45 +13,88 @@
 
     <!-- Courses Plans Section (In-page) -->
     <section id="courses" class="courses-inline-section py-80">
-      <div class="container">
-        <div class="section-heading text-center mb-4">
-          <h2 class="section-heading__title">Our Courses</h2>
-          <p class="section-heading__desc">Choose a plan to unlock courses and earn certificates</p>
+      <!-- Decorative background orbs -->
+      <div class="courses-bg-orb courses-bg-orb--1"></div>
+      <div class="courses-bg-orb courses-bg-orb--2"></div>
+
+      <div class="container position-relative" style="z-index: 2;">
+        <div class="section-heading text-center mb-5">
+          <span class="courses-section-label">
+            <i class="fas fa-graduation-cap me-2"></i>SKILL DEVELOPMENT
+          </span>
+          <h2 class="section-heading__title mt-3">Our <span class="courses-title-highlight">Courses</span></h2>
+          <p class="section-heading__desc">Choose a plan to unlock premium courses and earn industry-recognized certificates</p>
+          <div class="courses-title-divider"></div>
         </div>
 
         <div v-if="plansLoading" class="tw-flex tw-justify-center tw-py-20">
-          <div class="tw-w-10 tw-h-10 tw-border-4 tw-border-indigo-500 tw-border-t-transparent tw-rounded-full tw-animate-spin"></div>
+          <div class="courses-loader">
+            <div class="courses-loader__ring"></div>
+            <span class="courses-loader__text">Loading Plans...</span>
+          </div>
         </div>
 
         <div v-else-if="coursePlans.length > 0" class="row g-4 justify-content-center">
-          <div v-for="plan in coursePlans" :key="plan.id" class="col-lg-4 col-md-6">
-            <div class="course-plan-card">
+          <div v-for="(plan, idx) in coursePlans" :key="plan.id" class="col-lg-4 col-md-6">
+            <div class="course-plan-card" :class="{ 'course-plan-card--featured': idx === 1 }">
+              <!-- Featured badge -->
+              <div v-if="idx === 1" class="course-plan-card__featured-badge">
+                <i class="fas fa-star me-1"></i>Most Popular
+              </div>
+
+              <!-- Glowing border effect -->
+              <div class="course-plan-card__glow"></div>
+
               <div class="course-plan-card__top">
+                <!-- Icon -->
+                <div class="course-plan-card__icon">
+                  <i :class="getPlanIcon(idx)"></i>
+                </div>
                 <div class="course-plan-card__name">{{ plan.name }}</div>
                 <div class="course-plan-card__price">
                   <span class="cur">{{ currencySymbol }}</span>{{ formatAmount(plan.price) }}
+                  <span class="course-plan-card__price-period">/lifetime</span>
                 </div>
                 <div class="course-plan-card__meta">
-                  <span><i class="fas fa-calendar-alt me-1"></i>Lifetime</span>
-                  <span><i class="fas fa-book-open me-1"></i>{{ plan.courses_count }} courses</span>
+                  <span class="course-plan-card__meta-item">
+                    <i class="fas fa-infinity"></i>Lifetime Access
+                  </span>
+                  <span class="course-plan-card__meta-item">
+                    <i class="fas fa-book-open"></i>{{ plan.courses_count }} Courses
+                  </span>
+                  <span class="course-plan-card__meta-item">
+                    <i class="fas fa-certificate"></i>Certificate
+                  </span>
                 </div>
               </div>
+
               <div class="course-plan-card__body">
-                <p class="course-plan-card__desc">{{ plan.description || 'Unlock courses with this plan.' }}</p>
+                <p class="course-plan-card__desc">{{ plan.description || 'Unlock premium courses with this plan and accelerate your career growth.' }}</p>
+
+                <!-- Feature list -->
+                <ul class="course-plan-card__features">
+                  <li><i class="fas fa-check-circle"></i> Lifetime course access</li>
+                  <li><i class="fas fa-check-circle"></i> Completion certificate</li>
+                  <li><i class="fas fa-check-circle"></i> Expert instructors</li>
+                  <li><i class="fas fa-check-circle"></i> Study materials included</li>
+                </ul>
+
                 <div class="course-plan-card__actions">
                   <router-link
                     v-if="isAuthenticated"
                     :to="{ path: '/user/packages', query: { from_home_buy: 1 } }"
-                    class="btn btn--base w-100"
+                    class="course-plan-card__btn"
                   >
                     <i class="fas fa-shopping-cart me-2"></i>Buy Plan
+                    <span class="course-plan-card__btn-shine"></span>
                   </router-link>
                   <router-link
                     v-else
                     to="/register"
-                    class="btn btn--base w-100"
+                    class="course-plan-card__btn"
                   >
-                    <i class="fas fa-user-plus me-2"></i>Register to Buy
+                    <i class="fas fa-user-plus me-2"></i>Get Started
+                    <span class="course-plan-card__btn-shine"></span>
                   </router-link>
                 </div>
               </div>
@@ -59,8 +102,20 @@
           </div>
         </div>
 
-        <div v-else class="text-center py-4">
-          <p class="mb-0 text-muted">Plans will appear here once added.</p>
+        <div v-else class="courses-empty-state">
+          <div class="courses-empty-state__icon">
+            <i class="fas fa-book-open"></i>
+          </div>
+          <h5 class="courses-empty-state__title">Plans Coming Soon</h5>
+          <p class="courses-empty-state__text">Our course plans will appear here once available. Stay tuned!</p>
+        </div>
+
+        <!-- Bottom CTA -->
+        <div class="courses-cta text-center mt-5">
+          <router-link to="/all-courses" class="courses-cta__link">
+            <i class="fas fa-th-large me-2"></i>Browse All Courses
+            <i class="fas fa-arrow-right ms-2"></i>
+          </router-link>
         </div>
       </div>
     </section>
@@ -197,6 +252,12 @@ export default {
       return parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
     }
 
+    const getPlanIcon = (idx) => {
+      const icons = ['fas fa-seedling', 'fas fa-rocket', 'fas fa-crown']
+      return icons[idx] || 'fas fa-star'
+    }
+
+
     const fetchCoursePlans = async () => {
       plansLoading.value = true
       try {
@@ -321,6 +382,7 @@ export default {
       currencySymbol,
       isAuthenticated,
       formatAmount,
+      getPlanIcon,
       contactForm,
       contactLoading,
       contactInfo,
@@ -340,75 +402,398 @@ export default {
 /* ── Courses Plans Inline Section ── */
 .courses-inline-section {
   position: relative;
+  overflow: hidden;
 }
+
+/* Background orbs */
+.courses-bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  filter: blur(80px);
+}
+.courses-bg-orb--1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(255, 100, 20, 0.18) 0%, transparent 70%);
+  top: -100px;
+  left: -120px;
+}
+.courses-bg-orb--2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 149, 39, 0.14) 0%, transparent 70%);
+  bottom: -80px;
+  right: -80px;
+}
+
+/* Section label pill */
+.courses-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(90deg, rgba(255,100,20,0.18), rgba(255,149,39,0.18));
+  border: 1px solid rgba(255, 120, 30, 0.35);
+  color: hsl(25, 100%, 62%);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+
 .courses-inline-section .section-heading__title {
-  font-size: 2.25rem;
+  font-size: 2.5rem;
   font-weight: 800;
+  font-family: 'Montserrat', sans-serif;
 }
+
+/* Orange highlight on "Courses" word */
+.courses-title-highlight {
+  background: linear-gradient(90deg, hsl(12, 100%, 60%), hsl(29, 100%, 58%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .courses-inline-section .section-heading__desc {
   font-size: 1rem;
   opacity: 0.7;
-  max-width: 520px;
-  margin: 0.5rem auto 0;
+  max-width: 560px;
+  margin: 0.75rem auto 0;
+  line-height: 1.7;
+}
+
+/* Animated divider */
+.courses-title-divider {
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, hsl(12, 100%, 60%), hsl(29, 100%, 58%));
+  border-radius: 999px;
+  margin: 1.25rem auto 0;
+}
+
+/* Custom loader */
+.courses-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 60px 0;
+}
+.courses-loader__ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 120, 30, 0.2);
+  border-top-color: hsl(12, 100%, 60%);
+  animation: coursesLoaderSpin 0.8s linear infinite;
+}
+@keyframes coursesLoaderSpin {
+  to { transform: rotate(360deg); }
+}
+.courses-loader__text {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.5);
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 /* ── Course Plan Cards ── */
-.course-plan-card{
-  background: #fff;
-  border-radius: 18px;
-  border: 1px solid rgba(15,23,42,0.08);
+.course-plan-card {
+  position: relative;
+  background: hsl(210, 81%, 10%);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 120, 30, 0.18);
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(2,6,23,0.08);
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-.course-plan-card:hover{
-  transform: translateY(-4px);
-  box-shadow: 0 14px 40px rgba(2,6,23,0.12);
-}
-.course-plan-card__top{
-  padding: 18px 18px 14px;
-  background: linear-gradient(135deg, rgba(79,70,229,0.10), rgba(139,92,246,0.10));
-  border-bottom: 1px solid rgba(99,102,241,0.16);
-}
-.course-plan-card__name{
-  font-weight: 800;
-  font-size: 1.1rem;
-  color: #0f172a;
-  margin-bottom: 8px;
-}
-.course-plan-card__price{
-  font-weight: 900;
-  font-size: 1.8rem;
-  color: #4f46e5;
-  line-height: 1.1;
-}
-.course-plan-card__price .cur{
-  font-size: 1rem;
-  margin-right: 4px;
-  color: #6366f1;
-}
-.course-plan-card__meta{
-  margin-top: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: transform 0.35s cubic-bezier(.4,0,.2,1), box-shadow 0.35s cubic-bezier(.4,0,.2,1), border-color 0.35s ease;
+  height: 100%;
   display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  color: #475569;
-  font-weight: 600;
-  font-size: .9rem;
+  flex-direction: column;
 }
-.course-plan-card__body{
-  padding: 16px 18px 18px;
+.course-plan-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(255, 100, 20, 0.15);
+  border-color: rgba(255, 120, 30, 0.45);
 }
-.course-plan-card__desc{
-  margin: 0 0 14px;
-  color: #475569;
-  font-size: .95rem;
-  line-height: 1.5;
+
+/* Featured card (middle) */
+.course-plan-card--featured {
+  border-color: hsl(12, 100%, 60%) !important;
+  background: linear-gradient(160deg, hsl(210, 81%, 12%) 0%, hsl(210, 65%, 14%) 100%);
+  box-shadow: 0 12px 50px rgba(0,0,0,0.5), 0 0 60px rgba(255, 100, 20, 0.2);
+  transform: translateY(-6px);
 }
-.course-plan-card__actions .btn{
+.course-plan-card--featured:hover {
+  transform: translateY(-16px);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.55), 0 0 80px rgba(255, 100, 20, 0.28);
+}
+
+/* Featured badge */
+.course-plan-card__featured-badge {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, hsl(12, 100%, 55%), hsl(29, 100%, 55%));
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 5px 16px;
+  border-radius: 0 0 12px 12px;
+  z-index: 10;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(255, 100, 20, 0.4);
+}
+
+/* Glow overlay on hover */
+.course-plan-card__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: radial-gradient(ellipse at top center, rgba(255, 100, 20, 0.08) 0%, transparent 65%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+.course-plan-card:hover .course-plan-card__glow {
+  opacity: 1;
+}
+
+/* Top area */
+.course-plan-card__top {
+  position: relative;
+  padding: 28px 24px 22px;
+  background: linear-gradient(160deg, rgba(255,100,20,0.10) 0%, rgba(255,149,39,0.06) 100%);
+  border-bottom: 1px solid rgba(255, 120, 30, 0.15);
+  z-index: 1;
+}
+
+/* Plan icon */
+.course-plan-card__icon {
+  width: 52px;
+  height: 52px;
   border-radius: 14px;
-  padding: 12px 14px;
+  background: linear-gradient(135deg, hsl(12, 100%, 60%), hsl(29, 100%, 58%));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 20px rgba(255, 100, 20, 0.4);
+  font-size: 1.3rem;
+  color: #fff;
+}
+
+.course-plan-card__name {
   font-weight: 800;
+  font-size: 1.15rem;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 10px;
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: 0.2px;
+}
+
+.course-plan-card__price {
+  font-weight: 900;
+  font-size: 2.2rem;
+  color: hsl(12, 100%, 62%);
+  line-height: 1.1;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+  font-family: 'Montserrat', sans-serif;
+}
+.course-plan-card__price .cur {
+  font-size: 1.15rem;
+  margin-right: 2px;
+  color: hsl(29, 100%, 60%);
+  font-weight: 700;
+}
+.course-plan-card__price-period {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.4);
+  font-weight: 500;
+  margin-left: 2px;
+  align-self: flex-end;
+  margin-bottom: 4px;
+}
+
+/* Meta chips */
+.course-plan-card__meta {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.course-plan-card__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 120, 30, 0.12);
+  border: 1px solid rgba(255, 120, 30, 0.22);
+  color: hsl(25, 90%, 70%);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.2px;
+}
+.course-plan-card__meta-item i {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+/* Body */
+.course-plan-card__body {
+  position: relative;
+  padding: 22px 24px 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
+.course-plan-card__desc {
+  margin: 0 0 18px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+/* Features list */
+.course-plan-card__features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  flex: 1;
+}
+.course-plan-card__features li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.9rem;
+}
+.course-plan-card__features li i {
+  color: hsl(12, 100%, 60%);
+  font-size: 0.88rem;
+  flex-shrink: 0;
+}
+
+/* CTA Button with shine animation */
+.course-plan-card__btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, hsl(12, 100%, 55%), hsl(29, 100%, 56%));
+  color: #fff !important;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(255, 100, 20, 0.4);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.course-plan-card__btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 32px rgba(255, 100, 20, 0.55);
+  color: #fff !important;
+}
+/* Shine sweep effect */
+.course-plan-card__btn-shine {
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  transform: skewX(-20deg);
+  animation: btnShine 2.4s infinite;
+}
+@keyframes btnShine {
+  0%   { left: -75%; }
+  60%  { left: 130%; }
+  100% { left: 130%; }
+}
+
+/* Empty state */
+.courses-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+.courses-empty-state__icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 100, 20, 0.1);
+  border: 1px solid rgba(255, 100, 20, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 1.8rem;
+  color: hsl(12, 100%, 60%);
+}
+.courses-empty-state__title {
+  color: rgba(255,255,255,0.85);
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 1.2rem;
+}
+.courses-empty-state__text {
+  color: rgba(255,255,255,0.45);
+  font-size: 0.92rem;
+}
+
+/* Bottom Courses CTA link */
+.courses-cta__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: hsl(25, 95%, 65%);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border: 1px solid rgba(255, 120, 30, 0.3);
+  padding: 10px 24px;
+  border-radius: 999px;
+  background: rgba(255, 100, 20, 0.08);
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+}
+.courses-cta__link:hover {
+  background: rgba(255, 100, 20, 0.16);
+  border-color: rgba(255, 120, 30, 0.55);
+  color: hsl(25, 100%, 70%);
+  text-decoration: none;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(255, 100, 20, 0.2);
+}
+
+@media (max-width: 768px) {
+  .courses-inline-section .section-heading__title {
+    font-size: 1.9rem;
+  }
+  .course-plan-card--featured {
+    transform: translateY(0);
+  }
 }
 
 /* ── Contact Inline Section ── */

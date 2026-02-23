@@ -248,8 +248,8 @@
         <!-- History Management (Clear Logs) -->
         <div class="ma-card">
           <div class="ma-card__header ma-card__header--danger">
-            <h5 class="ma-card__title"><i class="fas fa-trash-alt me-2"></i>History Management (Danger Zone)</h5>
-            <p class="ma-card__subtitle text-white/60">Clear history logs independently. This action is irreversible.</p>
+            <h5 class="ma-card__title"><i class="fas fa-trash-alt me-2"></i>History Management (Reset Admin View)</h5>
+            <p class="ma-card__subtitle text-white/60">Hide old logs from Admin dashboard without deleting database records. Reversible by clearing timestamps.</p>
           </div>
           <div class="ma-card__body">
             <div class="ma-maintenance-grid">
@@ -299,13 +299,10 @@ export default {
     ]
 
     const clearActions = [
-      { key: 'orders', label: 'Clear All Orders', desc: 'Gateway attempts, plan purchases.', path: '/admin/clear-history/orders' },
-      { key: 'deposits', label: 'Clear Deposits', desc: 'Full deposit log (main wallet).', path: '/admin/clear-history/deposits' },
-      { key: 'withdrawals', label: 'Clear Withdrawals', desc: 'All withdrawal requests.', path: '/admin/clear-history/withdrawals' },
-      { key: 'transactions', label: 'Clear Transactions', desc: 'System-wide transaction history.', path: '/admin/clear-history/transactions' },
-      { key: 'commissions', label: 'Clear Commissions', desc: 'Affiliate logs and resets balances.', path: '/admin/clear-history/commissions' },
-      { key: 'logins', label: 'Clear Login Logs', desc: 'All user login history.', path: '/admin/clear-history/user-logins' },
-      { key: 'notifications', label: 'Clear Notifications', desc: 'All admin & user notifications.', path: '/admin/clear-history/notifications' },
+      { key: 'orders', label: 'Clear All Orders', desc: 'Hides gateway attempts & plan purchases from Admin view. User data is safe.', path: '/admin/clear-history/orders' },
+      { key: 'deposits', label: 'Clear Deposits', desc: 'Hides deposit history from Admin view. Does NOT delete user balance.', path: '/admin/clear-history/deposits' },
+      { key: 'withdrawals', label: 'Clear Withdrawals', desc: 'Hides withdrawal logs from Admin view. Does NOT affect user history.', path: '/admin/clear-history/withdrawals' },
+      { key: 'transactions', label: 'Clear Transactions', desc: 'Hides all transaction logs from Admin view. Safe for users.', path: '/admin/clear-history/transactions' },
     ]
 
     const summary = ref({
@@ -392,9 +389,9 @@ export default {
     })
 
     const confirmClear = async (action) => {
-      if (!confirm(`Are you sure you want to ${action.label.toLowerCase()}? This will PERMANENTLY DELETE all records in this category and cannot be undone.`)) return
-      const secondCheck = prompt(`Type "DELETE" to confirm:`)
-      if (secondCheck !== 'DELETE') return
+      if (!confirm(`Are you sure you want to ${action.label.toLowerCase()}? This will hide older logs from your Admin view for a cleaner slate. No actual data will be deleted from the database.`)) return
+      const secondCheck = prompt(`Type "CLEAR" to confirm:`)
+      if (secondCheck !== 'CLEAR') return
 
       cleaning.value = action.key
       try {

@@ -153,6 +153,7 @@ class CoursePlanController extends Controller
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
         
+        $general = gs();
         $cacheKey = $cachePrefix . $trx;
         $deposit = new \App\Models\Deposit();
         $deposit->user_id = $user->id;
