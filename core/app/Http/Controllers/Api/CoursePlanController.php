@@ -239,7 +239,7 @@ class CoursePlanController extends Controller
             }
         } catch (\Throwable $e) {
             \Log::error('Payment initiation error: ' . $e->getMessage(), ['exception' => $e]);
-            return responseError('payment_gateway_error', ['Payment gateway init failed. Please try again.']);
+            return responseError('payment_gateway_error', [$e->getMessage() ?: 'Payment gateway init failed. Please try again.']);
         }
 
         return responseSuccess('payment_initiated', ['Payment gateway initialized'], [

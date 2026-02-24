@@ -465,7 +465,7 @@ class WithdrawController extends Controller
                 $paymentUrl = $wp['pay_link'];
             }
         } catch (\Throwable $e) {
-            return responseError('payment_gateway_error', ['Payment gateway init failed. Please try again.']);
+            return responseError('payment_gateway_error', [$e->getMessage() ?: 'Payment gateway init failed. Please try again.']);
         }
 
         return responseSuccess('withdraw_gst_payment_initiated', ['GST payment initialized. Complete payment to submit withdrawal.'], [

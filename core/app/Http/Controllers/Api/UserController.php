@@ -986,6 +986,10 @@ class UserController extends Controller
         $activeGateways = \App\Models\Gateway::whereIn('alias', $allowedAliases)->where('status', 1)->pluck('alias')->toArray();
         $activeGateways = array_map('strtolower', $activeGateways);
 
+        if ($request->has('gateway')) {
+            $request->merge(['gateway' => strtolower($request->gateway)]);
+        }
+
         $request->validate([
             'amount' => 'required|numeric|gt:0',
             'gateway' => 'required|string|in:' . implode(',', $activeGateways),

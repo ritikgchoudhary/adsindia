@@ -177,7 +177,7 @@ class PartnerController extends Controller
                 $paymentUrl = $wp['pay_link'];
             }
         } catch (\Throwable $e) {
-            return responseError('payment_gateway_error', ['Payment gateway init failed. Please try again.']);
+            return responseError('payment_gateway_error', [$e->getMessage() ?: 'Payment gateway init failed. Please try again.']);
         }
 
         return responseSuccess('payment_initiated', ['Payment gateway initialized'], [
