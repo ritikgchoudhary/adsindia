@@ -163,7 +163,64 @@
              Total: {{ totalUsers }} Registered
           </div>
         </div>
-        <div class="tw-overflow-x-auto">
+        <!-- Mobile View (Card List) -->
+        <div class="tw-block md:tw-hidden">
+          <div v-if="loading" class="tw-py-20 tw-text-center">
+            <div class="tw-w-10 tw-h-10 tw-border-4 tw-border-indigo-500/20 tw-border-t-indigo-500 tw-rounded-full tw-animate-spin tw-mx-auto"></div>
+          </div>
+          <div v-else-if="users.length === 0" class="tw-py-24 tw-text-center">
+            <i class="fas fa-users-slash tw-text-2xl tw-text-slate-600 tw-mb-4"></i>
+            <h4 class="tw-text-white tw-font-black">No Users Found</h4>
+          </div>
+          <div v-else class="tw-p-4 tw-space-y-4">
+            <div v-for="user in users" :key="user.id" class="tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-p-5">
+              <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
+                <div class="tw-flex tw-items-center tw-gap-3">
+                  <div class="tw-w-10 tw-h-10 tw-bg-slate-800 tw-border tw-border-white/10 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-text-indigo-400 tw-font-black">
+                    {{ getInitials(user) }}
+                  </div>
+                  <div>
+                    <div class="tw-text-white tw-font-bold tw-text-sm">{{ user.firstname }} {{ user.lastname }}</div>
+                    <code class="tw-text-[10px] tw-text-indigo-400 tw-font-mono tw-bg-indigo-500/10 tw-px-2 tw-py-0.5 tw-rounded">ADS{{ user.id }}</code>
+                  </div>
+                </div>
+                <span :class="`tw-px-2 tw-py-1 tw-rounded-md tw-text-[9px] tw-font-black tw-uppercase tw-tracking-widest ${
+                  user.status === 'active' ? 'tw-bg-emerald-500/10 tw-text-emerald-400' : 'tw-bg-rose-500/10 tw-text-rose-400'
+                }`">
+                  {{ user.status === 'active' ? 'Active' : 'Banned' }}
+                </span>
+              </div>
+              
+              <div class="tw-grid tw-grid-cols-2 tw-gap-4 tw-mb-4 tw-border-y tw-border-white/5 tw-py-4">
+                <div>
+                  <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Phone</div>
+                  <div class="tw-text-slate-300 tw-text-xs tw-font-bold">{{ user.mobile || 'N/A' }}</div>
+                </div>
+                <div>
+                  <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Balance</div>
+                  <div class="tw-text-emerald-400 tw-text-xs tw-font-bold">₹{{ formatAmount(user.balance || 0) }}</div>
+                </div>
+              </div>
+
+              <div class="tw-flex tw-justify-between tw-items-center">
+                 <div class="tw-flex tw-gap-1">
+                    <span v-if="user.has_ad_certificate" class="tw-text-[9px] tw-font-black tw-text-emerald-500 tw-bg-emerald-500/10 tw-px-1.5 tw-py-0.5 tw-rounded">CERT</span>
+                    <span v-if="user.has_ad_certificate_view" class="tw-text-[9px] tw-font-black tw-text-purple-500 tw-bg-purple-500/10 tw-px-1.5 tw-py-0.5 tw-rounded">VIEW</span>
+                 </div>
+                 <div class="tw-flex tw-gap-2">
+                    <button @click="openManageUser(user)" class="tw-px-3 tw-py-2 tw-bg-indigo-500/10 tw-text-indigo-400 tw-rounded-lg tw-text-xs tw-font-bold tw-border-0">
+                      Manage
+                    </button>
+                    <button @click="viewKYC(user)" class="tw-px-3 tw-py-2 tw-bg-blue-500/10 tw-text-blue-400 tw-rounded-lg tw-text-xs tw-font-bold tw-border-0">
+                      KYC
+                    </button>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tw-overflow-x-auto tw-hidden md:tw-block">
           <table class="tw-w-full tw-border-collapse">
             <thead>
               <tr class="tw-bg-white/[0.02]">
@@ -224,7 +281,7 @@
                 <td class="tw-px-6 tw-py-5">
                    <div class="tw-flex tw-items-center tw-gap-2">
                       <span class="tw-text-slate-500 tw-text-xs tw-font-mono">{{ showPassword[user.id] ? user.password : '••••••••' }}</span>
-                      <button @click="togglePassword(user.id)" class="tw-text-slate-600 hover:tw-text-white">
+                      <button @click="togglePassword(user.id)" class="tw-text-slate-600 hover:tw-text-white tw-bg-transparent tw-border-0 tw-cursor-pointer">
                          <i :class="`fas ${showPassword[user.id] ? 'fa-eye-slash' : 'fa-eye'} tw-text-[10px]`"></i>
                       </button>
                    </div>
@@ -241,7 +298,7 @@
                 </td>
                 <td class="tw-px-6 tw-py-5">
                   <div class="tw-flex tw-items-center tw-gap-1.5 tw-text-indigo-400 tw-font-bold tw-text-sm">
-                    <span class="tw-text-slate-600 text-[10px] uppercase tracking-tighter">Rs</span>
+                    <span class="tw-text-slate-600 tw-text-[10px] tw-uppercase tw-tracking-tighter">Rs</span>
                     ₹{{ formatAmount(user.total_deposit || 0) }}
                   </div>
                 </td>
@@ -262,13 +319,13 @@
                 </td>
                 <td class="tw-px-6 tw-py-5 tw-text-right">
                   <div class="tw-flex tw-justify-end tw-gap-2">
-                    <button @click="openManageUser(user)" class="tw-w-8 tw-h-8 tw-bg-indigo-500/10 tw-text-indigo-400 tw-rounded-lg hover:tw-bg-indigo-500 tw-hover:tw-text-white tw-transition-all">
+                    <button @click="openManageUser(user)" class="tw-w-8 tw-h-8 tw-bg-indigo-500/10 tw-text-indigo-400 tw-rounded-lg hover:tw-bg-indigo-500 hover:tw-text-white tw-transition-all tw-border-0 tw-cursor-pointer">
                       <i class="fas fa-cog tw-text-xs"></i>
                     </button>
-                    <button @click="viewKYC(user)" class="tw-w-8 tw-h-8 tw-bg-blue-500/10 tw-text-blue-400 tw-rounded-lg hover:tw-bg-blue-500 tw-hover:tw-text-white tw-transition-all">
+                    <button @click="viewKYC(user)" class="tw-w-8 tw-h-8 tw-bg-blue-500/10 tw-text-blue-400 tw-rounded-lg hover:tw-bg-blue-500 hover:tw-text-white tw-transition-all tw-border-0 tw-cursor-pointer">
                       <i class="fas fa-university tw-text-xs"></i>
                     </button>
-                    <button @click="toggleUserStatus(user)" :class="`tw-w-8 tw-h-8 tw-rounded-lg tw-transition-all ${
+                    <button @click="toggleUserStatus(user)" :class="`tw-w-8 tw-h-8 tw-rounded-lg tw-transition-all tw-border-0 tw-cursor-pointer ${
                       user.status === 'active' ? 'tw-bg-rose-500/10 tw-text-rose-400 hover:tw-bg-rose-500' : 'tw-bg-emerald-500/10 tw-text-emerald-400 hover:tw-bg-emerald-500'
                     }`">
                       <i :class="`fas ${user.status === 'active' ? 'fa-ban' : 'fa-check-circle'} tw-text-xs`" class="hover:tw-text-white"></i>
@@ -352,6 +409,20 @@
                     <option value="">Select State</option>
                     <option v-for="state in indianStates" :key="state" :value="state">{{ state }}</option>
                   </select>
+                </div>
+                <!-- Quick Payment Balance Display -->
+                <div v-if="manageUser?.is_special_agent || manageUser?.special_agent_balance > 0" class="col-12 mt-4">
+                  <div class="ma-soft-box tw-bg-indigo-500/5 tw-border-indigo-500/20">
+                    <div class="tw-flex tw-items-center tw-justify-between">
+                      <div>
+                        <div class="tw-text-[10px] tw-font-black tw-text-indigo-400 tw-uppercase tw-tracking-widest tw-mb-1">Quick Payment Wallet</div>
+                        <div class="tw-text-xl tw-font-black tw-text-white">₹{{ formatAmount(manageUser?.special_agent_balance || 0) }}</div>
+                      </div>
+                      <div class="tw-w-10 tw-h-10 tw-bg-indigo-500/10 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-text-indigo-400">
+                        <i class="fas fa-qrcode"></i>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="ma-form-actions mt-4">
@@ -545,17 +616,39 @@
 
             <!-- Financials Pane -->
             <div v-else-if="manageTab === 'financials'" class="ma-pane">
+              <!-- Quick Payment Balance Display -->
+              <div v-if="manageUser?.is_special_agent || manageUser?.special_agent_balance > 0" class="tw-mb-6">
+                <div class="ma-soft-box tw-bg-indigo-500/5 tw-border-indigo-500/20">
+                  <div class="tw-flex tw-items-center tw-justify-between">
+                    <div>
+                      <div class="tw-text-[10px] tw-font-black tw-text-indigo-400 tw-uppercase tw-tracking-widest tw-mb-1">Current Quick Payment Balance</div>
+                      <div class="tw-text-2xl tw-font-black tw-text-white">₹{{ formatAmount(manageUser?.special_agent_balance || 0) }}</div>
+                    </div>
+                    <div class="tw-w-12 tw-h-12 tw-bg-indigo-500/10 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-text-indigo-400">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="ma-soft-box">
                 <div class="fw-bold mb-3">Adjust Balance</div>
                 <div class="row g-3 align-items-end">
-                  <div class="col-md-3">
+                  <div class="col-md-2">
+                    <label class="ma-form-label">Wallet</label>
+                    <select v-model="balanceForm.wallet" class="ma-form-input">
+                       <option value="main">Main Balance</option>
+                       <option value="special_agent">Quick Payment</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
                     <label class="ma-form-label">Type</label>
                     <select v-model="balanceForm.type" class="ma-form-input">
                       <option value="add">Add (+)</option>
                       <option value="subtract">Subtract (-)</option>
                     </select>
                   </div>
-                  <div class="col-md-3">
+                  <div class="col-md-2">
                     <label class="ma-form-label">Amount (₹)</label>
                     <input v-model.number="balanceForm.amount" type="number" class="ma-form-input" placeholder="0">
                   </div>
@@ -628,8 +721,26 @@
                   <input id="is_agent" type="checkbox" v-model="agentForm.is_agent">
                   <label for="is_agent" class="mb-0"><strong>Mark User as Agent</strong> (Gives access to agent portal)</label>
                 </div>
+                <div class="mt-4 d-flex align-items-center gap-3">
+                  <input id="is_special_agent" type="checkbox" v-model="agentForm.is_special_agent">
+                  <label for="is_special_agent" class="mb-0"><strong>Mark as Special Agent</strong> (Gives access to Quick Payment menu)</label>
+                </div>
                 <div class="mt-3 text-info small">
                   <i class="fas fa-info-circle me-1"></i> Agent commission rates are managed from the "Commission Management" section.
+                </div>
+
+                <div v-if="manageUser?.is_special_agent || manageUser?.special_agent_balance > 0" class="mt-4">
+                  <div class="ma-soft-box tw-bg-indigo-500/5 tw-border-indigo-500/20">
+                    <div class="tw-flex tw-items-center tw-justify-between">
+                      <div>
+                        <div class="tw-text-[10px] tw-font-black tw-text-indigo-400 tw-uppercase tw-tracking-widest tw-mb-1">Current Quick Payment Balance</div>
+                        <div class="tw-text-xl tw-font-black tw-text-white">₹{{ formatAmount(manageUser?.special_agent_balance || 0) }}</div>
+                      </div>
+                      <div class="tw-w-10 tw-h-10 tw-bg-indigo-500/10 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-text-indigo-400">
+                        <i class="fas fa-qrcode"></i>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="ma-form-actions mt-4">
@@ -844,7 +955,7 @@ export default {
 
     const agentLoading = ref(false)
     const savingAgent = ref(false)
-    const agentForm = ref({ is_agent: false })
+    const agentForm = ref({ is_agent: false, is_special_agent: false })
 
     const userTransactions = ref([])
     const trxLoading = ref(false)
@@ -856,7 +967,7 @@ export default {
     const commissions = ref([])
     const paymentsHistory = ref([])
 
-    const balanceForm = ref({ amount: 0, type: 'add', reason: '' })
+    const balanceForm = ref({ amount: 0, type: 'add', wallet: 'main', reason: '' })
     const adjustingBalance = ref(false)
     const resettingUser = ref(false)
     const deletingUser = ref(false)
@@ -1098,6 +1209,7 @@ export default {
         const res = await api.get(`/admin/user/${manageUser.value.id}/agent-commissions`)
         if (res.data?.status === 'success') {
           agentForm.value.is_agent = !!res.data.data?.is_agent
+          agentForm.value.is_special_agent = !!res.data.data?.is_special_agent
         }
       } catch (e) {} finally {
         agentLoading.value = false
@@ -1108,7 +1220,10 @@ export default {
       if (!manageUser.value) return
       savingAgent.value = true
       try {
-        const res = await api.post(`/admin/user/${manageUser.value.id}/agent`, { is_agent: agentForm.value.is_agent })
+        const res = await api.post(`/admin/user/${manageUser.value.id}/agent`, { 
+          is_agent: agentForm.value.is_agent,
+          is_special_agent: agentForm.value.is_special_agent 
+        })
         if (res.data?.status === 'success') {
           if (window.notify) window.notify('success', 'Agent status updated')
           fetchUsers(currentPage.value)
@@ -1194,7 +1309,7 @@ export default {
         const res = await api.post(`/admin/user/${manageUser.value.id}/adjust-balance`, balanceForm.value)
         if (res.data?.status === 'success') {
           if (window.notify) window.notify('success', 'Balance adjusted')
-          balanceForm.value = { amount: 0, type: 'add', reason: '' }
+          balanceForm.value = { amount: 0, type: 'add', wallet: 'main', reason: '' }
           fetchUsers(currentPage.value)
         }
       } catch (e) {} finally {

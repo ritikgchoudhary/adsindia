@@ -213,9 +213,13 @@ export default {
         if (res.data?.status === 'success') {
           notify('success', 'Terminal Updated')
           await fetchGateways()
+        } else {
+          const msg = res.data?.message?.error?.[0] || 'Upload failed'
+          notify('error', msg)
         }
       } catch (e) {
-        notify('error', 'Upload failed')
+        const msg = e.response?.data?.message?.error?.[0] || 'Connection Error'
+        notify('error', msg)
       } finally {
         uploading.value = false
         if (fileInput.value) fileInput.value.value = ''
@@ -229,9 +233,11 @@ export default {
         if (res.data?.status === 'success') {
           notify('success', 'Terminal Removed')
           await fetchGateways()
+        } else {
+          notify('error', res.data?.message?.error?.[0] || 'Removal failed')
         }
       } catch (e) {
-        notify('error', 'Action failed')
+        notify('error', e.response?.data?.message?.error?.[0] || 'Connection Error')
       }
     }
 

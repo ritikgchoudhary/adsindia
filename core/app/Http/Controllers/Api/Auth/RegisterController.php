@@ -234,7 +234,7 @@ class RegisterController extends Controller
     {
         $request->validate([
             'registration_token' => 'required|string',
-            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush,custom_qr',
         ]);
 
         $regToken = $request->registration_token;
@@ -302,12 +302,27 @@ class RegisterController extends Controller
         $gw_param = 'watchpay_trx=';
         if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
         if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        if ($gateway === 'custom_qr') $gw_param = 'custom_qr_trx=';
         
         // Create Payment via Gateway Selection
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
         $pageUrl = $base . '/register?' . $gw_param . urlencode($trx);
         $notifyUrl = $base . '/ipn/' . $gateway;
         
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
+        
+        // Store status session for IPN (consistent key for both gateways)
+        cache()->put($cachePrefix . $trx, [
+            'type' => 'registration',
+            'user_id' => 0,
+            'amount' => (float) $registrationFee,
+            'status' => 'pending',
+            'created_at' => now()->format('Y-m-d H:i:s'),
+        ], now()->addHours(2));
+
         try {
             if ($gateway == 'simplypay') {
                 $sp = \App\Lib\SimplyPayGateway::createPayment([
@@ -333,6 +348,20 @@ class RegisterController extends Controller
                     'payPhone' => $registrationData['mobile'] ?? '',
                 ]);
                 $paymentUrl = $ap['pay_link'];
+            } elseif ($gateway === 'custom_qr') {
+                $qrImages = $gw->extra ?? [];
+                $fullQrImages = array_map(function($img) {
+                    return asset(getFilePath('gateway') . '/' . $img);
+                }, (is_string($qrImages) ? json_decode($qrImages, true) : (array)$qrImages));
+                
+                return responseSuccess('initiated', ['Manual QR tracking initiated'], [
+                    'payment_url' => $pageUrl . '&method=custom_qr',
+                    'is_manual' => true,
+                    'qr_images' => $fullQrImages,
+                    'registration_token' => $regToken,
+                    'trx' => $trx,
+                    'amount' => (float) $registrationFee,
+                ]);
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -347,25 +376,11 @@ class RegisterController extends Controller
             return responseError('payment_gateway_error', ['Payment gateway init failed: ' . $e->getMessage()]);
         }
 
-        $cachePrefix = 'watchpay_payment_';
-        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
-        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
-        
-        // Store status session for IPN (consistent key for both gateways)
-        cache()->put($cachePrefix . $trx, [
-            'type' => 'registration_fee',
-            'registration_token' => $regToken,
-            'amount' => $registrationFee,
-            'package_id' => (int) ($registrationData['pkg'] ?? 0),
-            'package_name' => (string) ($pkgMeta['name'] ?? 'Package'),
-            'status' => 'pending',
-            'created_at' => now()->format('Y-m-d H:i:s'),
-        ], now()->addHours(2));
-
-        return responseSuccess('payment_initiated', ['Payment gateway initialized'], [
+        return responseSuccess('payment_initiated', ['Payment initialized successfully!'], [
             'payment_url' => $paymentUrl,
+            'registration_token' => $regToken,
             'trx' => $trx,
-            'amount' => $registrationFee,
+            'amount' => (float) $registrationFee,
             'currency_symbol' => gs('cur_sym') ?? '₹',
             'gateway_name' => $gateway == 'simplypay' ? 'SimplyPay' : ($gateway == 'rupeerush' ? 'RupeeRush' : 'WatchPay'),
             'package_name' => (string) ($pkgMeta['name'] ?? 'Package'),
@@ -401,9 +416,13 @@ class RegisterController extends Controller
             return responseError('payment_not_verified', ['Payment not verified. Please complete payment first.']);
         }
         $gateway = $paymentData['gateway'] ?? 'watchpay';
+        if (!in_array($gateway, ['simplypay', 'watchpay', 'rupeerush', 'custom_qr'])) {
+             $gateway = 'watchpay';
+        }
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $gwSession = cache()->get($cachePrefix . $paymentTrx);
         $gwOk = is_array($gwSession) && (($gwSession['status'] ?? '') === 'success') && (($gwSession['registration_token'] ?? null) === $regToken);

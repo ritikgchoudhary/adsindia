@@ -151,6 +151,32 @@
             <div class="tw-text-slate-400 tw-text-sm">Redirecting to {{ selectedGateway === 'simplypay' ? 'SimplyPay' : (selectedGateway === 'rupeerush' ? 'RupeeRush' : (selectedGateway === 'custom_qr' ? 'Manual QR' : 'WatchPay')) }} gateway</div>
           </div>
 
+          <!-- State: Manual QR -->
+          <div v-else-if="status === 'manual_qr'" class="tw-py-4 tw-text-center">
+             <h4 class="tw-text-white tw-font-black tw-text-lg tw-mb-6">Scan to Pay ₹{{ formatAmount(itemAmount) }}</h4>
+             
+             <div class="tw-space-y-6">
+                <div v-for="(img, idx) in manualQrImages" :key="idx" class="tw-bg-white tw-p-4 tw-rounded-3xl tw-inline-block">
+                  <img :src="img" class="tw-w-64 tw-h-auto tw-rounded-xl" />
+                </div>
+             </div>
+
+             <div class="tw-mt-10 tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-3xl tw-p-6 tw-text-left">
+                <div class="tw-flex tw-items-center tw-gap-4 tw-mb-4 tw-text-amber-400">
+                  <i class="fas fa-info-circle"></i>
+                  <span class="tw-text-xs tw-font-black tw-uppercase">Verification Required</span>
+                </div>
+                <p class="tw-text-slate-400 tw-text-[11px] tw-leading-relaxed tw-mb-0">
+                  This is a manual QR system. Once you complete the payment, our team will verify it. Track your transaction status in history.
+                </p>
+             </div>
+
+             <div class="tw-flex tw-gap-4 tw-mt-8">
+                <button @click="goBack" class="tw-flex-1 tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-rounded-2xl tw-font-black tw-transition-all tw-border-0">I have paid</button>
+                <button @click="status = 'selecting'" class="tw-flex-1 tw-py-4 tw-bg-red-500/10 tw-text-red-500 hover:tw-bg-red-500/20 tw-rounded-2xl tw-font-black tw-transition-all tw-border-0">Cancel</button>
+             </div>
+          </div>
+
           <!-- State: Error -->
           <div v-else class="tw-py-8">
             <div class="tw-w-20 tw-h-20 tw-bg-rose-500/10 tw-rounded-[30px] tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-8 tw-text-rose-500">
@@ -192,9 +218,10 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
-    const status = ref('selecting') // selecting | processing | failed
+    const status = ref('selecting') // selecting | processing | failed | manual_qr
     const errorMessage = ref('Unknown error')
     const selectedGateway = ref('')
+    const manualQrImages = ref([])
     const gatewayStatuses = ref({
       watchpay: 1,
       simplypay: 1,
@@ -317,9 +344,16 @@ export default {
 
         const data = res?.data
         const paymentUrl = data?.data?.payment_url
-        if (data?.status === 'success' && paymentUrl) {
-          window.location.replace(paymentUrl)
-          return
+        if (data?.status === 'success') {
+          if (data.data?.is_manual) {
+            manualQrImages.value = data.data.qr_images || []
+            status.value = 'manual_qr'
+            return
+          }
+          if (paymentUrl) {
+            window.location.replace(paymentUrl)
+            return
+          }
         }
 
         const msg = data?.message?.error?.[0] || data?.message?.[0] || data?.message || 'Payment initiation failed'
@@ -367,8 +401,8 @@ export default {
       itemAmount,
       currencySymbol,
       formatAmount,
-      pageTitleDisplay,
-      gatewayStatuses
+      gatewayStatuses,
+      manualQrImages
     }
   }
 }

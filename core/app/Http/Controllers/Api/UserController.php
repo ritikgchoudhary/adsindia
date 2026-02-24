@@ -349,7 +349,7 @@ class UserController extends Controller
         }
 
         $gateway = $request->input('gateway', 'watchpay');
-        if (!in_array($gateway, ['watchpay', 'simplypay', 'rupeerush'])) {
+        if (!in_array($gateway, ['watchpay', 'simplypay', 'rupeerush', 'custom_qr'])) {
             $gateway = 'watchpay';
         }
 
@@ -368,6 +368,17 @@ class UserController extends Controller
 
         // 🟢 Create a real Deposit record so it shows in "All Orders" immediately (Initiated)
         $gate = \App\Models\Gateway::where('alias', $gateway)->first();
+        if (!$gate || $gate->status != 1) {
+            return responseError('gateway_unavailable', ['Selected payment gateway is currently unavailable.']);
+        }
+
+        if ($gateway === 'custom_qr') {
+            $qrImages = $gate->extra ?? [];
+            if (empty($qrImages)) {
+                return responseError('gateway_unavailable', ['Manual QR system is currently not available. Please contact admin.']);
+            }
+        }
+
         $deposit = new \App\Models\Deposit();
         $deposit->user_id = $user->id;
         $deposit->method_code = $gate->code ?? 0;
@@ -384,6 +395,7 @@ class UserController extends Controller
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $cacheKey = $cachePrefix . $trx;
         cache()->put($cacheKey, [
@@ -397,6 +409,7 @@ class UserController extends Controller
         $gw_param = 'watchpay_trx=';
         if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
         if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        if ($gateway === 'custom_qr') $gw_param = 'custom_qr_trx=';
         
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
         $pageUrl = $base . '/user/account-kyc?' . $gw_param . urlencode($trx);
@@ -426,6 +439,19 @@ class UserController extends Controller
                     'payPhone' => $user->mobile,
                 ]);
                 $paymentUrl = $ap['pay_link'];
+            } elseif ($gateway === 'custom_qr') {
+                $qrImages = $gate->extra ?? [];
+                $fullQrImages = array_map(function($img) {
+                    return asset(getFilePath('gateway') . '/' . $img);
+                }, (is_string($qrImages) ? json_decode($qrImages, true) : (array)$qrImages));
+                
+                return responseSuccess('initiated', ['Manual QR tracking initiated'], [
+                    'payment_url' => $pageUrl . '&method=custom_qr',
+                    'is_manual' => true,
+                    'qr_images' => $fullQrImages,
+                    'trx' => $trx,
+                    'amount' => (float) $kycFee,
+                ]);
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -471,9 +497,13 @@ class UserController extends Controller
 
         $trx = (string) $request->trx;
         $gateway = $request->input('gateway', 'watchpay');
+        if (!in_array($gateway, ['simplypay', 'watchpay', 'rupeerush', 'custom_qr'])) {
+            $gateway = 'watchpay';
+        }
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $cacheKey = $cachePrefix . $trx;
 
@@ -530,6 +560,7 @@ class UserController extends Controller
             'dial_code' => $user->dial_code,
             'balance' => $user->balance,
             'is_agent' => (bool) ($user->is_agent ?? false),
+            'is_special_agent' => (bool) ($user->is_special_agent ?? false),
             'status' => $user->status,
             'ev' => $user->ev,
             'sv' => $user->sv,
@@ -942,5 +973,168 @@ class UserController extends Controller
         } else {
             return responseError('invalid_code', ['Wrong verification code']);
         }
+    }
+
+    public function initiateSpecialPayment(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user->is_special_agent) {
+            return responseError('unauthorized', ['This feature is only for special agents.']);
+        }
+
+        $allowedAliases = ['SimplyPay', 'simplypay', 'watchpay', 'WatchPay', 'Rupeerush', 'rupeerush', 'custom_qr'];
+        $activeGateways = \App\Models\Gateway::whereIn('alias', $allowedAliases)->where('status', 1)->pluck('alias')->toArray();
+        $activeGateways = array_map('strtolower', $activeGateways);
+
+        $request->validate([
+            'amount' => 'required|numeric|gt:0',
+            'gateway' => 'required|string|in:' . implode(',', $activeGateways),
+        ]);
+
+        $amount = (float) $request->amount;
+        $gateway = strtolower($request->gateway);
+        $trx = getTrx();
+
+        // Create Deposit
+        $gate = \App\Models\Gateway::where('alias', $gateway)->first();
+        if (!$gate) {
+             $gate = \App\Models\Gateway::where('alias', 'like', $gateway)->first();
+        }
+
+        $deposit = new \App\Models\Deposit();
+        $deposit->user_id = $user->id;
+        $deposit->method_code = $gate->code ?? 0;
+        $deposit->method_currency = 'INR';
+        $deposit->amount = $amount;
+        $deposit->charge = 0;
+        $deposit->rate = 1;
+        $deposit->final_amount = $amount;
+        $deposit->trx = $trx;
+        $deposit->remark = 'special_agent_payment';
+        $deposit->status = Status::PAYMENT_INITIATE;
+        $deposit->save();
+
+        // Cache session for IPN
+        $cachePrefix = $gateway . '_payment_';
+        if ($gateway === 'watchpay') $cachePrefix = 'watchpay_payment_';
+        $cacheKey = $cachePrefix . $trx;
+        cache()->put($cacheKey, [
+            'type' => 'special_agent_payment',
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'status' => 'pending',
+            'created_at' => now()->format('Y-m-d H:i:s'),
+        ], now()->addHours(2));
+
+        $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
+        $gw_param = $gateway . '_trx=';
+        $pageUrl = $base . '/user/quick-payment?' . $gw_param . urlencode($trx) . '&amount=' . $amount;
+        $notifyUrl = $base . '/ipn/' . $gateway;
+
+        try {
+            if ($gateway === 'simplypay') {
+                $sp = \App\Lib\SimplyPayGateway::createPayment([
+                    'merOrderNo' => $trx,
+                    'amount' => $amount,
+                    'notifyUrl' => $notifyUrl,
+                    'returnUrl' => $pageUrl,
+                    'name' => $user->fullname ?: $user->username,
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'attach' => 'Special Agent Payment',
+                ]);
+                $paymentUrl = $sp['pay_link'];
+            } elseif ($gateway === 'rupeerush') {
+                $ap = \App\Lib\RupeeRushGateway::createPayment([
+                    'outTradeNo' => $trx,
+                    'totalAmount' => $amount,
+                    'notifyUrl' => $notifyUrl,
+                    'payViewUrl' => $pageUrl,
+                    'payName' => $user->fullname ?: $user->username,
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'payPhone' => $user->mobile,
+                ]);
+                $paymentUrl = $ap['pay_link'];
+            } elseif ($gateway === 'watchpay') {
+                $wp = \App\Lib\WatchPayGateway::createWebPayment($trx, $amount, 'Special Agent Payment', $pageUrl, $notifyUrl);
+                $paymentUrl = $wp['pay_link'];
+            } elseif ($gateway === 'custom_qr') {
+                $qrImages = $gate->extra ?? [];
+                if (empty($qrImages)) {
+                    return responseError('gateway_unavailable', ['Manual QR system is currently not available. Please contact admin.']);
+                }
+                $fullQrImages = array_map(function($img) {
+                    return asset(getFilePath('gateway') . '/' . $img);
+                }, (is_string($qrImages) ? json_decode($qrImages, true) : (array)$qrImages));
+                // For custom_qr, we just return the page with TRX, and frontend will show QR
+                return responseSuccess('initiated', ['Custom QR tracking initiated'], [
+                    'payment_url' => $pageUrl . '&method=custom_qr',
+                    'is_manual' => true,
+                    'qr_images' => $fullQrImages,
+                    'trx' => $trx,
+                    'amount' => $amount
+                ]);
+            } else {
+                throw new \Exception("Gateway not supported for rapid payment");
+            }
+        } catch (\Throwable $e) {
+            return responseError('gateway_error', [$e->getMessage()]);
+        }
+
+        return responseSuccess('initiated', ['Payment initiated'], ['payment_url' => $paymentUrl]);
+    }
+
+    public function confirmSpecialPayment(Request $request)
+    {
+        $request->validate(['trx' => 'required', 'gateway' => 'required']);
+        $user = auth()->user();
+        $trx = $request->trx;
+        $gateway = strtolower($request->gateway);
+        $cacheKey = $gateway . '_payment_' . $trx;
+        $session = cache()->get($cacheKey);
+
+        if (!$session || ($session['type'] ?? '') !== 'special_agent_payment' || (int)$session['user_id'] !== (int)$user->id) {
+            return responseError('not_found', ['Session not found']);
+        }
+        if (($session['status'] ?? '') !== 'success') {
+            return responseError('pending', ['Payment not verified']);
+        }
+
+        return responseSuccess('success', ['Payment verified successfully']);
+    }
+
+    public function specialPaymentHistory()
+    {
+        $user = auth()->user();
+        if (!$user->is_special_agent) {
+            return responseError('unauthorized', ['This feature is only for special agents.']);
+        }
+
+        $history = \App\Models\Deposit::where('user_id', $user->id)
+            ->where('remark', 'special_agent_payment')
+            ->orderBy('id', 'desc')
+            ->limit(10)
+            ->get(['trx', 'amount', 'status', 'created_at']);
+
+        $allowedAliases = ['SimplyPay', 'simplypay', 'watchpay', 'WatchPay', 'Rupeerush', 'rupeerush', 'custom_qr'];
+        $activeGateways = \App\Models\Gateway::whereIn('alias', $allowedAliases)->where('status', 1)->get()->makeVisible('extra');
+
+        foreach ($activeGateways as $gw) {
+            if ($gw->alias == 'custom_qr' && $gw->extra) {
+                $images = is_string($gw->extra) ? json_decode($gw->extra, true) : (array) $gw->extra;
+                $formattedImages = [];
+                foreach ($images as $img) {
+                    $formattedImages[] = asset(getFilePath('gateway') . '/' . $img);
+                }
+                $gw->qr_images = $formattedImages;
+            }
+        }
+
+        return responseSuccess('history', ['History retrieved'], [
+            'balance' => $user->special_agent_balance,
+            'history' => $history,
+            'gateways' => $activeGateways
+        ]);
     }
 }

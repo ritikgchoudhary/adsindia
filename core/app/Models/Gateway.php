@@ -16,7 +16,7 @@ class Gateway extends Model
 
     protected $casts = [
         'code' => 'string',
-        'extra' => 'object',
+        'extra' => 'array',
         'input_form'=> 'object',
         'supported_currencies'=>'object'
     ];

@@ -131,6 +131,8 @@ class PaymentController extends Controller {
                 $details = 'Partner Program Join via ' . $methodName;
             } elseif ($deposit->remark == 'registration_fee') {
                 $details = 'Registration Fee via ' . $methodName;
+            } elseif ($deposit->remark == 'special_agent_payment') {
+                $details = 'Special Agent Payment via ' . $methodName;
             }
 
             // Support both advertiser deposits and user deposits
@@ -213,7 +215,21 @@ class PaymentController extends Controller {
                     $transaction->remark       = 'deposit';
                     $transaction->save();
                 } 
-                // 2. Handle KYC Fee
+                elseif ($deposit->remark == 'special_agent_payment') {
+                    $user->special_agent_balance = (float) ($user->special_agent_balance ?? 0) + (float) $deposit->amount;
+                    $user->save();
+
+                    $transaction               = new Transaction();
+                    $transaction->user_id      = $deposit->user_id;
+                    $transaction->amount       = $deposit->amount;
+                    $transaction->post_balance = $user->special_agent_balance;
+                    $transaction->charge       = $deposit->charge;
+                    $transaction->trx_type     = '+';
+                    $transaction->details      = $details;
+                    $transaction->trx          = $deposit->trx;
+                    $transaction->remark       = 'special_agent_payment';
+                    $transaction->save();
+                }                // 2. Handle KYC Fee
                 elseif ($deposit->remark == 'kyc_fee') {
                     if (!(bool) ($user->has_paid_kyc_fee ?? false)) {
                         $user->has_paid_kyc_fee = true;

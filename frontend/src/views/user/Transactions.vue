@@ -63,8 +63,8 @@
           </form>
         </div>
 
-        <!-- Table -->
-        <div class="tw-overflow-x-auto">
+        <!-- Desktop Table -->
+        <div class="tw-hidden lg:tw-block">
           <table class="tw-w-full tw-text-sm tw-borer-collapse">
             <thead>
               <tr class="tw-bg-slate-50 tw-border-b tw-border-slate-200">
@@ -101,17 +101,38 @@
                   <span class="tw-text-slate-600 tw-leading-snug tw-max-w-xs tw-block">{{ trx.details }}</span>
                 </td>
               </tr>
-              <tr v-if="transactions.length === 0">
-                <td colspan="5" class="tw-px-6 tw-py-16 tw-text-center">
-                  <div class="tw-w-16 tw-h-16 tw-bg-slate-50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
-                    <i class="fas fa-receipt tw-text-3xl tw-text-slate-300"></i>
-                  </div>
-                  <h3 class="tw-text-slate-900 tw-font-bold tw-text-lg tw-mb-1">No transactions found</h3>
-                  <p class="tw-text-slate-500 tw-text-sm">Try adjusting your filters or check back later.</p>
-                </td>
-              </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Mobile View (Card List) -->
+        <div class="lg:tw-hidden tw-p-3 sm:tw-p-4 tw-space-y-3">
+          <div v-for="trx in transactions" :key="trx.id" class="tw-bg-white tw-border tw-border-slate-100 tw-rounded-xl tw-p-4 tw-shadow-sm">
+            <div class="tw-flex tw-justify-between tw-items-start tw-mb-3">
+              <div class="tw-flex tw-flex-col">
+                <span class="tw-text-slate-900 tw-font-bold tw-text-sm">{{ formatRemark(trx.remark) }}</span>
+                <span class="tw-text-slate-400 tw-text-[10px] tw-font-mono tw-mt-1">{{ trx.trx }}</span>
+              </div>
+              <span class="tw-font-black tw-text-base" :class="trx.trx_type === '+' ? 'tw-text-emerald-600' : 'tw-text-rose-500'">
+                {{ trx.trx_type }} {{ currencySymbol }}{{ formatAmount(trx.amount) }}
+              </span>
+            </div>
+            <div class="tw-text-slate-500 tw-text-[11px] tw-leading-relaxed tw-mb-3 tw-bg-slate-50 tw-p-2 tw-rounded-lg">
+              {{ trx.details }}
+            </div>
+            <div class="tw-flex tw-justify-between tw-items-center tw-pt-3 tw-border-t tw-border-slate-50">
+              <span class="tw-text-slate-400 tw-text-[10px]">{{ trx.created_at_human }}</span>
+              <div class="tw-text-right">
+                <span class="tw-text-slate-400 tw-text-[9px] tw-uppercase tw-font-bold tw-tracking-wider tw-block">Balance</span>
+                <span class="tw-text-slate-700 tw-font-bold tw-text-sm">{{ currencySymbol }}{{ formatAmount(trx.post_balance) }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="transactions.length === 0" class="tw-py-16 tw-text-center">
+             <i class="fas fa-receipt tw-text-4xl tw-text-slate-200 tw-mb-3"></i>
+             <p class="tw-text-slate-500 tw-text-sm">No transactions found</p>
+          </div>
         </div>
         
         <!-- Pagination (Simple placeholder if needed later) -->

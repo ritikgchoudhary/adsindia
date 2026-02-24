@@ -46,10 +46,12 @@ class User extends Authenticatable {
         'kyc_data'          => 'object',
         'ver_code_send_at'  => 'datetime',
         'is_agent'          => 'boolean',
+        'is_special_agent'  => 'boolean',
         'has_ad_certificate'=> 'boolean',
         'has_ad_certificate_view'=> 'boolean',
         'kyc_fee_paid_at'   => 'datetime',
         'partner_plan_valid_until' => 'datetime',
+        'special_agent_balance' => 'float',
     ];
 
     public function loginLogs() {

@@ -40,6 +40,7 @@
             <div class="tw-flex tw-flex-col tw-gap-5 tw-mb-10">
               <!-- WatchPay Option -->
               <button 
+                v-if="gatewayStatuses.watchpay"
                 @click="selectedGateway = 'watchpay'"
                 class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-indigo-500/50 hover:tw-shadow-lg hover:tw-shadow-indigo-500/5 tw-flex tw-items-center tw-justify-between"
                 :class="selectedGateway === 'watchpay' ? 'tw-border-indigo-500 tw-bg-indigo-500/5 tw-ring-1 tw-ring-indigo-500/50' : ''"
@@ -60,6 +61,7 @@
 
               <!-- SimplyPay Option -->
               <button 
+                v-if="gatewayStatuses.simplypay"
                 @click="selectedGateway = 'simplypay'"
                 class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-emerald-500/50 hover:tw-shadow-lg hover:tw-shadow-emerald-500/5 tw-flex tw-items-center tw-justify-between"
                 :class="selectedGateway === 'simplypay' ? 'tw-border-emerald-500 tw-bg-emerald-500/5 tw-ring-1 tw-ring-emerald-500/50' : ''"
@@ -77,14 +79,63 @@
                     <i class="fas fa-chevron-right tw-text-slate-500 tw-text-sm tw-transition-transform group-hover:tw-translate-x-0.5 group-hover:tw-text-emerald-400"></i>
                 </div>
               </button>
+
+              <!-- RupeeRush Option -->
+              <button 
+                v-if="gatewayStatuses.rupeerush"
+                @click="selectedGateway = 'rupeerush'"
+                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-orange-500/50 hover:tw-shadow-lg hover:tw-shadow-orange-500/5 tw-flex tw-items-center tw-justify-between"
+                :class="selectedGateway === 'rupeerush' ? 'tw-border-orange-500 tw-bg-orange-500/5 tw-ring-1 tw-ring-orange-500/50' : ''"
+              >
+                <div class="tw-flex tw-items-center">
+                  <div class="tw-w-14 tw-h-14 tw-bg-orange-600 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-orange-600/20 tw-transition-transform group-hover:tw-scale-110">
+                    <i class="fas fa-indian-rupee-sign tw-text-white tw-text-xl"></i>
+                  </div>
+                  <div>
+                    <div class="tw-font-bold tw-text-white tw-text-lg">RupeeRush</div>
+                    <div class="tw-text-xs tw-text-slate-500">UPI Gateway - Rupee Rush</div>
+                  </div>
+                </div>
+                <div class="tw-w-10 tw-h-10 tw-bg-slate-800/50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-transition-colors group-hover:tw-bg-orange-500/20">
+                    <i class="fas fa-chevron-right tw-text-slate-500 tw-text-sm tw-transition-transform group-hover:tw-translate-x-0.5 group-hover:tw-text-orange-400"></i>
+                </div>
+              </button>
+
+              <!-- Custom QR Option -->
+              <button 
+                v-if="gatewayStatuses.customqr"
+                @click="selectedGateway = 'custom_qr'"
+                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-slate-500/50 hover:tw-shadow-lg hover:tw-shadow-slate-500/5 tw-flex tw-items-center tw-justify-between"
+                :class="selectedGateway === 'custom_qr' ? 'tw-border-slate-400 tw-bg-slate-500/5 tw-ring-1 tw-ring-slate-400/50' : ''"
+              >
+                <div class="tw-flex tw-items-center">
+                  <div class="tw-w-14 tw-h-14 tw-bg-slate-700 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-slate-600/20 tw-transition-transform group-hover:tw-scale-110">
+                    <i class="fas fa-qrcode tw-text-white tw-text-xl"></i>
+                  </div>
+                  <div>
+                    <div class="tw-font-bold tw-text-white tw-text-lg">Manual QR</div>
+                    <div class="tw-text-xs tw-text-slate-500">Scan & Upload Screenshot</div>
+                  </div>
+                </div>
+                <div class="tw-w-10 tw-h-10 tw-bg-slate-800/50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-transition-colors group-hover:tw-bg-slate-500/20">
+                    <i class="fas fa-chevron-right tw-text-slate-500 tw-text-sm tw-transition-transform group-hover:tw-translate-x-0.5 group-hover:tw-text-slate-400"></i>
+                </div>
+              </button>
             </div>
 
             <button 
               type="button"
-              @click="goBack"
-              class="tw-inline-flex tw-items-center tw-gap-2 tw-text-[13px] tw-font-bold tw-text-slate-500 hover:tw-text-white/80 tw-transition-all tw-duration-300 tw-bg-transparent tw-border-0 tw-cursor-pointer"
+              @click="initiatePayment"
+              class="tw-w-full tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-rounded-2xl tw-font-bold tw-transition-all tw-border-0 tw-shadow-lg tw-shadow-indigo-600/20 tw-mb-4 disabled:tw-opacity-50"
+              :disabled="!selectedGateway"
             >
-              <i class="fas fa-arrow-left"></i>
+              Continue Payment
+            </button>
+            <button 
+              type="button"
+              @click="goBack"
+              class="tw-w-full tw-py-4 tw-bg-slate-800 hover:tw-bg-slate-700 tw-text-white tw-rounded-2xl tw-font-bold tw-transition-all tw-border-0"
+            >
               Cancel
             </button>
           </div>
@@ -97,6 +148,32 @@
             </div>
             <div class="tw-text-white tw-font-bold tw-text-xl tw-mb-2">{{ processingPayment ? 'Redirecting...' : 'Verifying Payment...' }}</div>
             <div class="tw-text-slate-400 tw-text-sm">Please do not close this window.</div>
+          </div>
+
+          <!-- State: Manual QR -->
+          <div v-else-if="paymentStatus === 'manual_qr'" class="tw-py-4 tw-text-center">
+             <h4 class="tw-text-white tw-font-black tw-text-lg tw-mb-6">Scan to Pay ₹{{ formatAmount(paymentAmount) }}</h4>
+             
+             <div class="tw-space-y-6">
+                <div v-for="(img, idx) in manualQrImages" :key="idx" class="tw-bg-white tw-p-4 tw-rounded-3xl tw-inline-block">
+                  <img :src="img" class="tw-w-64 tw-h-auto tw-rounded-xl" />
+                </div>
+             </div>
+
+             <div class="tw-mt-10 tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-3xl tw-p-6 tw-text-left">
+                <div class="tw-flex tw-items-center tw-gap-4 tw-mb-4 tw-text-amber-400">
+                  <i class="fas fa-info-circle"></i>
+                  <span class="tw-text-xs tw-font-black tw-uppercase">Verification Required</span>
+                </div>
+                <p class="tw-text-slate-400 tw-text-[11px] tw-leading-relaxed tw-mb-0">
+                  This is a manual QR system. Once you complete the payment, our admin team will verify it. Turnback to dashboard and check history.
+                </p>
+             </div>
+
+             <div class="tw-flex tw-gap-4 tw-mt-8">
+                <button @click="$router.push('/dashboard')" class="tw-flex-1 tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-rounded-2xl tw-font-black tw-transition-all tw-border-0">I have paid</button>
+                <button @click="paymentStatus = 'selecting_gateway'" class="tw-flex-1 tw-py-4 tw-bg-red-500/10 tw-text-red-500 hover:tw-bg-red-500/20 tw-rounded-2xl tw-font-black tw-transition-all tw-border-0">Cancel</button>
+             </div>
           </div>
 
           <!-- Error State -->
@@ -142,7 +219,7 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
-    const paymentStatus = ref('processing') // selecting_gateway, processing, success, failed
+    const paymentStatus = ref('processing') // selecting_gateway, processing, success, failed, manual_qr
     const paymentAmount = ref(0)
     const planName = ref('')
     const planId = ref(null)
@@ -151,10 +228,25 @@ export default {
     const errorMessage = ref('')
     const selectedGateway = ref('')
     const processingPayment = ref(false)
+    const manualQrImages = ref([])
+    const gatewayStatuses = ref({
+      watchpay: 1, simplypay: 1, rupeerush: 1, customqr: 1
+    })
 
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
       return parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    }
+
+    const fetchGatewayStatus = async () => {
+      try {
+        const res = await api.get('/gateway-status')
+        if (res.data?.status === 'success') {
+          gatewayStatuses.value = res.data.data
+        }
+      } catch (e) {
+        console.error('Failed to fetch gateway status:', e)
+      }
     }
 
     const processPayment = async () => {
@@ -212,11 +304,19 @@ export default {
           payment_method: 'gateway',
           gateway: selectedGateway.value
         })
-        if (response.data.status === 'success' && response.data.data?.payment_url) {
-          window.location.href = response.data.data.payment_url
-          return
+        const data = response.data
+        if (data.status === 'success') {
+          if (data.data?.is_manual) {
+            manualQrImages.value = data.data.qr_images || []
+            paymentStatus.value = 'manual_qr'
+            return
+          }
+          if (data.data?.payment_url) {
+            window.location.href = data.data.payment_url
+            return
+          }
         }
-        throw new Error(response.data.message?.error?.[0] || 'Initiation failed')
+        throw new Error(data.message?.error?.[0] || data.message || 'Initiation failed')
       } catch (error) {
         errorMessage.value = error.response?.data?.message?.error?.[0] || error.message
         paymentStatus.value = 'failed'
@@ -233,7 +333,10 @@ export default {
     const goBack = () => router.push('/user/ad-plans')
     const goToAdsWork = () => router.push('/user/ads-work')
 
-    onMounted(processPayment)
+    onMounted(() => {
+        fetchGatewayStatus()
+        processPayment()
+    })
 
     return {
       paymentStatus,
@@ -244,6 +347,8 @@ export default {
       errorMessage,
       selectedGateway,
       processingPayment,
+      manualQrImages,
+      gatewayStatuses,
       formatAmount,
       retryPayment,
       goBack,

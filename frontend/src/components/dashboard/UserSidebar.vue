@@ -203,6 +203,18 @@
         </router-link>
       </li>
 
+      <!-- Quick Payment (Special Agent Only) -->
+      <li v-if="isSpecialAgent" class="tw-mb-1">
+        <router-link 
+          to="/user/quick-payment" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline"
+          :class="isActive('/user/quick-payment') ? 'tw-bg-indigo-500/10 tw-text-indigo-400 tw-border-l-2 tw-border-indigo-500' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200 tw-border-l-2 tw-border-transparent'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-qrcode"></i></span>
+          <span class="tw-flex-1">Quick Payment</span>
+        </router-link>
+      </li>
+
       <!-- Customer Support -->
       <li class="tw-mb-1">
         <router-link 
@@ -274,7 +286,8 @@ export default {
     const route = useRoute()
     const siteLogo = ref('/assets/images/logo_icon/logo.png?v=' + new Date().getTime())
     const openSubmenus = ref([])
-    const isAgent = ref(false)
+    const isAgent = ref(localStorage.getItem('is_agent') === 'true')
+    const isSpecialAgent = ref(localStorage.getItem('is_special_agent') === 'true')
 
     const onLogoError = () => { siteLogo.value = null }
 
@@ -308,6 +321,10 @@ export default {
         const res = await api.get('/user-info', { __skipLoader: true })
         const d = res?.data?.data || res?.data
         isAgent.value = !!(d?.is_agent)
+        isSpecialAgent.value = !!(d?.is_special_agent)
+        
+        localStorage.setItem('is_agent', isAgent.value)
+        localStorage.setItem('is_special_agent', isSpecialAgent.value)
         // Ensure submenu visibility if user is already on an agent-only page
         if (isDropdownActive(teamMenuPaths.value) && !openSubmenus.value.includes('team')) {
           openSubmenus.value.push('team')
@@ -350,6 +367,7 @@ export default {
       openSubmenus,
       toggleSubmenu,
       isAgent,
+      isSpecialAgent,
       teamMenuPaths
     }
   }

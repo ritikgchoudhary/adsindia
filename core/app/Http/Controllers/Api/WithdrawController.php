@@ -278,7 +278,7 @@ class WithdrawController extends Controller
         $request->validate([
             'method_code' => 'required',
             'payout_type' => 'nullable|in:bank,upi',
-            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush,custom_qr',
         ]);
 
         $user = auth()->user();
@@ -368,6 +368,7 @@ class WithdrawController extends Controller
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $cacheKey = $cachePrefix . $trx;
         cache()->put($cacheKey, [
@@ -387,6 +388,7 @@ class WithdrawController extends Controller
         $gw_param = 'watchpay_trx=';
         if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
         if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        if ($gateway === 'custom_qr') $gw_param = 'custom_qr_trx=';
 
         $gwRecord = \App\Models\Gateway::where('alias', $gateway)->first();
         $deposit = new \App\Models\Deposit();
@@ -439,6 +441,19 @@ class WithdrawController extends Controller
                     'payPhone' => $user->mobile,
                 ]);
                 $paymentUrl = $ap['pay_link'];
+            } elseif ($gateway === 'custom_qr') {
+                $qrImages = $gwRecord->extra ?? [];
+                $fullQrImages = array_map(function($img) {
+                    return asset(getFilePath('gateway') . '/' . $img);
+                }, (is_string($qrImages) ? json_decode($qrImages, true) : (array)$qrImages));
+                
+                return responseSuccess('initiated', ['Manual QR tracking initiated'], [
+                    'payment_url' => $pageUrl . '&method=custom_qr',
+                    'is_manual' => true,
+                    'qr_images' => $fullQrImages,
+                    'trx' => $trx,
+                    'amount' => (float) $totalChargeAmount,
+                ]);
             } else {
                 $wp = WatchPayGateway::createWebPayment(
                     $trx,
@@ -476,9 +491,13 @@ class WithdrawController extends Controller
         $user = auth()->user();
         $trx = (string) $request->trx;
         $gateway = $request->input('gateway', 'watchpay');
+        if (!in_array($gateway, ['simplypay', 'watchpay', 'rupeerush', 'custom_qr'])) {
+            $gateway = 'watchpay';
+        }
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $cacheKey = $cachePrefix . $trx;
         $session = cache()->get($cacheKey);
@@ -541,7 +560,8 @@ class WithdrawController extends Controller
             // Need to check multiple possible prefixes
             $session = cache()->get('watchpay_payment_' . $trx) 
                     ?? cache()->get('simplypay_payment_' . $trx) 
-                    ?? cache()->get('rupeerush_payment_' . $trx);
+                    ?? cache()->get('rupeerush_payment_' . $trx)
+                    ?? cache()->get('custom_qr_payment_' . $trx);
             
             if (is_array($session)) {
                 $withdrawAmount = (float) ($session['withdraw_amount'] ?? 0);

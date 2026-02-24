@@ -5,31 +5,31 @@
       <!-- Main Content Card -->
       <div class="ma-glass-card">
         <!-- Header Section -->
-        <div class="ma-card-header">
-          <div class="tw-flex tw-items-center tw-gap-3">
-             <div class="header-icon-box">
+        <div class="ma-card-header tw-p-4 sm:tw-p-6">
+          <div class="tw-flex tw-items-center tw-gap-2 sm:tw-gap-3">
+             <div class="header-icon-box tw-w-9 tw-h-9 sm:tw-w-11 sm:tw-h-11 tw-text-lg sm:tw-text-xl">
                 <i class="fas fa-file-invoice-dollar"></i>
              </div>
              <div>
-                <h5 class="tw-text-white tw-font-bold tw-text-lg tw-m-0 text-glow">Withdrawal Log</h5>
-                <p class="tw-text-slate-400 tw-text-sm tw-m-0">Your history of withdrawal requests</p>
+                <h5 class="tw-text-white tw-font-bold tw-text-base sm:tw-text-lg tw-m-0">Withdrawal Log</h5>
+                <p class="tw-text-slate-400 tw-text-[10px] sm:tw-text-sm tw-m-0">Your request history</p>
              </div>
           </div>
           
-          <div class="header-actions">
+          <div class="header-actions tw-gap-2 sm:tw-gap-3">
             <form @submit.prevent="handleSearch" class="tw-relative tw-w-full md:tw-w-auto">
               <input 
                 type="search" 
                 v-model="searchQuery" 
-                placeholder="TRX Number..." 
-                class="search-input"
+                placeholder="TRX..." 
+                class="search-input tw-py-2 tw-text-xs sm:tw-text-sm"
               >
               <button type="submit" class="search-btn">
-                <i class="fas fa-search"></i>
+                <i class="fas fa-search tw-text-xs"></i>
               </button>
             </form>
-            <button class="ma-refresh-btn" @click="fetchWithdraws" :class="{ 'tw-animate-spin': loading }">
-               <i class="fas fa-sync-alt"></i>
+            <button class="ma-refresh-btn tw-w-9 tw-h-9 sm:tw-w-11 sm:tw-h-11" @click="fetchWithdraws" :class="{ 'tw-animate-spin': loading }">
+               <i class="fas fa-sync-alt tw-text-xs"></i>
             </button>
           </div>
         </div>
@@ -88,33 +88,33 @@
         </div>
 
         <!-- Mobile / Tablet List Layout -->
-        <div class="lg:tw-hidden tw-p-2 tw-space-y-4">
-           <div v-for="withdraw in withdraws" :key="withdraw.id" class="ma-mobile-card">
-              <div class="mobile-card-header">
+        <div class="lg:tw-hidden tw-p-3 tw-space-y-3">
+           <div v-for="withdraw in withdraws" :key="withdraw.id" class="ma-mobile-card tw-p-3 tw-rounded-xl">
+              <div class="mobile-card-header tw-mb-3">
                  <div class="tw-flex tw-items-center tw-gap-2">
-                    <div class="method-icon-mini" :class="getMethodClass(withdraw.method?.name)">
+                    <div class="method-icon-mini tw-w-7 tw-h-7 tw-text-xs" :class="getMethodClass(withdraw.method?.name)">
                        <i :class="getMethodIcon(withdraw.method?.name)"></i>
                     </div>
                     <div>
-                       <div class="tw-text-white tw-font-bold tw-text-sm">{{ withdraw.method?.name }}</div>
-                       <div class="tw-text-[10px] tw-text-indigo-400 tw-font-mono">{{ withdraw.trx }}</div>
+                       <div class="tw-text-white tw-font-bold tw-text-xs">{{ withdraw.method?.name }}</div>
+                       <div class="tw-text-[9px] tw-text-indigo-400 tw-font-mono">{{ withdraw.trx }}</div>
                     </div>
                  </div>
-                 <div class="status-badge-container scale-75" v-html="withdraw.status_badge"></div>
+                 <div class="status-badge-container tw-scale-90" v-html="withdraw.status_badge"></div>
               </div>
               <div class="mobile-card-body">
-                 <div class="tw-flex tw-justify-between tw-items-end">
+                 <div class="tw-flex tw-justify-between tw-items-center">
                     <div>
-                       <div class="tw-text-white tw-font-black tw-text-xl">
+                       <div class="tw-text-white tw-font-black tw-text-lg">
                           {{ currencySymbol }}{{ formatAmount(withdraw.amount) }}
                        </div>
-                       <div class="tw-text-[10px] tw-text-slate-500 tw-mt-1">
-                           {{ formatDateTime(withdraw.created_at) }}
+                       <div class="tw-text-[9px] tw-text-slate-500">
+                            {{ withdraw.created_at_human }}
                        </div>
                     </div>
                     <div class="tw-text-right">
-                       <button @click="showDetails(withdraw)" class="ma-mobile-action">
-                          Reason <i class="fas fa-chevron-right tw-ml-1"></i>
+                       <button @click="showDetails(withdraw)" class="tw-bg-indigo-600 tw-text-white tw-border-0 tw-px-3 tw-py-1.5 tw-rounded-lg tw-text-[10px] tw-font-bold tw-cursor-pointer">
+                          Reason <i class="fas fa-chevron-right tw-ml-1 tw-text-[8px]"></i>
                        </button>
                     </div>
                  </div>

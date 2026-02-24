@@ -291,6 +291,12 @@ const routes = [
     component: () => import('../views/user/Leaderboard.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/user/quick-payment',
+    name: 'QuickPayment',
+    component: () => import('../views/user/QuickPayment.vue'),
+    meta: { requiresAuth: true }
+  },
   // Admin Routes
   {
     path: '/admin/login',

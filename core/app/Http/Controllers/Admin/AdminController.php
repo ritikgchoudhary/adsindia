@@ -190,10 +190,12 @@ class AdminController extends Controller {
                 'mobile'     => $user->mobile ?? '',
                 'password'   => $user->password,
                 'balance'    => $user->balance,
+                'special_agent_balance' => (float)($user->special_agent_balance ?? 0),
                 'affiliate_balance' => $user->affiliate_balance,
                 'total_deposit' => $totalDeposit,
                 'status'     => $user->status == 1 ? 'active' : 'banned',
                 'is_agent'   => (bool) ($user->is_agent ?? false),
+                'is_special_agent' => (bool) ($user->is_special_agent ?? false),
                 'partner_plan_id' => $user->partner_plan_id,
                 'partner_plan_valid_until' => $user->partner_plan_valid_until,
                 'is_partner' => (bool)($user->partner_plan_id && $user->partner_plan_valid_until && now()->lt($user->partner_plan_valid_until)),
@@ -442,6 +444,8 @@ class AdminController extends Controller {
                 'dial_code' => $user->dial_code,
                 'status' => $user->status == 1 ? 'active' : 'banned',
                 'is_agent' => (bool) ($user->is_agent ?? false),
+                'is_special_agent' => (bool) ($user->is_special_agent ?? false),
+                'special_agent_balance' => (float) ($user->special_agent_balance ?? 0),
                 'ev' => $user->ev,
                 'sv' => $user->sv,
                 'kv' => $user->kv,
@@ -577,6 +581,9 @@ class AdminController extends Controller {
                 'lastname' => $user->lastname,
                 'mobile' => $user->mobile,
                 'state' => $user->state ?? null,
+                'is_agent' => (bool)($user->is_agent ?? false),
+                'is_special_agent' => (bool)($user->is_special_agent ?? false),
+                'special_agent_balance' => (float)($user->special_agent_balance ?? 0),
                 'referred_by' => $user->ref_by ?: null,
             ],
         ]);
@@ -600,19 +607,44 @@ class AdminController extends Controller {
     }
 
     /**
+     * Mark/unmark a user as Special Agent (Admin API)
+     */
+    public function setUserSpecialAgent(Request $request, $id)
+    {
+        $request->validate([
+            'is_special_agent' => 'required|boolean',
+        ]);
+
+        $user = User::findOrFail($id);
+        $user->is_special_agent = (bool) $request->is_special_agent;
+        $user->save();
+
+        return responseSuccess('special_agent_updated', ['Special Agent status updated successfully'], [
+            'user' => [
+                'id' => $user->id,
+                'is_special_agent' => (bool) ($user->is_special_agent ?? false),
+            ],
+        ]);
+    }
+
+    /**
      * Mark/unmark a user as Agent (Admin API)
      */
     public function setUserAgent(Request $request, $id)
     {
         $request->validate([
-            'is_agent' => 'required|boolean',
+            'is_agent' => 'nullable|boolean',
+            'is_special_agent' => 'nullable|boolean',
         ]);
 
         $user = User::findOrFail($id);
-        if (Schema::hasColumn('users', 'is_agent')) {
+        if ($request->has('is_agent')) {
             $user->is_agent = (bool) $request->is_agent;
-            $user->save();
         }
+        if ($request->has('is_special_agent')) {
+            $user->is_special_agent = (bool) $request->is_special_agent;
+        }
+        $user->save();
 
         // When enabling agent mode, ensure settings row exists (admin can edit later).
         // Defaults match current business expectation and remain fully configurable.
@@ -655,6 +687,7 @@ class AdminController extends Controller {
             'user' => [
                 'id' => $user->id,
                 'is_agent' => (bool) ($user->is_agent ?? false),
+                'is_special_agent' => (bool) ($user->is_special_agent ?? false),
             ],
         ]);
     }
@@ -670,6 +703,7 @@ class AdminController extends Controller {
         return responseSuccess('agent_commissions', ['Agent commission settings retrieved'], [
             'user_id' => $user->id,
             'is_agent' => (bool) ($user->is_agent ?? false),
+            'is_special_agent' => (bool) ($user->is_special_agent ?? false),
             'settings' => $settings,
         ]);
     }
@@ -2629,23 +2663,27 @@ class AdminController extends Controller {
 
     public function adjustBalance(Request $request, $id) {
         $request->validate([
-            'amount' => 'required|numeric',
+            'amount' => 'required|numeric|gt:0',
             'type' => 'required|in:add,subtract',
+            'wallet' => 'nullable|in:main,special_agent',
             'reason' => 'required|string|max:255',
         ]);
 
         $user = User::findOrFail($id);
         $amount = abs($request->amount);
         $reason = $request->reason;
+        $wallet = $request->get('wallet', 'main');
+
+        $balanceField = ($wallet === 'special_agent') ? 'special_agent_balance' : 'balance';
 
         if ($request->type == 'add') {
-            $user->balance += $amount;
+            $user->$balanceField += $amount;
             $trx_type = '+';
         } else {
-            if ($user->balance < $amount) {
-                return responseError('insufficient_balance', ['User does not have enough balance to subtract this amount']);
+            if ($user->$balanceField < $amount) {
+                return responseError('insufficient_balance', ['User does not have enough ' . str_replace('_', ' ', $wallet) . ' balance to subtract this amount']);
             }
-            $user->balance -= $amount;
+            $user->$balanceField -= $amount;
             $trx_type = '-';
         }
 
@@ -2654,7 +2692,7 @@ class AdminController extends Controller {
         $transaction = new Transaction();
         $transaction->user_id = $user->id;
         $transaction->amount = $amount;
-        $transaction->post_balance = $user->balance;
+        $transaction->post_balance = $user->$balanceField;
         $transaction->charge = 0;
         $transaction->trx_type = $trx_type;
         $transaction->details = "Admin adjustment: " . $reason;
@@ -2785,7 +2823,7 @@ class AdminController extends Controller {
 
     public function uploadGatewayQr(Request $request) {
         $request->validate([
-            'qr_images.*' => ['nullable', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png', 'webp'])]
+            'qr_images.*' => ['nullable', new FileTypeValidate(['jpg', 'jpeg', 'png', 'webp'])]
         ]);
 
         $gateway = Gateway::where('alias', 'custom_qr')->first();
@@ -2800,16 +2838,20 @@ class AdminController extends Controller {
             $gateway->save();
         }
 
-        $qrImages = json_decode($gateway->extra, true) ?? [];
+        $qrImages = $gateway->extra ?? [];
 
         if ($request->hasFile('qr_images')) {
             foreach ($request->file('qr_images') as $image) {
-                $filename = fileUploader($image, getFilePath('gateway'));
-                $qrImages[] = $filename;
+                try {
+                    $filename = fileUploader($image, getFilePath('gateway'));
+                    $qrImages[] = $filename;
+                } catch (\Exception $e) {
+                    return responseError('upload_failed', ['Image upload failed: ' . $e->getMessage()]);
+                }
             }
         }
 
-        $gateway->extra = $qrImages; // Eloquent handles the cast
+        $gateway->extra = $qrImages; 
         $gateway->save();
 
         return responseSuccess('qr_uploaded', ['QR images uploaded']);
@@ -2817,7 +2859,7 @@ class AdminController extends Controller {
 
     public function removeGatewayQr($index) {
         $gateway = Gateway::where('alias', 'custom_qr')->firstOrFail();
-        $qrImages = json_decode($gateway->extra, true) ?? [];
+        $qrImages = $gateway->extra ?? [];
 
         if (isset($qrImages[$index])) {
             fileManager()->removeFile(getFilePath('gateway') . '/' . $qrImages[$index]);

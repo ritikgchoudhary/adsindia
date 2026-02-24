@@ -1,15 +1,15 @@
 <template>
   <DashboardLayout page-title="Affiliate Withdraw" :dark-theme="true">
-    <div class="tw-min-h-screen tw-py-8 tw-px-4">
+    <div class="tw-min-h-screen tw-py-4 sm:tw-py-8 tw-px-3 sm:tw-px-4">
       <div class="tw-max-w-5xl tw-mx-auto">
         <!-- Header Section -->
-        <div class="tw-mb-8 tw-flex tw-flex-col md:tw-flex-row md:tw-items-center tw-justify-between tw-gap-4">
+        <div class="tw-mb-4 sm:tw-mb-8 tw-flex tw-flex-col md:tw-flex-row md:tw-items-center tw-justify-between tw-gap-3 sm:tw-gap-4">
           <div>
-            <h1 class="tw-text-3xl tw-font-extrabold tw-text-white tw-tracking-tight tw-mb-2">Affiliate Withdrawal</h1>
-            <p class="tw-text-slate-400 tw-text-sm">Transfer your affiliate earnings to your linked bank account securely.</p>
+            <h1 class="tw-text-xl sm:tw-text-3xl tw-font-extrabold tw-text-white tw-tracking-tight tw-mb-1 sm:tw-mb-2">Affiliate Withdrawal</h1>
+            <p class="tw-text-slate-400 tw-text-[11px] sm:tw-text-sm">Transfer your earnings to your bank account securely.</p>
           </div>
-          <router-link to="/user/affiliate-income" class="tw-group tw-flex tw-items-center tw-gap-2 tw-px-5 tw-py-2.5 tw-bg-white/5 hover:tw-bg-white/10 tw-border tw-border-white/10 tw-rounded-xl tw-text-white tw-font-semibold tw-transition-all tw-no-underline">
-            <i class="fas fa-arrow-left tw-text-xs tw-transition-transform group-hover:tw--translate-x-1"></i>
+          <router-link to="/user/affiliate-income" class="tw-group tw-flex tw-items-center tw-justify-center tw-gap-2 tw-px-4 tw-py-2 tw-bg-white/5 hover:tw-bg-white/10 tw-border tw-border-white/10 tw-rounded-xl tw-text-white tw-font-semibold tw-transition-all tw-no-underline tw-text-xs sm:tw-text-base">
+            <i class="fas fa-arrow-left tw-text-[10px] sm:tw-text-xs tw-transition-transform group-hover:tw--translate-x-1"></i>
             <span>Back to Income</span>
           </router-link>
         </div>
@@ -18,13 +18,13 @@
           <!-- Left: Selection & Tools (2/3 width) -->
           <div class="lg:tw-col-span-2 tw-space-y-6">
             <!-- Method Selection (Moved to Top) -->
-            <div class="tw-bg-slate-900/50 tw-backdrop-blur-xl tw-border tw-border-white/10 tw-rounded-3xl tw-p-6 md:tw-p-8">
-              <div class="tw-flex tw-items-center tw-justify-between tw-mb-6">
-                <div class="tw-flex tw-items-center tw-gap-3">
-                  <div class="tw-w-10 tw-h-10 tw-bg-indigo-500/20 tw-rounded-xl tw-flex tw-items-center tw-justify-center">
-                    <i class="fas fa-university tw-text-indigo-400"></i>
+            <div class="tw-bg-slate-900/50 tw-backdrop-blur-xl tw-border tw-border-white/10 tw-rounded-2xl sm:tw-rounded-3xl tw-p-4 sm:tw-p-8">
+              <div class="tw-flex tw-items-center tw-justify-between tw-mb-4 sm:tw-mb-6">
+                <div class="tw-flex tw-items-center tw-gap-2 sm:tw-gap-3">
+                  <div class="tw-w-8 tw-h-8 sm:tw-w-10 sm:tw-h-10 tw-bg-indigo-500/20 tw-rounded-lg sm:tw-rounded-xl tw-flex tw-items-center tw-justify-center">
+                    <i class="fas fa-university tw-text-indigo-400 tw-text-sm sm:tw-text-base"></i>
                   </div>
-                  <h2 class="tw-text-xl tw-font-bold tw-text-white tw-m-0">Select Destination</h2>
+                  <h2 class="tw-text-base sm:tw-text-xl tw-font-bold tw-text-white tw-m-0">Select Destination</h2>
                 </div>
                 <span class="tw-hidden md:tw-block tw-px-3 tw-py-1 tw-bg-white/5 tw-rounded-full tw-text-[10px] tw-text-slate-400 tw-font-bold tw-uppercase">KYC Verified Required</span>
               </div>
@@ -46,7 +46,7 @@
                 <p class="tw-text-slate-500 tw-text-sm tw-max-w-xs tw-mx-auto">We couldn't find any available withdrawal methods for your region.</p>
               </div>
 
-              <div v-else class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+              <div v-else class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-3 sm:tw-gap-4">
                 <label
                   v-for="(method, index) in withdrawMethods"
                   :key="method?.id || index"
@@ -61,10 +61,10 @@
                     class="tw-hidden"
                   >
                   <div 
-                    class="tw-bg-white/5 tw-border-2 tw-rounded-2xl tw-p-5 tw-flex tw-items-center tw-gap-4 tw-transition-all tw-duration-300 group-hover:tw-bg-white/10"
+                    class="tw-bg-white/5 tw-border-2 tw-rounded-xl sm:tw-rounded-2xl tw-p-3 sm:tw-p-5 tw-flex tw-items-center tw-gap-3 sm:tw-gap-4 tw-transition-all tw-duration-300 group-hover:tw-bg-white/10"
                     :class="selectedMethod === method.id ? 'tw-border-indigo-500 tw-bg-indigo-500/5 tw-shadow-lg tw-shadow-indigo-500/10' : 'tw-border-white/5'"
                   >
-                    <div class="tw-relative tw-w-14 tw-h-14 tw-bg-white tw-rounded-xl tw-p-2 tw-flex tw-items-center tw-justify-center tw-shadow-sm">
+                    <div class="tw-relative tw-w-10 tw-h-10 sm:tw-w-14 sm:tw-h-14 tw-bg-white tw-rounded-lg sm:tw-rounded-xl tw-p-1.5 sm:tw-p-2 tw-flex tw-items-center tw-justify-center tw-shadow-sm">
                       <img
                         :src="method.image || fallbackMethodIcon"
                         :alt="method.name"
@@ -73,13 +73,13 @@
                       >
                     </div>
                     <div class="tw-flex-1">
-                      <span class="tw-block tw-text-white tw-font-bold tw-text-sm">{{ method.name }}</span>
-                      <span class="tw-block tw-text-slate-400 tw-text-[10px] tw-mt-1">Default Payout Method</span>
+                      <span class="tw-block tw-text-white tw-font-bold tw-text-xs sm:tw-text-sm">{{ method.name }}</span>
+                      <span class="tw-block tw-text-slate-400 tw-text-[8px] sm:tw-text-[10px] tw-mt-0.5">Secure Payout</span>
                     </div>
-                    <div class="tw-w-6 tw-h-6 tw-rounded-full tw-border-2 tw-flex tw-items-center tw-justify-center tw-transition-all"
+                    <div class="tw-w-5 tw-h-5 tw-rounded-full tw-border-2 tw-flex tw-items-center tw-justify-center tw-transition-all"
                       :class="selectedMethod === method.id ? 'tw-bg-indigo-500 tw-border-indigo-500' : 'tw-border-white/20'"
                     >
-                      <i v-if="selectedMethod === method.id" class="fas fa-check tw-text-white tw-text-[10px]"></i>
+                      <i v-if="selectedMethod === method.id" class="fas fa-check tw-text-white tw-text-[8px]"></i>
                     </div>
                   </div>
                 </label>
@@ -87,33 +87,33 @@
             </div>
 
             <!-- Balance Card (Now Below Selection) -->
-            <div class="tw-relative tw-overflow-hidden tw-rounded-3xl tw-bg-gradient-to-br tw-from-slate-800 tw-to-slate-900 tw-p-8 tw-shadow-2xl tw-border tw-border-white/5">
+            <div class="tw-relative tw-overflow-hidden tw-rounded-2xl sm:tw-rounded-3xl tw-bg-gradient-to-br tw-from-slate-800 tw-to-slate-900 tw-p-5 sm:tw-p-8 tw-shadow-2xl tw-border tw-border-white/5">
               <div class="tw-relative tw-z-10">
-                <div class="tw-flex tw-justify-between tw-items-start tw-mb-8">
-                  <div class="tw-w-12 tw-h-12 tw-bg-indigo-500/20 tw-backdrop-blur-md tw-rounded-xl tw-flex tw-items-center tw-justify-center">
-                    <i class="fas fa-wallet tw-text-indigo-400 tw-text-xl"></i>
+                <div class="tw-flex tw-justify-between tw-items-start tw-mb-4 sm:tw-mb-8">
+                  <div class="tw-w-10 tw-h-10 sm:tw-w-12 sm:tw-h-12 tw-bg-indigo-500/20 tw-backdrop-blur-md tw-rounded-xl tw-flex tw-items-center tw-justify-center">
+                    <i class="fas fa-wallet tw-text-indigo-400 tw-text-base sm:tw-text-xl"></i>
                   </div>
                   <div class="tw-text-right">
-                    <span class="tw-text-white/60 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Affiliate Wallet</span>
-                    <div class="tw-flex tw-items-center tw-gap-1 tw-justify-end tw-mt-1">
-                      <div class="tw-w-2 tw-h-2 tw-bg-emerald-400 tw-rounded-full tw-animate-pulse"></div>
-                      <span class="tw-text-emerald-400 tw-text-[10px] tw-font-bold tw-uppercase">Active</span>
+                    <span class="tw-text-white/60 tw-text-[10px] sm:tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Affiliate Wallet</span>
+                    <div class="tw-flex tw-items-center tw-gap-1 tw-justify-end tw-mt-0.5">
+                      <div class="tw-w-1.5 tw-h-1.5 tw-bg-emerald-400 tw-rounded-full tw-animate-pulse"></div>
+                      <span class="tw-text-emerald-400 tw-text-[8px] sm:tw-text-[10px] tw-font-bold tw-uppercase">Active</span>
                     </div>
                   </div>
                 </div>
                 
                 <div class="tw-mb-2">
-                  <span class="tw-text-white/80 tw-text-sm tw-font-medium">Total Withdrawable Balance</span>
+                  <span class="tw-text-white/80 tw-text-xs sm:tw-text-sm tw-font-medium">Total Withdrawable</span>
                   <div class="tw-flex tw-items-baseline tw-gap-2 tw-mt-1">
-                    <span class="tw-text-white tw-text-4xl md:tw-text-5xl tw-font-black">{{ currencySymbol }}{{ formatAmount(availableBalance) }}</span>
+                    <span class="tw-text-white tw-text-2xl sm:tw-text-5xl tw-font-black">{{ currencySymbol }}{{ formatAmount(availableBalance) }}</span>
                   </div>
                 </div>
                 
-                <div class="tw-mt-6 tw-pt-6 tw-border-t tw-border-white/10 tw-flex tw-items-center tw-justify-between">
-                  <p class="tw-text-slate-400 tw-text-xs tw-max-w-[250px]">Withdrawals are processed within 24-48 business hours after request.</p>
-                  <div class="tw-flex tw-items-center tw-gap-2">
-                    <i class="fas fa-shield-alt tw-text-indigo-400/50 tw-text-2xl"></i>
-                    <span class="tw-text-[10px] tw-text-slate-500 tw-font-bold tw-uppercase">Secure Gateway</span>
+                <div class="tw-mt-4 sm:tw-mt-6 tw-pt-4 sm:tw-pt-6 tw-border-t tw-border-white/10 tw-flex tw-items-center tw-justify-between tw-gap-4">
+                  <p class="tw-text-slate-400 tw-text-[10px] sm:tw-text-xs tw-max-w-[180px] sm:tw-max-w-[250px] tw-m-0">Processed within 24-48 business hours.</p>
+                  <div class="tw-flex tw-items-center tw-gap-1.5 tw-shrink-0">
+                    <i class="fas fa-shield-alt tw-text-indigo-400/50 tw-text-lg sm:tw-text-2xl"></i>
+                    <span class="tw-text-[8px] sm:tw-text-[10px] tw-text-slate-500 tw-font-black tw-uppercase tw-tracking-widest tw-whitespace-nowrap">Secure Gateway</span>
                   </div>
                 </div>
               </div>

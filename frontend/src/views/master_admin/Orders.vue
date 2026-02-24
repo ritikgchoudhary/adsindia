@@ -74,7 +74,64 @@
           </div>
           <span class="ma-card__count">{{ totalOrders }} orders</span>
         </div>
-        <div class="table-responsive ma-table-wrapper">
+        <!-- Mobile View (Card List) -->
+        <div class="tw-block md:tw-hidden">
+          <div v-if="loading" class="tw-py-20 tw-text-center">
+            <div class="ma-spinner tw-mx-auto"></div>
+          </div>
+          <div v-else-if="orders.length === 0" class="tw-py-24 tw-text-center tw-text-white/40">
+            <i class="fas fa-receipt fa-3x tw-mb-3"></i>
+            <p>No orders found</p>
+          </div>
+          <div v-else class="tw-p-4 tw-space-y-4">
+            <div v-for="o in orders" :key="o.id" class="tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-p-5">
+              <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
+                <div class="ma-user-cell">
+                  <div class="ma-user-avatar">{{ getInitials(o.user) }}</div>
+                  <div>
+                    <span class="ma-user-name">{{ o.user?.firstname }} {{ o.user?.lastname }}</span>
+                    <span class="ma-user-username">@{{ o.user?.username }}</span>
+                  </div>
+                </div>
+                <span class="ma-badge" :class="{
+                  'ma-badge--success': o.status_class === 'success' && !o.is_manual,
+                  'ma-badge--danger': o.status_class === 'success' && o.is_manual,
+                  'ma-badge--warning': o.status_class === 'warning',
+                  'ma-badge--red': o.status_class === 'danger',
+                  'ma-badge--secondary': o.status_class === 'secondary'
+                }">
+                  {{ o.is_manual ? 'Manual' : o.status_text }}
+                </span>
+              </div>
+
+              <div class="tw-grid tw-grid-cols-2 tw-gap-4 tw-mb-4 tw-border-y tw-border-white/5 tw-py-4">
+                <div>
+                  <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Amount</div>
+                  <div class="tw-text-emerald-400 tw-text-xs tw-font-bold">₹{{ formatAmount(o.amount) }}</div>
+                  <div class="tw-text-white/30 tw-text-[9px]">A: ₹{{ formatAmount(o.after_charge) }}</div>
+                </div>
+                <div>
+                  <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Type/Trx</div>
+                  <div class="tw-text-indigo-400 tw-text-[10px] tw-font-bold tw-truncate">{{ o.order_type || 'Payment' }}</div>
+                  <code class="tw-text-white/30 tw-text-[9px] tw-font-mono">{{ o.trx }}</code>
+                </div>
+              </div>
+
+              <div class="tw-flex tw-justify-between tw-items-center">
+                <div class="tw-text-white/30 tw-text-[10px]">
+                  {{ formatDateTime(o.created_at) }}
+                </div>
+                <div class="ma-action-buttons">
+                  <button class="ma-action-btn ma-action-btn--view" @click="viewOrder(o)">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive ma-table-wrapper tw-hidden md:tw-block">
           <table class="ma-table">
             <thead>
               <tr>

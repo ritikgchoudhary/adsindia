@@ -106,7 +106,67 @@
           <div class="ma-record-count"> Showing {{ withdrawals.length }} of {{ total }} records </div>
         </div>
 
-        <div class="table-responsive">
+        <!-- Mobile View (Card List) -->
+        <div class="tw-block md:tw-hidden">
+          <div v-if="loading" class="tw-py-20 tw-text-center">
+            <div class="ma-loader"></div>
+            <p class="tw-mt-3 tw-text-white/40">Fetching records...</p>
+          </div>
+          <div v-else-if="withdrawals.length === 0" class="tw-py-24 tw-text-center tw-text-white/40">
+            <i class="fas fa-inbox fa-3x tw-mb-3"></i>
+            <p>No withdrawal requests found.</p>
+          </div>
+          <div v-else class="tw-p-4 tw-space-y-4">
+            <div v-for="w in withdrawals" :key="w.id" class="tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-p-5">
+              <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
+                <div class="ma-user-profile">
+                  <div class="ma-avatar">{{ getInitials(w.user) }}</div>
+                  <div class="ma-user-info">
+                    <div class="ma-name">{{ w.user?.firstname }} {{ w.user?.lastname }}</div>
+                    <div class="ma-username">@{{ w.user?.username }}</div>
+                  </div>
+                </div>
+                <div class="ma-status-chip" :class="statusInfo(w).badgeClass">
+                  {{ statusInfo(w).text }}
+                </div>
+              </div>
+
+              <div class="tw-grid tw-grid-cols-2 tw-gap-4 tw-mb-4 tw-border-y tw-border-white/5 tw-py-4">
+                <div>
+                  <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Amount</div>
+                  <div class="tw-text-emerald-400 tw-text-xs tw-font-bold">₹{{ formatAmount(w.after_charge || 0) }}</div>
+                  <div class="tw-text-white/30 tw-text-[9px]">G: ₹{{ formatAmount(w.amount) }}</div>
+                </div>
+                <div>
+                  <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Wallet/Method</div>
+                  <div class="tw-text-slate-300 tw-text-xs tw-font-bold">{{ (w.wallet || 'main').toUpperCase() }}</div>
+                  <div class="tw-text-white/30 tw-text-[9px]">{{ w.method?.name || 'Manual' }}</div>
+                </div>
+              </div>
+
+              <div class="tw-flex tw-justify-between tw-items-center">
+                <div class="tw-text-white/30 tw-text-[10px]">
+                  {{ formatDateTime(w.created_at) }}
+                </div>
+                <div class="ma-table-actions">
+                  <button class="btn-action btn-view" @click="viewDetails(w)">
+                    <i class="fas fa-receipt"></i>
+                  </button>
+                  <template v-if="isPending(w)">
+                    <button class="btn-action btn-approve" @click="approve(w)">
+                      <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn-action btn-reject" @click="reject(w)">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive tw-hidden md:tw-block">
           <table class="ma-table">
             <thead>
               <tr>

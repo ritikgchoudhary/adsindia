@@ -72,7 +72,66 @@
             No links yet. Generate one above.
           </div>
 
-          <div v-else class="table-responsive">
+          <!-- Mobile View (Card List) -->
+          <div class="tw-block md:tw-hidden">
+            <div v-if="existingLinks.length === 0" class="tw-py-8 tw-text-center tw-text-white/60">
+              No links yet.
+            </div>
+            <div v-else class="tw-space-y-4">
+              <div v-for="row in existingLinks" :key="row.id" class="tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-p-5">
+                <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
+                  <div class="tw-font-black tw-text-white">#{{ row.id }} - {{ row.package_name }}</div>
+                  <span class="badge" :class="row.is_active ? 'bg-success' : 'bg-secondary'">
+                    {{ row.is_active ? 'Active' : 'Inactive' }}
+                  </span>
+                </div>
+
+                <div class="tw-grid tw-grid-cols-2 tw-gap-4 tw-mb-4 tw-bg-black/20 tw-p-3 tw-rounded-xl">
+                  <div>
+                    <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Discount</div>
+                    <div class="tw-text-slate-300 tw-text-xs tw-font-bold">₹{{ formatAmount(row.discount) }}</div>
+                  </div>
+                  <div>
+                    <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Final Price</div>
+                    <div class="tw-text-emerald-400 tw-text-sm tw-font-black">₹{{ formatAmount(row.final_price) }}</div>
+                  </div>
+                </div>
+
+                <div class="tw-mb-4">
+                   <div class="tw-flex tw-gap-2">
+                      <input :id="`existingLinkMob${row.id}`" class="form--control tw-text-xs" :value="row.link || makeLink(row)" readonly>
+                      <button class="ma-btn" type="button" @click="copy(`existingLinkMob${row.id}`)">
+                        <i class="fas fa-copy"></i>
+                      </button>
+                    </div>
+                </div>
+
+                <div class="tw-flex tw-gap-2 tw-flex-wrap">
+                   <button v-if="editingId !== row.id" class="ma-btn tw-flex-1" type="button" @click="startEdit(row)">
+                      <i class="fas fa-pen me-1"></i> Edit
+                   </button>
+                   <template v-else>
+                      <button class="ma-btn ma-btn--primary tw-flex-1" type="button" @click="saveEdit(row)">
+                        <i class="fas fa-check"></i>
+                      </button>
+                      <button class="ma-btn tw-flex-1" type="button" @click="cancelEdit">
+                        X
+                      </button>
+                   </template>
+
+                   <button class="ma-btn tw-flex-1" type="button" @click="toggleActive(row)">
+                      {{ row.is_active ? 'Disable' : 'Enable' }}
+                   </button>
+                   
+                   <button class="ma-btn ma-btn--danger" type="button" @click="remove(row)">
+                      <i class="fas fa-trash"></i>
+                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="existingLinks.length > 0" class="table-responsive tw-hidden md:tw-block">
             <table class="table table-dark table-striped align-middle mb-0">
               <thead>
                 <tr>

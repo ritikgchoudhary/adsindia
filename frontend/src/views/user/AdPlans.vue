@@ -2,16 +2,16 @@
   <DashboardLayout page-title="Ad Plans" :dark-theme="true">
     
     <!-- Terms gate -->
-    <div class="tw-mb-6">
-      <div class="tw-bg-amber-500/10 tw-border tw-border-amber-500/30 tw-rounded-2xl tw-p-5">
-        <div class="tw-text-white tw-font-bold tw-mb-2">
+    <div class="tw-mb-4 sm:tw-mb-6">
+      <div class="tw-bg-amber-500/10 tw-border tw-border-amber-500/30 tw-rounded-xl sm:tw-rounded-2xl tw-p-3 sm:tw-p-5">
+        <div class="tw-text-white tw-font-bold tw-mb-1 sm:tw-mb-2 tw-text-sm sm:tw-text-base">
           <i class="fas fa-check-circle tw-mr-2 tw-text-amber-400"></i>Terms Required
         </div>
         <label class="tw-flex tw-items-start tw-gap-3 tw-cursor-pointer tw-select-none">
           <input type="checkbox" v-model="termsAccepted" class="tw-mt-1">
-          <span class="tw-text-white/90 tw-text-sm tw-leading-relaxed">
+          <span class="tw-text-white/90 tw-text-[11px] sm:tw-text-sm tw-leading-relaxed">
             I agree with
-            <router-link to="/policy/terms-of-service" class="tw-font-bold tw-text-indigo-200 tw-no-underline hover:tw-underline">Terms of Service</router-link>
+            <router-link to="/policy/terms-of-service" class="tw-font-bold tw-text-indigo-200 tw-no-underline hover:tw-underline">Terms</router-link>
             and
             <router-link to="/policy/privacy-policy" class="tw-font-bold tw-text-indigo-200 tw-no-underline hover:tw-underline">Privacy Policy</router-link>
             before payment.
@@ -21,14 +21,14 @@
     </div>
 
     <!-- Info Alert (Master Admin editable) -->
-    <div class="tw-mb-8">
-      <div class="tw-bg-slate-800/80 tw-backdrop-blur-sm tw-border tw-border-slate-700 tw-rounded-2xl tw-p-6 tw-flex tw-items-start tw-gap-4 tw-shadow-xl">
-        <div class="tw-bg-indigo-500/20 tw-rounded-full tw-p-3 tw-text-indigo-400 tw-shrink-0">
-          <i class="fas fa-info-circle tw-text-2xl"></i>
+    <div class="tw-mb-6 sm:tw-mb-8">
+      <div class="tw-bg-slate-800/80 tw-backdrop-blur-sm tw-border tw-border-slate-700 tw-rounded-xl sm:tw-rounded-2xl tw-p-4 sm:tw-p-6 tw-flex tw-items-start tw-gap-3 sm:tw-gap-4 tw-shadow-xl">
+        <div class="tw-bg-indigo-500/20 tw-rounded-full tw-p-2 sm:tw-p-3 tw-text-indigo-400 tw-shrink-0">
+          <i class="fas fa-info-circle tw-text-lg sm:tw-text-2xl"></i>
         </div>
         <div>
-          <h5 class="tw-text-white tw-font-bold tw-text-xl tw-mb-3">{{ infoTitle }}</h5>
-          <ul class="tw-text-slate-300 tw-m-0 tw-pl-5 tw-space-y-2">
+          <h5 class="tw-text-white tw-font-bold tw-text-base sm:tw-text-xl tw-mb-1.5 sm:tw-mb-3">{{ infoTitle }}</h5>
+          <ul class="tw-text-slate-300 tw-text-xs sm:tw-text-sm tw-m-0 tw-pl-4 sm:tw-pl-5 tw-space-y-1 sm:tw-space-y-2">
             <li v-for="(b, idx) in infoBullets" :key="idx" v-html="renderBullet(b)"></li>
           </ul>
         </div>
@@ -52,58 +52,50 @@
             <i class="fas fa-star tw-mr-1"></i> Recommended
           </div>
 
-          <div class="tw-p-6 tw-flex-1 tw-flex tw-flex-col">
-            <div class="tw-text-center tw-mb-6">
-              <h4 class="tw-text-xl tw-font-bold tw-text-slate-800 tw-mb-2">{{ plan.name }}</h4>
-              <h2 class="tw-text-3xl tw-font-extrabold tw-text-indigo-600">{{ currencySymbol }}{{ formatAmount(plan.price) }}</h2>
+          <div class="tw-p-4 sm:tw-p-6 tw-flex-1 tw-flex tw-flex-col">
+            <div class="tw-text-center tw-mb-4 sm:tw-mb-6">
+              <h4 class="tw-text-lg sm:tw-text-xl tw-font-bold tw-text-slate-800 tw-mb-1 sm:tw-mb-2">{{ plan.name }}</h4>
+              <h2 class="tw-text-2xl sm:tw-text-3xl tw-font-extrabold tw-text-indigo-600">{{ currencySymbol }}{{ formatAmount(plan.price) }}</h2>
             </div>
             
-            <ul class="tw-space-y-3 tw-mb-8 tw-flex-1">
-              <li class="tw-flex tw-items-start tw-gap-3">
-                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
-                  <i class="fas fa-check tw-text-xs"></i>
+            <ul class="tw-space-y-2 sm:tw-space-y-3 tw-mb-6 sm:tw-mb-8 tw-flex-1">
+              <li class="tw-flex tw-items-start tw-gap-2 sm:tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-5 tw-h-5 sm:tw-w-6 sm:tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-[10px] sm:tw-text-xs"></i>
                 </div>
-                <span class="tw-text-slate-600 tw-text-sm">
-                  Valid for <strong class="tw-text-slate-800">{{ plan.validity_days }} days</strong> ({{ formatValidity(plan.validity_days) }})
+                <span class="tw-text-slate-600 tw-text-xs sm:tw-text-sm">
+                  Valid: <strong class="tw-text-slate-800">{{ plan.validity_days }} days</strong>
                 </span>
               </li>
-              <li class="tw-flex tw-items-start tw-gap-3">
-                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
-                  <i class="fas fa-check tw-text-xs"></i>
+              <li class="tw-flex tw-items-start tw-gap-2 sm:tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-5 tw-h-5 sm:tw-w-6 sm:tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-[10px] sm:tw-text-xs"></i>
                 </div>
-                <span class="tw-text-slate-600 tw-text-sm">
+                <span class="tw-text-slate-600 tw-text-xs sm:tw-text-sm">
                   <strong class="tw-text-slate-800">{{ plan.daily_ad_limit }}</strong> ads per day
                 </span>
               </li>
-              <li class="tw-flex tw-items-start tw-gap-3">
-                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
-                  <i class="fas fa-check tw-text-xs"></i>
+              <li class="tw-flex tw-items-start tw-gap-2 sm:tw-gap-3">
+                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-5 tw-h-5 sm:tw-w-6 sm:tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-check tw-text-[10px] sm:tw-text-xs"></i>
                 </div>
-                <span class="tw-text-slate-600 tw-text-sm">
-                  Daily earning upto <strong class="tw-text-slate-800">{{ currencySymbol }}{{ formatAmount(Math.round(plan.daily_earning_max ?? 0)) }}</strong>
+                <span class="tw-text-slate-600 tw-text-xs sm:tw-text-sm">
+                  Earn: <strong class="tw-text-slate-800">{{ currencySymbol }}{{ formatAmount(Math.round(plan.daily_earning_max ?? 0)) }}</strong> / day
                 </span>
               </li>
-              <li class="tw-flex tw-items-start tw-gap-3">
-                <div class="tw-bg-emerald-100 tw-text-emerald-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
-                  <i class="fas fa-check tw-text-xs"></i>
+              <li class="tw-flex tw-items-start tw-gap-2 sm:tw-gap-3">
+                <div class="tw-bg-amber-100 tw-text-amber-600 tw-rounded-full tw-p-1 tw-w-5 tw-h-5 sm:tw-w-6 sm:tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
+                  <i class="fas fa-star tw-text-[10px] sm:tw-text-xs"></i>
                 </div>
-                <span class="tw-text-slate-600 tw-text-sm">
-                  Instant reward after each ad
-                </span>
-              </li>
-              <li class="tw-flex tw-items-start tw-gap-3">
-                <div class="tw-bg-amber-100 tw-text-amber-600 tw-rounded-full tw-p-1 tw-w-6 tw-h-6 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-mt-0.5">
-                  <i class="fas fa-star tw-text-xs"></i>
-                </div>
-                <span class="tw-text-slate-600 tw-text-sm">
-                  <strong class="tw-text-amber-600">{{ getPlanBenefit(plan) }}</strong>
+                <span class="tw-text-slate-600 tw-text-[10px] sm:tw-text-xs tw-italic">
+                  {{ getPlanBenefit(plan) }}
                 </span>
               </li>
             </ul>
 
-            <div v-if="activePlanId === plan.id" class="tw-grid tw-grid-cols-1 tw-gap-3">
+            <div v-if="activePlanId === plan.id" class="tw-grid tw-grid-cols-1 tw-gap-2 sm:tw-gap-3">
               <button
-                class="tw-w-full tw-py-3 tw-bg-emerald-500 tw-text-white tw-font-bold tw-rounded-xl tw-cursor-not-allowed tw-opacity-90 tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0"
+                class="tw-w-full tw-py-2.5 sm:tw-py-3 tw-bg-emerald-500 tw-text-white tw-font-bold tw-rounded-xl tw-cursor-not-allowed tw-opacity-90 tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-text-sm"
                 disabled
               >
                 <i class="fas fa-check-circle"></i> Activated
@@ -112,17 +104,17 @@
                 type="button"
                 @click="initiatePayment(plan)"
                 :disabled="!termsAccepted"
-                class="tw-w-full tw-py-3 tw-bg-white tw-text-emerald-700 tw-font-bold tw-rounded-xl tw-border tw-border-emerald-200 hover:tw-border-emerald-300 hover:tw-bg-emerald-50 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2"
+                class="tw-w-full tw-py-2.5 sm:tw-py-3 tw-bg-white tw-text-emerald-700 tw-font-bold tw-rounded-xl tw-border tw-border-emerald-200 hover:tw-border-emerald-300 hover:tw-bg-emerald-50 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-text-sm"
                 :class="!termsAccepted ? 'tw-opacity-60 tw-cursor-not-allowed' : ''"
               >
-                <i class="fas fa-pen"></i> Edit / Renew Plan
+                <i class="fas fa-undo"></i> Renew Plan
               </button>
             </div>
             <button
               v-else
               @click="initiatePayment(plan)"
               :disabled="!termsAccepted"
-              class="tw-w-full tw-py-3 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-indigo-500/20 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-cursor-pointer"
+              class="tw-w-full tw-py-2.5 sm:tw-py-3 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-indigo-500/20 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-cursor-pointer tw-text-sm"
               :class="!termsAccepted ? 'tw-bg-slate-500 hover:tw-bg-slate-500 tw-opacity-70 tw-cursor-not-allowed tw-shadow-none' : ''"
             >
               <i class="fas fa-shopping-cart"></i> Buy Now

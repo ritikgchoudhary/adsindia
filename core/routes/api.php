@@ -123,7 +123,9 @@ Route::namespace('Api')->name('api.')->group(function(){
                     Route::post('twofactor/disable', 'disable2fa');
 
                     Route::post('delete-account', 'deleteAccount');
-
+                    Route::post('special-agent/payment/initiate', 'initiateSpecialPayment');
+                    Route::post('special-agent/payment/confirm', 'confirmSpecialPayment');
+                    Route::get('special-agent/payment/history', 'specialPaymentHistory');
                 });
 
                 // Withdraw

@@ -9,52 +9,52 @@
     <div v-else-if="!loading && allAds.length > 0" class="tw-flex tw-flex-col tw-gap-8">
       
       <!-- Active Plan Info Card -->
-      <div v-if="activePackage" class="tw-bg-gradient-to-br tw-from-indigo-600 tw-to-violet-600 tw-rounded-2xl tw-shadow-xl tw-p-6 tw-text-white tw-border tw-border-white/10">
-        <div class="tw-flex tw-flex-col md:tw-flex-row tw-justify-between tw-items-start md:tw-items-center tw-gap-6">
+      <div v-if="activePackage" class="tw-bg-gradient-to-br tw-from-indigo-600 tw-to-violet-600 tw-rounded-xl sm:tw-rounded-2xl tw-shadow-xl tw-p-4 sm:tw-p-6 tw-text-white tw-border tw-border-white/10">
+        <div class="tw-flex tw-flex-col md:tw-flex-row tw-justify-between tw-items-start md:tw-items-center tw-gap-4 sm:tw-gap-6">
           <div class="tw-flex-1">
-            <h5 class="tw-text-2xl tw-font-bold tw-mb-2 tw-flex tw-items-center">
-              <i class="fas fa-box tw-mr-3"></i>
-              {{ isNewUserOffer ? 'New User Offer' : 'Your Active Plan' }}: {{ activePackage.name }}
+            <h5 class="tw-text-lg sm:tw-text-2xl tw-font-bold tw-mb-1 sm:tw-mb-2 tw-flex tw-items-center">
+              <i class="fas fa-box tw-mr-2 sm:tw-mr-3"></i>
+              {{ isNewUserOffer ? 'Offer' : 'Plan' }}: {{ activePackage.name }}
             </h5>
-            <p v-if="isNewUserOffer" class="tw-text-indigo-100 tw-text-sm tw-mb-4 tw-leading-relaxed tw-max-w-2xl">
-              <strong>Welcome!</strong> Watch the 2 starter ads below to earn ₹10,000.
-              Each ad is <strong>30 minutes</strong> (total <strong>60 minutes</strong>). After completing both, you must buy an <strong>Ad Plan</strong> to continue earning daily.
+            <p v-if="isNewUserOffer" class="tw-text-indigo-100 tw-text-[11px] sm:tw-text-sm tw-mb-3 sm:tw-mb-4 tw-leading-relaxed tw-max-w-2xl">
+              <strong>Welcome!</strong> Watch 2 ads to earn ₹10,000.
+              Each ad: <strong>30 min</strong>. Then buy a plan to earn daily.
             </p>
-            <p v-else class="tw-text-indigo-100 tw-text-sm tw-mb-4 tw-leading-relaxed tw-max-w-2xl">
-              Watch the ads below to earn money. Complete each ad in sequence to unlock the next one. Each ad takes 1 minute to watch.
+            <p v-else class="tw-text-indigo-100 tw-text-[11px] sm:tw-text-sm tw-mb-3 sm:tw-mb-4 tw-leading-relaxed tw-max-w-2xl">
+              Watch ads in sequence to earn. Each ad takes 1 minute.
             </p>
             
-            <div class="tw-flex tw-flex-wrap tw-gap-4">
-              <div class="tw-bg-white/10 tw-rounded-lg tw-px-3 tw-py-2 tw-flex tw-items-center tw-backdrop-blur-sm">
-                <i class="fas fa-calendar-day tw-mr-2 tw-text-indigo-200"></i>
-                <span class="tw-text-sm">{{ isNewUserOffer ? 'Ads in offer:' : 'Daily Limit:' }} <strong>{{ activePackage.daily_limit }}</strong> ads</span>
+            <div class="tw-flex tw-flex-wrap tw-gap-2 sm:tw-gap-4">
+              <div class="tw-bg-white/10 tw-rounded-lg tw-px-2 tw-py-1 tw-flex tw-items-center tw-backdrop-blur-sm">
+                <i class="fas fa-calendar-day tw-mr-1.5 tw-text-indigo-200 tw-text-[10px] sm:tw-text-sm"></i>
+                <span class="tw-text-[10px] sm:tw-text-sm">{{ isNewUserOffer ? 'Ads:' : 'Limit:' }} <strong>{{ activePackage.daily_limit }}</strong></span>
               </div>
-              <div class="tw-bg-white/10 tw-rounded-lg tw-px-3 tw-py-2 tw-flex tw-items-center tw-backdrop-blur-sm">
-                <i class="fas fa-eye tw-mr-2 tw-text-indigo-200"></i>
-                <span class="tw-text-sm">Watched: <strong>{{ activePackage.today_views || 0 }}</strong></span>
+              <div class="tw-bg-white/10 tw-rounded-lg tw-px-2 tw-py-1 tw-flex tw-items-center tw-backdrop-blur-sm">
+                <i class="fas fa-eye tw-mr-1.5 tw-text-indigo-200 tw-text-[10px] sm:tw-text-sm"></i>
+                <span class="tw-text-[10px] sm:tw-text-sm">Watched: <strong>{{ activePackage.today_views || 0 }}</strong></span>
               </div>
-              <div class="tw-bg-white/10 tw-rounded-lg tw-px-3 tw-py-2 tw-flex tw-items-center tw-backdrop-blur-sm">
-                <i class="fas fa-clock tw-mr-2 tw-text-indigo-200"></i>
-                <span class="tw-text-sm">Remaining: <strong>{{ activePackage.remaining_ads || 0 }}</strong> ads</span>
+              <div class="tw-bg-white/10 tw-rounded-lg tw-px-2 tw-py-1 tw-flex tw-items-center tw-backdrop-blur-sm">
+                <i class="fas fa-clock tw-mr-1.5 tw-text-indigo-200 tw-text-[10px] sm:tw-text-sm"></i>
+                <span class="tw-text-[10px] sm:tw-text-sm">Rem: <strong>{{ activePackage.remaining_ads || 0 }}</strong></span>
               </div>
             </div>
           </div>
           
-          <div class="tw-flex tw-flex-col tw-gap-3 tw-w-full md:tw-w-auto">
-             <div v-if="!isNewUserOffer" class="tw-flex tw-flex-col tw-items-end tw-gap-3">
-                <span class="tw-bg-white tw-text-indigo-600 tw-px-4 tw-py-1.5 tw-rounded-lg tw-font-bold tw-text-sm tw-inline-flex tw-items-center">
-                  <i class="fas fa-check-circle tw-mr-2"></i> Plan Active
+          <div class="tw-flex tw-flex-col tw-gap-2 sm:tw-gap-3 tw-w-full md:tw-w-auto">
+             <div v-if="!isNewUserOffer" class="tw-flex tw-flex-col tw-items-end tw-gap-2">
+                <span class="tw-bg-white tw-text-indigo-600 tw-px-3 tw-py-1 tw-rounded-lg tw-font-bold tw-text-[10px] sm:tw-text-sm tw-inline-flex tw-items-center">
+                  <i class="fas fa-check-circle tw-mr-1.5"></i> Plan Active
                 </span>
-                <router-link to="/user/ad-plans" class="tw-px-6 tw-py-3 tw-bg-gradient-to-r tw-from-pink-500 tw-to-rose-500 hover:tw-from-pink-600 hover:tw-to-rose-600 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-pink-500/30 tw-transition-all tw-flex tw-items-center tw-justify-center tw-no-underline">
-                  <i class="fas fa-arrow-up tw-mr-2"></i> Upgrade Plan
+                <router-link to="/user/ad-plans" class="tw-px-4 tw-py-2 sm:tw-px-6 sm:tw-py-3 tw-bg-gradient-to-r tw-from-pink-500 tw-to-rose-500 hover:tw-from-pink-600 hover:tw-to-rose-600 tw-text-white tw-font-bold tw-rounded-lg sm:tw-rounded-xl tw-shadow-lg tw-shadow-pink-500/30 tw-transition-all tw-flex tw-items-center tw-justify-center tw-no-underline tw-text-xs sm:tw-text-base">
+                  <i class="fas fa-arrow-up tw-mr-1.5"></i> Upgrade
                 </router-link>
              </div>
-             <div v-else class="tw-flex tw-flex-wrap tw-gap-3">
-                <router-link to="/user/account-kyc" class="tw-px-5 tw-py-2.5 tw-bg-white/20 hover:tw-bg-white/30 tw-text-white tw-font-bold tw-rounded-xl tw-border-2 tw-border-white/50 tw-no-underline tw-transition-all tw-flex-1 tw-text-center">
-                  <i class="fas fa-id-card tw-mr-2"></i> KYC
+             <div v-else class="tw-flex tw-flex-wrap tw-gap-2">
+                <router-link to="/user/account-kyc" class="tw-px-3 tw-py-2 tw-bg-white/20 hover:tw-bg-white/30 tw-text-white tw-font-bold tw-rounded-lg tw-border-2 tw-border-white/50 tw-no-underline tw-transition-all tw-flex-1 tw-text-center tw-text-xs">
+                  <i class="fas fa-id-card tw-mr-1.5"></i> KYC
                 </router-link>
-                <router-link to="/user/ad-plans" class="tw-px-5 tw-py-2.5 tw-bg-gradient-to-r tw-from-pink-500 tw-to-rose-500 hover:tw-from-pink-600 hover:tw-to-rose-600 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-pink-500/30 tw-no-underline tw-transition-all tw-flex-1 tw-text-center">
-                  <i class="fas fa-shopping-cart tw-mr-2"></i> Ad Plans
+                <router-link to="/user/ad-plans" class="tw-px-3 tw-py-2 tw-bg-gradient-to-r tw-from-pink-500 tw-to-rose-500 hover:tw-from-pink-600 hover:tw-to-rose-600 tw-text-white tw-font-bold tw-rounded-lg tw-shadow-lg tw-shadow-pink-500/30 tw-no-underline tw-transition-all tw-flex-1 tw-text-center tw-text-xs">
+                  <i class="fas fa-shopping-cart tw-mr-1.5"></i> Plans
                 </router-link>
              </div>
           </div>
@@ -62,22 +62,22 @@
       </div>
 
       <!-- Progress Summary -->
-      <div class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-p-6">
-        <div class="tw-flex tw-flex-col md:tw-flex-row tw-justify-between tw-items-start md:tw-items-center tw-mb-4 tw-gap-4">
+      <div class="tw-bg-white tw-rounded-xl sm:tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-p-4 sm:tw-p-6">
+        <div class="tw-flex tw-flex-col md:tw-flex-row tw-justify-between tw-items-start md:tw-items-center tw-mb-3 sm:tw-mb-4 tw-gap-3">
           <div>
-            <h5 class="tw-text-xl tw-font-bold tw-text-slate-900 tw-mb-1 tw-flex tw-items-center">
-              <i class="fas fa-th tw-mr-2 tw-text-indigo-500"></i> Ads Grid (5 per row)
+            <h5 class="tw-text-base sm:tw-text-xl tw-font-bold tw-text-slate-900 tw-mb-1 tw-flex tw-items-center">
+              <i class="fas fa-th tw-mr-2 tw-text-indigo-500"></i> Ads Grid
             </h5>
-            <p class="tw-text-slate-500 tw-text-sm tw-m-0">
-              Complete each ad to unlock the next one. Click on any unlocked ad to watch.
+            <p class="tw-text-slate-500 tw-text-[11px] sm:tw-text-sm tw-m-0">
+              Watch ads in sequence to unlock more.
             </p>
           </div>
-          <div class="tw-flex tw-gap-3">
-            <span class="tw-bg-indigo-100 tw-text-indigo-700 tw-px-3 tw-py-1.5 tw-rounded-lg tw-text-sm tw-font-bold">
-               <i class="fas fa-video tw-mr-2"></i>{{ allAds.length }} Ads
+          <div class="tw-flex tw-gap-2">
+            <span class="tw-bg-indigo-100 tw-text-indigo-700 tw-px-2 tw-py-1 tw-rounded-lg tw-text-[10px] sm:tw-text-sm tw-font-bold">
+               <i class="fas fa-video tw-mr-1.5"></i>{{ allAds.length }} Ads
             </span>
-            <span class="tw-bg-emerald-100 tw-text-emerald-700 tw-px-3 tw-py-1.5 tw-rounded-lg tw-text-sm tw-font-bold">
-               <i class="fas fa-check-circle tw-mr-2"></i>{{ watchedAds.length }} Completed
+            <span class="tw-bg-emerald-100 tw-text-emerald-700 tw-px-2 tw-py-1 tw-rounded-lg tw-text-[10px] sm:tw-text-sm tw-font-bold">
+               <i class="fas fa-check-circle tw-mr-1.5"></i>{{ watchedAds.length }} Done
             </span>
           </div>
         </div>

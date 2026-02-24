@@ -58,18 +58,18 @@
       </div>
 
       <!-- New Profile & Earnings Section -->
-      <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-8 tw-mb-8">
+      <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-4 md:tw-gap-8 tw-mb-6 md:tw-mb-8">
         <!-- Profile Card (Left) -->
         <div class="lg:tw-col-span-1">
-          <div class="tw-h-full tw-bg-gradient-to-b tw-from-yellow-400 tw-to-yellow-600 tw-rounded-2xl sm:tw-rounded-[28px] tw-p-4 sm:tw-p-6 tw-text-center tw-shadow-xl tw-border-2 sm:tw-border-[3px] tw-border-white tw-flex tw-flex-col tw-items-center tw-justify-center">
+          <div class="tw-h-full tw-bg-gradient-to-b tw-from-yellow-400 tw-to-yellow-600 tw-rounded-2xl sm:tw-rounded-[24px] tw-p-4 sm:tw-p-6 tw-text-center tw-shadow-xl tw-border-2 tw-border-white tw-flex tw-flex-col tw-items-center tw-justify-center">
             <!-- UID -->
-            <h2 class="tw-text-white tw-font-bold tw-text-xl sm:tw-text-2xl tw-mb-4 sm:tw-mb-5 tw-drop-shadow-md tw-uppercase tw-tracking-wider">
+            <h2 class="tw-text-white tw-font-bold tw-text-lg sm:tw-text-xl tw-mb-2 sm:tw-mb-4 tw-drop-shadow-md tw-uppercase tw-tracking-wider">
               {{ referralCode || user.uid || user.id || 'USER' }}
             </h2>
             
             <!-- Profile Image -->
-            <div class="tw-relative tw-mb-4 sm:tw-mb-5">
-              <div class="tw-w-24 tw-h-24 sm:tw-w-32 sm:tw-h-32 tw-rounded-full tw-border-[3px] sm:tw-border-[4px] tw-border-white tw-shadow-2xl tw-overflow-hidden tw-mx-auto tw-bg-indigo-500 tw-flex tw-items-center tw-justify-center">
+            <div class="tw-relative tw-mb-3 sm:tw-mb-4">
+              <div class="tw-w-16 tw-h-16 sm:tw-w-28 sm:tw-h-28 tw-rounded-full tw-border-[2px] sm:tw-border-[3px] tw-border-white tw-shadow-2xl tw-overflow-hidden tw-mx-auto tw-bg-indigo-500 tw-flex tw-items-center tw-justify-center">
                 <img 
                   v-if="user.image"
                   :src="user.image" 
@@ -83,72 +83,56 @@
                   class="tw-w-full tw-h-full tw-object-cover"
                 >
               </div>
-              <div class="tw-absolute tw-bottom-1 tw-right-1 tw-bg-green-500 tw-w-4 tw-h-4 tw-rounded-full tw-border-2 tw-border-white" title="Active"></div>
+              <div class="tw-absolute tw-bottom-1 tw-right-1 tw-bg-green-500 tw-w-3 tw-h-3 tw-rounded-full tw-border-2 tw-border-white" title="Active"></div>
             </div>
 
             <!-- Full Name -->
-            <h1 class="tw-text-white tw-font-extrabold tw-text-xl sm:tw-text-2xl tw-mb-4 sm:tw-mb-5 tw-drop-shadow-lg">
+            <h1 class="tw-text-white tw-font-extrabold tw-text-base sm:tw-text-xl tw-mb-2 sm:tw-mb-4 tw-drop-shadow-lg">
               {{ displayName }}
             </h1>
 
             <!-- Badge -->
-            <div class="tw-bg-[#007bff] tw-text-white tw-px-5 sm:tw-px-6 tw-py-2 sm:tw-py-2.5 tw-rounded-2xl tw-font-bold tw-text-sm sm:tw-text-base tw-shadow-lg tw-tracking-wide">
+            <div class="tw-bg-[#007bff] tw-text-white tw-px-3 sm:tw-px-6 tw-py-1 sm:tw-py-2 tw-rounded-xl tw-font-bold tw-text-[10px] sm:tw-text-sm tw-shadow-lg tw-tracking-wide">
               ADS SKILL INDIA
             </div>
           </div>
         </div>
 
-        <!-- Earnings Stack (Right) -->
-        <div class="lg:tw-col-span-2 tw-flex tw-flex-col tw-gap-4">
-          <!-- Today's Earning -->
-          <div class="tw-bg-gradient-to-r tw-from-cyan-400 tw-to-blue-400 tw-rounded-2xl tw-p-2 tw-border-2 tw-border-white tw-shadow-lg tw-h-full tw-min-h-[100px] tw-flex tw-items-center">
-            <div class="tw-flex tw-items-center tw-justify-between tw-w-full tw-px-6">
-              <div class="tw-text-white">
-                <span class="tw-text-5xl tw-font-bold tw-opacity-90">₹</span>
-              </div>
-              <div class="tw-text-right tw-text-white">
-                <h2 class="tw-text-3xl tw-font-bold tw-mb-1">{{ formatAmount(earnTodayAnim) }}</h2>
-                <div class="tw-text-sm tw-font-bold tw-opacity-90">Today's Earning</div>
-              </div>
+        <!-- Earnings Stack -->
+        <div class="lg:tw-col-span-2 tw-flex tw-flex-col tw-gap-2 sm:tw-gap-4">
+          <!-- Today Earnings -->
+          <div class="tw-bg-gradient-to-r tw-from-cyan-400 tw-to-cyan-500 tw-p-3 sm:tw-p-5 tw-rounded-xl sm:tw-rounded-2xl tw-flex tw-items-center tw-justify-between tw-text-white tw-shadow-lg tw-relative tw-overflow-hidden">
+            <div class="tw-text-2xl sm:tw-text-4xl tw-font-serif tw-opacity-40">₹</div>
+            <div class="tw-text-right">
+              <div class="tw-text-xl sm:tw-text-3xl tw-font-black tw-leading-none">₹{{ formatAmount(earnTodayAnim) }}</div>
+              <div class="tw-text-[8px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-mt-1 sm:tw-mt-2 tw-opacity-90">Today's Earning</div>
             </div>
           </div>
 
-          <!-- Last 7 Days Earning -->
-          <div class="tw-bg-[#007bff] tw-rounded-2xl tw-p-2 tw-border-2 tw-border-white tw-shadow-lg tw-h-full tw-min-h-[100px] tw-flex tw-items-center">
-             <div class="tw-flex tw-items-center tw-justify-between tw-w-full tw-px-6">
-              <div class="tw-text-white">
-                <span class="tw-text-5xl tw-font-bold tw-opacity-90">₹</span>
-              </div>
-              <div class="tw-text-right tw-text-white">
-                <h2 class="tw-text-3xl tw-font-bold tw-mb-1">{{ formatAmount(earnLast7DaysAnim) }}</h2>
-                <div class="tw-text-sm tw-font-bold tw-opacity-90">Last 7 Days Earning</div>
-              </div>
+          <!-- 7 Days Earnings -->
+          <div class="tw-bg-gradient-to-r tw-from-blue-500 tw-to-blue-600 tw-p-3 sm:tw-p-5 tw-rounded-xl sm:tw-rounded-2xl tw-flex tw-items-center tw-justify-between tw-text-white tw-shadow-lg tw-relative tw-overflow-hidden">
+            <div class="tw-text-2xl sm:tw-text-4xl tw-font-serif tw-opacity-40">₹</div>
+            <div class="tw-text-right">
+              <div class="tw-text-xl sm:tw-text-3xl tw-font-black tw-leading-none">₹{{ formatAmount(earnLast7DaysAnim) }}</div>
+              <div class="tw-text-[8px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-mt-1 sm:tw-mt-2 tw-opacity-90">Last 7 Days Earning</div>
             </div>
           </div>
 
-          <!-- Last 30 Days Earning -->
-          <div class="tw-bg-[#0056b3] tw-rounded-2xl tw-p-2 tw-border-2 tw-border-white tw-shadow-lg tw-h-full tw-min-h-[100px] tw-flex tw-items-center">
-             <div class="tw-flex tw-items-center tw-justify-between tw-w-full tw-px-6">
-              <div class="tw-text-white">
-                <span class="tw-text-5xl tw-font-bold tw-opacity-90">₹</span>
-              </div>
-              <div class="tw-text-right tw-text-white">
-                <h2 class="tw-text-3xl tw-font-bold tw-mb-1">{{ formatAmount(earnLast30DaysAnim) }}</h2>
-                <div class="tw-text-sm tw-font-bold tw-opacity-90">Last 30 Days Earning</div>
-              </div>
+          <!-- 30 Days Earnings -->
+          <div class="tw-bg-gradient-to-r tw-from-blue-700 tw-to-blue-800 tw-p-3 sm:tw-p-5 tw-rounded-xl sm:tw-rounded-2xl tw-flex tw-items-center tw-justify-between tw-text-white tw-shadow-lg tw-relative tw-overflow-hidden">
+            <div class="tw-text-2xl sm:tw-text-4xl tw-font-serif tw-opacity-40">₹</div>
+            <div class="tw-text-right">
+              <div class="tw-text-xl sm:tw-text-3xl tw-font-black tw-leading-none">₹{{ formatAmount(earnLast30DaysAnim) }}</div>
+              <div class="tw-text-[8px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-mt-1 sm:tw-mt-2 tw-opacity-90">Last 30 Days Earning</div>
             </div>
           </div>
 
-          <!-- All Time Earning -->
-          <div class="tw-bg-gradient-to-r tw-from-[#2c0b4f] tw-to-[#1c2e7b] tw-rounded-2xl tw-p-2 tw-border-2 tw-border-white tw-shadow-lg tw-h-full tw-min-h-[100px] tw-flex tw-items-center">
-             <div class="tw-flex tw-items-center tw-justify-between tw-w-full tw-px-6">
-              <div class="tw-text-white">
-                <span class="tw-text-5xl tw-font-bold tw-opacity-90">₹</span>
-              </div>
-              <div class="tw-text-right tw-text-white">
-                <h2 class="tw-text-3xl tw-font-bold tw-mb-1">{{ formatAmount(earnTotalAnim) }}</h2>
-                <div class="tw-text-sm tw-font-bold tw-opacity-90">All Time Earning</div>
-              </div>
+          <!-- Total Earnings -->
+          <div class="tw-bg-gradient-to-r tw-from-[#2e1065] tw-to-[#0f172a] tw-p-3 sm:tw-p-5 tw-rounded-xl sm:tw-rounded-2xl tw-flex tw-items-center tw-justify-between tw-text-white tw-shadow-lg tw-relative tw-overflow-hidden">
+            <div class="tw-text-2xl sm:tw-text-4xl tw-font-serif tw-opacity-40">₹</div>
+            <div class="tw-text-right">
+              <div class="tw-text-xl sm:tw-text-3xl tw-font-black tw-leading-none">₹{{ formatAmount(earnTotalAnim) }}</div>
+              <div class="tw-text-[8px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-mt-1 sm:tw-mt-2 tw-opacity-90">All Time Earning</div>
             </div>
           </div>
         </div>
@@ -158,7 +142,7 @@
         <!-- Main Stats & Table -->
         <div class="xl:tw-col-span-9 lg:tw-col-span-8">
           <!-- Balance Widgets -->
-          <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-6 tw-mb-6">
+          <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-3 sm:tw-gap-6 tw-mb-6">
             <div 
               v-for="(stat, index) in [
                 { label: 'Balance', value: widget.balance, icon: 'fas fa-wallet', from: 'tw-from-indigo-500', to: 'tw-to-violet-600' },
@@ -169,14 +153,14 @@
               :key="index"
             >
               <div 
-                class="tw-p-5 tw-h-full tw-rounded-2xl tw-border tw-border-white/10 tw-text-white tw-transition-all tw-duration-200 hover:-tw-translate-y-1 hover:tw-shadow-xl tw-bg-gradient-to-br"
+                class="tw-p-3 sm:tw-p-5 tw-h-full tw-rounded-xl sm:tw-rounded-2xl tw-border tw-border-white/10 tw-text-white tw-transition-all tw-duration-200 hover:-tw-translate-y-1 hover:tw-shadow-xl tw-bg-gradient-to-br"
                 :class="`${stat.from} ${stat.to}`"
               >
-                <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-bg-white/20 tw-flex tw-items-center tw-justify-center tw-text-xl tw-mb-3">
+                <div class="tw-w-8 tw-h-8 sm:tw-w-12 sm:tw-h-12 tw-rounded-lg sm:tw-rounded-xl tw-bg-white/20 tw-flex tw-items-center tw-justify-center tw-text-sm sm:tw-text-xl tw-mb-2 sm:tw-mb-3">
                    <i :class="stat.icon"></i>
                 </div>
-                <span class="tw-text-xs tw-font-bold tw-uppercase tw-opacity-90 tw-tracking-wide">{{ stat.label }}</span>
-                <h3 class="tw-text-2xl tw-font-extrabold tw-mt-1 tw-mb-0">
+                <span class="tw-text-[9px] sm:tw-text-xs tw-font-bold tw-uppercase tw-opacity-90 tw-tracking-wide">{{ stat.label }}</span>
+                <h3 class="tw-text-base sm:tw-text-2xl tw-font-extrabold tw-mt-1 tw-mb-0">
                   {{ currencySymbol }}{{
                     stat.label === 'Balance'
                       ? formatAmount(widgetBalanceAnim)

@@ -124,7 +124,7 @@ class PackageController extends Controller
         $request->validate([
             'package_id' => 'required|integer|in:1,2,3,4,5',
             'payment_method' => 'required|in:gateway',
-            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush,custom_qr',
         ]);
 
         $packagesData = [
@@ -140,6 +140,23 @@ class PackageController extends Controller
 
         if (!$package) {
             return responseError('package_not_found', ['Package not found']);
+        }
+
+        $gateway = $request->input('gateway', 'watchpay');
+        if (!in_array($gateway, ['watchpay', 'simplypay', 'rupeerush', 'custom_qr'])) {
+            $gateway = 'watchpay';
+        }
+
+        $gw = \App\Models\Gateway::where('alias', $gateway)->first();
+        if (!$gw || $gw->status != 1) {
+            return responseError('gateway_unavailable', ['Selected payment gateway is currently unavailable.']);
+        }
+
+        if ($gateway === 'custom_qr') {
+            $qrImages = $gw->extra ?? [];
+            if (empty($qrImages)) {
+                return responseError('gateway_unavailable', ['Manual QR system is currently not available. Please contact admin.']);
+            }
         }
 
         // Get current package
@@ -179,7 +196,7 @@ class PackageController extends Controller
         }
 
         // Only gateway payment is allowed
-        return $this->initiateGatewayPayment($user, $packageId, $package, $remainingAmount, $currentOrder, $request->input('gateway', 'watchpay'));
+        return $this->initiateGatewayPayment($user, $packageId, $package, $remainingAmount, $currentOrder, $gateway);
     }
 
     /**
@@ -270,6 +287,7 @@ class PackageController extends Controller
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $cacheKey = $cachePrefix . $trx;
         cache()->put($cacheKey, [
@@ -284,6 +302,7 @@ class PackageController extends Controller
         $gw_param = 'watchpay_trx=';
         if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
         if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        if ($gateway === 'custom_qr') $gw_param = 'custom_qr_trx=';
         
         $base = request()->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
         $pageUrl = $base . '/user/package-payment?' . $gw_param . urlencode($trx) . '&amount=' . $remainingAmount . '&package_id=' . $packageId . '&package_name=' . urlencode($package['name']);
@@ -312,6 +331,20 @@ class PackageController extends Controller
                     'payPhone' => $user->mobile,
                 ]);
                 $paymentUrl = $ap['pay_link'];
+            } elseif ($gateway === 'custom_qr') {
+                $gw = \App\Models\Gateway::where('alias', 'custom_qr')->first();
+                $qrImages = $gw->extra ?? [];
+                $fullQrImages = array_map(function($img) {
+                    return asset(getFilePath('gateway') . '/' . $img);
+                }, (is_string($qrImages) ? json_decode($qrImages, true) : (array)$qrImages));
+                
+                return responseSuccess('initiated', ['Manual QR tracking initiated'], [
+                    'payment_url' => $pageUrl . '&method=custom_qr',
+                    'is_manual' => true,
+                    'qr_images' => $fullQrImages,
+                    'trx' => $trx,
+                    'amount' => (float) $remainingAmount,
+                ]);
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -384,10 +417,16 @@ class PackageController extends Controller
             $remainingAmount = $package['price'];
         }
 
+        $gateway = $request->input('gateway', 'watchpay');
+        if (!in_array($gateway, ['simplypay', 'watchpay', 'rupeerush', 'custom_qr'])) {
+            $gateway = 'watchpay';
+        }
+
         // Gateway verification
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $cacheKey = $cachePrefix . $request->trx;
         $session = cache()->get($cacheKey);

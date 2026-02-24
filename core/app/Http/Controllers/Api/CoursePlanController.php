@@ -132,6 +132,13 @@ class CoursePlanController extends Controller
             return responseError('gateway_unavailable', ['Selected payment gateway is currently unavailable.']);
         }
 
+        if ($gateway === 'custom_qr') {
+            $qrImages = $gw->extra ?? [];
+            if (empty($qrImages)) {
+                return responseError('gateway_unavailable', ['Manual QR system is currently not available. Please contact admin.']);
+            }
+        }
+
         // If already active, block duplicate purchase (lifetime)
         $existing = CoursePlanOrder::where('user_id', $user->id)
             ->where('course_plan_id', $plan->id)
@@ -145,6 +152,7 @@ class CoursePlanController extends Controller
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $general = gs();
         $cacheKey = $cachePrefix . $trx;
@@ -174,6 +182,7 @@ class CoursePlanController extends Controller
         $gw_param = 'watchpay_trx=';
         if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
         if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        if ($gateway === 'custom_qr') $gw_param = 'custom_qr_trx=';
         
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
         $pageUrl = $base . '/user/packages?' . $gw_param . urlencode($trx) . '&course_plan_id=' . $plan->id;
@@ -204,6 +213,20 @@ class CoursePlanController extends Controller
                     'payPhone' => $user->mobile,
                 ]);
                 $paymentUrl = $ap['pay_link'];
+            } elseif ($gateway == 'custom_qr') {
+                // For manual QR, we return the local URL with a flag, or we can include the images here
+                $qrImages = $gw->extra ?? [];
+                $fullQrImages = array_map(function($img) {
+                    return asset(getFilePath('gateway') . '/' . $img);
+                }, (is_string($qrImages) ? json_decode($qrImages, true) : (array)$qrImages));
+                
+                return responseSuccess('initiated', ['Manual QR tracking initiated'], [
+                    'payment_url' => $pageUrl . '&method=custom_qr',
+                    'is_manual' => true,
+                    'qr_images' => $fullQrImages,
+                    'trx' => $trx,
+                    'amount' => (float) $plan->price,
+                ]);
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -245,6 +268,7 @@ class CoursePlanController extends Controller
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
         if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $session = cache()->get($cachePrefix . $trx);
 

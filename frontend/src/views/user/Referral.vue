@@ -36,68 +36,64 @@
       <div class="lg:tw-col-span-8 tw-flex tw-flex-col tw-gap-8">
         
         <!-- General Referral Link (KEPT ORIGINAL) -->
-        <div class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-overflow-hidden">
-          <div class="tw-bg-slate-50 tw-p-5 tw-border-b tw-border-slate-200">
-            <h5 class="tw-text-slate-900 tw-font-bold tw-text-lg tw-m-0 tw-flex tw-items-center">
-              <i class="fas fa-link tw-mr-2 tw-text-indigo-600"></i>General Referral Link
+        <div class="tw-bg-white tw-rounded-xl sm:tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-overflow-hidden">
+          <div class="tw-bg-slate-50 tw-p-3 sm:tw-p-5 tw-border-b tw-border-slate-200">
+            <h5 class="tw-text-slate-900 tw-font-bold tw-text-base sm:tw-text-lg tw-m-0 tw-flex tw-items-center">
+              <i class="fas fa-link tw-mr-2 tw-text-indigo-600"></i>General Link
             </h5>
           </div>
-          <div class="tw-p-6">
-            <div class="tw-flex tw-flex-col md:tw-flex-row tw-gap-3 tw-mb-4">
+          <div class="tw-p-4 sm:tw-p-6">
+            <div class="tw-flex tw-flex-col md:tw-flex-row tw-gap-2 sm:tw-gap-3 tw-mb-3 sm:tw-mb-4">
               <input 
                 type="text" 
                 :value="referralLink" 
-                class="tw-flex-1 tw-px-4 tw-py-3 tw-bg-slate-50 tw-border tw-border-slate-300 tw-rounded-xl tw-text-slate-600 tw-font-mono tw-text-sm focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-indigo-500/20"
+                class="tw-flex-1 tw-px-3 tw-py-2 tw-bg-slate-50 tw-border tw-border-slate-300 tw-rounded-lg tw-text-slate-600 tw-font-mono tw-text-xs sm:tw-text-sm focus:tw-outline-none"
                 readonly 
                 :id="'referralLink'"
               >
               <button 
                 type="button" 
-                class="tw-px-6 tw-py-3 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-shadow-lg tw-shadow-indigo-500/20 tw-border-0 tw-cursor-pointer"
+                class="tw-px-4 tw-py-2 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-lg tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-cursor-pointer tw-text-xs sm:tw-text-sm"
                 @click="copyReferralLink('referralLink')"
               >
                 <i class="fas fa-copy"></i> Copy Link
               </button>
             </div>
-            <p v-if="referralCode" class="tw-text-slate-600 tw-text-sm tw-mb-2 tw-flex tw-items-center tw-gap-2">
-              <span class="tw-font-medium">Your referral code:</span>
-              <code class="tw-bg-slate-100 tw-px-2 tw-py-1 tw-rounded tw-font-mono tw-font-bold tw-text-indigo-600">{{ referralCode }}</code>
-            </p>
-            <p class="tw-text-slate-500 tw-text-sm tw-m-0 tw-flex tw-items-start tw-gap-2">
-              <i class="fas fa-info-circle tw-mt-0.5 tw-text-indigo-500"></i>
-              Share this link with your friends and earn commission on their activities.
+            <p v-if="referralCode" class="tw-text-slate-600 tw-text-[11px] sm:tw-text-sm tw-mb-2 tw-flex tw-items-center tw-gap-2">
+              <span class="tw-font-medium">Code:</span>
+              <code class="tw-bg-slate-100 tw-px-1.5 tw-py-0.5 tw-rounded tw-font-mono tw-font-bold tw-text-indigo-600">{{ referralCode }}</code>
             </p>
           </div>
         </div>
 
         <!-- Package-Specific Links (KEPT ORIGINAL) -->
-        <div class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-overflow-hidden">
-          <div class="tw-bg-slate-50 tw-p-5 tw-border-b tw-border-slate-200">
-            <h5 class="tw-text-slate-900 tw-font-bold tw-text-lg tw-m-0 tw-flex tw-items-center">
-              <i class="fas fa-gift tw-mr-2 tw-text-indigo-600"></i>Package-Specific Referral Links (All Plans)
+        <div class="tw-bg-white tw-rounded-xl sm:tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-overflow-hidden">
+          <div class="tw-bg-slate-50 tw-p-3 sm:tw-p-5 tw-border-b tw-border-slate-200">
+            <h5 class="tw-text-slate-900 tw-font-bold tw-text-base sm:tw-text-lg tw-m-0 tw-flex tw-items-center">
+              <i class="fas fa-gift tw-mr-2 tw-text-indigo-600"></i>Plan-Specific Links
             </h5>
           </div>
-          <div class="tw-p-6">
-            <div class="tw-flex tw-flex-col tw-gap-4">
+          <div class="tw-p-4 sm:tw-p-6">
+            <div class="tw-flex tw-flex-col tw-gap-3 sm:tw-gap-4">
               <template v-for="pkgLink in packageLinks" :key="pkgLink?.package_id || Math.random()">
-                <div v-if="pkgLink && pkgLink.package_id" class="tw-p-4 tw-rounded-xl tw-bg-slate-50 tw-border tw-border-slate-200 hover:tw-border-indigo-200 hover:tw-bg-white hover:tw-shadow-md tw-transition-all">
-                  <div class="tw-flex tw-flex-col md:tw-flex-row md:tw-items-center tw-justify-between tw-gap-2 tw-mb-3">
-                    <h6 class="tw-text-slate-900 tw-font-bold tw-text-base tw-m-0">{{ pkgLink.package_name }}</h6>
-                    <div class="tw-text-sm tw-text-slate-600">
-                      Package Price: <span class="tw-font-medium">{{ currencySymbol }}{{ formatAmount(pkgLink.original_price) }}</span>
+                <div v-if="pkgLink && pkgLink.package_id" class="tw-p-3 sm:tw-p-4 tw-rounded-lg sm:tw-rounded-xl tw-bg-slate-50 tw-border tw-border-slate-200">
+                  <div class="tw-flex tw-flex-col md:tw-flex-row md:tw-items-center tw-justify-between tw-gap-1 tw-mb-2">
+                    <h6 class="tw-text-slate-900 tw-font-bold tw-text-sm sm:tw-text-base tw-m-0">{{ pkgLink.package_name }}</h6>
+                    <div class="tw-text-[10px] sm:tw-text-sm tw-text-slate-500">
+                      Price: <span class="tw-font-medium">{{ currencySymbol }}{{ formatAmount(pkgLink.original_price) }}</span>
                     </div>
                   </div>
                   <div class="tw-flex tw-gap-2">
                     <input
                       type="text"
                       :value="pkgLink.link"
-                      class="tw-flex-1 tw-px-3 tw-py-2 tw-bg-white tw-border tw-border-slate-300 tw-rounded-lg tw-text-slate-600 tw-font-mono tw-text-xs focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-indigo-500/20"
+                      class="tw-flex-1 tw-px-2 tw-py-1.5 tw-bg-white tw-border tw-border-slate-300 tw-rounded-lg tw-text-slate-600 tw-font-mono tw-text-[10px] focus:tw-outline-none"
                       readonly
                       :id="`pkgLink${pkgLink.package_id}`"
                     >
                     <button
                       type="button"
-                      class="tw-px-4 tw-py-2 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-text-xs tw-rounded-lg tw-transition-all tw-border-0 tw-cursor-pointer"
+                      class="tw-px-3 tw-py-1.5 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-text-[10px] tw-rounded-lg tw-transition-all tw-border-0 tw-cursor-pointer"
                       @click="copyReferralLink(`pkgLink${pkgLink.package_id}`)"
                     >
                       Copy
@@ -151,56 +147,46 @@
         </div>
 
         <!-- Premium My Downline Team Section (IMPROVED UI) -->
-        <div class="tw-bg-[#151921] tw-rounded-[34px] tw-shadow-2xl tw-border tw-border-white/5 tw-overflow-hidden">
-          <div class="tw-px-8 tw-py-8 tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-between tw-gap-5">
-            <h5 class="tw-text-white tw-font-black tw-text-2xl tw-m-0 tw-flex tw-items-center">
-              <span class="tw-w-10 tw-h-10 tw-bg-indigo-500/20 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-mr-4">
-                <i class="fas fa-users-crown tw-text-indigo-400"></i>
+        <div class="tw-bg-[#151921] tw-rounded-2xl sm:tw-rounded-[34px] tw-shadow-2xl tw-border tw-border-white/5 tw-overflow-hidden">
+          <div class="tw-px-4 sm:tw-px-8 tw-py-4 sm:tw-py-8 tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-between tw-gap-3 sm:tw-gap-5">
+            <h5 class="tw-text-white tw-font-black tw-text-lg sm:tw-text-2xl tw-m-0 tw-flex tw-items-center">
+              <span class="tw-w-8 tw-h-8 sm:tw-w-10 sm:tw-h-10 tw-bg-indigo-500/20 tw-rounded-lg sm:tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-mr-3 sm:tw-mr-4">
+                <i class="fas fa-users-crown tw-text-indigo-400 tw-text-sm sm:tw-text-base"></i>
               </span>
-              My Downline Team
+              Team members
             </h5>
-            <div class="tw-relative tw-w-full sm:tw-w-80">
-                <i class="fas fa-search tw-absolute tw-left-5 tw-top-1/2 -tw-translate-y-1/2 tw-text-slate-500"></i>
+            <div class="tw-relative tw-w-full sm:tw-w-64">
+                <i class="fas fa-search tw-absolute tw-left-4 tw-top-1/2 -tw-translate-y-1/2 tw-text-slate-500 tw-text-xs"></i>
                 <input 
                   v-model="searchQuery"
                   type="text" 
-                  placeholder="Search by name or ADS ID..." 
-                  class="tw-w-full tw-pl-12 tw-pr-5 tw-py-3.5 tw-bg-slate-800/40 tw-backdrop-blur-sm tw-border tw-border-white/10 tw-rounded-2xl tw-text-white tw-text-sm focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-indigo-500/30 tw-transition-all placeholder:tw-text-slate-600"
+                  placeholder="Search members..." 
+                  class="tw-w-full tw-pl-10 tw-pr-4 tw-py-2 tw-bg-slate-800/40 tw-backdrop-blur-sm tw-border tw-border-white/10 tw-rounded-xl tw-text-white tw-text-xs focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-indigo-500/30 tw-transition-all"
                 >
             </div>
           </div>
           
-          <div class="tw-px-8 tw-pb-10">
+          <div class="tw-px-4 sm:tw-px-8 tw-pb-6 sm:tw-pb-10">
             <!-- Stats Grid - Premium Deep Gradients -->
-            <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-3 tw-gap-6 tw-mb-12">
-              <div class="tw-bg-gradient-to-br tw-from-indigo-600 tw-to-indigo-800 tw-rounded-[28px] tw-p-7 tw-text-white tw-shadow-xl tw-shadow-indigo-500/10 tw-relative tw-overflow-hidden tw-group hover:tw-scale-[1.02] tw-transition-transform">
-                <div class="tw-absolute -tw-bottom-4 -tw-right-4 tw-text-8xl tw-opacity-10 tw-rotate-12 group-hover:tw-scale-110 tw-transition-transform">
-                  <i class="fas fa-users"></i>
-                </div>
-                <h3 class="tw-text-4xl tw-font-black tw-mb-1">{{ Math.floor(totalMembersAnim) }}</h3>
-                <p class="tw-text-indigo-200 tw-text-[11px] tw-font-black tw-uppercase tw-tracking-[2px] tw-m-0">Total Members</p>
+            <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-3 tw-gap-3 sm:tw-gap-6 tw-mb-6 sm:tw-mb-10">
+              <div class="tw-bg-gradient-to-br tw-from-indigo-600 tw-to-indigo-800 tw-rounded-xl sm:tw-rounded-[28px] tw-p-3 sm:tw-p-7 tw-text-white tw-shadow-xl tw-relative tw-overflow-hidden">
+                <h3 class="tw-text-xl sm:tw-text-4xl tw-font-black tw-mb-0.5 sm:tw-mb-1">{{ Math.floor(totalMembersAnim) }}</h3>
+                <p class="tw-text-indigo-200 tw-text-[8px] sm:tw-text-[11px] tw-font-black tw-uppercase tw-tracking-widest tw-m-0">Total Members</p>
               </div>
               
-              <div class="tw-bg-gradient-to-br tw-from-emerald-500 tw-to-emerald-700 tw-rounded-[28px] tw-p-7 tw-text-white tw-shadow-xl tw-shadow-emerald-500/10 tw-relative tw-overflow-hidden tw-group hover:tw-scale-[1.02] tw-transition-transform">
-                <div class="tw-absolute -tw-bottom-4 -tw-right-4 tw-text-8xl tw-opacity-10 tw-rotate-12 group-hover:tw-scale-110 tw-transition-transform">
-                  <i class="fas fa-user-check"></i>
-                </div>
-                <h3 class="tw-text-4xl tw-font-black tw-mb-1">{{ Math.floor(activeMembersAnim) }}</h3>
-                <p class="tw-text-emerald-100 tw-text-[11px] tw-font-black tw-uppercase tw-tracking-[2px] tw-m-0">Active Members</p>
+              <div class="tw-bg-gradient-to-br tw-from-emerald-500 tw-to-emerald-700 tw-rounded-xl sm:tw-rounded-[28px] tw-p-3 sm:tw-p-7 tw-text-white tw-shadow-xl tw-relative tw-overflow-hidden">
+                <h3 class="tw-text-xl sm:tw-text-4xl tw-font-black tw-mb-0.5 sm:tw-mb-1">{{ Math.floor(activeMembersAnim) }}</h3>
+                <p class="tw-text-emerald-100 tw-text-[8px] sm:tw-text-[11px] tw-font-black tw-uppercase tw-tracking-widest tw-m-0">Active Members</p>
               </div>
               
-              <!-- Changed Amber/Yellow to Deep Violet Premium Gradient -->
-              <div class="tw-bg-gradient-to-br tw-from-violet-600 tw-to-purple-800 tw-rounded-[28px] tw-p-7 tw-text-white tw-shadow-xl tw-shadow-violet-500/10 tw-relative tw-overflow-hidden tw-group hover:tw-scale-[1.02] tw-transition-transform">
-                <div class="tw-absolute -tw-bottom-4 -tw-right-4 tw-text-8xl tw-opacity-10 tw-rotate-12 group-hover:tw-scale-110 tw-transition-transform">
-                  <i class="fas fa-gem"></i>
-                </div>
-                <h3 class="tw-text-4xl tw-font-black tw-mb-1">{{ currencySymbol }}{{ formatAmount(teamEarningAnim) }}</h3>
-                <p class="tw-text-violet-100 tw-text-[11px] tw-font-black tw-uppercase tw-tracking-[2px] tw-m-0">Team Earning</p>
+              <div class="tw-bg-gradient-to-br tw-from-violet-600 tw-to-purple-800 tw-rounded-xl sm:tw-rounded-[28px] tw-p-3 sm:tw-p-7 tw-text-white tw-shadow-xl tw-relative tw-overflow-hidden tw-col-span-2 md:tw-col-span-1">
+                <h3 class="tw-text-xl sm:tw-text-4xl tw-font-black tw-mb-0.5 sm:tw-mb-1">{{ currencySymbol }}{{ formatAmount(teamEarningAnim) }}</h3>
+                <p class="tw-text-violet-100 tw-text-[8px] sm:tw-text-[11px] tw-font-black tw-uppercase tw-tracking-widest tw-m-0">Team Earning</p>
               </div>
             </div>
 
-            <!-- Sleek Table -->
-            <div class="tw-overflow-x-auto">
+            <!-- Desktop Table -->
+            <div class="tw-hidden md:tw-block tw-overflow-x-auto">
               <table class="tw-w-full tw-text-sm tw-border-collapse">
                 <thead>
                   <tr class="tw-border-b tw-border-white/5">
@@ -240,17 +226,42 @@
                     </td>
                     <td class="tw-px-6 tw-py-6 tw-font-black tw-text-white tw-text-right tw-text-lg">{{ currencySymbol }}{{ formatAmount(member.earning) }}</td>
                   </tr>
-                  <tr v-if="filteredTeam.length === 0">
-                    <td colspan="4" class="tw-px-6 tw-py-32 tw-text-center">
-                      <div class="tw-w-24 tw-h-24 tw-bg-slate-800/50 tw-rounded-[30px] tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-6">
-                        <i class="fas fa-users-slash tw-text-4xl tw-text-slate-600"></i>
-                      </div>
-                      <h4 class="tw-text-slate-400 tw-font-black tw-text-lg tw-mb-2">No team members found</h4>
-                      <p class="tw-text-slate-600 tw-text-sm tw-max-w-xs tw-mx-auto">Use your referral link above to start building your network!</p>
-                    </td>
-                  </tr>
                 </tbody>
               </table>
+            </div>
+
+            <!-- Mobile View (Card List) -->
+            <div class="md:tw-hidden tw-space-y-4">
+               <div v-for="member in filteredTeam" :key="member.id" class="tw-bg-white/5 tw-border tw-border-white/5 tw-rounded-xl tw-p-4">
+                  <div class="tw-flex tw-items-center tw-gap-4 tw-mb-3">
+                     <div class="tw-w-10 tw-h-10 tw-rounded-xl tw-bg-indigo-500/20 tw-text-indigo-300 tw-flex tw-items-center tw-justify-center tw-font-black tw-text-sm">
+                        {{ (member.firstname?.[0] || member.username?.[0] || '?').toUpperCase() }}
+                     </div>
+                     <div class="tw-min-w-0">
+                        <div class="tw-font-black tw-text-white tw-text-sm tw-truncate">
+                           {{ (String((member.firstname || '') + ' ' + (member.lastname || '')).trim()) || member.username }}
+                        </div>
+                        <span class="tw-text-[9px] tw-font-black tw-bg-indigo-500/30 tw-text-indigo-200 tw-px-1.5 tw-py-0.5 tw-rounded tw-tracking-widest">ADS{{ member.id }}</span>
+                     </div>
+                  </div>
+                  <div class="tw-flex tw-justify-between tw-items-end tw-pt-3 tw-border-t tw-border-white/5">
+                     <div>
+                        <div class="tw-text-[10px] tw-text-slate-500 tw-mb-0.5">Joined: {{ formatDate(member.joined_at) }}</div>
+                        <span class="tw-text-[8px] tw-font-black tw-uppercase tw-tracking-widest" :class="member.status === 'active' ? 'tw-text-emerald-400' : 'tw-text-rose-400'">
+                           {{ member.status }}
+                        </span>
+                     </div>
+                     <div class="tw-text-right">
+                        <div class="tw-text-[10px] tw-text-slate-500">Income</div>
+                        <div class="tw-text-white tw-font-black">₹{{ formatAmount(member.earning) }}</div>
+                     </div>
+                  </div>
+               </div>
+
+               <div v-if="filteredTeam.length === 0" class="tw-py-20 tw-text-center">
+                  <i class="fas fa-users-slash tw-text-4xl tw-text-slate-700 tw-mb-4"></i>
+                  <p class="tw-text-slate-500 tw-text-sm">No members found</p>
+               </div>
             </div>
           </div>
         </div>
@@ -294,30 +305,30 @@
         </div>
 
         <!-- Referral Earning -->
-        <div class="tw-bg-white tw-rounded-2xl tw-shadow-xl tw-border-2 tw-border-indigo-100 tw-overflow-hidden">
-          <div class="tw-bg-indigo-600 tw-p-6 tw-text-white tw-flex tw-items-center tw-justify-between">
-            <h5 class="tw-font-bold tw-text-lg tw-m-0">Referral Earning</h5>
-            <span class="tw-text-indigo-200 tw-text-xl tw-font-bold">₹</span>
+        <div class="tw-bg-white tw-rounded-xl sm:tw-rounded-2xl tw-shadow-xl tw-border-2 tw-border-indigo-100 tw-overflow-hidden">
+          <div class="tw-bg-indigo-600 tw-p-4 sm:tw-p-6 tw-text-white tw-flex tw-items-center tw-justify-between">
+            <h5 class="tw-font-bold tw-text-base sm:tw-text-lg tw-m-0">Referral Earning</h5>
+            <span class="tw-text-indigo-200 tw-text-lg sm:tw-text-xl tw-font-bold">₹</span>
           </div>
-          <div class="tw-p-6 tw-flex tw-flex-col tw-gap-0">
+          <div class="tw-p-4 sm:tw-p-6 tw-flex tw-flex-col tw-gap-0">
             
-            <div class="tw-py-4 tw-border-b tw-border-slate-100">
-              <p class="tw-text-[10px] tw-font-bold tw-uppercase tw-text-slate-400 tw-mb-1">Today Earning</p>
-              <h4 class="tw-text-2xl tw-font-extrabold tw-text-emerald-500 tw-m-0">
+            <div class="tw-py-3 sm:tw-py-4 tw-border-b tw-border-slate-100">
+              <p class="tw-text-[9px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-text-slate-400 tw-mb-0.5 sm:tw-mb-1">Today Earning</p>
+              <h4 class="tw-text-xl sm:tw-text-2xl tw-font-extrabold tw-text-emerald-500 tw-m-0">
                 {{ currencySymbol }}{{ formatAmount(todayEarningAnim) }}
               </h4>
             </div>
 
-            <div class="tw-py-4 tw-border-b tw-border-slate-100">
-              <p class="tw-text-[10px] tw-font-bold tw-uppercase tw-text-slate-400 tw-mb-1">This Month</p>
-              <h4 class="tw-text-2xl tw-font-extrabold tw-text-indigo-500 tw-m-0">
+            <div class="tw-py-3 sm:tw-py-4 tw-border-b tw-border-slate-100">
+              <p class="tw-text-[9px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-text-slate-400 tw-mb-0.5 sm:tw-mb-1">This Month</p>
+              <h4 class="tw-text-xl sm:tw-text-2xl tw-font-extrabold tw-text-indigo-500 tw-m-0">
                 {{ currencySymbol }}{{ formatAmount(thisMonthEarningAnim) }}
               </h4>
             </div>
 
-            <div class="tw-py-4">
-              <p class="tw-text-[10px] tw-font-bold tw-uppercase tw-text-slate-400 tw-mb-1">Total Earning</p>
-              <h4 class="tw-text-3xl tw-font-extrabold tw-text-indigo-600 tw-m-0">
+            <div class="tw-py-3 sm:tw-py-4">
+              <p class="tw-text-[9px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-text-slate-400 tw-mb-0.5 sm:tw-mb-1">Total Earning</p>
+              <h4 class="tw-text-2xl sm:tw-text-3xl tw-font-extrabold tw-text-indigo-600 tw-m-0">
                 {{ currencySymbol }}{{ formatAmount(totalEarningAnim) }}
               </h4>
             </div>

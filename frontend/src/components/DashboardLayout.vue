@@ -47,7 +47,8 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import UserSidebar from './dashboard/UserSidebar.vue'
 import Topbar from './dashboard/Topbar.vue'
 
@@ -73,6 +74,12 @@ export default {
   },
   setup() {
     const isSidebarOpen = ref(false)
+    const route = useRoute()
+
+    // Close sidebar on mobile when route change
+    watch(() => route.path, () => {
+      isSidebarOpen.value = false
+    })
 
     onMounted(() => {
       // KEEPING SCROLL FIX FOR NOW AS IT SEEMS CRITICAL FOR USER

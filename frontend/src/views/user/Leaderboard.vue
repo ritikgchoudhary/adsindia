@@ -405,12 +405,36 @@ export default {
 .loading-spinner { font-size: 3rem; color: #6366f1; margin-bottom: 1rem; }
 .loading-text { color: #94a3b8; font-weight: 600; }
 
+@media (max-width: 768px) {
+  .leaderboard-header { padding: 1.25rem; margin-bottom: 1.5rem; border-radius: 24px; }
+  .trophy-icon-wrapper { width: 50px; height: 50px; font-size: 1.5rem; border-radius: 14px; }
+  .main-title { font-size: 1.75rem; }
+  .subtitle { font-size: 0.85rem; }
+  .period-btn { padding: 8px 16px; font-size: 0.8rem; }
+  .leaderboard-list-card { border-radius: 20px; }
+}
+
 @media (max-width: 640px) {
-  .leaderboard-header { padding: 1.5rem; }
-  .main-title { font-size: 2rem; }
-  .rank-row-content { padding: 1rem; }
-  .rank-earning .earning-val { font-size: 1.25rem; }
-  .rank-avatar { width: 44px; height: 44px; }
-  .rank-name { font-size: 1.05rem; }
+  .rank-row-content { padding: 0.85rem 1rem; border-radius: 18px; }
+  .rank-pos-wrapper { width: 32px; }
+  .rank-badge { width: 28px; height: 28px; font-size: 0.85rem; border-radius: 8px; }
+  .rank-user-info { gap: 0.75rem; margin-left: 0.5rem; }
+  .rank-avatar { width: 40px; height: 40px; border-radius: 12px; }
+  .rank-name { font-size: 0.95rem; }
+  .rank-status { font-size: 0.6rem; letter-spacing: 0.5px; }
+  .rank-earning .earning-val { font-size: 1.1rem; }
+  .rank-earning .earning-lbl { font-size: 0.6rem; letter-spacing: 0.5px; }
+  .rank-crown { font-size: 1rem; top: -8px; left: -8px; }
+}
+
+@media (max-width: 480px) {
+  .leaderboard-header { padding: 1rem; }
+  .main-title { font-size: 1.5rem; }
+  .period-btn { padding: 6px 12px; }
+  .rank-row-content { padding: 0.75rem 0.85rem; }
+  .rank-name { font-size: 0.9rem; line-height: 1.2; }
+  .rank-earning .earning-val { font-size: 1rem; }
+  /* Hide minor labels on very small screens to keep it in one line */
+  .rank-status, .earning-lbl { display: none; }
 }
 </style>

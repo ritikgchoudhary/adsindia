@@ -3,109 +3,111 @@
     <div class="tw-grid tw-grid-cols-1 tw-gap-8">
       
       <!-- Step Progress Indicator -->
-      <div class="tw-bg-slate-900/80 tw-backdrop-blur-sm tw-rounded-2xl tw-shadow-xl tw-border tw-border-slate-800 tw-p-8">
+      <div class="tw-bg-slate-900/80 tw-backdrop-blur-sm tw-rounded-xl sm:tw-rounded-2xl tw-shadow-xl tw-border tw-border-slate-800 tw-p-4 sm:tw-p-8">
         <div class="tw-flex tw-justify-between tw-items-center tw-relative">
           <!-- Connecting Line -->
-          <div class="tw-absolute tw-top-6 tw-left-0 tw-w-full tw-h-0.5 tw-bg-slate-800 -tw-z-0"></div>
+          <div class="tw-absolute tw-top-4 sm:tw-top-6 tw-left-0 tw-w-full tw-h-0.5 tw-bg-slate-800 -tw-z-0"></div>
           
           <!-- Steps -->
           <div class="tw-relative tw-z-10 tw-text-center tw-flex-1 tw-cursor-pointer" @click="navigateToStep(1)">
             <div 
-              class="tw-w-12 tw-h-12 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-border-2 tw-transition-all tw-duration-300"
+              class="tw-w-8 tw-h-8 sm:tw-w-12 sm:tw-h-12 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-border-2 tw-transition-all tw-duration-300"
               :class="currentStep >= 1 ? 'tw-bg-indigo-600 tw-border-indigo-400 tw-text-white tw-shadow-lg tw-shadow-indigo-500/30' : 'tw-bg-slate-800 tw-border-slate-700 tw-text-slate-500'"
             >
-              <i class="fas fa-university tw-text-lg"></i>
+              <i class="fas fa-university tw-text-sm sm:tw-text-lg"></i>
             </div>
-            <div class="tw-mt-3 tw-font-bold tw-text-xs tw-uppercase tw-tracking-wider" :class="currentStep >= 1 ? 'tw-text-white' : 'tw-text-slate-500'">Bank Details</div>
+            <div class="tw-mt-2 sm:tw-mt-3 tw-font-bold tw-text-[8px] sm:tw-text-xs tw-uppercase tw-tracking-wider" :class="currentStep >= 1 ? 'tw-text-white' : 'tw-text-slate-500'">Bank</div>
           </div>
 
           <div class="tw-relative tw-z-10 tw-text-center tw-flex-1 tw-cursor-pointer" @click="navigateToStep(2)">
             <div 
-              class="tw-w-12 tw-h-12 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-border-2 tw-transition-all tw-duration-300"
+              class="tw-w-8 tw-h-8 sm:tw-w-12 sm:tw-h-12 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-border-2 tw-transition-all tw-duration-300"
               :class="currentStep >= 2 ? 'tw-bg-indigo-600 tw-border-indigo-400 tw-text-white tw-shadow-lg tw-shadow-indigo-500/30' : 'tw-bg-slate-800 tw-border-slate-700 tw-text-slate-500'"
             >
-              <i class="fas fa-id-card tw-text-lg"></i>
+              <i class="fas fa-id-card tw-text-sm sm:tw-text-lg"></i>
             </div>
-            <div class="tw-mt-3 tw-font-bold tw-text-xs tw-uppercase tw-tracking-wider" :class="currentStep >= 2 ? 'tw-text-white' : 'tw-text-slate-500'">KYC Documents</div>
+            <div class="tw-mt-2 sm:tw-mt-3 tw-font-bold tw-text-[8px] sm:tw-text-xs tw-uppercase tw-tracking-wider" :class="currentStep >= 2 ? 'tw-text-white' : 'tw-text-slate-500'">Documents</div>
           </div>
 
           <div class="tw-relative tw-z-10 tw-text-center tw-flex-1 tw-cursor-pointer" @click="navigateToStep(3)">
             <div 
-              class="tw-w-12 tw-h-12 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-border-2 tw-transition-all tw-duration-300"
+              class="tw-w-8 tw-h-8 sm:tw-w-12 sm:tw-h-12 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mx-auto tw-border-2 tw-transition-all tw-duration-300"
               :class="kycStatus === 1 ? 'tw-bg-emerald-500 tw-border-emerald-400 tw-text-white tw-shadow-lg tw-shadow-emerald-500/30' : (currentStep >= 3 ? 'tw-bg-indigo-600 tw-border-indigo-400 tw-text-white' : 'tw-bg-slate-800 tw-border-slate-700 tw-text-slate-500')"
             >
-              <i class="fas" :class="kycStatus === 1 ? 'fa-check' : 'fa-shield-alt'"></i>
+              <i class="fas tw-text-sm sm:tw-text-lg" :class="kycStatus === 1 ? 'fa-check' : 'fa-shield-alt'"></i>
             </div>
-            <div class="tw-mt-3 tw-font-bold tw-text-xs tw-uppercase tw-tracking-wider" :class="kycStatus === 1 ? 'tw-text-emerald-400' : (currentStep >= 3 ? 'tw-text-white' : 'tw-text-slate-500')">Verification</div>
+            <div class="tw-mt-2 sm:tw-mt-3 tw-font-bold tw-text-[8px] sm:tw-text-xs tw-uppercase tw-tracking-wider" :class="kycStatus === 1 ? 'tw-text-emerald-400' : (currentStep >= 3 ? 'tw-text-white' : 'tw-text-slate-500')">Review</div>
           </div>
         </div>
       </div>
 
       <!-- Step 1: Bank Details -->
-      <div v-if="currentStep === 1" class="tw-bg-slate-900/80 tw-backdrop-blur-sm tw-rounded-2xl tw-shadow-xl tw-border tw-border-slate-800 tw-overflow-hidden">
-        <div class="tw-bg-slate-800/50 tw-p-5 tw-border-b tw-border-slate-800 tw-flex tw-justify-between tw-items-center">
-          <h5 class="tw-text-white tw-font-bold tw-text-lg tw-m-0 tw-flex tw-items-center">
-            <i class="fas fa-university tw-mr-3 tw-text-indigo-400"></i>Step 1: Bank Details
+      <div v-if="currentStep === 1" class="tw-bg-slate-900/80 tw-backdrop-blur-sm tw-rounded-xl sm:tw-rounded-2xl tw-shadow-xl tw-border tw-border-slate-800 tw-overflow-hidden">
+        <div class="tw-bg-slate-800/50 tw-p-3 sm:tw-p-5 tw-border-b tw-border-slate-800 tw-flex tw-items-center tw-justify-between tw-gap-2">
+          <h5 class="tw-text-white tw-font-bold tw-text-sm sm:tw-text-lg tw-m-0 tw-flex tw-items-center">
+            <i class="fas fa-university tw-mr-2 sm:tw-mr-3 tw-text-indigo-400"></i><span class="tw-hidden sm:tw-inline">Step 1: </span>Bank Details
           </h5>
-          <button 
-            v-if="hasSavedBankDetails && !showBankForm && !isKycLocked" 
-            @click="showBankForm = true"
-            class="tw-px-4 tw-py-2 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-text-xs tw-font-bold tw-rounded-lg tw-transition-all tw-border-0 tw-cursor-pointer"
-          >
-            <i class="fas fa-plus tw-mr-1"></i> Add / Edit Details
-          </button>
-
-          <button
-            v-if="isKycVerified"
-            type="button"
-            @click="resetVerifiedKyc"
-            class="tw-px-4 tw-py-2 tw-bg-rose-600 hover:tw-bg-rose-700 tw-text-white tw-text-xs tw-font-bold tw-rounded-lg tw-transition-all tw-border-0 tw-cursor-pointer"
-          >
-            <i class="fas fa-trash tw-mr-1"></i> Delete Old & Add New
-          </button>
+          <div class="tw-flex tw-gap-1 sm:tw-gap-2">
+            <button 
+              v-if="hasSavedBankDetails && !showBankForm && !isKycLocked" 
+              @click="showBankForm = true"
+              class="tw-px-2 sm:tw-px-4 tw-py-1.5 sm:tw-py-2 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-text-[10px] sm:tw-text-xs tw-font-bold tw-rounded-lg tw-transition-all tw-border-0 tw-cursor-pointer tw-whitespace-nowrap"
+            >
+              <i class="fas fa-pen tw-mr-1"></i> Edit
+            </button>
+  
+            <button
+              v-if="isKycVerified"
+              type="button"
+              @click="resetVerifiedKyc"
+              class="tw-px-2 sm:tw-px-4 tw-py-1.5 sm:tw-py-2 tw-bg-rose-600 hover:tw-bg-rose-700 tw-text-white tw-text-[10px] sm:tw-text-xs tw-font-bold tw-rounded-lg tw-transition-all tw-border-0 tw-cursor-pointer tw-whitespace-nowrap"
+            >
+              <i class="fas fa-trash tw-mr-1"></i> Reset
+            </button>
+          </div>
         </div>
-        <div class="tw-p-8">
+        <div class="tw-p-4 sm:tw-p-8">
           
           <!-- Saved Bank Details Card (Matches Screenshot) -->
-          <div v-if="hasSavedBankDetails && !showBankForm" class="tw-bg-slate-950 tw-border tw-border-white/5 tw-rounded-2xl tw-p-8 tw-text-white tw-shadow-2xl tw-max-w-lg tw-mx-auto tw-relative">
-            <div class="tw-flex tw-justify-between tw-items-start tw-mb-8">
+          <div v-if="hasSavedBankDetails && !showBankForm" class="tw-bg-slate-950 tw-border tw-border-white/5 tw-rounded-2xl tw-p-5 sm:tw-p-8 tw-text-white tw-shadow-2xl tw-max-w-lg tw-mx-auto tw-relative">
+            <div class="tw-flex tw-justify-between tw-items-start tw-mb-5 sm:tw-mb-8">
               <div>
-                <p class="tw-text-slate-400 tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-2">Bank Name</p>
-                <h3 class="tw-text-2xl tw-font-extrabold tw-tracking-wide tw-m-0">{{ bankDetails.bank_name }}</h3>
+                <p class="tw-text-slate-400 tw-text-[8px] sm:tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-1 sm:tw-mb-2">Bank Name</p>
+                <h3 class="tw-text-lg sm:tw-text-2xl tw-font-extrabold tw-tracking-wide tw-m-0">{{ bankDetails.bank_name }}</h3>
               </div>
-              <i class="fas fa-university tw-text-4xl tw-text-white/10"></i>
+              <i class="fas fa-university tw-text-2xl sm:tw-text-4xl tw-text-white/10"></i>
             </div>
             
-            <div class="tw-mb-8">
-              <p class="tw-text-slate-400 tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-2">Account Number</p>
-              <div class="tw-text-xl tw-font-mono tw-tracking-[0.3em] tw-font-bold">{{ maskAccountNumber(bankDetails.account_number) }}</div>
+            <div class="tw-mb-5 sm:tw-mb-8">
+              <p class="tw-text-slate-400 tw-text-[8px] sm:tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-1 sm:tw-mb-2">Account Number</p>
+              <div class="tw-text-sm sm:tw-text-xl tw-font-mono tw-tracking-[0.1em] sm:tw-tracking-[0.3em] tw-font-bold">{{ maskAccountNumber(bankDetails.account_number) }}</div>
             </div>
             
-            <div class="tw-grid tw-grid-cols-2 tw-gap-8">
+            <div class="tw-grid tw-grid-cols-2 tw-gap-4 sm:tw-gap-8">
               <div>
-                <p class="tw-text-slate-400 tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-2">Holder Name</p>
-                <div class="tw-text-base tw-font-bold tw-truncate">{{ bankDetails.account_holder_name }}</div>
+                <p class="tw-text-slate-400 tw-text-[8px] sm:tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-1 sm:tw-mb-2">Holder Name</p>
+                <div class="tw-text-xs sm:tw-text-base tw-font-bold tw-truncate">{{ bankDetails.account_holder_name }}</div>
               </div>
               <div>
-                <p class="tw-text-slate-400 tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-2">IFSC Code</p>
-                <div class="tw-text-base tw-font-mono tw-font-bold">{{ maskIfscOrUpi(bankDetails.ifsc_code) }}</div>
+                <p class="tw-text-slate-400 tw-text-[8px] sm:tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-1 sm:tw-mb-2">IFSC Code</p>
+                <div class="tw-text-xs sm:tw-text-base tw-font-mono tw-font-bold">{{ maskIfscOrUpi(bankDetails.ifsc_code) }}</div>
               </div>
               <div v-if="bankDetails.bank_registered_no">
-                <p class="tw-text-slate-400 tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-2">Mobile Number</p>
-                <div class="tw-text-base tw-font-bold">{{ maskKeepLast4(bankDetails.bank_registered_no) }}</div>
+                <p class="tw-text-slate-400 tw-text-[8px] sm:tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-1 sm:tw-mb-2">Mobile Number</p>
+                <div class="tw-text-xs sm:tw-text-base tw-font-bold">{{ maskKeepLast4(bankDetails.bank_registered_no) }}</div>
               </div>
               <div v-if="bankDetails.upi_id">
-                <p class="tw-text-slate-400 tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-2">UPI ID</p>
-                <div class="tw-text-base tw-font-bold">{{ maskUpi(bankDetails.upi_id) }}</div>
+                <p class="tw-text-slate-400 tw-text-[8px] sm:tw-text-[10px] tw-uppercase tw-tracking-[0.2em] tw-font-bold tw-mb-1 sm:tw-mb-2">UPI ID</p>
+                <div class="tw-text-xs sm:tw-text-base tw-font-bold tw-truncate">{{ maskUpi(bankDetails.upi_id) }}</div>
               </div>
             </div>
 
             <!-- Proceed Button (Inside Card) -->
             <button 
               @click="navigateToStep(2)"
-              class="tw-w-full tw-mt-10 tw-py-4 tw-bg-white/5 hover:tw-bg-white/10 tw-text-white tw-font-bold tw-rounded-xl tw-transition-all tw-border tw-border-white/10 tw-cursor-pointer tw-flex tw-items-center tw-justify-center tw-gap-2"
+              class="tw-w-full tw-mt-6 sm:tw-mt-10 tw-py-3 sm:tw-py-4 tw-bg-white/5 hover:tw-bg-white/10 tw-text-white tw-font-bold tw-rounded-xl tw-transition-all tw-border tw-border-white/10 tw-cursor-pointer tw-flex tw-items-center tw-justify-center tw-gap-2 tw-text-sm"
             >
-              Proceed to KYC Documents <i class="fas fa-arrow-right tw-text-xs"></i>
+              Proceed to Documents <i class="fas fa-arrow-right tw-text-xs"></i>
             </button>
           </div>
 
@@ -152,13 +154,13 @@
                 <input type="text" v-model="bankDetails.upi_id" class="tw-w-full tw-px-4 tw-py-3 tw-bg-slate-950 tw-border tw-border-slate-800 tw-rounded-xl tw-text-white focus:tw-outline-none focus:tw-border-indigo-500 focus:tw-ring-4 focus:tw-ring-indigo-500/10 tw-transition-all" placeholder="Enter UPI ID (e.g. name@bank)">
               </div>
             </div>
-            <div class="tw-flex tw-justify-end tw-mt-8">
+            <div class="tw-flex tw-justify-end tw-mt-6 sm:tw-mt-8">
               <button 
                 type="button" 
                 @click="submitBankDetails"
-                class="tw-px-8 tw-py-3.5 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-indigo-500/30 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-cursor-pointer"
+                class="tw-w-full sm:tw-w-auto tw-px-8 tw-py-3 sm:tw-py-3.5 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-cursor-pointer tw-text-sm"
               >
-                <i class="fas fa-save"></i> Save Details
+                <i class="fas fa-save"></i> Save Bank Details
               </button>
             </div>
           </form>
@@ -166,13 +168,13 @@
       </div>
 
       <!-- Step 2: KYC Documents -->
-      <div v-if="currentStep === 2" class="tw-bg-slate-900/80 tw-backdrop-blur-sm tw-rounded-2xl tw-shadow-xl tw-border tw-border-slate-800 tw-overflow-hidden">
-        <div class="tw-bg-slate-800/50 tw-p-5 tw-border-b tw-border-slate-800">
-          <h5 class="tw-text-white tw-font-bold tw-text-lg tw-m-0 tw-flex tw-items-center">
-            <i class="fas fa-id-card tw-mr-3 tw-text-indigo-400"></i>Step 2: KYC Documents
+      <div v-if="currentStep === 2" class="tw-bg-slate-900/80 tw-backdrop-blur-sm tw-rounded-xl sm:tw-rounded-2xl tw-shadow-xl tw-border tw-border-slate-800 tw-overflow-hidden">
+        <div class="tw-bg-slate-800/50 tw-p-3 sm:tw-p-5 tw-border-b tw-border-slate-800">
+          <h5 class="tw-text-white tw-font-bold tw-text-sm sm:tw-text-lg tw-m-0 tw-flex tw-items-center">
+            <i class="fas fa-id-card tw-mr-2 sm:tw-mr-3 tw-text-indigo-400"></i><span class="tw-hidden sm:tw-inline">Step 2: </span>Documents
           </h5>
         </div>
-        <div class="tw-p-8">
+        <div class="tw-p-4 sm:tw-p-8">
           
           <!-- Integrated Payment & Terms (Required for Step 2) -->
           <div v-if="!hasPaidKYCFee && Number(kycFee) > 0" class="tw-mb-10 tw-rounded-2xl tw-border tw-border-indigo-500/20 tw-bg-indigo-500/5 tw-p-6">

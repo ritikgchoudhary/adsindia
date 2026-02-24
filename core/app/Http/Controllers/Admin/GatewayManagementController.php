@@ -29,7 +29,7 @@ class GatewayManagementController extends Controller
     public function uploadQr(Request $request)
     {
         $request->validate([
-            'qr_images.*' => ['nullable', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png', 'webp'])]
+            'qr_images.*' => ['nullable', new FileTypeValidate(['jpg', 'jpeg', 'png', 'webp'])]
         ]);
 
         $gateway = Gateway::where('alias', 'custom_qr')->first();
@@ -45,7 +45,7 @@ class GatewayManagementController extends Controller
             $gateway->save();
         }
 
-        $qrImages = json_decode($gateway->extra, true) ?? [];
+        $qrImages = $gateway->extra ?? [];
 
         if ($request->hasFile('qr_images')) {
             foreach ($request->file('qr_images') as $image) {
@@ -53,13 +53,13 @@ class GatewayManagementController extends Controller
                     $filename = fileUploader($image, getFilePath('gateway'));
                     $qrImages[] = $filename;
                 } catch (\Exception $exp) {
-                    $notify[] = ['error', 'Image could not be uploaded'];
+                    $notify[] = ['error', 'Image could not be uploaded: ' . $exp->getMessage()];
                     return back()->withNotify($notify);
                 }
             }
         }
 
-        $gateway->extra = json_encode($qrImages);
+        $gateway->extra = $qrImages;
         $gateway->save();
 
         $notify[] = ['success', 'QR images uploaded successfully'];
@@ -69,13 +69,13 @@ class GatewayManagementController extends Controller
     public function removeQr($index)
     {
         $gateway = Gateway::where('alias', 'custom_qr')->firstOrFail();
-        $qrImages = json_decode($gateway->extra, true) ?? [];
+        $qrImages = $gateway->extra ?? [];
 
         if (isset($qrImages[$index])) {
             fileManager()->removeFile(getFilePath('gateway') . '/' . $qrImages[$index]);
             unset($qrImages[$index]);
             $qrImages = array_values($qrImages);
-            $gateway->extra = json_encode($qrImages);
+            $gateway->extra = $qrImages;
             $gateway->save();
         }
 

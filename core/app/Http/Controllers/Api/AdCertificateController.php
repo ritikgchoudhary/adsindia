@@ -37,11 +37,21 @@ class AdCertificateController extends Controller
         $user = auth()->user();
         $general = gs();
         $gateway = $request->input('gateway', 'watchpay');
+        if (!in_array($gateway, ['watchpay', 'simplypay', 'rupeerush', 'custom_qr'])) {
+            $gateway = 'watchpay';
+        }
         $type = $request->input('type', 'course'); // 'course' or 'view'
         
         $gw = \App\Models\Gateway::where('alias', $gateway)->first();
         if (!$gw || $gw->status != 1) {
             return responseError('gateway_unavailable', ['Selected payment gateway is currently unavailable.']);
+        }
+
+        if ($gateway === 'custom_qr') {
+            $qrImages = $gw->extra ?? [];
+            if (empty($qrImages)) {
+                return responseError('gateway_unavailable', ['Manual QR system is currently not available. Please contact admin.']);
+            }
         }
 
         if ($this->hasAdCertificate($user, $type)) {
@@ -66,7 +76,10 @@ class AdCertificateController extends Controller
         $deposit->status = Status::PAYMENT_INITIATE;
         $deposit->save();
 
-        cache()->put($gateway . '_payment_' . $trx, [
+        $cachePrefix = $gateway . '_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
+
+        cache()->put($cachePrefix . $trx, [
             'type' => 'ad_certificate',
             'cert_type' => $type,
             'user_id' => $user->id,
@@ -77,7 +90,11 @@ class AdCertificateController extends Controller
 
         $backPath = ($type === 'view') ? '/user/certificates' : '/user/courses';
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
-        $pageUrl = $base . $backPath . '?' . $gateway . '_trx=' . urlencode($trx) . '&ad_certificate=1';
+        
+        $gw_param = $gateway . '_trx=';
+        if ($gateway === 'custom_qr') $gw_param = 'custom_qr_trx=';
+
+        $pageUrl = $base . $backPath . '?' . $gw_param . urlencode($trx) . '&ad_certificate=1';
         $notifyUrl = $base . '/ipn/' . $gateway;
 
         $goodsName = ($type === 'view') ? 'Ad Certificate (View)' : 'Ad Certificate (Course)';
@@ -107,6 +124,19 @@ class AdCertificateController extends Controller
                     'payPhone' => $user->mobile,
                 ]);
                 $paymentUrl = $ap['pay_link'];
+            } elseif ($gateway == 'custom_qr') {
+                $qrImages = $gw->extra ?? [];
+                $fullQrImages = array_map(function($img) {
+                    return asset(getFilePath('gateway') . '/' . $img);
+                }, (is_string($qrImages) ? json_decode($qrImages, true) : (array)$qrImages));
+                
+                return responseSuccess('initiated', ['Manual QR tracking initiated'], [
+                    'payment_url' => $pageUrl . '&method=custom_qr',
+                    'is_manual' => true,
+                    'qr_images' => $fullQrImages,
+                    'trx' => $trx,
+                    'amount' => (float) self::PRICE,
+                ]);
             } else {
                 $wp = WatchPayGateway::createWebPayment(
                     $trx,
@@ -139,7 +169,7 @@ class AdCertificateController extends Controller
         $user = auth()->user();
         $trx = (string) $request->trx;
         $gateway = $request->gateway;
-        if (!in_array($gateway, ['simplypay', 'watchpay', 'rupeerush'])) {
+        if (!in_array($gateway, ['simplypay', 'watchpay', 'rupeerush', 'custom_qr'])) {
             $gateway = 'watchpay';
         }
         $session = cache()->get($gateway . '_payment_' . $trx);
