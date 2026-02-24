@@ -3,127 +3,124 @@
     <div class="ma-reports">
 
       <!-- Range Selector -->
-      <div class="ma-card mb-4">
-        <div class="ma-card__body d-flex flex-wrap gap-3 align-items-center">
-          <span class="text-muted" style="font-size:0.9rem;"><i class="fas fa-calendar-alt me-2"></i>Date Range</span>
-          <div class="ma-range-tabs">
+      <div class="tw-bg-slate-900/50 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-mb-6 tw-flex tw-flex-wrap tw-gap-4 tw-items-center tw-justify-between tw-shadow-sm">
+        <div class="tw-flex tw-items-center tw-gap-4">
+          <span class="tw-text-slate-400 tw-font-bold tw-text-sm tw-uppercase tw-tracking-widest">
+            <i class="fas fa-calendar-alt tw-mr-2"></i>Date Range
+          </span>
+          <div class="tw-flex tw-gap-2 tw-bg-black/20 tw-p-1.5 tw-rounded-xl tw-border tw-border-white/5">
             <button v-for="r in ranges" :key="r.val"
-              class="ma-range-tab"
-              :class="{ 'ma-range-tab--active': range === r.val }"
+              class="tw-px-4 tw-py-2 tw-rounded-lg tw-text-xs tw-font-bold tw-transition-all tw-duration-300 tw-border tw-border-transparent"
+              :class="range === r.val ? 'tw-bg-indigo-500/20 tw-text-indigo-400 tw-border-indigo-500/30 tw-shadow-inner' : 'tw-text-slate-400 hover:tw-text-white hover:tw-bg-white/5'"
               @click="range = r.val; fetchReports()"
             >{{ r.label }}</button>
           </div>
-          <button class="ma-btn-refresh ms-auto" @click="fetchReports" :title="'Refresh'">
-            <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
-          </button>
         </div>
+        <button class="tw-w-10 tw-h-10 tw-rounded-xl tw-bg-indigo-600 hover:tw-bg-indigo-500 tw-text-white tw-border-0 tw-flex tw-items-center tw-justify-center tw-transition-all tw-duration-300 tw-shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:tw-shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-tw-translate-y-0.5" @click="fetchReports" title="Refresh">
+          <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
+        </button>
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="ma-center py-5">
-        <div class="ma-spinner"></div>
-        <p class="text-muted mt-3">Loading analytics...</p>
+      <div v-if="loading" class="tw-text-center tw-py-20">
+        <div class="tw-w-16 tw-h-16 tw-border-4 tw-border-indigo-500/30 tw-border-t-indigo-500 tw-rounded-full tw-animate-spin tw-mx-auto tw-mb-4"></div>
+        <div class="tw-text-slate-400 tw-font-medium">Fetching rich analytics...</div>
       </div>
 
       <template v-else>
         <!-- Summary Stats Row -->
-        <div class="row g-3 mb-4">
-          <div class="col-sm-6 col-md-3">
-            <div class="ma-stat-card ma-stat-card--green">
-              <div class="ma-stat-card__icon"><i class="fas fa-arrow-down"></i></div>
-              <div class="ma-stat-card__body">
-                <div class="ma-stat-card__val">₹{{ fmt(summary.total_deposits) }}</div>
-                <div class="ma-stat-card__lbl">Total Deposits</div>
-              </div>
+        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-4 tw-mb-6">
+          <!-- Total Deposits -->
+          <div class="tw-bg-gradient-to-br tw-from-emerald-900/40 tw-to-slate-900/80 tw-backdrop-blur-xl tw-rounded-[24px] tw-p-6 tw-border tw-border-emerald-500/20 tw-relative tw-overflow-hidden tw-group hover:-tw-translate-y-1 tw-transition-all tw-duration-300 hover:tw-shadow-[0_8px_30px_-10px_rgba(16,185,129,0.3)]">
+            <div class="tw-absolute -tw-right-6 -tw-top-6 tw-w-24 tw-h-24 tw-bg-emerald-500/10 tw-rounded-full tw-blur-2xl transition-all group-hover:tw-bg-emerald-500/20"></div>
+            <div class="tw-flex tw-items-center tw-justify-between tw-mb-4 relative">
+              <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-bg-emerald-500/10 tw-text-emerald-400 tw-flex tw-items-center tw-justify-center tw-text-xl tw-border tw-border-emerald-500/20 tw-shadow-inner"><i class="fas fa-arrow-down"></i></div>
+              <span class="tw-text-emerald-400/50 tw-text-xs tw-font-bold tw-uppercase">All Time</span>
             </div>
+            <h3 class="tw-text-white tw-text-3xl tw-font-black tw-mb-1 tw-tracking-tight">₹{{ fmt(summary.total_deposits) }}</h3>
+            <p class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Total Deposits</p>
           </div>
-          <div class="col-sm-6 col-md-3">
-            <div class="ma-stat-card ma-stat-card--red">
-              <div class="ma-stat-card__icon"><i class="fas fa-arrow-up"></i></div>
-              <div class="ma-stat-card__body">
-                <div class="ma-stat-card__val">₹{{ fmt(summary.total_withdrawals) }}</div>
-                <div class="ma-stat-card__lbl">Total Withdrawals</div>
-              </div>
+
+          <!-- Total Withdrawals -->
+          <div class="tw-bg-gradient-to-br tw-from-rose-900/40 tw-to-slate-900/80 tw-backdrop-blur-xl tw-rounded-[24px] tw-p-6 tw-border tw-border-rose-500/20 tw-relative tw-overflow-hidden tw-group hover:-tw-translate-y-1 tw-transition-all tw-duration-300 hover:tw-shadow-[0_8px_30px_-10px_rgba(244,63,94,0.3)]">
+            <div class="tw-absolute -tw-right-6 -tw-top-6 tw-w-24 tw-h-24 tw-bg-rose-500/10 tw-rounded-full tw-blur-2xl transition-all group-hover:tw-bg-rose-500/20"></div>
+            <div class="tw-flex tw-items-center tw-justify-between tw-mb-4 relative">
+              <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-bg-rose-500/10 tw-text-rose-400 tw-flex tw-items-center tw-justify-center tw-text-xl tw-border tw-border-rose-500/20 tw-shadow-inner"><i class="fas fa-arrow-up"></i></div>
+              <span class="tw-text-rose-400/50 tw-text-xs tw-font-bold tw-uppercase">All Time</span>
             </div>
+            <h3 class="tw-text-white tw-text-3xl tw-font-black tw-mb-1 tw-tracking-tight">₹{{ fmt(summary.total_withdrawals) }}</h3>
+            <p class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Total Withdrawals</p>
           </div>
-          <div class="col-sm-6 col-md-3">
-            <div class="ma-stat-card ma-stat-card--purple">
-              <div class="ma-stat-card__icon"><i class="fas fa-chart-line"></i></div>
-              <div class="ma-stat-card__body">
-                <div class="ma-stat-card__val">₹{{ fmt(summary.net_revenue) }}</div>
-                <div class="ma-stat-card__lbl">Net Revenue</div>
-              </div>
+
+          <!-- Net Revenue -->
+          <div class="tw-bg-gradient-to-br tw-from-purple-900/40 tw-to-slate-900/80 tw-backdrop-blur-xl tw-rounded-[24px] tw-p-6 tw-border tw-border-purple-500/20 tw-relative tw-overflow-hidden tw-group hover:-tw-translate-y-1 tw-transition-all tw-duration-300 hover:tw-shadow-[0_8px_30px_-10px_rgba(168,85,247,0.3)]">
+            <div class="tw-absolute -tw-right-6 -tw-top-6 tw-w-24 tw-h-24 tw-bg-purple-500/10 tw-rounded-full tw-blur-2xl transition-all group-hover:tw-bg-purple-500/20"></div>
+            <div class="tw-flex tw-items-center tw-justify-between tw-mb-4 relative">
+              <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-bg-purple-500/10 tw-text-purple-400 tw-flex tw-items-center tw-justify-center tw-text-xl tw-border tw-border-purple-500/20 tw-shadow-inner"><i class="fas fa-chart-line"></i></div>
+              <span class="tw-text-purple-400/50 tw-text-xs tw-font-bold tw-uppercase">Net Profit</span>
             </div>
+            <h3 class="tw-text-white tw-text-3xl tw-font-black tw-mb-1 tw-tracking-tight">₹{{ fmt(summary.net_revenue) }}</h3>
+            <p class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">System Revenue</p>
           </div>
-          <div class="col-sm-6 col-md-3">
-            <div class="ma-stat-card ma-stat-card--blue">
-              <div class="ma-stat-card__icon"><i class="fas fa-users"></i></div>
-              <div class="ma-stat-card__body">
-                <div class="ma-stat-card__val">{{ summary.total_users }}</div>
-                <div class="ma-stat-card__lbl">Total Users</div>
-              </div>
+
+          <!-- Total Users -->
+          <div class="tw-bg-gradient-to-br tw-from-blue-900/40 tw-to-slate-900/80 tw-backdrop-blur-xl tw-rounded-[24px] tw-p-6 tw-border tw-border-blue-500/20 tw-relative tw-overflow-hidden tw-group hover:-tw-translate-y-1 tw-transition-all tw-duration-300 hover:tw-shadow-[0_8px_30px_-10px_rgba(59,130,246,0.3)]">
+            <div class="tw-absolute -tw-right-6 -tw-top-6 tw-w-24 tw-h-24 tw-bg-blue-500/10 tw-rounded-full tw-blur-2xl transition-all group-hover:tw-bg-blue-500/20"></div>
+            <div class="tw-flex tw-items-center tw-justify-between tw-mb-4 relative">
+              <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-bg-blue-500/10 tw-text-blue-400 tw-flex tw-items-center tw-justify-center tw-text-xl tw-border tw-border-blue-500/20 tw-shadow-inner"><i class="fas fa-users"></i></div>
+              <span class="tw-text-blue-400/50 tw-text-xs tw-font-bold tw-uppercase">Community</span>
             </div>
+            <h3 class="tw-text-white tw-text-3xl tw-font-black tw-mb-1 tw-tracking-tight">{{ fmt(summary.total_users) }}</h3>
+            <p class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Total Users</p>
           </div>
         </div>
 
-        <!-- Second stat row  -->
-        <div class="row g-3 mb-4">
-          <div class="col-6 col-md-2">
-            <div class="ma-mini-stat">
-              <div class="ma-mini-stat__val text-success">{{ summary.active_users }}</div>
-              <div class="ma-mini-stat__lbl">Active Users</div>
-            </div>
+        <!-- Quick Mini Stats Row -->
+        <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-6 tw-gap-4 tw-mb-6">
+          <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
+              <div class="tw-text-emerald-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.active_users }}</div>
+              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">Active Users</div>
           </div>
-          <div class="col-6 col-md-2">
-            <div class="ma-mini-stat">
-              <div class="ma-mini-stat__val text-danger">{{ summary.banned_users }}</div>
-              <div class="ma-mini-stat__lbl">Banned Users</div>
-            </div>
+          <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
+              <div class="tw-text-rose-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.banned_users }}</div>
+              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">Banned</div>
           </div>
-          <div class="col-6 col-md-2">
-            <div class="ma-mini-stat">
-              <div class="ma-mini-stat__val text-warning">{{ summary.kyc_pending }}</div>
-              <div class="ma-mini-stat__lbl">KYC Pending</div>
-            </div>
+          <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
+              <div class="tw-text-amber-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.kyc_pending }}</div>
+              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">KYC Pend.</div>
           </div>
-          <div class="col-6 col-md-2">
-            <div class="ma-mini-stat">
-              <div class="ma-mini-stat__val text-info">{{ summary.kyc_verified }}</div>
-              <div class="ma-mini-stat__lbl">KYC Verified</div>
-            </div>
+          <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
+              <div class="tw-text-blue-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.kyc_verified }}</div>
+              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">KYC Verif.</div>
           </div>
-          <div class="col-6 col-md-2">
-            <div class="ma-mini-stat">
-              <div class="ma-mini-stat__val text-warning">{{ summary.pending_deposits }}</div>
-              <div class="ma-mini-stat__lbl">Pending Deposits</div>
-            </div>
+          <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
+              <div class="tw-text-amber-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.pending_deposits }}</div>
+              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">Dep. Pend.</div>
           </div>
-          <div class="col-6 col-md-2">
-            <div class="ma-mini-stat">
-              <div class="ma-mini-stat__val text-warning">{{ summary.pending_withdrawals }}</div>
-              <div class="ma-mini-stat__lbl">Pending Withdrawals</div>
-            </div>
+          <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
+              <div class="tw-text-amber-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.pending_withdrawals }}</div>
+              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">With. Pend.</div>
           </div>
         </div>
 
-        <!-- Today's Quick Stats -->
-        <div class="row g-3 mb-4">
-          <div class="col-md-6">
-            <div class="ma-today-card">
-              <i class="fas fa-user-plus ma-today-card__icon"></i>
-              <div>
-                <div class="ma-today-card__val">{{ summary.new_users_today }}</div>
-                <div class="ma-today-card__lbl">New Users Today</div>
-              </div>
+        <!-- Today's Quick Highlights -->
+        <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-mb-6">
+          <div class="tw-bg-indigo-900/20 tw-backdrop-blur-xl tw-border tw-border-indigo-500/20 tw-rounded-2xl tw-p-5 tw-flex tw-items-center tw-gap-5">
+            <div class="tw-w-14 tw-h-14 tw-rounded-xl tw-bg-indigo-500/20 tw-text-indigo-400 tw-flex tw-items-center tw-justify-center tw-text-2xl">
+              <i class="fas fa-user-plus"></i>
+            </div>
+            <div>
+              <h4 class="tw-text-white tw-font-black tw-text-2xl tw-mb-0">{{ summary.new_users_today }}</h4>
+              <p class="tw-text-indigo-300/70 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest tw-mb-0">New Users Today</p>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="ma-today-card ma-today-card--green">
-              <i class="fas fa-rupee-sign ma-today-card__icon"></i>
-              <div>
-                <div class="ma-today-card__val">₹{{ fmt(summary.deposits_today) }}</div>
-                <div class="ma-today-card__lbl">Deposits Today</div>
-              </div>
+          <div class="tw-bg-emerald-900/20 tw-backdrop-blur-xl tw-border tw-border-emerald-500/20 tw-rounded-2xl tw-p-5 tw-flex tw-items-center tw-gap-5">
+            <div class="tw-w-14 tw-h-14 tw-rounded-xl tw-bg-emerald-500/20 tw-text-emerald-400 tw-flex tw-items-center tw-justify-center tw-text-2xl">
+              <i class="fas fa-rupee-sign"></i>
+            </div>
+            <div>
+              <h4 class="tw-text-white tw-font-black tw-text-2xl tw-mb-0">₹{{ fmt(summary.deposits_today) }}</h4>
+              <p class="tw-text-emerald-300/70 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest tw-mb-0">Deposits Today</p>
             </div>
           </div>
         </div>

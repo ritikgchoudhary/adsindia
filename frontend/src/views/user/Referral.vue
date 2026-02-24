@@ -513,3 +513,58 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 640px) {
+  /* Partner Modal */
+  .tw-bg-\[\#151921\].tw-rounded-\[34px\] { border-radius: 1.5rem !important; }
+  .tw-p-10 { padding: 1.5rem !important; }
+  .tw-w-20.tw-h-20 { width: 3.5rem !important; height: 3.5rem !important; border-radius: 1rem !important; margin-bottom: 1.5rem !important; }
+  .tw-w-20.tw-h-20 i { font-size: 1.75rem !important; }
+  h3.tw-text-2xl { font-size: 1.25rem !important; }
+  .tw-py-4 { padding: 0.85rem !important; border-radius: 1rem !important; font-size: 0.9rem !important; }
+
+  /* Links & Cards */
+  .tw-p-4.sm\:tw-p-6 { padding: 1rem !important; }
+  .tw-p-3.sm\:tw-p-5 { padding: 0.85rem 1rem !important; }
+  h5.tw-text-base { font-size: 1rem !important; }
+  input.tw-py-2 { padding: 0.65rem 0.85rem !important; font-size: 0.75rem !important; border-radius: 0.75rem !important; }
+  .tw-px-4.tw-py-2 { padding: 0.65rem 1rem !important; font-size: 0.85rem !important; border-radius: 0.75rem !important; }
+
+  /* Plan Specific Box */
+  .tw-p-3.sm\:tw-p-4 { padding: 0.85rem !important; border-radius: 0.85rem !important; }
+  h6.tw-text-sm { font-size: 0.85rem !important; }
+  .tw-text-\[10px\] { font-size: 0.65rem !important; }
+  input.tw-py-1\.5 { padding: 0.5rem !important; font-size: 0.65rem !important; border-radius: 0.5rem !important; }
+  .tw-px-3.tw-py-1\.5 { padding: 0.5rem 0.75rem !important; font-size: 0.65rem !important; border-radius: 0.5rem !important; }
+
+  /* Team Section */
+  .tw-bg-\[\#151921\].sm\:tw-rounded-\[34px\] { border-radius: 1.25rem !important; }
+  .tw-px-4.sm\:tw-px-8 { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .tw-py-4.sm\:tw-py-8 { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
+  h5.tw-text-lg { font-size: 1.15rem !important; }
+  .tw-w-8.tw-h-8 { width: 2.25rem !important; height: 2.25rem !important; border-radius: 0.65rem !important; margin-right: 0.5rem !important; }
+  .tw-w-64 { width: 100% !important; margin-top: 0.5rem !important; }
+
+  /* Stats Grid */
+  .tw-grid-cols-2 { gap: 0.75rem !important; }
+  .tw-p-3.sm\:tw-p-7 { padding: 1rem !important; border-radius: 1rem !important; }
+  h3.tw-text-xl { font-size: 1.35rem !important; }
+  .tw-text-\[8px\] { font-size: 7px !important; }
+
+  /* Team Cards (Mobile) */
+  .tw-p-4 { padding: 0.85rem !important; border-radius: 1rem !important; }
+  .tw-w-10.tw-h-10 { width: 2.25rem !important; height: 2.25rem !important; border-radius: 0.75rem !important; }
+  .tw-text-sm.tw-truncate { font-size: 0.85rem !important; }
+  .tw-text-\[9px\] { font-size: 7px !important; }
+  .tw-pt-3 { padding-top: 0.75rem !important; }
+  .tw-text-white.tw-font-black { font-size: 0.9rem !important; }
+
+  /* Wallet & Earning Sidebar Cards */
+  .tw-p-5 { padding: 0.85rem 1rem !important; }
+  .tw-p-6 { padding: 1rem !important; }
+  .tw-py-3 { padding: 0.75rem !important; border-radius: 0.85rem !important; font-size: 0.85rem !important; }
+  .tw-text-xl\.sm\:tw-text-2xl { font-size: 1.35rem !important; }
+  .tw-py-3.sm\:tw-py-4 { padding: 0.75rem 0 !important; }
+}
+</style>

@@ -107,7 +107,13 @@
                  :alt="ad.title" 
                  class="tw-w-full tw-h-full tw-object-cover"
                  :class="index > currentUnlockedIndex ? 'tw-brightness-50' : 'tw-brightness-90 group-hover:tw-brightness-100'"
-                 @error="$event.target.src = '/assets/images/default-ad.jpg'"
+                 @error="(e) => { 
+                   if (e.target.src.indexOf('/assets/images/default-ad.jpg') === -1) {
+                     e.target.src = '/assets/images/default-ad.jpg';
+                   } else {
+                     e.target.style.display = 'none';
+                   }
+                 }"
                >
             </div>
 
@@ -750,3 +756,77 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 768px) {
+  /* Layout gaps */
+  .tw-flex.tw-flex-col.tw-gap-8 { gap: 1.25rem !important; }
+  .tw-py-10 { padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
+
+  /* Active Plan Info Card */
+  .tw-rounded-xl.sm\:tw-rounded-2xl { border-radius: 1rem !important; }
+  .tw-p-4.sm\:tw-p-6 { padding: 1rem !important; }
+  h5.tw-text-lg { font-size: 1.1rem !important; margin-bottom: 0.25rem !important; }
+  p.tw-text-indigo-100 { font-size: 11px !important; margin-bottom: 0.75rem !important; line-height: 1.4 !important; }
+  .tw-flex.tw-flex-wrap.tw-gap-2 { gap: 0.5rem !important; }
+  .tw-bg-white\/10.tw-rounded-lg { padding: 0.35rem 0.6rem !important; border-radius: 0.6rem !important; }
+  .tw-text-\[10px\].sm\:tw-text-sm { font-size: 10px !important; }
+  
+  /* Upgrade Button / Links */
+  .tw-px-4.tw-py-2 { padding: 0.6rem 0.85rem !important; font-size: 11px !important; border-radius: 0.75rem !important; }
+  .tw-px-3.tw-py-2 { padding: 0.5rem 0.75rem !important; font-size: 11px !important; border-radius: 0.75rem !important; }
+  span.tw-bg-white.tw-text-indigo-600 { padding: 0.35rem 0.6rem !important; font-size: 10px !important; border-radius: 0.6rem !important; }
+
+  /* Ads Grid Box Header */
+  .tw-bg-white.tw-rounded-xl.sm\:tw-rounded-2xl { padding: 1rem !important; border-radius: 1.25rem !important; }
+  h5.tw-text-base { font-size: 1rem !important; }
+  p.tw-text-slate-500 { font-size: 11px !important; }
+  .tw-bg-indigo-100 { padding: 0.35rem 0.6rem !important; font-size: 10px !important; }
+  .tw-bg-emerald-100 { padding: 0.35rem 0.6rem !important; font-size: 10px !important; }
+  .tw-h-3 { height: 0.5rem !important; }
+
+  /* Grid Layout */
+  .tw-grid.tw-grid-cols-1 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.85rem !important;
+  }
+  .tw-rounded-2xl { border-radius: 1rem !important; }
+  .tw-w-14.tw-h-14 { width: 2.75rem !important; height: 2.75rem !important; }
+  .tw-w-14.tw-h-14 i { font-size: 1.1rem !important; }
+  .tw-text-3xl.tw-mb-2 { font-size: 1.75rem !important; margin-bottom: 0.25rem !important; }
+  .tw-text-xs.tw-font-bold { font-size: 10px !important; }
+
+  /* Empty State / No Plan View */
+  .tw-max-w-2xl.tw-bg-white.tw-rounded-3xl { padding: 1.5rem !important; border-radius: 1.5rem !important; margin: 0 10px !important; }
+  .tw-w-20.tw-h-20 { width: 4rem !important; height: 4rem !important; }
+  .tw-text-4xl { font-size: 2rem !important; }
+  .tw-text-2xl.tw-font-bold { font-size: 1.25rem !important; }
+  .tw-text-base.tw-leading-relaxed { font-size: 0.9rem !important; margin-bottom: 1.25rem !important; }
+  .tw-bg-blue-50.tw-rounded-xl { padding: 0.85rem !important; border-radius: 1rem !important; font-size: 12px !important; margin-bottom: 1.5rem !important; }
+  .tw-px-8.tw-py-4 { padding: 1rem 1.5rem !important; font-size: 1rem !important; border-radius: 1rem !important; width: 100% !important; justify-content: center !important; }
+  .tw-mb-6 { margin-bottom: 1.25rem !important; }
+
+  /* Watch Ad Modal */
+  .tw-bg-white.tw-rounded-2xl.tw-shadow-2xl { border-radius: 1.25rem !important; }
+  .tw-p-4.tw-bg-slate-900 { padding: 0.85rem !important; }
+  .tw-min-h-\[300px\] { min-height: 220px !important; }
+  .tw-text-xl.tw-font-bold.tw-bg-black\/40 { font-size: 1rem !important; padding: 0.5rem 0.85rem !important; }
+  .tw-w-14.tw-h-14.tw-rounded-full.tw-bg-white { width: 2.75rem !important; height: 2.75rem !important; }
+  .tw-w-14.tw-h-14.tw-rounded-full.tw-bg-white i { font-size: 1.15rem !important; }
+  
+  /* Success State in Modal */
+  .tw-text-center.tw-p-10 { padding: 1.5rem !important; }
+  .tw-w-20.tw-h-20.tw-bg-emerald-100 { width: 4rem !important; height: 4rem !important; margin-bottom: 1rem !important; }
+  .tw-text-4xl.tw-text-emerald-500 { font-size: 2rem !important; }
+  h3.tw-text-2xl { font-size: 1.25rem !important; }
+  p.tw-text-slate-500.tw-mb-6 { font-size: 0.8rem !important; margin-bottom: 1rem !important; }
+  .tw-text-emerald-800.tw-font-bold.tw-text-lg { font-size: 1.15rem !important; }
+  .tw-py-3.tw-bg-indigo-600 { padding: 0.65rem !important; font-size: 0.9rem !important; border-radius: 0.85rem !important; }
+}
+
+@media (max-width: 480px) {
+  .tw-grid.tw-grid-cols-1 { gap: 0.65rem !important; }
+  .tw-text-2xl.tw-font-bold { font-size: 1.15rem !important; }
+  .tw-bg-blue-50.tw-rounded-xl { font-size: 11px !important; }
+}
+</style>

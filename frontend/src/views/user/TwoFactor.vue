@@ -192,3 +192,36 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 640px) {
+  /* Header section */
+  .tw-p-6 { padding: 1.15rem !important; }
+  h5.tw-text-lg { font-size: 1.1rem !important; }
+  p.tw-text-sm { font-size: 0.8rem !important; }
+  
+  /* QR Code section */
+  .tw-grid.tw-grid-cols-1.md\:tw-grid-cols-2 { gap: 1.25rem !important; }
+  .tw-p-4.tw-border { padding: 1rem !important; border-radius: 1rem !important; }
+  .tw-min-h-\[200px\] { min-height: 150px !important; }
+  img.tw-max-w-\[180px\] { max-width: 140px !important; }
+  
+  /* Inputs & Keys */
+  label.tw-text-sm { font-size: 0.8rem !important; margin-bottom: 0.35rem !important; }
+  input.tw-py-3 { padding: 0.65rem 0.85rem !important; font-size: 0.85rem !important; border-radius: 0.85rem 0 0 0.85rem !important; }
+  .tw-rounded-r-xl { border-radius: 0 0.85rem 0.85rem 0 !important; }
+  .tw-rounded-l-xl { border-radius: 0.85rem 0 0 0.85rem !important; }
+  
+  /* Info box */
+  .tw-p-4.tw-bg-indigo-50 { padding: 0.85rem !important; border-radius: 0.85rem !important; }
+  .tw-text-indigo-800.tw-text-sm { font-size: 0.75rem !important; }
+  
+  /* OTP Form */
+  .tw-border-t.tw-border-slate-200.tw-pt-6 { pt: 4 !important; }
+  h6.tw-text-slate-900 { font-size: 0.95rem !important; margin-bottom: 0.75rem !important; }
+  input#otp_code { padding: 0.75rem !important; font-size: 1.15rem !important; border-radius: 0.85rem !important; }
+  
+  /* Submit button */
+  .tw-px-8.tw-py-3 { padding: 0.75rem !important; width: 100% !important; font-size: 1rem !important; border-radius: 0.85rem !important; }
+}
+</style>

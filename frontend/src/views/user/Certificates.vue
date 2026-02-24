@@ -27,21 +27,21 @@
       <div v-if="!loading && requiresAdCertificate && !hasAdCertificate">
         <!-- Unlock Banner -->
         <div class="tw-mb-6 sm:tw-mb-8 tw-rounded-2xl tw-p-4 sm:tw-p-6 tw-backdrop-blur-md tw-border tw-border-amber-500/30 tw-bg-amber-500/10">
-          <div class="tw-flex tw-items-start tw-gap-4 sm:tw-gap-6 tw-flex-wrap">
+          <div class="tw-flex tw-flex-col sm:tw-flex-row tw-items-center sm:tw-items-start tw-gap-4 sm:tw-gap-6">
             <div class="tw-w-10 tw-h-10 sm:tw-w-14 sm:tw-h-14 tw-rounded-xl tw-bg-amber-500/20 tw-text-amber-400 tw-flex tw-items-center tw-justify-center tw-text-xl sm:tw-text-2xl tw-shrink-0">
               <i class="fas fa-lock"></i>
             </div>
-            <div class="tw-flex-1">
+            <div class="tw-flex-1 tw-text-center sm:tw-text-left tw-w-full">
               <h5 class="tw-text-white tw-font-bold tw-text-base sm:tw-text-xl tw-mb-1 sm:tw-mb-2">Unlock Your Journey</h5>
               <p class="tw-text-white/90 tw-m-0 tw-text-xs sm:tw-text-base tw-leading-relaxed">
                 Activate your <b>Ad Certificate</b> to view and download your earned certificates and access premium learning.
               </p>
-              <div class="tw-mt-3 tw-flex tw-flex-col sm:tw-flex-row tw-gap-2 sm:tw-gap-3">
+              <div class="tw-mt-3 tw-flex tw-flex-col sm:tw-flex-row tw-items-center sm:tw-items-start tw-justify-center sm:tw-justify-start tw-gap-2 sm:tw-gap-3">
                 <button
                   type="button"
                   @click="purchaseAdCertificate"
                   :disabled="purchasingAdCert"
-                  class="tw-px-4 sm:tw-px-6 tw-py-2 sm:tw-py-3 tw-bg-amber-500 hover:tw-bg-amber-600 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-transition-all tw-border-0 tw-cursor-pointer disabled:tw-opacity-60 disabled:tw-cursor-not-allowed tw-text-xs sm:tw-text-base"
+                  class="tw-w-full sm:tw-w-auto tw-px-4 sm:tw-px-6 tw-py-2 sm:tw-py-3 tw-bg-amber-500 hover:tw-bg-amber-600 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-transition-all tw-border-0 tw-cursor-pointer disabled:tw-opacity-60 disabled:tw-cursor-not-allowed tw-text-xs sm:tw-text-base"
                 >
                   <i v-if="purchasingAdCert" class="fas fa-spinner fa-spin tw-mr-2"></i>
                   <i v-else class="fas fa-crown tw-mr-2"></i>
@@ -53,14 +53,14 @@
         </div>
 
         <!-- Initial Empty State (Achievement Await) -->
-        <div class="tw-bg-slate-900/50 tw-backdrop-blur-md tw-border tw-border-white/5 tw-rounded-[3rem] tw-p-16 tw-text-center tw-max-w-3xl tw-mx-auto">
-          <div class="tw-w-32 tw-h-32 tw-mx-auto tw-bg-indigo-500/10 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-indigo-500 tw-mb-8 tw-border tw-border-indigo-500/10">
-            <i class="fas fa-graduation-cap tw-text-5xl"></i>
+        <div class="tw-bg-slate-900/50 tw-backdrop-blur-md tw-border tw-border-white/5 tw-rounded-[2rem] sm:tw-rounded-[3rem] tw-p-8 sm:tw-p-16 tw-text-center tw-max-w-3xl tw-mx-auto">
+          <div class="tw-w-20 tw-h-20 sm:tw-w-32 sm:tw-h-32 tw-mx-auto tw-bg-indigo-500/10 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-indigo-500 tw-mb-4 sm:tw-mb-8 tw-border tw-border-indigo-500/10">
+            <i class="fas fa-graduation-cap tw-text-3xl sm:tw-text-5xl"></i>
           </div>
-          <h2 class="tw-text-white tw-font-bold tw-text-3xl tw-mb-4">Your achievements await</h2>
-          <p class="tw-text-slate-400 tw-text-lg tw-mb-10 tw-max-w-md tw-mx-auto">Unlock professional courses and start earning certificates to level up your career profile.</p>
-          <router-link to="/user/courses" class="tw-inline-flex tw-items-center tw-px-10 tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-500 tw-text-white tw-font-black tw-text-lg tw-rounded-2xl tw-shadow-2xl tw-shadow-indigo-500/40 tw-transition-all tw-duration-300 tw-no-underline">
-            <i class="fas fa-play tw-mr-3"></i>Browse Courses
+          <h2 class="tw-text-white tw-font-bold tw-text-xl sm:tw-text-3xl tw-mb-3 sm:tw-mb-4">Your achievements await</h2>
+          <p class="tw-text-slate-400 tw-text-sm sm:tw-text-lg tw-mb-6 sm:tw-mb-10 tw-max-w-md tw-mx-auto">Unlock professional courses and start earning certificates to level up your career profile.</p>
+          <router-link to="/user/courses" class="tw-inline-flex tw-items-center tw-px-6 tw-py-3 sm:tw-px-10 sm:tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-500 tw-text-white tw-font-black tw-text-sm sm:tw-text-lg tw-rounded-xl sm:tw-rounded-2xl tw-shadow-2xl tw-shadow-indigo-500/40 tw-transition-all tw-duration-300 tw-no-underline">
+            <i class="fas fa-play tw-mr-2 sm:tw-mr-3"></i>Browse Courses
           </router-link>
         </div>
       </div>
@@ -136,16 +136,16 @@
         </div>
 
         <!-- Purchased but no courses available state -->
-        <div v-else class="tw-bg-slate-900/50 tw-backdrop-blur-md tw-border tw-border-white/5 tw-rounded-[3rem] tw-p-16 tw-text-center tw-max-w-3xl tw-mx-auto">
-          <div class="tw-w-32 tw-h-32 tw-mx-auto tw-bg-indigo-500/10 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-indigo-500 tw-mb-8 tw-border tw-border-indigo-500/10">
-            <i class="fas fa-graduation-cap tw-text-5xl"></i>
+        <div class="tw-bg-slate-900/50 tw-backdrop-blur-md tw-border tw-border-white/5 tw-rounded-[2rem] sm:tw-rounded-[3rem] tw-p-8 sm:tw-p-16 tw-text-center tw-max-w-3xl tw-mx-auto">
+          <div class="tw-w-20 tw-h-20 sm:tw-w-32 sm:tw-h-32 tw-mx-auto tw-bg-indigo-500/10 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-indigo-500 tw-mb-4 sm:tw-mb-8 tw-border tw-border-indigo-500/10">
+            <i class="fas fa-graduation-cap tw-text-3xl sm:tw-text-5xl"></i>
           </div>
-          <h2 class="tw-text-white tw-font-bold tw-text-3xl tw-mb-4">Ready to earn certificates?</h2>
-          <p class="tw-text-slate-400 tw-text-lg tw-mb-10 tw-max-w-md tw-mx-auto">
+          <h2 class="tw-text-white tw-font-bold tw-text-xl sm:tw-text-3xl tw-mb-3 sm:tw-mb-4">Ready to earn certificates?</h2>
+          <p class="tw-text-slate-400 tw-text-sm sm:tw-text-lg tw-mb-6 sm:tw-mb-10 tw-max-w-md tw-mx-auto">
             Your Certificate access is active! Now head over to courses and complete them to see your certificates here.
           </p>
-          <router-link to="/user/courses" class="tw-inline-flex tw-items-center tw-px-10 tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-500 tw-text-white tw-font-black tw-text-lg tw-rounded-2xl tw-shadow-2xl tw-shadow-indigo-500/40 tw-transition-all tw-duration-300 tw-no-underline">
-            <i class="fas fa-play tw-mr-3"></i>Go to Courses
+          <router-link to="/user/courses" class="tw-inline-flex tw-items-center tw-px-6 tw-py-3 sm:tw-px-10 sm:tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-500 tw-text-white tw-font-black tw-text-sm sm:tw-text-lg tw-rounded-xl sm:tw-rounded-2xl tw-shadow-2xl tw-shadow-indigo-500/40 tw-transition-all tw-duration-300 tw-no-underline">
+            <i class="fas fa-play tw-mr-2 sm:tw-mr-3"></i>Go to Courses
           </router-link>
         </div>
       </template>
@@ -431,5 +431,41 @@ export default {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  /* Header adjustment */
+  h1.tw-text-white { font-size: 1.1rem !important; }
+  .tw-w-10.tw-h-10.sm\:tw-w-14 { width: 2.25rem !important; height: 2.25rem !important; font-size: 1rem !important; }
+  
+  /* Grid gap */
+  .tw-grid.tw-gap-6 { gap: 0.75rem !important; }
+  
+  /* Card adjustments */
+  .tw-rounded-3xl { border-radius: 1rem !important; }
+  .tw-p-4.sm\:tw-p-6 { padding: 0.75rem !important; }
+  
+  /* Trophy icon in card */
+  .tw-w-10.tw-h-10 { width: 2.5rem !important; height: 2.5rem !important; font-size: 1rem !important; }
+  
+  /* Course name in card */
+  h3.tw-text-sm { font-size: 0.85rem !important; margin-bottom: 0.75rem !important; min-height: auto !important; }
+  
+  /* Button sizes */
+  .tw-py-1\.5.sm\:tw-py-2\.5 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; font-size: 0.65rem !important; }
+  
+  /* Modal Certificate content */
+  .tw-text-3xl.sm\:tw-text-5xl { font-size: 1.5rem !important; }
+  .tw-text-2xl.sm\:tw-text-3xl { font-size: 1rem !important; }
+  h3.tw-text-2xl.sm\:tw-text-3xl { font-size: 1.1rem !important; }
+  .tw-px-12 { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .tw-p-12 { padding: 1.25rem !important; }
+  .tw-p-10 { padding: 0.75rem !important; }
+  .tw-mb-8 { margin-bottom: 1rem !important; }
+  .tw-max-w-3xl.tw-rounded-\[2\.5rem\] { border-radius: 1.5rem !important; }
+  
+  /* Buttons in modal */
+  .tw-px-8.tw-py-4 { padding: 0.75rem 1rem !important; font-size: 0.85rem !important; }
+  .tw-px-10.tw-py-4 { padding: 0.75rem 1.25rem !important; font-size: 0.85rem !important; }
 }
 </style>

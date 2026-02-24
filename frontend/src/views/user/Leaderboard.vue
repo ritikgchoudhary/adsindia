@@ -60,8 +60,8 @@
           <p class="empty-text">Be the first to earn and claim the top spot!</p>
         </div>
 
-        <div v-else class="tw-p-4 sm:tw-p-8">
-          <div class="tw-flex tw-flex-col tw-gap-4">
+        <div v-else class="tw-p-2 sm:tw-p-8">
+          <div class="tw-flex tw-flex-col tw-gap-3 sm:tw-gap-4">
             <div
               v-for="(entry, index) in topTenLeaderboard"
               :key="entry?.rank ?? index"
@@ -428,13 +428,52 @@ export default {
 }
 
 @media (max-width: 480px) {
-  .leaderboard-header { padding: 1rem; }
-  .main-title { font-size: 1.5rem; }
-  .period-btn { padding: 6px 12px; }
-  .rank-row-content { padding: 0.75rem 0.85rem; }
-  .rank-name { font-size: 0.9rem; line-height: 1.2; }
-  .rank-earning .earning-val { font-size: 1rem; }
-  /* Hide minor labels on very small screens to keep it in one line */
-  .rank-status, .earning-lbl { display: none; }
+  .leaderboard-container { padding-left: 0 !important; padding-right: 0 !important; }
+  .leaderboard-header { padding: 0.75rem 0.5rem !important; border-radius: 16px !important; margin-bottom: 0.75rem !important; }
+  .trophy-icon-wrapper { width: 32px; height: 32px; font-size: 1rem; border-radius: 8px; }
+  .main-title { font-size: 1.1rem; }
+  .subtitle { font-size: 0.65rem; }
+  .period-selector { 
+    width: 100%;
+    padding: 4px; 
+    border-radius: 14px; 
+    align-self: stretch;
+    gap: 4px;
+  }
+  .period-btn { 
+    flex: 1;
+    padding: 8px 4px; 
+    font-size: 0.75rem; 
+    border-radius: 10px; 
+    justify-content: center;
+  }
+  
+  .rank-row { margin-bottom: 6px; }
+  .rank-row-content { 
+    padding: 0.45rem 0.6rem; 
+    border-radius: 12px; 
+    background: rgba(255, 255, 255, 0.05); /* Slightly lighter for better contrast */
+  }
+  .rank-pos-wrapper { width: 22px; }
+  .rank-badge { 
+    width: auto; 
+    height: auto; 
+    font-size: 0.8rem; 
+    background: transparent !important; 
+    color: #94a3b8 !important; 
+    border: none !important;
+  }
+  .rank-badge::after { content: "."; } /* Matching the "1." style from ref */
+  
+  .rank-user-info { gap: 0.5rem; margin-left: 0.25rem; }
+  .rank-avatar { width: 32px; height: 32px; border-radius: 50%; } /* Circular avatar like ref */
+  .rank-avatar-wrapper { display: flex; align-items: center; }
+  .rank-crown { font-size: 0.8rem; top: -6px; left: -6px; }
+  
+  .rank-name { font-size: 0.75rem; font-weight: 700; color: #f8fafc; }
+  .rank-earning .earning-val { font-size: 0.8rem; font-weight: 700; color: #fbbf24; }
+  
+  /* Strictly hide extra labels */
+  .rank-status, .earning-lbl { display: none !important; }
 }
 </style>

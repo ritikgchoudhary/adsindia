@@ -857,3 +857,65 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 640px) {
+  /* Progress Indicator */
+  .tw-p-4.sm\:tw-p-8 { padding: 0.65rem !important; }
+  .tw-w-8.tw-h-8 { width: 1.85rem !important; height: 1.85rem !important; }
+  .tw-w-8.tw-h-8 i { font-size: 0.8rem !important; }
+  .tw-font-bold.tw-text-\[8px\] { font-size: 6px !important; margin-top: 0.2rem !important; }
+  
+  /* Bank Details Header */
+  .tw-p-3.sm\:tw-p-5 { padding: 0.5rem 0.75rem !important; }
+  h5.tw-text-sm { font-size: 0.8rem !important; }
+  .tw-px-2.sm\:tw-px-4 { padding: 0.35rem 0.65rem !important; font-size: 8px !important; }
+  
+  /* Bank Details Card (Step 1) */
+  .tw-p-4.sm\:tw-p-8 { padding: 0.85rem 0.65rem !important; }
+  .tw-bg-slate-950.tw-p-5 { padding: 0.85rem !important; border-radius: 1rem !important; }
+  
+  /* Bank Card Labels */
+  .tw-text-\[8px\].sm\:tw-text-\[10px\].tw-uppercase { font-size: 6px !important; margin-bottom: 0.25rem !important; letter-spacing: 0.1em !important; }
+  h3.tw-text-lg { font-size: 0.95rem !important; margin-top: 0 !important; }
+  .tw-text-sm.sm\:tw-text-xl.tw-font-mono { font-size: 0.8rem !important; }
+  .tw-text-xs.sm\:tw-text-base { font-size: 0.7rem !important; }
+  .tw-w-full.tw-mt-6 { margin-top: 0.75rem !important; padding: 0.65rem !important; border-radius: 0.75rem !important; font-size: 0.8rem !important; }
+  
+  /* Bank Form */
+  .tw-grid.tw-grid-cols-1.md\:tw-grid-cols-2 { gap: 0.75rem !important; }
+  input.tw-py-3 { padding: 0.5rem 0.85rem !important; font-size: 0.85rem !important; border-radius: 0.75rem !important; }
+  label.tw-text-sm { font-size: 0.7rem !important; margin-bottom: 0.25rem !important; }
+  .tw-px-8.tw-py-3 { width: 100% !important; padding: 0.65rem !important; font-size: 0.85rem !important; border-radius: 0.75rem !important; }
+  
+  /* Documents (Step 2) */
+  .tw-mb-10.tw-p-6 { padding: 0.85rem !important; border-radius: 1rem !important; margin-bottom: 1rem !important; }
+  .tw-text-lg.tw-mb-1 { font-size: 0.9rem !important; }
+  .tw-text-sm.tw-leading-relaxed { font-size: 0.7rem !important; margin-bottom: 0.85rem !important; }
+  .tw-px-8.tw-py-4 { padding: 0.65rem 1rem !important; font-size: 9px !important; border-radius: 0.75rem !important; }
+  
+  /* File inputs */
+  input.tw-py-3\.5 { padding: 0.5rem 0.85rem !important; font-size: 0.8rem !important; }
+  .tw-bg-emerald-500\/10.tw-p-3 { padding: 0.4rem 0.65rem !important; border-radius: 0.65rem !important; margin-top: 0.4rem !important; }
+  
+  /* Document Form Labels */
+  .tw-text-xs.tw-font-bold.tw-text-slate-400.tw-uppercase { font-size: 9px !important; margin-bottom: 0.5rem !important; }
+  
+  /* Document buttons */
+  .tw-px-10.tw-py-4 { padding: 0.65rem 1rem !important; font-size: 9px !important; border-radius: 0.75rem !important; }
+  .tw-mt-12.tw-pt-8 { margin-top: 1rem !important; padding-top: 0.75rem !important; }
+  
+  /* Review Status (Step 3) */
+  .tw-p-12 { padding: 1.5rem 0.85rem !important; }
+  .tw-w-28.tw-h-28 { width: 4rem !important; height: 4rem !important; margin-bottom: 1rem !important; }
+  .tw-w-28.tw-h-28 i { font-size: 1.75rem !important; }
+  h3.tw-text-3xl { font-size: 1.25rem !important; }
+  p.tw-text-slate-400 { font-size: 0.75rem !important; margin-bottom: 1rem !important; }
+  .tw-bg-rose-500\/10 { padding: 0.75rem !important; border-radius: 0.85rem !important; margin-bottom: 1rem !important; }
+  
+  /* Modals */
+  .tw-rounded-\[2\.5rem\] { border-radius: 1.25rem !important; }
+  .tw-p-10 { padding: 1rem !important; }
+  .tw-text-2xl { font-size: 1.15rem !important; }
+}
+</style>

@@ -423,4 +423,57 @@ export default {
 
 <style scoped>
 .tw-animation-slow { animation-duration: 3s; }
+
+@media (max-width: 768px) {
+  /* Layout gaps */
+  .tw-grid.tw-gap-8 { gap: 1rem !important; }
+  .tw-min-h-\[85vh\] { min-height: auto !important; padding: 1rem 0.5rem !important; }
+
+  /* Balance Card */
+  .tw-bg-gradient-to-br { padding: 1.25rem !important; border-radius: 1.5rem !important; margin-bottom: 1rem !important; }
+  .tw-text-4xl { font-size: 1.75rem !important; }
+  .tw-text-7xl { font-size: 3rem !important; }
+  .tw-p-8.tw-opacity-10 { padding: 1.5rem !important; }
+  .tw-text-xs.tw-font-black { font-size: 10px !important; }
+  
+  /* Generator Card Header */
+  .tw-bg-\[\#0f172a\].tw-rounded-\[40px\] { border-radius: 1.5rem !important; }
+  .tw-p-8.sm\:tw-p-10 { padding: 1.25rem !important; }
+  .tw-w-14.tw-h-14 { width: 3rem !important; height: 3rem !important; border-radius: 0.85rem !important; }
+  .tw-w-14.tw-h-14 i { font-size: 1.25rem !important; }
+  h2.tw-text-xl { font-size: 1.1rem !important; }
+  .tw-mb-8 { margin-bottom: 1.25rem !important; }
+  
+  /* Inputs */
+  .tw-text-2xl { font-size: 1.25rem !important; }
+  input.tw-py-5 { padding: 0.75rem 0.75rem 0.75rem 2.5rem !important; border-radius: 0.85rem !important; }
+  .tw-absolute.tw-left-6 { left: 1rem !important; font-size: 1.1rem !important; }
+  label.tw-text-\[11px\] { font-size: 10px !important; margin-bottom: 0.5rem !important; }
+
+  /* Buttons */
+  .tw-py-5 { padding: 0.85rem !important; font-size: 1rem !important; border-radius: 1rem !important; }
+  .tw-grid-cols-2 { gap: 0.75rem !important; }
+  .tw-p-5.tw-rounded-2xl { padding: 0.75rem !important; border-radius: 1rem !important; }
+  .tw-p-5.tw-rounded-2xl i { font-size: 1.25rem !important; margin-bottom: 0.5rem !important; }
+
+  /* History Card */
+  .tw-bg-\[\#0f172a\].tw-rounded-\[40px\].tw-overflow-hidden { border-radius: 1.5rem !important; }
+  .tw-p-8.tw-border-b { padding: 1.25rem !important; }
+  h3.tw-text-lg { font-size: 1.1rem !important; }
+  
+  /* History Items */
+  .tw-p-5.tw-flex.tw-items-center { padding: 0.75rem 1rem !important; border-radius: 1rem !important; }
+  .tw-w-12.tw-h-12 { width: 2.5rem !important; height: 2.5rem !important; border-radius: 0.75rem !important; }
+  .tw-w-12.tw-h-12 i { font-size: 0.9rem !important; }
+  .tw-text-white.tw-font-bold.tw-text-sm { font-size: 0.9rem !important; }
+  .tw-text-\[10px\] { font-size: 9px !important; }
+  .tw-gap-4 { gap: 0.85rem !important; }
+}
+
+@media (max-width: 480px) {
+  .tw-text-4xl { font-size: 1.5rem !important; }
+  .tw-text-2xl { font-size: 1.15rem !important; }
+  .tw-p-5.tw-rounded-2xl { padding: 0.6rem !important; }
+  .tw-p-8.sm\:tw-p-10 { padding: 1rem !important; }
+}
 </style>

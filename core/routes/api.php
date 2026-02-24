@@ -334,10 +334,20 @@ Route::namespace('Api')->name('api.')->group(function(){
             Route::post('clear-history/commissions', [\App\Http\Controllers\Admin\AdminController::class, 'clearCommissions']);
             Route::post('clear-history/user-logins', [\App\Http\Controllers\Admin\AdminController::class, 'clearUserLogins']);
             Route::post('clear-history/notifications', [\App\Http\Controllers\Admin\AdminController::class, 'clearNotifications']);
+            Route::post('clear-history/ledger', [\App\Http\Controllers\Admin\AdminController::class, 'clearLedger']);
 
             // Dummy (GET) deposit gateway – creates pending deposit for admin approval
             Route::get('dummy/user-deposit', [\App\Http\Controllers\Admin\DummyGatewayController::class, 'createUserDeposit']);
             
+            // Account Ledger (Expenses and Summaries)
+            Route::prefix('account-ledger')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Admin\AccountLedgerController::class, 'getSummary']);
+                Route::post('add-expense', [\App\Http\Controllers\Api\Admin\AccountLedgerController::class, 'addExpense']);
+                Route::delete('expense/{id}', [\App\Http\Controllers\Api\Admin\AccountLedgerController::class, 'deleteExpense']);
+                Route::post('hide-date', [\App\Http\Controllers\Api\Admin\AccountLedgerController::class, 'hideDate']);
+                Route::post('restore-date', [\App\Http\Controllers\Api\Admin\AccountLedgerController::class, 'restoreDate']);
+            });
+
             // Courses Management
             Route::prefix('course')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Admin\CourseController::class, 'index']);

@@ -789,16 +789,38 @@ export default {
 
 @media (max-width: 768px) {
   .courses-inline-section .section-heading__title {
-    font-size: 1.9rem;
+    font-size: 1.75rem !important;
   }
   .course-plan-card--featured {
     transform: translateY(0);
   }
+  .py-80 { padding-top: 40px !important; padding-bottom: 40px !important; }
+  .courses-section-label { font-size: 0.65rem !important; padding: 4px 12px !important; }
+  .section-heading__desc { font-size: 0.85rem !important; margin-top: 0.5rem !important; }
+  
+  /* Course Cards Mobile */
+  .course-plan-card__top { padding: 20px 18px 15px !important; }
+  .course-plan-card__icon { width: 40px !important; height: 40px !important; font-size: 1rem !important; margin-bottom: 12px !important; }
+  .course-plan-card__name { font-size: 1rem !important; }
+  .course-plan-card__price { font-size: 1.75rem !important; }
+  .course-plan-card__meta-item { font-size: 0.7rem !important; padding: 3px 8px !important; }
+  
+  .course-plan-card__body { padding: 15px 18px 20px !important; }
+  .course-plan-card__desc { font-size: 0.8rem !important; margin-bottom: 12px !important; }
+  .course-plan-card__features li { font-size: 0.8rem !important; }
+  .course-plan-card__btn { padding: 10px 15px !important; font-size: 0.85rem !important; border-radius: 10px !important; }
+  
+  /* Contact Section Mobile */
+  .contact-wrapper { padding: 1.5rem !important; border-radius: 1.25rem !important; }
+  .contact-wrapper__subtitle { font-size: 0.7rem !important; }
+  .contact-wrapper__title { font-size: 1.25rem !important; }
+  .form--label { font-size: 0.75rem !important; margin-bottom: 4px !important; }
+  .form--control { padding: 0.65rem 1rem !important; font-size: 0.85rem !important; border-radius: 0.75rem !important; }
 }
 
-/* ── Contact Inline Section ── */
-.contact-inline-section {
-  position: relative;
+@media (max-width: 480px) {
+  .courses-inline-section .section-heading__title { font-size: 1.5rem !important; }
+  .course-plan-card__price { font-size: 1.5rem !important; }
 }
 
 .py-80 { padding-top: 80px; padding-bottom: 80px; }

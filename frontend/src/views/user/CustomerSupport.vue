@@ -375,4 +375,41 @@ export default {
   color: #0f172a !important;
   background: #ffffff !important;
 }
+
+@media (max-width: 640px) {
+  /* Intro Card */
+  .tw-p-5 { padding: 0.85rem !important; }
+  h5.tw-text-lg { font-size: 1rem !important; }
+  p.tw-text-slate-500 { font-size: 0.75rem !important; }
+
+  /* Channel Cards Grid */
+  .tw-grid.tw-gap-6 { gap: 1rem !important; }
+  .tw-p-6 { padding: 1.25rem !important; border-radius: 1.15rem !important; }
+  .tw-w-16.tw-h-16 { width: 3.5rem !important; height: 3.5rem !important; margin-bottom: 0.75rem !important; border-radius: 1rem !important; }
+  .tw-w-16.tw-h-16 i { font-size: 1.5rem !important; }
+  h5.tw-text-slate-900 { font-size: 1rem !important; }
+  p.tw-text-sm.tw-mb-6 { font-size: 0.75rem !important; margin-bottom: 1rem !important; }
+  .tw-py-3 { padding: 0.65rem !important; font-size: 0.9rem !important; border-radius: 0.85rem !important; }
+
+  /* Submit Ticket Section */
+  .tw-p-6 { padding: 1rem !important; }
+  .tw-p-5.tw-border-b { padding: 1rem !important; }
+  h5.tw-text-lg i { font-size: 1.15rem !important; }
+  p.tw-text-sm.tw-mt-2 { font-size: 0.75rem !important; }
+  .tw-text-sm.tw-font-bold.tw-text-indigo-600 { font-size: 0.8rem !important; }
+
+  /* Form Elements */
+  .tw-gap-5 { gap: 0.75rem !important; }
+  .tw-py-3 { padding: 0.65rem 0.85rem !important; font-size: 0.85rem !important; border-radius: 0.85rem !important; }
+  label.tw-text-sm { font-size: 0.8rem !important; margin-bottom: 0.25rem !important; }
+  textarea.tw-py-3 { padding: 0.75rem !important; font-size: 0.85rem !important; border-radius: 0.85rem !important; }
+
+  /* Attachments Box */
+  .tw-p-5.tw-bg-slate-50 { padding: 0.85rem !important; border-radius: 0.85rem !important; }
+  .tw-text-sm.tw-font-bold.tw-text-slate-700 { font-size: 0.8rem !important; }
+  .tw-px-3.tw-py-1\.5 { font-size: 0.75rem !important; padding: 0.4rem 0.65rem !important; border-radius: 0.5rem !important; }
+
+  /* Submit Button */
+  .tw-py-3\.5 { padding: 0.75rem !important; font-size: 1rem !important; border-radius: 0.85rem !important; }
+}
 </style>

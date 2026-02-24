@@ -332,6 +332,41 @@
           </form>
         </div>
       </div>
+
+      <!-- History Management (Clear Logs) -->
+      <div class="ma-card mb-4 animate__animated animate__fadeIn">
+        <div class="ma-card__header ma-card__header--danger">
+          <div class="d-flex align-items-center">
+            <div class="ma-icon-box me-3 icon-danger">
+              <i class="fas fa-trash-alt"></i>
+            </div>
+            <div>
+              <h5 class="ma-card__title">History Management (Reset Admin View)</h5>
+              <p class="ma-card__subtitle">Hide old logs from Admin dashboard without deleting database records.</p>
+            </div>
+          </div>
+        </div>
+        <div class="ma-card__body">
+          <div class="ma-maintenance-grid">
+            <div v-for="action in clearActions" :key="action.key" class="ma-maintenance-item">
+              <div class="ma-maintenance-item__content">
+                <div class="ma-maintenance-item__title">{{ action.label }}</div>
+                <div class="ma-maintenance-item__desc">{{ action.desc }}</div>
+              </div>
+              <button
+                class="ma-btn-clear"
+                :class="{ 'ma-btn-clear--loading': cleaning === action.key }"
+                :disabled="cleaning"
+                @click="confirmClear(action)"
+              >
+                <i v-if="cleaning === action.key" class="fas fa-spinner fa-spin"></i>
+                <i v-else class="fas fa-trash"></i>
+                <span>Clear</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </MasterAdminLayout>
 </template>
@@ -489,6 +524,36 @@ export default {
       }
     }
 
+    const cleaning = ref(null)
+    const clearActions = [
+      { key: 'orders', label: 'Clear All Orders', desc: 'Hides gateway attempts & plan purchases from Admin view. User data is safe.', path: '/admin/clear-history/orders' },
+      { key: 'deposits', label: 'Clear Deposits', desc: 'Hides deposit history from Admin view. Does NOT delete user balance.', path: '/admin/clear-history/deposits' },
+      { key: 'withdrawals', label: 'Clear Withdrawals', desc: 'Hides withdrawal logs from Admin view. Does NOT affect user history.', path: '/admin/clear-history/withdrawals' },
+      { key: 'transactions', label: 'Clear Transactions', desc: 'Hides all transaction logs from Admin view. Safe for users.', path: '/admin/clear-history/transactions' },
+      { key: 'ledger', label: 'Clear Account Ledger', desc: 'Hides all previous ledger summaries from Admin view. Reversible.', path: '/admin/clear-history/ledger' },
+    ]
+
+    const confirmClear = async (action) => {
+      if (!confirm(`Are you sure you want to ${action.label.toLowerCase()}? This will hide older logs from your Admin view for a cleaner slate. No actual data will be deleted from the database.`)) return
+      const secondCheck = prompt(`Type "CLEAR" to confirm:`)
+      if (secondCheck !== 'CLEAR') return
+
+      cleaning.value = action.key
+      try {
+        const res = await api.post(action.path)
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', res.data.message || 'Cleared successfully')
+        } else {
+          if (window.notify) window.notify('error', res.data?.message || 'Failed to clear')
+        }
+      } catch (e) {
+        console.error('Clear error', e)
+        if (window.notify) window.notify('error', 'Operation failed')
+      } finally {
+        cleaning.value = null
+      }
+    }
+
     // Withdrawal settings state
     const withdrawLoadError = ref('')
     const withdrawSaving = ref(false)
@@ -577,7 +642,10 @@ export default {
       withdrawSaveSuccess,
       withdrawForm,
       fetchWithdrawalSettings,
-      saveWithdrawalSettings
+      saveWithdrawalSettings,
+      cleaning, 
+      clearActions, 
+      confirmClear
     }
   }
 }
@@ -711,4 +779,61 @@ export default {
 }
 
 .fs-7 { font-size: 0.85rem; }
+
+/* Maintenance */
+.ma-card__header--danger {
+  padding: 1.75rem;
+  background: linear-gradient(to right, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.05));
+  border-bottom: 1px solid rgba(239, 68, 68, 0.05);
+}
+
+.icon-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.ma-maintenance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.ma-maintenance-item {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ma-maintenance-item__content { flex: 1; }
+.ma-maintenance-item__title { font-size: 0.9rem; font-weight: 700; color: #f1f5f9; margin-bottom: 2px; }
+.ma-maintenance-item__desc { font-size: 0.75rem; color: #64748b; }
+
+.ma-btn-clear {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(239,68,68,0.4);
+  background: rgba(239,68,68,0.1);
+  color: #f87171;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.ma-btn-clear:hover:not(:disabled) {
+  background: rgba(239,68,68,0.25);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.ma-btn-clear:disabled { opacity: 0.5; cursor: not-allowed; }
+.ma-btn-clear--loading { background: rgba(255,255,255,0.05); color: #94a3b8; border-color: rgba(255,255,255,0.1); }
 </style>

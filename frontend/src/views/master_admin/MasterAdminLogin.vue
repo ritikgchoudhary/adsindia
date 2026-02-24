@@ -85,6 +85,7 @@ export default {
       formData,
       loading,
       errorMsg,
+      logoUrl,
       handleLogin
     }
   }

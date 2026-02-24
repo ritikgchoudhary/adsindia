@@ -222,3 +222,39 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 640px) {
+  /* Terms gate */
+  .tw-bg-amber-500\/10 { padding: 0.75rem !important; border-radius: 1rem !important; margin-bottom: 1rem !important; }
+  .tw-text-white.tw-font-bold.tw-mb-2 { font-size: 0.85rem !important; margin-bottom: 0.25rem !important; }
+  .tw-text-white\/90.tw-text-sm { font-size: 0.75rem !important; }
+
+  /* Info Alert */
+  .tw-mb-8 { margin-bottom: 1rem !important; }
+  .tw-bg-slate-800\/80 { padding: 0.85rem !important; border-radius: 1.25rem !important; gap: 0.75rem !important; }
+  .tw-bg-indigo-500\/20.tw-p-3 { padding: 0.5rem !important; }
+  .tw-text-2xl { font-size: 1.25rem !important; }
+  h5.tw-text-xl { font-size: 1rem !important; margin-bottom: 0.5rem !important; }
+  p.tw-text-slate-300 { font-size: 0.75rem !important; margin-bottom: 0.5rem !important; line-height: 1.4 !important; }
+  ul.tw-space-y-2 { font-size: 0.75rem !important; space-y: 1 !important; }
+  li { margin-bottom: 0.25rem !important; }
+
+  /* Plans Grid */
+  .tw-grid.tw-gap-6 { gap: 0.75rem !important; }
+  
+  /* Plan Cards */
+  .tw-p-6.tw-flex-1 { padding: 1rem !important; }
+  .tw-text-center.tw-mb-6 { margin-bottom: 1rem !important; }
+  h4.tw-text-xl { font-size: 1.1rem !important; margin-bottom: 0.25rem !important; }
+  h2.tw-text-3xl { font-size: 1.75rem !important; }
+  
+  /* Features list in cards */
+  .tw-space-y-3 { space-y: 2 !important; margin-bottom: 1.25rem !important; }
+  .tw-w-6.tw-h-6 { width: 1.25rem !important; height: 1.25rem !important; }
+  span.tw-text-sm { font-size: 0.75rem !important; }
+  
+  /* Join Button */
+  .tw-py-3 { padding-top: 0.65rem !important; padding-bottom: 0.65rem !important; font-size: 0.85rem !important; border-radius: 0.75rem !important; }
+}
+</style>

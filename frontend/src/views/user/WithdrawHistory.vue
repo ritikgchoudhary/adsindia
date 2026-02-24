@@ -593,65 +593,41 @@ export default {
   font-weight: 500;
 }
 
-/* Animations */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.tw-animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+@media (max-width: 640px) {
+  /* Main Container */
+  .ma-glass-card { border-radius: 1.25rem !important; }
+  .ma-card-header { padding: 1rem !important; gap: 0.85rem !important; }
+  .header-icon-box { width: 2.25rem !important; height: 2.25rem !important; border-radius: 0.65rem !important; font-size: 1rem !important; }
+  h5.tw-text-base { font-size: 0.95rem !important; }
+  p.tw-text-\[10px\] { font-size: 8px !important; }
 
-@keyframes modal-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-.tw-animate-modal-in { animation: modal-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  /* Search & Actions */
+  .header-actions { gap: 0.5rem !important; }
+  .search-input { padding: 0.65rem 1rem !important; font-size: 0.75rem !important; border-radius: 0.75rem !important; }
+  .search-btn { right: 4px !important; width: 28px !important; height: 28px !important; }
+  .ma-refresh-btn { width: 2.25rem !important; height: 2.25rem !important; border-radius: 0.75rem !important; }
+  .ma-refresh-btn i { font-size: 0.75rem !important; }
 
-/* Clean Status Badges - Remove Icons/Dots */
-:deep(.status-badge-container .badge i),
-:deep(.status-badge-container .badge::before) {
-  display: none !important;
-}
+  /* Mobile Cards */
+  .lg\:tw-hidden.tw-p-3 { padding: 0.75rem !important; gap: 0.65rem !important; }
+  .ma-mobile-card { padding: 0.85rem !important; border-radius: 1rem !important; }
+  .mobile-card-header { margin-bottom: 0.75rem !important; }
+  .method-icon-mini { width: 1.75rem !important; height: 1.75rem !important; border-radius: 0.5rem !important; font-size: 0.75rem !important; }
+  .mobile-card-header .tw-text-white { font-size: 0.75rem !important; }
+  .tw-text-white.tw-font-black.tw-text-lg { font-size: 1.15rem !important; }
+  .tw-text-\[9px\] { font-size: 7px !important; }
+  .status-badge-container { scale: 0.75 !important; transform-origin: right !important; }
+  .tw-bg-indigo-600.tw-text-white { padding: 0.4rem 0.75rem !important; font-size: 9px !important; border-radius: 0.5rem !important; }
 
-:deep(.status-badge-container .badge) {
-  padding: 6px 14px !important;
-  border-radius: 8px !important;
-  font-size: 10px !important;
-  font-weight: 800 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-}
-
-:deep(.status-badge-container .badge-success) {
-  background: rgba(16, 185, 129, 0.1) !important;
-  color: #10b981 !important;
-  border-color: rgba(16, 185, 129, 0.2) !important;
-}
-
-:deep(.status-badge-container .badge-warning) {
-  background: rgba(245, 158, 11, 0.1) !important;
-  color: #f59e0b !important;
-  border-color: rgba(245, 158, 11, 0.2) !important;
-}
-
-:deep(.status-badge-container .badge-danger) {
-  background: rgba(239, 68, 68, 0.1) !important;
-  color: #ef4444 !important;
-  border-color: rgba(239, 68, 68, 0.2) !important;
-}
-
-.ma-btn-primary {
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
-  color: white;
-  border: 0;
-  padding: 14px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s;
+  /* Modal */
+  .ma-modal-content { border-radius: 1.5rem !important; }
+  .ma-modal-header { padding: 1rem 1.25rem !important; }
+  .modal-title-box { font-size: 1rem !important; gap: 0.75rem !important; }
+  .modal-close-btn { width: 1.75rem !important; height: 1.75rem !important; border-radius: 0.5rem !important; }
+  .ma-modal-body { padding: 1.25rem !important; }
+  .professional-remark { padding: 0.85rem !important; border-radius: 0.85rem !important; }
+  .remark-content { font-size: 0.8rem !important; }
+  .ma-btn-primary { padding: 0.75rem !important; border-radius: 0.75rem !important; font-size: 0.9rem !important; }
 }
 
 .ma-spinner-fancy {

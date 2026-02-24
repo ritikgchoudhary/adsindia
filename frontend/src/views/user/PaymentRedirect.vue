@@ -508,4 +508,44 @@ export default {
 .tw-animation-slow {
   animation-duration: 3s;
 }
+
+@media (max-width: 768px) {
+  .tw-p-8.sm\:tw-p-12 { padding: 1.25rem !important; }
+  .tw-rounded-\[40px\] { border-radius: 1.5rem !important; }
+  .tw-w-20.tw-h-20 { width: 4rem !important; height: 4rem !important; }
+  .tw-text-3xl { font-size: 1.5rem !important; }
+  .tw-text-6xl { font-size: 2.25rem !important; }
+  .tw-text-3xl.tw-font-bold { font-size: 1.25rem !important; }
+  h5.tw-text-slate-400 { font-size: 11px !important; margin-bottom: 0.5rem !important; }
+  
+  .tw-mb-10 { margin-bottom: 1.5rem !important; }
+  .tw-mb-8 { margin-bottom: 1rem !important; }
+  
+  /* Gateway Buttons */
+  .tw-p-5 { padding: 0.75rem !important; border-radius: 1rem !important; }
+  .tw-w-14.tw-h-14 { width: 3rem !important; height: 3rem !important; border-radius: 0.75rem !important; margin-right: 0.75rem !important; }
+  .tw-w-14.tw-h-14 i { font-size: 1.1rem !important; }
+  .tw-text-lg { font-size: 1rem !important; }
+  .tw-text-xs { font-size: 10px !important; }
+  .tw-w-10.tw-h-10 { width: 2.25rem !important; height: 2.25rem !important; }
+  
+  /* Manual QR Section */
+  .tw-bg-white.tw-p-4 { padding: 0.75rem !important; border-radius: 1.25rem !important; }
+  .tw-w-64 { width: 12rem !important; }
+  .tw-bg-slate-900\/50.tw-p-5 { padding: 1rem !important; border-radius: 1rem !important; }
+  input.tw-p-4 { padding: 0.65rem !important; font-size: 0.9rem !important; }
+  .tw-py-4.tw-px-4 { padding: 0.65rem !important; }
+  
+  .tw-py-5 { padding: 1rem !important; font-size: 0.95rem !important; border-radius: 1rem !important; }
+  .tw-text-2xl { font-size: 1.25rem !important; }
+  
+  /* Modal-like card padding on very small devices */
+  .tw-min-h-\[85vh\] { min-height: auto !important; padding: 1rem 0.5rem !important; }
+}
+
+@media (max-width: 480px) {
+  .tw-text-6xl { font-size: 1.85rem !important; }
+  .tw-flex-col.tw-gap-5 { gap: 0.75rem !important; }
+  .tw-w-14.tw-h-14 { width: 2.5rem !important; height: 2.5rem !important; }
+}
 </style>

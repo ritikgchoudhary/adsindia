@@ -1642,10 +1642,38 @@ export default {
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* Mobile spacing tweaks */
 @media (max-width: 768px) {
+  .account { padding-top: 40px !important; }
+  .account-form { padding: 1rem !important; border-radius: 1.25rem !important; margin: 0 10px !important; }
+  .account-form__title { font-size: 1.15rem !important; margin-bottom: 0.75rem !important; }
+  .form--label { font-size: 0.75rem !important; margin-bottom: 2px !important; }
+  .form--control { font-size: 0.85rem !important; min-height: 38px !important; border-radius: 0.6rem !important; padding: 0.5rem 0.75rem !important; }
+  
+  /* Step Indicator Mobile */
+  .registration-steps-mobile { gap: 0.4rem !important; padding: 8px !important; margin-bottom: 1rem !important; }
+  .rstep-circle { width: 1.5rem !important; height: 1.5rem !important; font-size: 0.75rem !important; }
+  .rstep-label { font-size: 0.6rem !important; margin-top: 0.15rem !important; }
+  
+  .btn--base.btn--lg { padding: 8px !important; font-size: 0.85rem !important; border-radius: 0.6rem !important; }
+  .have-account__text { font-size: 0.8rem !important; margin-top: 1rem !important; }
+
+  /* Payment Step */
+  .payment-info-card { padding: 0.85rem !important; border-radius: 0.85rem !important; }
+  .payment-value { font-size: 1.25rem !important; }
+  .payment-description { font-size: 0.7rem !important; }
+
   ::deep(.account-form) {
-    padding: 1.25rem 1rem;
+    padding: 1rem !important;
   }
+  
+  ::deep(.form-group) {
+    margin-bottom: 0.75rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-form__title { font-size: 1.05rem !important; }
+  .rstep-label { display: none; }
+  .registration-steps-mobile { justify-content: center !important; gap: 1rem !important; }
 }
 </style>

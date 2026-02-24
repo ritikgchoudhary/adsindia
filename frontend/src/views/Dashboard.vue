@@ -583,3 +583,52 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 640px) {
+  /* KYC Alerts */
+  .tw-rounded-2xl { border-radius: 1.15rem !important; }
+  .tw-p-5 { padding: 1rem !important; }
+  h4.tw-text-xl { font-size: 1.1rem !important; }
+  p.tw-text-slate-700 { font-size: 0.85rem !important; margin-bottom: 0.85rem !important; }
+  .tw-px-4.tw-py-2 { padding: 0.6rem 1rem !important; font-size: 0.8rem !important; border-radius: 0.75rem !important; }
+
+  /* Profile Card & UID */
+  .tw-rounded-\[24px\] { border-radius: 1.5rem !important; }
+  h2.tw-text-lg { font-size: 1.1rem !important; margin-bottom: 1rem !important; }
+  .tw-w-16.tw-h-16 { width: 6rem !important; height: 6rem !important; margin-bottom: 1rem !important; border-width: 3px !important; }
+  h1.tw-text-base { font-size: 1.25rem !important; margin-bottom: 1rem !important; }
+  .tw-px-3.tw-py-1 { padding: 0.45rem 1rem !important; font-size: 11px !important; border-radius: 0.85rem !important; }
+
+  /* Earnings Stack (Cyan/Blue cards) */
+  .tw-gap-2 { gap: 0.65rem !important; }
+  .tw-p-3.sm\:tw-p-5 { padding: 1rem 1.25rem !important; border-radius: 1.25rem !important; }
+  .tw-text-2xl.sm\:tw-text-4xl.tw-font-serif { font-size: 1.75rem !important; }
+  .tw-text-xl.tw-font-black { font-size: 1.4rem !important; }
+  .tw-text-\[8px\].sm\:tw-text-\[10px\] { font-size: 8px !important; margin-top: 0.35rem !important; }
+
+  /* Grid Stats (Wallet, Income, etc.) */
+  .tw-grid.tw-gap-3 { gap: 0.85rem !important; }
+  .tw-w-8.tw-h-8 { width: 2.75rem !important; height: 2.75rem !important; margin-bottom: 0.65rem !important; }
+  .tw-w-8.tw-h-8 i { font-size: 1.15rem !important; }
+  .tw-text-\[9px\] { font-size: 9px !important; }
+  .tw-text-base.sm\:tw-text-2xl.tw-font-extrabold { font-size: 1.15rem !important; }
+
+  /* Transactions Header & Cards */
+  .tw-p-5.tw-border-b { padding: 1rem !important; }
+  .tw-p-5 h5.tw-text-lg { font-size: 1.1rem !important; }
+  .tw-p-4.tw-space-y-3 { padding: 1rem !important; }
+  .tw-p-4.tw-backdrop-blur-sm { padding: 1rem !important; border-radius: 1.15rem !important; }
+  .tw-font-mono.tw-text-\[11px\] { font-size: 10px !important; }
+  .tw-text-\[11px\].tw-text-slate-400 { font-size: 10px !important; }
+  .tw-text-sm.tw-font-extrabold { font-size: 1rem !important; }
+  .tw-text-xs.tw-text-slate-300 { font-size: 0.8rem !important; }
+  .tw-text-xs.tw-text-slate-400.tw-leading-relaxed { font-size: 0.8rem !important; }
+
+  /* Sidebar Wallet Card */
+  .tw-from-indigo-500.tw-to-violet-600.tw-text-center { padding: 1.35rem !important; border-radius: 1.5rem !important; }
+  .tw-w-12.tw-h-12.tw-mx-auto { width: 3rem !important; height: 3rem !important; margin-bottom: 0.75rem !important; }
+  .tw-text-3xl.tw-font-extrabold.tw-mb-5 { font-size: 1.85rem !important; margin-bottom: 1.25rem !important; }
+  .tw-py-4.tw-bg-gradient-to-r { padding: 0.85rem !important; font-size: 1rem !important; border-radius: 1rem !important; }
+}
+</style>

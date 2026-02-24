@@ -3211,6 +3211,14 @@ class AdminController extends Controller {
         return responseSuccess('cleared', ['Master Admin withdrawal history cleared (logs hidden)']);
     }
 
+public function clearLedger()
+{
+    $gs = gs();
+    $gs->admin_ledger_cleared_at = now();
+    $gs->save();
+    \Cache::forget('GeneralSetting');
+    return responseSuccess('cleared', ['Master Admin account ledger history cleared (logs hidden)']);
+}
     public function getEmailSettings()
     {
         $gs = gs();

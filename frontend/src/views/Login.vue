@@ -208,18 +208,15 @@ export default {
 </script>
 
 <style scoped>
-.account {
-  padding-top: 120px;
-}
-
-.login-centered-form {
-  max-width: 520px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 1;
-}
-
-.login-centered-form .account-logo img {
-  max-height: 60px;
+@media (max-width: 767px) {
+  .account { padding-top: 60px !important; }
+  .login-centered-form { padding: 1.5rem !important; border-radius: 1.5rem !important; }
+  .account-form__badge { font-size: 0.75rem !important; padding: 4px 12px !important; }
+  .account-form__title { font-size: 1.25rem !important; margin-bottom: 1rem !important; }
+  .form--label { font-size: 0.8rem !important; }
+  .form--control { font-size: 0.9rem !important; padding: 0.65rem 1rem !important; border-radius: 0.75rem !important; }
+  .btn--base.btn--lg { padding: 10px !important; font-size: 0.95rem !important; }
+  .have-account__text { font-size: 0.85rem !important; }
+  .account-logo img { max-height: 45px !important; }
 }
 </style>

@@ -349,3 +349,52 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 640px) {
+  /* Current Plan Alert */
+  .tw-rounded-2xl { border-radius: 1rem !important; }
+  .tw-p-5 { padding: 0.75rem !important; }
+  .tw-p-6 { padding: 0.85rem !important; }
+  h5.tw-text-lg { font-size: 0.95rem !important; }
+  .tw-w-14.tw-h-14 { width: 2.5rem !important; height: 2.5rem !important; }
+  .tw-w-14.tw-h-14 i { font-size: 1.25rem !important; }
+  h4.tw-text-xl { font-size: 1.1rem !important; }
+  .tw-text-sm { font-size: 0.75rem !important; }
+  p.tw-text-slate-700 { font-size: 0.8rem !important; margin-bottom: 0.75rem !important; }
+  ul.tw-space-y-2 { space-y: 1 !important; margin-bottom: 1rem !important; }
+  .tw-px-6.tw-py-2\.5 { padding: 0.5rem 1rem !important; font-size: 0.85rem !important; border-radius: 0.75rem !important; }
+
+  /* Main Header */
+  .tw-mb-8 { margin-bottom: 1.5rem !important; }
+  .tw-mb-6 { margin-bottom: 1rem !important; }
+  h4.tw-text-xl { font-size: 1.1rem !important; }
+  p.tw-text-slate-500 { font-size: 0.8rem !important; }
+
+  /* Terms Alert */
+  .tw-bg-amber-50 { padding: 0.75rem !important; border-radius: 1rem !important; }
+  label.tw-text-sm { font-size: 0.75rem !important; }
+
+  /* Package Cards Grid */
+  .tw-grid.tw-gap-6 { gap: 1rem !important; }
+  
+  /* Package Cards */
+  .tw-p-6.tw-flex-1 { padding: 1.15rem !important; }
+  h4.tw-text-xl { font-size: 1.2rem !important; margin-bottom: 0.5rem !important; }
+  h2.tw-text-3xl { font-size: 1.75rem !important; }
+  .tw-text-3xl.tw-font-extrabold { font-size: 1.75rem !important; }
+  p.tw-text-slate-500.tw-text-sm { font-size: 0.75rem !important; margin-bottom: 0.75rem !important; }
+  
+  /* Features list in cards */
+  .tw-mb-6.tw-flex-1 { margin-bottom: 1rem !important; }
+  .tw-space-y-2 { space-y: 1 !important; }
+  span.tw-text-slate-600.tw-text-sm { font-size: 0.75rem !important; }
+  
+  /* Buy Button */
+  .tw-py-3 { padding-top: 0.65rem !important; padding-bottom: 0.65rem !important; font-size: 0.9rem !important; border-radius: 0.75rem !important; }
+  
+  /* Step box */
+  .tw-bg-sky-50 { padding: 0.75rem !important; border-radius: 0.85rem !important; }
+  .tw-text-sky-800.tw-text-sm { font-size: 0.75rem !important; }
+}
+</style>

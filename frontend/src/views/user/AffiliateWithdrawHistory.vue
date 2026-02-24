@@ -2,43 +2,6 @@
   <DashboardLayout page-title="Affiliate Withdraw History" :dark-theme="true">
     <div class="ma-withdraw-wrap tw-animate-fade-in tw-py-6">
       
-      <!-- Premium Stats Header -->
-      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-3 tw-gap-4 tw-mb-8">
-        <div class="ma-stat-card">
-          <div class="tw-flex tw-items-center tw-gap-4">
-            <div class="stat-icon-box tw-bg-indigo-500/20 tw-text-indigo-400">
-              <i class="fas fa-history"></i>
-            </div>
-            <div>
-              <p class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-m-0">Total Requests</p>
-              <h3 class="tw-text-white tw-font-black tw-text-2xl tw-m-0">{{ withdraws.length }}</h3>
-            </div>
-          </div>
-        </div>
-        <div class="ma-stat-card">
-          <div class="tw-flex tw-items-center tw-gap-4">
-            <div class="stat-icon-box tw-bg-cyan-500/20 tw-text-cyan-400">
-              <i class="fas fa-check-circle"></i>
-            </div>
-            <div>
-              <p class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-m-0">Approved</p>
-              <h3 class="tw-text-white tw-font-black tw-text-2xl tw-m-0">{{ withdraws.filter(w => w.status === 1).length }}</h3>
-            </div>
-          </div>
-        </div>
-        <div class="ma-stat-card">
-          <div class="tw-flex tw-items-center tw-gap-4">
-            <div class="stat-icon-box tw-bg-rose-500/20 tw-text-rose-400">
-              <i class="fas fa-clock"></i>
-            </div>
-            <div>
-              <p class="tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-m-0">Pending</p>
-              <h3 class="tw-text-white tw-font-black tw-text-2xl tw-m-0">{{ withdraws.filter(w => w.status === 2).length }}</h3>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Main Log Card -->
       <div class="ma-glass-card">
         <div class="ma-card-header">
@@ -71,9 +34,9 @@
           </div>
         </div>
 
-        <!-- Desktop Table -->
-        <div class="tw-hidden lg:tw-block">
-          <table class="ma-modern-table">
+        <!-- Payout Table (Scrollable on Mobile) -->
+        <div class="tw-overflow-x-auto">
+          <table class="ma-modern-table" style="min-width: 800px;">
             <thead>
               <tr>
                 <th>Gateway & TRX</th>
@@ -136,43 +99,6 @@
               </tr>
             </tbody>
           </table>
-        </div>
-
-        <!-- Mobile Card Layout -->
-        <div class="lg:tw-hidden tw-p-4 tw-space-y-4">
-           <div v-for="withdraw in withdraws" :key="withdraw.id" class="mobile-payout-card">
-              <div class="tw-flex tw-justify-between tw-items-start tw-mb-5">
-                 <div class="tw-flex tw-items-center tw-gap-3">
-                    <div class="method-icon-mini">
-                       <i :class="getMethodIcon(withdraw.method?.name)"></i>
-                    </div>
-                    <div>
-                       <div class="tw-text-white tw-font-bold tw-text-sm">{{ withdraw.method?.name }}</div>
-                       <div class="tw-text-[10px] tw-text-indigo-400/80 tw-font-mono">{{ withdraw.trx }}</div>
-                    </div>
-                 </div>
-                 <div class="status-badge-container scale-90" v-html="withdraw.status_badge"></div>
-              </div>
-              
-              <div class="tw-flex tw-items-center tw-justify-between">
-                <div>
-                  <div class="tw-text-slate-500 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wider tw-mb-1">Amount</div>
-                  <div class="tw-text-white tw-font-black tw-text-2xl">{{ currencySymbol }}{{ formatAmount(withdraw.amount) }}</div>
-                </div>
-                <button @click="showDetails(withdraw)" class="mobile-action-btn">
-                  DETAILS
-                </button>
-              </div>
-
-              <div class="tw-mt-4 tw-pt-4 tw-border-t tw-border-white/5 tw-flex tw-justify-between tw-items-center">
-                 <div class="tw-text-[10px] tw-text-slate-500">
-                    <i class="far fa-calendar-alt tw-mr-1"></i> {{ formatDateTime(withdraw.created_at) }}
-                 </div>
-                 <div class="tw-text-[10px] tw-text-indigo-500/60">
-                    {{ withdraw.created_at_human }}
-                 </div>
-              </div>
-           </div>
         </div>
 
         <!-- Loader -->
@@ -478,7 +404,45 @@ export default {
 :deep(.badge-warning) { background: rgba(244, 63, 94, 0.1) !important; color: #f43f5e !important; border-color: rgba(244, 63, 94, 0.2) !important; }
 :deep(.badge-danger) { background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; border-color: rgba(239, 68, 68, 0.2) !important; }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-.text-glow-primary { text-shadow: 0 0 15px var(--primary-glow); }
+@media (max-width: 640px) {
+  /* Stats Cards */
+  .tw-grid.tw-grid-cols-1.md\:tw-grid-cols-3 { gap: 0.75rem !important; margin-bottom: 1.25rem !important; }
+  .ma-stat-card { padding: 1rem !important; border-radius: 1.25rem !important; }
+  .stat-icon-box { width: 2.5rem !important; height: 2.5rem !important; border-radius: 0.75rem !important; font-size: 1rem !important; }
+  h3.tw-text-2xl { font-size: 1.25rem !important; }
+  p.tw-text-xs { font-size: 9px !important; }
+
+  /* Main Card Header */
+  .ma-glass-card { border-radius: 1.5rem !important; }
+  .ma-card-header { padding: 1.25rem !important; gap: 1rem !important; }
+  .header-icon-box { width: 2.75rem !important; height: 2.75rem !important; border-radius: 0.85rem !important; font-size: 1.25rem !important; }
+  h5.tw-text-xl { font-size: 1.1rem !important; }
+  p.tw-text-sm { font-size: 0.75rem !important; }
+
+  /* Header Actions */
+  .header-actions { gap: 0.75rem !important; }
+  .search-input { padding: 0.65rem 1rem 0.65rem 2.25rem !important; font-size: 0.75rem !important; border-radius: 0.75rem !important; }
+  .search-btn { left: 12px !important; }
+  .ma-btn-create { padding: 0.65rem 1rem !important; font-size: 0.75rem !important; border-radius: 0.75rem !important; }
+
+  /* Mobile Payout Cards */
+  .lg\:tw-hidden.tw-p-4 { padding: 0.85rem !important; gap: 0.75rem !important; }
+  .mobile-payout-card { padding: 1.15rem !important; border-radius: 1.25rem !important; }
+  .method-icon-mini { width: 2.25rem !important; height: 2.25rem !important; border-radius: 0.75rem !important; font-size: 1rem !important; }
+  .tw-text-white.tw-font-bold.tw-text-sm { font-size: 0.85rem !important; }
+  .tw-text-white.tw-font-black.tw-text-2xl { font-size: 1.5rem !important; }
+  .mobile-action-btn { padding: 0.5rem 1rem !important; border-radius: 0.75rem !important; font-size: 9px !important; }
+  .tw-mt-4.tw-pt-4 { margin-top: 0.75rem !important; padding-top: 0.75rem !important; }
+
+  /* Modal */
+  .modal-inner { border-radius: 1.75rem !important; }
+  .ma-modal-header-modern { padding: 1.25rem !important; }
+  .modal-header-icon { width: 2.25rem !important; height: 2.25rem !important; border-radius: 0.65rem !important; font-size: 1rem !important; }
+  h5.tw-text-white.tw-font-black { font-size: 1rem !important; }
+  .ma-modal-body { padding: 1.25rem !important; }
+  .feedback-container { padding: 1.15rem !important; border-radius: 1rem !important; }
+  .feedback-text { font-size: 0.85rem !important; }
+  .ma-btn-confirm { padding: 0.85rem !important; font-size: 0.95rem !important; border-radius: 1rem !important; }
+  .tw-mt-10 { margin-top: 1.5rem !important; }
+}
 </style>

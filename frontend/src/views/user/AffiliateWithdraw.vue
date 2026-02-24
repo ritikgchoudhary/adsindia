@@ -526,5 +526,53 @@ export default {
 .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+@media (max-width: 640px) {
+  /* Header */
+  h1.tw-text-xl { font-size: 1.15rem !important; }
+  .tw-mb-4.sm\:tw-mb-8 { margin-bottom: 1.25rem !important; }
+  
+  /* Select Destination section */
+  .tw-p-4.sm\:tw-p-8 { padding: 0.85rem !important; }
+  h2.tw-text-base { font-size: 0.95rem !important; }
+  .tw-w-8.tw-h-8 { width: 2.25rem !important; height: 2.25rem !important; }
+  
+  /* Method Grid -> 1 column (long names/UPI IDs need space) */
+  .tw-grid.tw-grid-cols-1.md\:tw-grid-cols-2 {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+  .tw-p-3.sm\:tw-p-5 { padding: 0.75rem !important; border-radius: 1rem !important; }
+  .tw-w-10.tw-h-10 { width: 2.5rem !important; height: 2.5rem !important; }
+  span.tw-text-xs.sm\:tw-text-sm { font-size: 0.75rem !important; line-height: 1.2; }
+  
+  /* Wallet Card */
+  .tw-p-5.sm\:tw-p-8 { padding: 1rem !important; border-radius: 1.25rem !important; }
+  h3.tw-text-base { font-size: 0.95rem !important; }
+  .tw-text-2xl.sm\:tw-text-5xl { font-size: 1.65rem !important; }
+  .tw-text-white\/80.tw-text-xs { font-size: 0.75rem !important; }
+  .tw-mt-4.sm\:tw-mt-6 { margin-top: 1rem !important; padding-top: 0.75rem !important; }
+  
+  /* Summary Box */
+  .tw-p-6.tw-sticky { padding: 0.85rem !important; border-radius: 1.25rem !important; }
+  h3.tw-text-lg { font-size: 1rem !important; margin-bottom: 0.75rem !important; }
+  .tw-space-y-4 { space-y: 2 !important; margin-bottom: 1rem !important; }
+  .tw-text-white.tw-text-2xl { font-size: 1.25rem !important; }
+  .tw-p-4.tw-bg-indigo-500\/10 { padding: 0.75rem !important; border-radius: 1rem !important; }
+  
+  /* Info box summary */
+  .tw-p-4.tw-mb-6 { padding: 0.75rem !important; border-radius: 1rem !important; margin-bottom: 1rem !important; }
+  
+  /* Submit button */
+  button.tw-py-4 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; font-size: 1rem !important; border-radius: 1rem !important; }
+  
+  /* Back button */
+  .tw-px-4.tw-py-2.tw-bg-white\/5 { padding: 0.5rem 0.75rem !important; border-radius: 0.85rem !important; }
+}
+
+@media (max-width: 400px) {
+  .tw-grid.tw-grid-cols-1.md\:tw-grid-cols-2 { gap: 0.5rem !important; }
+  .tw-text-2xl.sm\:tw-text-5xl { font-size: 1.4rem !important; }
+}
 </style>
 

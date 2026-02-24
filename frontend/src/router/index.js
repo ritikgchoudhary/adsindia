@@ -355,6 +355,7 @@ const routes = [
   { path: '/master_admin/withdrawals', name: 'MasterAdminWithdrawals', component: () => import('../views/master_admin/Withdrawals.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/transactions', name: 'MasterAdminTransactions', component: () => import('../views/master_admin/Transactions.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/commissions', name: 'MasterAdminCommissions', component: () => import('../views/master_admin/CommissionManagement.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/account-ledger', name: 'MasterAdminAccountLedger', component: () => import('../views/master_admin/AccountLedger.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/special-links', name: 'MasterAdminSpecialLinks', component: () => import('../views/master_admin/SpecialLinks.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/kyc', name: 'MasterAdminKYC', component: () => import('../views/master_admin/KYC.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/reports', name: 'MasterAdminReports', component: () => import('../views/master_admin/Reports.vue'), meta: { requiresMasterAdminAuth: true } },

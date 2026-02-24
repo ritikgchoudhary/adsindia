@@ -3,7 +3,7 @@
     <div class="header-left">
       <button
         type="button"
-        class="tw-inline-flex tw-items-center tw-justify-center tw-w-10 tw-h-10 tw-rounded-xl tw-border tw-border-white/10 tw-bg-white/5 tw-text-white tw-mr-3 md:tw-hidden"
+        class="ma-mobile-toggle tw-inline-flex tw-items-center tw-justify-center tw-w-10 tw-h-10 tw-rounded-xl tw-border tw-border-white/10 tw-bg-white/5 tw-text-white tw-mr-3"
         @click="$emit('toggle-sidebar')"
         aria-label="Toggle sidebar"
       >
@@ -46,10 +46,10 @@ export default {
 
 <style scoped>
 .master-header {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 240px;
-  right: 0;
+  left: 0;
+  width: 100%;
   height: 72px;
   background: rgba(0, 0, 0, 0.5); /* Black glass header */
   backdrop-filter: blur(20px) saturate(180%);
@@ -60,7 +60,6 @@ export default {
   align-items: center;
   padding: 0 32px;
   z-index: 999;
-  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
@@ -118,18 +117,29 @@ export default {
   box-shadow: 0 6px 16px rgba(255, 255, 255, 0.1);
 }
 
-@media (max-width: 768px) {
-  .master-header { 
-    left: 0; 
-    padding: 0 20px;
+@media (min-width: 1200px) {
+  .ma-mobile-toggle {
+    display: none !important;
   }
-  
-  .admin-name { 
-    display: none; 
-  }
-  
-  .page-title {
-    font-size: 1.25rem;
-  }
+}
+
+@media (max-width: 1199px) {
+  .master-header { padding: 0 20px !important; }
+  .admin-name { display: none !important; }
+}
+</style>
+
+<style>
+/* JS Fallback for Desktop-Mode on Mobile */
+body.master-is-mobile .ma-mobile-toggle {
+  display: inline-flex !important;
+}
+
+body.master-is-mobile .master-header { 
+  padding: 0 20px !important;
+}
+
+body.master-is-mobile .admin-name { 
+  display: none !important; 
 }
 </style>

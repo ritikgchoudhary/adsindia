@@ -233,11 +233,8 @@ export default {
 
 @media (max-width: 768px) {
   .admin-sidebar {
-    transform: translateX(-100%);
-  }
-  
-  .admin-sidebar.mobile-open {
-    transform: translateX(0);
+    transform: none !important;
+    position: fixed !important;
   }
 }
 </style>

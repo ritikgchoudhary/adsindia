@@ -502,3 +502,51 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 640px) {
+  /* Header adjustments */
+  .tw-px-4.sm\:tw-px-6 { padding: 0.85rem 1rem !important; }
+  .tw-py-4.sm\:tw-py-5 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+  .tw-w-10.tw-h-10 { width: 2.5rem !important; height: 2.5rem !important; border-radius: 0.75rem !important; font-size: 1.15rem !important; }
+  h1.tw-text-lg { font-size: 1.15rem !important; }
+  p.tw-text-\[10px\] { font-size: 8px !important; }
+  .tw-px-4.tw-py-2 { padding: 0.5rem 0.85rem !important; font-size: 10px !important; border-radius: 0.65rem !important; }
+  .tw-mb-4.sm\:tw-mb-8 { margin-bottom: 1rem !important; border-radius: 1rem !important; }
+
+  /* Alert Banners */
+  .tw-p-4.sm\:tw-p-6 { padding: 1rem !important; border-radius: 1rem !important; margin-bottom: 1.25rem !important; }
+  .tw-w-10.tw-h-10.sm\:tw-w-14 { width: 2.25rem !important; height: 2.25rem !important; font-size: 1rem !important; border-radius: 0.65rem !important; }
+  h5.tw-text-base { font-size: 0.95rem !important; margin-bottom: 0.25rem !important; }
+  p.tw-text-xs { font-size: 0.75rem !important; line-height: 1.4 !important; }
+  .tw-mt-3.tw-flex { margin-top: 0.75rem !important; gap: 0.5rem !important; }
+  .tw-px-4.tw-py-2.sm\:tw-px-6 { padding: 0.65rem 0.85rem !important; font-size: 10px !important; border-radius: 0.65rem !important; }
+
+  /* Section Titles */
+  .tw-mb-10 { margin-bottom: 1.5rem !important; }
+  .tw-mb-4.sm\:tw-mb-6 { margin-bottom: 1rem !important; padding-bottom: 0.65rem !important; }
+  h3.tw-text-lg { font-size: 1.1rem !important; }
+  .tw-w-8.tw-h-8 { width: 1.75rem !important; height: 1.75rem !important; font-size: 0.75rem !important; border-radius: 0.5rem !important; }
+  .tw-text-\[10px\] { font-size: 8px !important; padding: 0.15rem 0.5rem !important; }
+
+  /* Course Card Mobile (Compact) */
+  .tw-h-40 { height: 7.5rem !important; }
+  .tw-p-3 { padding: 0.75rem !important; }
+  h4.tw-text-sm { font-size: 0.85rem !important; margin-bottom: 0.5rem !important; min-height: auto !important; }
+  .tw-pt-3 { padding-top: 0.5rem !important; }
+  .tw-text-\[10px\] { font-size: 9px !important; }
+  .tw-text-sm { font-size: 0.85rem !important; }
+  .tw-rounded-xl { border-radius: 0.85rem !important; }
+  .tw-gap-8 { gap: 1rem !important; }
+
+  /* Locked Course Adjustments */
+  .tw-h-64 { height: 10rem !important; }
+  .tw-px-6.tw-py-3 { padding: 0.5rem 1rem !important; font-size: 10px !important; border-radius: 0.75rem !important; }
+  .tw-text-xl { font-size: 1rem !important; min-height: auto !important; margin-bottom: 0.35rem !important; }
+  .tw-text-sm.tw-leading-relaxed { font-size: 0.75rem !important; line-height: 1.3 !important; min-height: auto !important; margin-bottom: 0.75rem !important; }
+  .tw-p-3.tw-bg-slate-50 { padding: 0.5rem !important; margin-bottom: 0.75rem !important; border-radius: 0.65rem !important; gap: 0.5rem !important; }
+  .tw-gap-2.tw-text-sm { gap: 0.35rem !important; font-size: 10px !important; }
+  .tw-pt-4 { padding-top: 0.65rem !important; }
+  .tw-px-4.tw-py-2 { padding: 0.35rem 0.65rem !important; font-size: 10px !important; }
+}
+</style>

@@ -276,3 +276,31 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 640px) {
+  /* Main Container */
+  .tw-p-6.md\:tw-p-8 { padding: 1.25rem !important; }
+  
+  /* Profile Notice */
+  .tw-mb-6.tw-bg-indigo-50 { padding: 1rem !important; border-radius: 1rem !important; margin-bottom: 1.25rem !important; }
+  .tw-text-indigo-900.tw-text-sm { font-size: 0.85rem !important; }
+  .tw-text-indigo-800\/90.tw-text-sm { font-size: 0.75rem !important; line-height: 1.4 !important; }
+
+  /* Profile Header */
+  .tw-bg-slate-50.tw-p-6 { padding: 1.25rem !important; border-radius: 1rem !important; margin-bottom: 1.5rem !important; gap: 1rem !important; }
+  .tw-w-28.tw-h-28 { width: 5.5rem !important; height: 5.5rem !important; border-width: 3px !important; }
+  .tw-w-8.tw-h-8 { width: 2rem !important; height: 2rem !important; bottom: 0 !important; right: 0 !important; }
+  h3.tw-text-xl { font-size: 1.15rem !important; margin-bottom: 0px !important; }
+  p.tw-text-sm { font-size: 0.8rem !important; }
+
+  /* Form Grid */
+  .tw-grid.tw-gap-6 { gap: 1rem !important; margin-bottom: 1.5rem !important; }
+  label.tw-text-sm { font-size: 0.8rem !important; margin-bottom: 0.25rem !important; }
+  input.tw-py-3 { padding: 0.75rem 1rem !important; font-size: 0.9rem !important; border-radius: 0.85rem !important; }
+  .tw-grid-cols-2 { gap: 0.85rem !important; }
+
+  /* Update Button */
+  .tw-py-4 { padding: 0.85rem !important; font-size: 0.95rem !important; border-radius: 0.85rem !important; }
+}
+</style>

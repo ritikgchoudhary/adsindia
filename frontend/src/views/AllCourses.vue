@@ -611,12 +611,28 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .page-title {
-    font-size: 2rem;
-  }
+  .courses-header { padding: 1.5rem 0; }
+  .page-title { font-size: 1.5rem !important; }
+  .breadcrumb { font-size: 0.75rem !important; padding: 0.35rem 0.75rem !important; margin-bottom: 0.5rem !important; }
   
-  .course-thumb {
-    height: 180px;
-  }
+  .courses-section { padding: 1.5rem 0 !important; }
+  .course-thumb { height: 160px !important; }
+  .course-body { padding: 1.15rem !important; }
+  .course-title { font-size: 0.95rem !important; min-height: auto !important; margin-bottom: 0.5rem !important; }
+  .course-description { font-size: 0.75rem !important; margin-bottom: 0.75rem !important; line-height: 1.4 !important; }
+  .course-meta { padding: 0.65rem !important; margin-bottom: 0.75rem !important; border-radius: 0.75rem !important; }
+  .meta-item { font-size: 0.7rem !important; }
+  .course-price { font-size: 1rem !important; }
+  .course-footer { padding-top: 0.75rem !important; }
+  .course-overlay .btn { padding: 8px 16px !important; font-size: 0.75rem !important; border-radius: 0.75rem !important; }
+  
+  .pagination-wrapper { margin-top: 1.5rem !important; }
+  .page-link { padding: 0.5rem 0.85rem !important; font-size: 0.75rem !important; }
+}
+
+@media (max-width: 480px) {
+  .course-thumb { height: 140px !important; }
+  .course-body { padding: 1rem !important; }
+  .page-item .page-link { font-size: 0.65rem !important; }
 }
 </style>

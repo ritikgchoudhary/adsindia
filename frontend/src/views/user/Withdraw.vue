@@ -536,4 +536,70 @@ export default {
 .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+@media (max-width: 640px) {
+  .tw-grid-cols-1.lg\:tw-grid-cols-2 { gap: 0; }
+  .tw-bg-white.tw-rounded-2xl { border-radius: 1.25rem; }
+  
+  /* Header adjustments */
+  h5.tw-text-lg { font-size: 1rem !important; margin-bottom: 0.75rem !important; }
+  
+  /* Method Grid 2 columns even on mobile */
+  .tw-grid.tw-grid-cols-1.md\:tw-grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem !important;
+  }
+  
+  .tw-p-4.sm\:tw-p-6 { padding: 0.75rem !important; }
+  
+  /* Method card adjustments */
+  .tw-relative.tw-p-4 { padding: 0.65rem !important; border-radius: 0.75rem !important; }
+  .tw-w-16.tw-h-16 { width: 2.75rem !important; height: 2.75rem !important; padding: 0.35rem !important; border-radius: 0.65rem !important; }
+  span.tw-text-sm { font-size: 0.75rem !important; }
+  .tw-w-6.tw-h-6 { width: 1.25rem !important; height: 1.25rem !important; top: 0.5rem !important; right: 0.5rem !important; font-size: 10px !important; }
+  
+  /* Balance card */
+  .tw-bg-indigo-600.tw-rounded-xl { padding: 0.85rem 1rem !important; margin-bottom: 0.85rem !important; border-radius: 1rem; }
+  .tw-text-xs.tw-uppercase { font-size: 7px !important; }
+  h3.tw-text-2xl { font-size: 1.35rem !important; }
+  .tw-text-sm.tw-mt-2 { font-size: 0.7rem !important; margin-top: 0.35rem !important; line-height: 1.3; }
+  
+  /* Info box */
+  .tw-bg-slate-100 { padding: 0.65rem 0.85rem !important; border-radius: 0.75rem; margin-bottom: 0.75rem !important; }
+  .tw-text-sm.tw-font-semibold { font-size: 0.75rem !important; }
+  .tw-text-slate-600.tw-text-sm { font-size: 0.65rem !important; line-height: 1.3; }
+  
+  /* Input box */
+  .tw-bg-white.tw-rounded-xl.tw-p-4 { padding: 0.75rem !important; margin-bottom: 0.75rem !important; border-radius: 0.75rem; }
+  .tw-text-sm.tw-font-bold.tw-mb-2 { font-size: 0.75rem !important; margin-bottom: 0.35rem !important; }
+  input.tw-py-3 { padding: 0.5rem 0.75rem !important; font-size: 1rem !important; border-radius: 0.65rem !important; }
+  .tw-mt-2.tw-text-xs { font-size: 10px !important; margin-top: 0.25rem !important; }
+  
+  /* Summary details */
+  .tw-bg-white.tw-rounded-xl.tw-border.tw-p-4 { padding: 0.75rem !important; border-radius: 0.75rem; margin-bottom: 0.85rem !important; }
+  .tw-text-sm.tw-font-medium { font-size: 0.7rem !important; }
+  .tw-text-slate-800.tw-font-bold { font-size: 0.8rem !important; }
+  .tw-p-2.tw-rounded-lg { padding: 0.5rem !important; margin-bottom: 0.5rem !important; }
+  .tw-text-green-600 { font-size: 1rem !important; }
+  .tw-mb-3.tw-pb-3 { margin-bottom: 0.5rem !important; padding-bottom: 0.5rem !important; }
+  
+  /* Submit Button */
+  button.tw-py-3.5 { padding: 0.75rem !important; font-size: 0.9rem !important; border-radius: 0.75rem !important; }
+  .tw-mt-4.tw-text-center.tw-text-xs { font-size: 9px !important; margin-top: 0.5rem !important; }
+
+  /* Modals */
+  .tw-rounded-\[2\.5rem\] { border-radius: 1.25rem !important; }
+  .tw-p-10 { padding: 1.25rem !important; }
+  .tw-w-20.tw-h-20 { width: 3.5rem !important; height: 3.5rem !important; border-radius: 1rem !important; margin-bottom: 1.25rem !important; }
+  .tw-w-20.tw-h-20 i { font-size: 1.5rem !important; }
+  h3.tw-text-2xl { font-size: 1.15rem !important; }
+  .tw-p-6.tw-rounded-3xl, .tw-p-8.tw-rounded-3xl { padding: 1rem !important; border-radius: 1rem !important; }
+  .tw-py-4 { padding: 0.75rem !important; border-radius: 1rem !important; font-size: 0.9rem !important; }
+  .tw-mb-8 { margin-bottom: 1rem !important; }
+}
+
+@media (max-width: 400px) {
+  .tw-grid.tw-grid-cols-1.md\:tw-grid-cols-2 { gap: 0.5rem; }
+  .tw-p-4.sm\:tw-p-6 { padding: 0.65rem !important; }
+}
 </style>

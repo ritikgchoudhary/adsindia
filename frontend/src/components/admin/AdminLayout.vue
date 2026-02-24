@@ -76,12 +76,14 @@ export default defineComponent({
   display: flex;
   min-height: 100vh;
   background: #f5f7fa;
+  min-width: 1200px; /* Desktop-like width on all screens */
 }
 
 .admin-content {
   flex: 1;
   margin-left: 260px;
   transition: margin-left 0.3s;
+  min-width: 0;
 }
 
 .admin-content.collapsed {
@@ -93,12 +95,13 @@ export default defineComponent({
   margin-top: 70px;
 }
 
+/* Remove mobile-specific hiding/scaling - Keep desktop layout */
 @media (max-width: 768px) {
   .admin-content {
-    margin-left: 0;
+    margin-left: 260px; /* Maintain desktop margin */
   }
   .admin-content.collapsed {
-    margin-left: 0;
+    margin-left: 70px; /* Maintain desktop collapsed margin */
   }
 }
 </style>

@@ -73,3 +73,32 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.about-section {
+  padding: 120px 0;
+  position: relative;
+}
+
+@media (max-width: 991px) {
+  .about-section { padding: 60px 0; }
+  .about-thumb-wrapper { margin-bottom: 40px; }
+  .thumb-text-wrapper { display: none; }
+}
+
+@media (max-width: 767px) {
+  .about-section { padding: 40px 0; text-align: center; }
+  .about-content__badge { font-size: 0.75rem; padding: 4px 12px; margin-bottom: 0.5rem; }
+  .about-content__title { font-size: 1.65rem; margin-bottom: 1rem; }
+  .about-content__desc { font-size: 0.85rem; line-height: 1.5; margin-bottom: 1rem; }
+  .text-list { display: inline-block; text-align: left; margin-bottom: 1.5rem; }
+  .text-list__item { font-size: 0.85rem; margin-bottom: 6px; }
+  .about-content__btn .btn { padding: 10px 20px; font-size: 0.85rem; }
+  
+  .about-thumb-wrapper__thumb img {
+    border-radius: 1.25rem !important;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+}
+</style>

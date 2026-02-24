@@ -151,7 +151,7 @@
       </div>
 
       <!-- Main Users Card -->
-      <div class="tw-bg-slate-900 tw-border tw-border-white/10 tw-rounded-[2.5rem] tw-overflow-hidden tw-relative tw-shadow-2xl">
+      <div class="tw-bg-slate-900 tw-border tw-border-white/10 tw-rounded-[2.5rem] tw-overflow-visible tw-relative tw-shadow-2xl">
         <div class="tw-p-8 tw-border-b tw-border-white/5 tw-flex tw-justify-between tw-items-center">
           <div>
             <h5 class="tw-text-xl tw-font-black tw-text-white tw-m-0 tw-flex tw-items-center tw-gap-3">
@@ -163,64 +163,8 @@
              Total: {{ totalUsers }} Registered
           </div>
         </div>
-        <!-- Mobile View (Card List) -->
-        <div class="tw-block md:tw-hidden">
-          <div v-if="loading" class="tw-py-20 tw-text-center">
-            <div class="tw-w-10 tw-h-10 tw-border-4 tw-border-indigo-500/20 tw-border-t-indigo-500 tw-rounded-full tw-animate-spin tw-mx-auto"></div>
-          </div>
-          <div v-else-if="users.length === 0" class="tw-py-24 tw-text-center">
-            <i class="fas fa-users-slash tw-text-2xl tw-text-slate-600 tw-mb-4"></i>
-            <h4 class="tw-text-white tw-font-black">No Users Found</h4>
-          </div>
-          <div v-else class="tw-p-4 tw-space-y-4">
-            <div v-for="user in users" :key="user.id" class="tw-bg-white/5 tw-border tw-border-white/10 tw-rounded-2xl tw-p-5">
-              <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
-                <div class="tw-flex tw-items-center tw-gap-3">
-                  <div class="tw-w-10 tw-h-10 tw-bg-slate-800 tw-border tw-border-white/10 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-text-indigo-400 tw-font-black">
-                    {{ getInitials(user) }}
-                  </div>
-                  <div>
-                    <div class="tw-text-white tw-font-bold tw-text-sm">{{ user.firstname }} {{ user.lastname }}</div>
-                    <code class="tw-text-[10px] tw-text-indigo-400 tw-font-mono tw-bg-indigo-500/10 tw-px-2 tw-py-0.5 tw-rounded">ADS{{ user.id }}</code>
-                  </div>
-                </div>
-                <span :class="`tw-px-2 tw-py-1 tw-rounded-md tw-text-[9px] tw-font-black tw-uppercase tw-tracking-widest ${
-                  user.status === 'active' ? 'tw-bg-emerald-500/10 tw-text-emerald-400' : 'tw-bg-rose-500/10 tw-text-rose-400'
-                }`">
-                  {{ user.status === 'active' ? 'Active' : 'Banned' }}
-                </span>
-              </div>
-              
-              <div class="tw-grid tw-grid-cols-2 tw-gap-4 tw-mb-4 tw-border-y tw-border-white/5 tw-py-4">
-                <div>
-                  <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Phone</div>
-                  <div class="tw-text-slate-300 tw-text-xs tw-font-bold">{{ user.mobile || 'N/A' }}</div>
-                </div>
-                <div>
-                  <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Balance</div>
-                  <div class="tw-text-emerald-400 tw-text-xs tw-font-bold">₹{{ formatAmount(user.balance || 0) }}</div>
-                </div>
-              </div>
 
-              <div class="tw-flex tw-justify-between tw-items-center">
-                 <div class="tw-flex tw-gap-1">
-                    <span v-if="user.has_ad_certificate" class="tw-text-[9px] tw-font-black tw-text-emerald-500 tw-bg-emerald-500/10 tw-px-1.5 tw-py-0.5 tw-rounded">CERT</span>
-                    <span v-if="user.has_ad_certificate_view" class="tw-text-[9px] tw-font-black tw-text-purple-500 tw-bg-purple-500/10 tw-px-1.5 tw-py-0.5 tw-rounded">VIEW</span>
-                 </div>
-                 <div class="tw-flex tw-gap-2">
-                    <button @click="openManageUser(user)" class="tw-px-3 tw-py-2 tw-bg-indigo-500/10 tw-text-indigo-400 tw-rounded-lg tw-text-xs tw-font-bold tw-border-0">
-                      Manage
-                    </button>
-                    <button @click="viewKYC(user)" class="tw-px-3 tw-py-2 tw-bg-blue-500/10 tw-text-blue-400 tw-rounded-lg tw-text-xs tw-font-bold tw-border-0">
-                      KYC
-                    </button>
-                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="tw-overflow-x-auto tw-hidden md:tw-block">
+        <div class="tw-overflow-visible">
           <table class="tw-w-full tw-border-collapse">
             <thead>
               <tr class="tw-bg-white/[0.02]">
@@ -239,7 +183,7 @@
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="10" class="tw-py-20 tw-text-center">
+                <td colspan="11" class="tw-py-20 tw-text-center">
                   <div class="tw-inline-flex tw-flex-col tw-items-center tw-gap-4">
                     <div class="tw-w-10 tw-h-10 tw-border-4 tw-border-indigo-500/20 tw-border-t-indigo-500 tw-rounded-full tw-animate-spin"></div>
                     <span class="tw-text-slate-500 tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Loading Users...</span>

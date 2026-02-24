@@ -290,3 +290,42 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 640px) {
+  /* Terms Gate */
+  .tw-bg-amber-500\/10 { padding: 0.75rem !important; border-radius: 0.85rem !important; }
+  .tw-text-white.tw-font-bold.tw-mb-1 { font-size: 0.85rem !important; }
+  .tw-text-white\/90.tw-text-\[11px\] { font-size: 10px !important; }
+  
+  /* Info Alert */
+  .tw-mb-6.sm\:tw-mb-8 { margin-bottom: 1rem !important; }
+  .tw-bg-slate-800\/80 { padding: 0.85rem !important; border-radius: 1rem !important; }
+  .tw-bg-indigo-500\/20.tw-p-2 { padding: 0.5rem !important; }
+  .tw-text-lg.sm\:tw-text-2xl { font-size: 1.15rem !important; }
+  h5.tw-text-white.tw-font-bold { font-size: 0.95rem !important; margin-bottom: 0.5rem !important; }
+  ul.tw-text-slate-300 { font-size: 10px !important; space-y: 1 !important; }
+  
+  /* Plans Grid */
+  .tw-gap-6 { gap: 1rem !important; }
+  
+  /* Plan Cards */
+  .tw-rounded-2xl { border-radius: 1rem !important; }
+  .tw-bg-emerald-500.tw-text-white.tw-py-2 { padding: 0.35rem !important; font-size: 11px !important; }
+  .tw-bg-amber-400.tw-text-white.tw-py-2 { padding: 0.35rem !important; font-size: 11px !important; }
+  
+  .tw-p-4.sm\:tw-p-6 { padding: 1rem !important; }
+  h4.tw-text-lg { font-size: 1.1rem !important; margin-bottom: 0.25rem !important; }
+  h2.tw-text-2xl { font-size: 1.75rem !important; }
+  
+  /* Plan Features */
+  .tw-space-y-2 { space-y: 1.5 !important; margin-bottom: 1rem !important; }
+  .tw-bg-emerald-100 { width: 1.25rem !important; height: 1.25rem !important; border-radius: 0.5rem !important; }
+  .tw-bg-amber-100 { width: 1.25rem !important; height: 1.25rem !important; border-radius: 0.5rem !important; }
+  span.tw-text-slate-600 { font-size: 11px !important; }
+  span.tw-text-\[10px\] { font-size: 9px !important; }
+  
+  /* Buttons */
+  .tw-py-2\.5 { padding: 0.65rem !important; font-size: 0.85rem !important; border-radius: 0.85rem !important; }
+}
+</style>

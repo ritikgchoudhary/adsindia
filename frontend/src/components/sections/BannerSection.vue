@@ -153,3 +153,48 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.banner-section {
+  padding: 160px 0 100px;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 991px) {
+  .banner-section { padding: 120px 0 80px; }
+  .banner-content__title { font-size: 2.5rem; }
+  .banner-thumb { display: none; }
+}
+
+@media (max-width: 767px) {
+  .banner-section { padding: 80px 0 60px; text-align: center; }
+  .banner-content__subtitle { font-size: 0.85rem; margin-bottom: 0.5rem; }
+  .banner-content__title { font-size: 1.85rem; line-height: 1.3; margin-bottom: 1.5rem !important; }
+  .banner-content__desc { font-size: 0.85rem; margin-bottom: 2rem !important; }
+  .banner-content__btn { margin-bottom: 80px !important; position: relative; z-index: 10; }
+  .btn--base.pill { padding: 10px 24px; font-size: 0.85rem; }
+  .banner-content__shape, .banner-content__shape-two { display: none; }
+  
+  .banner-content__title .icon {
+    display: inline-flex;
+    font-size: 1rem;
+    padding: 4px 10px;
+    border-radius: 8px;
+    vertical-align: middle;
+    margin: 0 4px;
+  }
+  .banner-content__title .icon img { width: 16px; height: 16px; margin-right: 4px; }
+  
+  .banner-content__title .text {
+    display: inline-block;
+    padding-right: 5px; /* Prevent clipping of last letter */
+  }
+}
+
+@media (max-width: 480px) {
+  .banner-content__title { font-size: 1.5rem; }
+  .brand-wrapper { margin-top: 20px; }
+  .brand-wrapper .title { font-size: 11px !important; margin: 0 8px !important; }
+}
+</style>

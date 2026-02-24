@@ -1,6 +1,7 @@
 <template>
   <DashboardLayout page-title="Affiliate Income" :dark-theme="true">
-    <div class="tw-grid tw-grid-cols-1 tw-gap-8">
+    <div class="income-container">
+      <div class="tw-grid tw-grid-cols-1 tw-gap-8">
       
       <!-- Income Overview -->
       <div class="tw-bg-white tw-rounded-xl sm:tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-overflow-hidden">
@@ -26,47 +27,52 @@
           </div>
         </div>
         
-        <div class="tw-p-3 sm:tw-p-6">
-          <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-3 sm:tw-gap-6">
+        <div class="tw-p-4 sm:tw-p-6">
+          <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-4 tw-gap-3 sm:tw-gap-6">
             
-            <div class="tw-bg-gradient-to-br tw-from-indigo-500 tw-to-violet-600 tw-rounded-xl sm:tw-rounded-2xl tw-p-3 sm:tw-p-6 tw-text-white tw-shadow-lg tw-relative tw-overflow-hidden">
-              <div class="tw-w-8 tw-h-8 sm:tw-w-12 sm:tw-h-12 tw-rounded-lg sm:tw-rounded-xl tw-bg-white/20 tw-flex tw-items-center tw-justify-center tw-mb-2 sm:tw-mb-4 tw-backdrop-blur-sm">
-                <i class="fas fa-calendar-day tw-text-sm sm:tw-text-xl"></i>
-              </div>
-              <h3 class="tw-text-base sm:tw-text-2xl tw-font-extrabold tw-mb-0.5 sm:tw-mb-1">{{ currencySymbol }}{{ formatAmount(incomeTodayAnim) }}</h3>
-              <p class="tw-text-indigo-100 tw-text-[9px] sm:tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider tw-m-0">Today</p>
-            </div>
-            
-            <div class="tw-bg-gradient-to-br tw-from-cyan-500 tw-to-blue-600 tw-rounded-xl sm:tw-rounded-2xl tw-p-3 sm:tw-p-6 tw-text-white tw-shadow-lg tw-relative tw-overflow-hidden">
-              <div class="tw-w-8 tw-h-8 sm:tw-w-12 sm:tw-h-12 tw-rounded-lg sm:tw-rounded-xl tw-bg-white/20 tw-flex tw-items-center tw-justify-center tw-mb-2 sm:tw-mb-4 tw-backdrop-blur-sm">
-                <i class="fas fa-calendar-week tw-text-sm sm:tw-text-xl"></i>
-              </div>
-              <h3 class="tw-text-base sm:tw-text-2xl tw-font-extrabold tw-mb-0.5 sm:tw-mb-1">{{ currencySymbol }}{{ formatAmount(incomeWeekAnim) }}</h3>
-              <p class="tw-text-cyan-100 tw-text-[9px] sm:tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider tw-m-0">Week</p>
-            </div>
-            
-            <div class="tw-bg-gradient-to-br tw-from-amber-400 tw-to-orange-500 tw-rounded-xl sm:tw-rounded-2xl tw-p-3 sm:tw-p-6 tw-text-white tw-shadow-lg tw-relative tw-overflow-hidden">
-              <div class="tw-w-8 tw-h-8 sm:tw-w-12 sm:tw-h-12 tw-rounded-lg sm:tw-rounded-xl tw-bg-white/20 tw-flex tw-items-center tw-justify-center tw-mb-2 sm:tw-mb-4 tw-backdrop-blur-sm">
-                <i class="fas fa-calendar-alt tw-text-sm sm:tw-text-xl"></i>
-              </div>
-              <h3 class="tw-text-base sm:tw-text-2xl tw-font-extrabold tw-mb-0.5 sm:tw-mb-1">{{ currencySymbol }}{{ formatAmount(incomeMonthAnim) }}</h3>
-              <p class="tw-text-amber-100 tw-text-[9px] sm:tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider tw-m-0">Month</p>
-            </div>
-            
-            <div class="tw-bg-gradient-to-br tw-from-emerald-500 tw-to-teal-600 tw-rounded-xl sm:tw-rounded-2xl tw-p-3 sm:tw-p-6 tw-text-white tw-shadow-lg tw-relative tw-overflow-hidden">
-              <div class="tw-w-8 tw-h-8 sm:tw-w-12 sm:tw-h-12 tw-rounded-lg sm:tw-rounded-xl tw-bg-white/20 tw-flex tw-items-center tw-justify-center tw-mb-2 sm:tw-mb-4 tw-backdrop-blur-sm">
-                <i class="fas fa-coins tw-text-sm sm:tw-text-xl"></i>
-              </div>
-              <h3 class="tw-text-base sm:tw-text-2xl tw-font-extrabold tw-mb-0.5 sm:tw-mb-1">{{ currencySymbol }}{{ formatAmount(incomeTotalAnim) }}</h3>
-              <p class="tw-text-emerald-100 tw-text-[9px] sm:tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider tw-m-0">Total</p>
+            <!-- Today -->
+            <div class="tw-bg-gradient-to-r tw-from-indigo-600 tw-to-violet-700 tw-rounded-2xl tw-p-4 sm:tw-p-6 tw-text-white tw-shadow-lg tw-flex tw-items-center tw-justify-between tw-relative tw-overflow-hidden">
+               <div class="tw-absolute -tw-left-2 tw-top-1/2 -tw-translate-y-1/2 tw-text-[4rem] sm:tw-text-[5rem] tw-font-serif tw-opacity-10 tw-pointer-events-none">₹</div>
+               <div class="tw-z-10 tw-pl-4">
+                 <div class="tw-text-[9px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-opacity-80">Today's Income</div>
+                 <div class="tw-text-xl sm:tw-text-3xl tw-font-black tw-leading-none tw-mt-1">{{ currencySymbol }}{{ formatAmount(incomeTodayAnim) }}</div>
+               </div>
             </div>
 
-            <div class="tw-bg-gradient-to-br tw-from-teal-500 tw-to-green-600 tw-rounded-xl sm:tw-rounded-2xl tw-p-3 sm:tw-p-6 tw-text-white tw-shadow-lg tw-relative tw-overflow-hidden tw-col-span-2 md:tw-col-span-1">
-              <div class="tw-w-8 tw-h-8 sm:tw-w-12 sm:tw-h-12 tw-rounded-lg sm:tw-rounded-xl tw-bg-white/20 tw-flex tw-items-center tw-justify-center tw-mb-2 sm:tw-mb-4 tw-backdrop-blur-sm">
-                <i class="fas fa-wallet tw-text-sm sm:tw-text-xl"></i>
-              </div>
-              <h3 class="tw-text-base sm:tw-text-2xl tw-font-extrabold tw-mb-0.5 sm:tw-mb-1">{{ currencySymbol }}{{ formatAmount(affiliateBalanceAnim) }}</h3>
-              <p class="tw-text-emerald-100 tw-text-[9px] sm:tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider tw-m-0">Balance</p>
+            <!-- Week -->
+            <div class="tw-bg-gradient-to-r tw-from-cyan-500 tw-to-blue-600 tw-rounded-2xl tw-p-4 sm:tw-p-6 tw-text-white tw-shadow-lg tw-flex tw-items-center tw-justify-between tw-relative tw-overflow-hidden">
+               <div class="tw-absolute -tw-left-2 tw-top-1/2 -tw-translate-y-1/2 tw-text-[4rem] sm:tw-text-[5rem] tw-font-serif tw-opacity-10 tw-pointer-events-none">₹</div>
+               <div class="tw-z-10 tw-pl-4">
+                 <div class="tw-text-[9px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-opacity-80">This Week</div>
+                 <div class="tw-text-xl sm:tw-text-3xl tw-font-black tw-leading-none tw-mt-1">{{ currencySymbol }}{{ formatAmount(incomeWeekAnim) }}</div>
+               </div>
+            </div>
+
+            <!-- Month -->
+            <div class="tw-bg-gradient-to-r tw-from-amber-400 tw-to-orange-500 tw-rounded-2xl tw-p-4 sm:tw-p-6 tw-text-white tw-shadow-lg tw-flex tw-items-center tw-justify-between tw-relative tw-overflow-hidden">
+               <div class="tw-absolute -tw-left-2 tw-top-1/2 -tw-translate-y-1/2 tw-text-[4rem] sm:tw-text-[5rem] tw-font-serif tw-opacity-10 tw-pointer-events-none">₹</div>
+               <div class="tw-z-10 tw-pl-4">
+                 <div class="tw-text-[9px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-opacity-80">This Month</div>
+                 <div class="tw-text-xl sm:tw-text-3xl tw-font-black tw-leading-none tw-mt-1">{{ currencySymbol }}{{ formatAmount(incomeMonthAnim) }}</div>
+               </div>
+            </div>
+
+            <!-- Total -->
+            <div class="tw-bg-gradient-to-r tw-from-emerald-500 tw-to-teal-600 tw-rounded-2xl tw-p-4 sm:tw-p-6 tw-text-white tw-shadow-lg tw-flex tw-items-center tw-justify-between tw-relative tw-overflow-hidden">
+               <div class="tw-absolute -tw-left-2 tw-top-1/2 -tw-translate-y-1/2 tw-text-[4rem] sm:tw-text-[5rem] tw-font-serif tw-opacity-10 tw-pointer-events-none">₹</div>
+               <div class="tw-z-10 tw-pl-4">
+                 <div class="tw-text-[9px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-opacity-80">Total Income</div>
+                 <div class="tw-text-xl sm:tw-text-3xl tw-font-black tw-leading-none tw-mt-1">{{ currencySymbol }}{{ formatAmount(incomeTotalAnim) }}</div>
+               </div>
+            </div>
+
+            <!-- Balance -->
+            <div class="tw-bg-gradient-to-r tw-from-[#2e1065] tw-to-[#0f172a] tw-rounded-2xl tw-p-4 sm:tw-p-6 tw-text-white tw-shadow-lg tw-flex tw-items-center tw-justify-between tw-relative tw-overflow-hidden tw-col-span-1 md:tw-col-span-1">
+               <div class="tw-absolute -tw-left-2 tw-top-1/2 -tw-translate-y-1/2 tw-text-[4rem] sm:tw-text-[5rem] tw-font-serif tw-opacity-10 tw-pointer-events-none">₹</div>
+               <div class="tw-z-10 tw-pl-4">
+                 <div class="tw-text-[9px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-opacity-80">Affiliate Balance</div>
+                 <div class="tw-text-xl sm:tw-text-3xl tw-font-black tw-leading-none tw-mt-1">{{ currencySymbol }}{{ formatAmount(affiliateBalanceAnim) }}</div>
+               </div>
             </div>
           </div>
 
@@ -77,23 +83,23 @@
                 <i class="fas fa-layer-group tw-text-indigo-600"></i> Breakdown
               </h6>
               
-              <div class="tw-flex tw-items-center tw-bg-slate-100 tw-p-1 tw-rounded-xl tw-gap-0.5 sm:tw-gap-1">
+              <div class="tw-grid tw-grid-cols-4 tw-bg-slate-100 tw-p-1 tw-rounded-xl tw-gap-1 tw-w-full sm:tw-w-auto">
                 <button 
                   v-for="p in ['today', 'this_week', 'this_month', 'all_time']" :key="p"
                   @click="selectPeriod(p)"
                   :class="[
-                    'tw-px-2 sm:tw-px-4 tw-py-1 sm:tw-py-1.5 tw-text-[9px] sm:tw-text-xs tw-font-bold tw-rounded-lg tw-transition-all tw-cursor-pointer tw-border-0',
+                    'tw-px-1 sm:tw-px-4 tw-py-2 sm:tw-py-1.5 tw-text-[10px] sm:tw-text-xs tw-font-extrabold tw-rounded-lg tw-transition-all tw-cursor-pointer tw-border-0 tw-flex tw-items-center tw-justify-center',
                     selectedPeriod === p ? 'tw-bg-indigo-600 tw-text-white tw-shadow-sm' : 'tw-bg-transparent tw-text-slate-600'
                   ]"
-                >{{ p.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}</button>
+                >{{ p === 'today' ? 'Today' : p === 'this_week' ? 'Week' : p === 'this_month' ? 'Month' : 'All Time' }}</button>
               </div>
             </div>
 
-            <div v-if="currentBreakdown" class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-2 sm:tw-gap-4">
+            <div v-if="currentBreakdown" class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-3 sm:tw-gap-4">
               <div v-for="(val, label) in { 'Direct': bdDirectAnim, 'KYC': bdKycAnim, 'Withdraw': bdWithdrawAnim, 'Upgrade': bdUpgradeAnim, 'Certificate': bdCertificateAnim, 'Ads Plan': bdAdsPlanAnim, 'Partner': bdPartnerAnim, 'Total': bdTotalAnim }" :key="label" 
-                   class="tw-rounded-xl tw-border tw-border-slate-200 tw-bg-slate-50 tw-p-2.5 sm:tw-p-5">
-                <div class="tw-text-[8px] sm:tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wider tw-text-slate-400 tw-mb-0.5 sm:tw-mb-1">{{ label }}</div>
-                <div class="tw-text-xs sm:tw-text-xl tw-font-extrabold tw-text-slate-900">₹{{ formatAmount(val) }}</div>
+                   class="tw-rounded-xl tw-border tw-border-slate-100 tw-bg-slate-50/50 tw-p-4 sm:tw-p-5">
+                <div class="tw-text-[10px] sm:tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-wider tw-text-slate-400 tw-mb-1">{{ label }}</div>
+                <div class="tw-text-base sm:tw-text-xl tw-font-extrabold tw-text-slate-900">₹{{ formatAmount(val) }}</div>
               </div>
             </div>
           </div>
@@ -113,25 +119,25 @@
           <table class="tw-w-full tw-border-collapse">
             <thead>
               <tr class="tw-bg-slate-50 tw-border-b tw-border-slate-200">
-                <th class="tw-px-4 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider bg-transparent tw-whitespace-nowrap">Affiliate ID</th>
-                <th class="tw-px-4 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider bg-transparent tw-whitespace-nowrap">Name</th>
-                <th class="tw-px-4 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider bg-transparent tw-whitespace-nowrap">Type</th>
-                <th class="tw-px-4 tw-py-4 tw-text-right tw-text-xs tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider bg-transparent tw-whitespace-nowrap">Commission</th>
-                <th class="tw-px-4 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider bg-transparent tw-whitespace-nowrap">Date</th>
+                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider bg-transparent tw-whitespace-nowrap">Affiliate ID</th>
+                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider bg-transparent tw-whitespace-nowrap">Name</th>
+                <th class="tw-px-6 tw-py-4 tw-text-center tw-text-xs tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider bg-transparent tw-whitespace-nowrap">Type</th>
+                <th class="tw-px-6 tw-py-4 tw-text-center tw-text-xs tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider bg-transparent tw-whitespace-nowrap">Commission</th>
+                <th class="tw-px-6 tw-py-4 tw-text-left tw-text-xs tw-font-bold tw-text-slate-500 tw-uppercase tw-tracking-wider bg-transparent tw-whitespace-nowrap">Date</th>
               </tr>
             </thead>
             <tbody class="tw-divide-y tw-divide-slate-200 tw-bg-white">
               <template v-for="item in (commissionLog || [])" :key="item?.id || Math.random()">
                 <tr v-show="item && item.id" class="hover:tw-bg-slate-50 tw-transition-colors">
-                  <td class="tw-px-4 tw-py-4 tw-whitespace-nowrap tw-font-mono tw-text-slate-600 tw-text-sm">{{ item.affiliate_id || '—' }}</td>
-                  <td class="tw-px-4 tw-py-4 tw-whitespace-nowrap tw-font-bold tw-text-slate-900 tw-text-sm">{{ item.name || '—' }}</td>
-                  <td class="tw-px-4 tw-py-4 tw-whitespace-nowrap tw-text-slate-700 tw-text-sm">
+                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-font-mono tw-text-slate-600 tw-text-sm">{{ item.affiliate_id || '—' }}</td>
+                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-font-bold tw-text-slate-900 tw-text-sm">{{ item.name || '—' }}</td>
+                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-center tw-text-slate-700 tw-text-sm">
                     <span class="tw-px-2 tw-py-1 tw-rounded-lg tw-bg-slate-100 tw-text-[10px] tw-font-bold tw-text-slate-600">{{ item.type || '—' }}</span>
                   </td>
-                  <td class="tw-px-4 tw-py-4 tw-whitespace-nowrap tw-text-right tw-font-bold tw-text-emerald-700 tw-text-sm">
+                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-center tw-font-black tw-text-emerald-600 tw-text-sm">
                     {{ currencySymbol }}{{ formatAmount(item.commission_amount ?? 0) }}
                   </td>
-                  <td class="tw-px-4 tw-py-4 tw-whitespace-nowrap tw-text-slate-700 tw-text-sm">{{ formatDateTime(item.date) }}</td>
+                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-slate-700 tw-text-sm">{{ formatDateTime(item.date) }}</td>
                 </tr>
               </template>
             </tbody>
@@ -163,6 +169,7 @@
 
 
 
+      </div>
     </div>
   </DashboardLayout>
 </template>
@@ -314,3 +321,33 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.income-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+
+@media (max-width: 640px) {
+  /* Cards & Spacing */
+  .tw-p-4.sm\:tw-p-6 { padding: 1rem !important; }
+  .tw-rounded-[32px], .tw-rounded-2xl { border-radius: 1.25rem !important; }
+  .tw-gap-8 { gap: 1rem !important; }
+  
+  /* Overview Cards */
+  .tw-grid-cols-4 { gap: 0.75rem !important; }
+  .tw-text-xl.sm\:tw-text-3xl { font-size: 1.35rem !important; }
+  .tw-text-\[9px\] { font-size: 8px !important; }
+  .tw-p-4.sm\:tw-p-6 { padding: 0.85rem 1rem !important; }
+  
+  /* Breakdown Grid */
+  .tw-grid-cols-2 { gap: 0.75rem !important; }
+  .tw-p-4.sm\:tw-p-5 { padding: 0.85rem !important; border-radius: 1rem !important; }
+  .tw-text-base.sm\:tw-text-xl { font-size: 1rem !important; }
+  
+  /* History Card */
+  .tw-p-3.sm\:tw-p-5 { padding: 0.85rem 1rem !important; }
+  h5.tw-text-base { font-size: 1rem !important; }
+}
+</style>

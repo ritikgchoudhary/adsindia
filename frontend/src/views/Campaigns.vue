@@ -254,8 +254,26 @@ export default {
 }
 </script>
 
-<style>
-body:not(:has(.d-none.loader-wrapper)) {
-  overflow: hidden;
+<style scoped>
+.campaign-section {
+  padding: 60px 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  background-attachment: fixed;
+}
+
+@media (max-width: 991px) {
+  .campaign-section { padding: 40px 0; margin-top: 0 !important; }
+  .campaign-sidebar { margin-top: 40px; }
+}
+
+@media (max-width: 767px) {
+  .campaign-section { padding: 30px 0; }
+  .sidebar-item__title { font-size: 1rem !important; margin-bottom: 12px !important; }
+  .form--control { font-size: 0.85rem !important; padding: 0.65rem 1rem !important; }
+  .form-check-label { font-size: 0.8rem !important; }
+  .page-link { padding: 0.5rem 0.85rem !important; font-size: 0.75rem !important; }
+  
+  .loader-wrapper { padding: 40px 0 !important; }
 }
 </style>

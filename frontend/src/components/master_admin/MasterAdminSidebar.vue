@@ -8,7 +8,7 @@
       </div>
       <button
         type="button"
-        class="tw-absolute tw-right-3 tw-top-3 tw-w-10 tw-h-10 tw-rounded-xl tw-border tw-border-white/10 tw-bg-white/5 tw-text-white md:tw-hidden"
+        class="tw-absolute tw-right-3 tw-top-3 tw-w-10 tw-h-10 tw-rounded-xl tw-border tw-border-white/10 tw-bg-white/5 tw-text-white"
         @click="$emit('close')"
         aria-label="Close sidebar"
       >
@@ -21,7 +21,7 @@
         <div class="menu-group-label">{{ group.label }}</div>
         <ul class="sidebar-menu">
           <li v-for="(item, iIdx) in group.items" :key="iIdx" :class="{ active: isActive(item.path) }">
-            <router-link :to="item.path">
+            <router-link :to="item.path" @click="handleNavClick">
               <i :class="item.icon"></i>
               <span>{{ item.title }}</span>
             </router-link>
@@ -53,7 +53,7 @@ export default {
     isOpen: { type: Boolean, default: false }
   },
   emits: ['close'],
-  setup() {
+  setup(props, { emit }) {
     const route = useRoute()
     const router = useRouter()
     
@@ -69,6 +69,7 @@ export default {
         label: 'Dashboard',
         items: [
           { title: 'Home', path: '/master_admin/dashboard', icon: 'fas fa-home' },
+          { title: 'Account Ledger', path: '/master_admin/account-ledger', icon: 'fas fa-book-open' },
         ]
       },
       {
@@ -101,7 +102,6 @@ export default {
       {
         label: 'System',
         items: [
-          { title: 'Reports', path: '/master_admin/reports', icon: 'fas fa-chart-bar' },
           { title: 'Settings', path: '/master_admin/settings', icon: 'fas fa-cog' },
           { title: 'Email Settings', path: '/master_admin/email-settings', icon: 'fas fa-envelope' },
         ]
@@ -114,7 +114,15 @@ export default {
       router.push('/master_admin/login')
     }
     
-    return { isActive, handleLogout, logoUrl, onLogoError, route, menuGroups }
+    const handleNavClick = () => {
+      if (typeof window !== 'undefined') {
+        if (window.innerWidth <= 1199 || document.body.classList.contains('master-is-mobile')) {
+          emit('close')
+        }
+      }
+    }
+    
+    return { isActive, handleLogout, handleNavClick, logoUrl, onLogoError, route, menuGroups }
   }
 }
 </script>
@@ -136,11 +144,13 @@ export default {
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Visible by default on desktop */
+  transform: translateX(0);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1199px) {
   .master-sidebar { transform: translateX(-100%); }
-  .master-sidebar.master-sidebar--open { transform: translateX(0); }
+  .master-sidebar.master-sidebar--open { transform: translateX(0) !important; }
 }
 
 .master-sidebar::-webkit-scrollbar {
@@ -307,5 +317,15 @@ export default {
 .sidebar-menu li:last-child.active a {
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(239, 68, 68, 0.3);
+}
+</style>
+
+<style>
+/* JS Fallback for Desktop-Mode on Mobile */
+body.master-is-mobile .master-sidebar {
+  transform: translateX(-100%) !important;
+}
+body.master-is-mobile .master-sidebar.master-sidebar--open {
+  transform: translateX(0) !important;
 }
 </style>
