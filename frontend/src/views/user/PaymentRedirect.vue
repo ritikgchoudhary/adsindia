@@ -153,7 +153,7 @@
 
           <!-- State: Manual QR -->
           <div v-else-if="status === 'manual_qr'" class="tw-py-4 tw-text-center">
-             <h4 class="tw-text-white tw-font-black tw-text-lg tw-mb-6">Scan to Pay ₹{{ formatAmount(itemAmount) }}</h4>
+             <h4 class="tw-text-white tw-font-black tw-text-lg tw-mb-6">Scan QR & Submit Proof</h4>
              
              <div class="tw-space-y-6">
                 <div v-for="(img, idx) in manualQrImages" :key="idx" class="tw-bg-white tw-p-4 tw-rounded-3xl tw-inline-block">
@@ -161,20 +161,54 @@
                 </div>
              </div>
 
-             <div class="tw-mt-10 tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-3xl tw-p-6 tw-text-left">
+             <div class="tw-mt-8 tw-text-left tw-space-y-4">
+                <div class="tw-bg-slate-900/50 tw-p-5 tw-rounded-2xl tw-border tw-border-slate-800">
+                   <label class="tw-block tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider tw-mb-2">Enter Amount Paid (₹)</label>
+                   <input type="number" step="0.01" v-model="manualData.amount" class="tw-w-full tw-bg-slate-800 tw-text-white tw-border-0 tw-rounded-xl tw-p-4 tw-font-bold focus:tw-ring-2 focus:tw-ring-indigo-500 tw-transition-all" placeholder="e.g. 1499" />
+                </div>
+                
+                <div class="tw-bg-slate-900/50 tw-p-5 tw-rounded-2xl tw-border tw-border-slate-800">
+                   <label class="tw-block tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider tw-mb-2">UTR / Reference No.</label>
+                   <input type="text" v-model="manualData.utr" class="tw-w-full tw-bg-slate-800 tw-text-white tw-border-0 tw-rounded-xl tw-p-4 tw-font-bold focus:tw-ring-2 focus:tw-ring-indigo-500 tw-transition-all" placeholder="Enter 12-digit UTR" />
+                </div>
+
+                <div class="tw-bg-slate-900/50 tw-p-5 tw-rounded-2xl tw-border tw-border-slate-800">
+                   <label class="tw-block tw-text-slate-400 tw-text-xs tw-font-bold tw-uppercase tw-tracking-wider tw-mb-2">Payment Screenshot</label>
+                   <label class="tw-flex tw-items-center tw-justify-center tw-w-full tw-py-4 tw-px-4 tw-border-2 tw-border-dashed tw-border-slate-700 hover:tw-border-indigo-500 tw-rounded-xl tw-cursor-pointer tw-transition-all tw-bg-slate-800" :class="{'tw-border-indigo-500 tw-bg-indigo-500/10': manualData.file}">
+                     <span class="tw-text-slate-300 tw-text-sm tw-font-medium">{{ manualFileName || 'Upload Screenshot (JPG/PNG)' }}</span>
+                     <input type="file" class="tw-hidden" accept="image/*" @change="handleManualFile" />
+                   </label>
+                </div>
+             </div>
+
+             <div class="tw-mt-8 tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-3xl tw-p-6 tw-text-left">
                 <div class="tw-flex tw-items-center tw-gap-4 tw-mb-4 tw-text-amber-400">
                   <i class="fas fa-info-circle"></i>
                   <span class="tw-text-xs tw-font-black tw-uppercase">Verification Required</span>
                 </div>
                 <p class="tw-text-slate-400 tw-text-[11px] tw-leading-relaxed tw-mb-0">
-                  This is a manual QR system. Once you complete the payment, our team will verify it. Track your transaction status in history.
+                  This is a manual QR system. Once you complete the payment and submit the proof above, our team will manually verify it.
                 </p>
              </div>
 
              <div class="tw-flex tw-gap-4 tw-mt-8">
-                <button @click="goBack" class="tw-flex-1 tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-rounded-2xl tw-font-black tw-transition-all tw-border-0">I have paid</button>
+                <button @click="submitManualPaymentForm" :disabled="isSubmittingManual" class="tw-flex-1 tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-rounded-2xl tw-font-black tw-transition-all tw-border-0 disabled:tw-opacity-50">
+                  {{ isSubmittingManual ? 'Submitting...' : 'Submit Proof' }}
+                </button>
                 <button @click="status = 'selecting'" class="tw-flex-1 tw-py-4 tw-bg-red-500/10 tw-text-red-500 hover:tw-bg-red-500/20 tw-rounded-2xl tw-font-black tw-transition-all tw-border-0">Cancel</button>
              </div>
+          </div>
+          
+          <!-- State: Manual Success -->
+          <div v-else-if="status === 'manual_success'" class="tw-py-8">
+             <div class="tw-w-24 tw-h-24 tw-bg-emerald-500/10 tw-rounded-[40px] tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-8 tw-border-4 tw-border-emerald-500/20">
+                <i class="fas fa-check-circle tw-text-4xl tw-text-emerald-500"></i>
+             </div>
+             <h4 class="tw-text-white tw-font-black tw-text-2xl tw-mb-3">Proof Submitted!</h4>
+             <p class="tw-text-slate-400 tw-font-medium tw-leading-relaxed tw-mb-8 tw-px-6">We have received your payment details. It will be verified by our team shortly. Thank you!</p>
+             <button @click="goBack" class="tw-w-full tw-py-5 tw-bg-slate-800 hover:tw-bg-indigo-600 tw-text-white tw-font-bold tw-rounded-2xl tw-transition-all tw-border-0 tw-shadow-xl tw-shadow-transparent hover:tw-shadow-indigo-500/20">
+                Go to Dashboard
+             </button>
           </div>
 
           <!-- State: Error -->
@@ -218,10 +252,19 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
-    const status = ref('selecting') // selecting | processing | failed | manual_qr
+    const status = ref('selecting') // selecting | processing | failed | manual_qr | manual_success
     const errorMessage = ref('Unknown error')
     const selectedGateway = ref('')
     const manualQrImages = ref([])
+    const currentTrx = ref('')
+    const manualData = ref({
+       amount: '',
+       utr: '',
+       file: null
+    })
+    const manualFileName = ref('')
+    const isSubmittingManual = ref(false)
+    
     const gatewayStatuses = ref({
       watchpay: 1,
       simplypay: 1,
@@ -347,6 +390,8 @@ export default {
         if (data?.status === 'success') {
           if (data.data?.is_manual) {
             manualQrImages.value = data.data.qr_images || []
+            currentTrx.value = data.data.trx || ''
+            manualData.value.amount = itemAmount.value || data.data.amount || ''
             status.value = 'manual_qr'
             return
           }
@@ -367,6 +412,8 @@ export default {
     const retry = () => {
        status.value = 'selecting'
        selectedGateway.value = ''
+       manualData.value = { amount: '', utr: '', file: null }
+       manualFileName.value = ''
     }
 
     const goBack = () => {
@@ -383,6 +430,50 @@ export default {
       } catch (e) {
         console.error('Failed to fetch gateway status:', e)
       }
+    }
+
+    const handleManualFile = (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      manualData.value.file = file
+      manualFileName.value = file.name
+    }
+
+    const submitManualPaymentForm = async () => {
+       if (!manualData.value.amount || !manualData.value.utr || !manualData.value.file) {
+          if (window.notify) window.notify('error', 'Please fill all fields and upload the screenshot.')
+          return
+       }
+       if (!currentTrx.value) {
+          if (window.notify) window.notify('error', 'Invalid transaction. Please try again.')
+          return
+       }
+       isSubmittingManual.value = true
+       try {
+          const formData = new FormData()
+          formData.append('trx', currentTrx.value)
+          formData.append('amount', manualData.value.amount)
+          formData.append('utr', manualData.value.utr)
+          formData.append('screenshot', manualData.value.file)
+          
+          const res = await api.post('/manual-payment/submit', formData, {
+             headers: { 'Content-Type': 'multipart/form-data' }
+          })
+          if (res.data?.status === 'success') {
+             status.value = 'manual_success'
+          } else {
+             const m = res.data?.message;
+             const msg = (m?.error?.[0] || m?.success?.[0] || (Array.isArray(m) ? m[0] : m) || 'Failed to submit proof');
+             if (window.notify) window.notify('error', msg)
+          }
+       } catch (err) {
+          console.error(err)
+          const m = err.response?.data?.message;
+          const msg = (m?.error?.[0] || m?.success?.[0] || (Array.isArray(m) ? m[0] : m) || 'Submission failed');
+          if (window.notify) window.notify('error', msg)
+       } finally {
+          isSubmittingManual.value = false
+       }
     }
 
     onMounted(() => {
@@ -402,7 +493,12 @@ export default {
       currencySymbol,
       formatAmount,
       gatewayStatuses,
-      manualQrImages
+      manualQrImages,
+      manualData,
+      manualFileName,
+      isSubmittingManual,
+      handleManualFile,
+      submitManualPaymentForm
     }
   }
 }

@@ -160,6 +160,10 @@ Route::namespace('Api')->name('api.')->group(function(){
                     Route::post('app/payment/confirm', 'appPaymentConfirm');
                     Route::post('manual/confirm', 'manualDepositConfirm');
                 });
+                
+                Route::controller('ManualPaymentController')->group(function(){
+                    Route::post('manual-payment/submit', 'submitManualPayment');
+                });
 
                 Route::controller('TicketController')->prefix('ticket')->group(function () {
                     Route::get('/', 'supportTicket');
