@@ -79,27 +79,27 @@
         <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-6 tw-gap-4 tw-mb-6">
           <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
               <div class="tw-text-emerald-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.active_users }}</div>
-              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">Active Users</div>
+              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wide">Active Users</div>
           </div>
           <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
               <div class="tw-text-rose-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.banned_users }}</div>
-              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">Banned</div>
+              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wide">Banned</div>
           </div>
           <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
               <div class="tw-text-amber-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.kyc_pending }}</div>
-              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">KYC Pend.</div>
+              <div class="tw-text-slate-400 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-wide">KYC Pending</div>
           </div>
           <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
               <div class="tw-text-blue-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.kyc_verified }}</div>
-              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">KYC Verif.</div>
+              <div class="tw-text-slate-400 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-wide">KYC Verified</div>
           </div>
           <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
               <div class="tw-text-amber-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.pending_deposits }}</div>
-              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">Dep. Pend.</div>
+              <div class="tw-text-slate-400 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-wide">Deposit Pending</div>
           </div>
           <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-4 tw-text-center hover:tw-bg-slate-800/80 tw-transition-colors">
               <div class="tw-text-amber-400 tw-font-black tw-text-2xl tw-mb-1">{{ summary.pending_withdrawals }}</div>
-              <div class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest">With. Pend.</div>
+              <div class="tw-text-slate-400 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-wide">Withdraw Pending</div>
           </div>
         </div>
 
