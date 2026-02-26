@@ -109,6 +109,12 @@ export default {
           { title: 'Settings', path: '/master_admin/settings', icon: 'fas fa-cog', superOnly: true },
           { title: 'Email Settings', path: '/master_admin/email-settings', icon: 'fas fa-envelope', superOnly: true },
         ]
+      },
+      {
+        label: 'Beta & Experimental',
+        items: [
+          { title: 'Beta Features Hub', path: '/master_admin/beta-features', icon: 'fas fa-vial' },
+        ]
       }
     ]
 

@@ -61,15 +61,15 @@
       <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-4 md:tw-gap-8 tw-mb-6 md:tw-mb-8">
         <!-- Profile Card (Left) -->
         <div class="lg:tw-col-span-1">
-          <div class="tw-h-full tw-bg-gradient-to-b tw-from-yellow-400 tw-to-yellow-600 tw-rounded-2xl sm:tw-rounded-[24px] tw-p-4 sm:tw-p-6 tw-text-center tw-shadow-xl tw-border-2 tw-border-white tw-flex tw-flex-col tw-items-center tw-justify-center">
+          <div class="tw-h-full tw-bg-gradient-to-b tw-from-yellow-400 tw-to-yellow-600 tw-rounded-[32px] tw-p-6 sm:tw-p-8 tw-text-center tw-shadow-2xl tw-border-2 tw-border-white/50 tw-flex tw-flex-col tw-items-center tw-justify-center">
             <!-- UID -->
-            <h2 class="tw-text-white tw-font-bold tw-text-lg sm:tw-text-xl tw-mb-2 sm:tw-mb-4 tw-drop-shadow-md tw-uppercase tw-tracking-wider">
+            <h2 class="tw-text-white tw-font-bold tw-text-xl sm:tw-text-2xl tw-mb-4 tw-drop-shadow-lg tw-uppercase tw-tracking-widest">
               {{ referralCode || user.uid || user.id || 'USER' }}
             </h2>
             
             <!-- Profile Image -->
-            <div class="tw-relative tw-mb-3 sm:tw-mb-4">
-              <div class="tw-w-16 tw-h-16 sm:tw-w-28 sm:tw-h-28 tw-rounded-full tw-border-[2px] sm:tw-border-[3px] tw-border-white tw-shadow-2xl tw-overflow-hidden tw-mx-auto tw-bg-indigo-500 tw-flex tw-items-center tw-justify-center">
+            <div class="tw-relative tw-mb-6">
+              <div class="tw-w-28 tw-h-28 sm:tw-w-44 sm:tw-h-44 tw-rounded-full tw-border-[4px] sm:tw-border-[6px] tw-border-white tw-shadow-xl tw-overflow-hidden tw-mx-auto tw-bg-indigo-500 tw-flex tw-items-center tw-justify-center">
                 <img 
                   v-if="user.image"
                   :src="user.image" 
@@ -83,16 +83,16 @@
                   class="tw-w-full tw-h-full tw-object-cover"
                 >
               </div>
-              <div class="tw-absolute tw-bottom-1 tw-right-1 tw-bg-green-500 tw-w-3 tw-h-3 tw-rounded-full tw-border-2 tw-border-white" title="Active"></div>
+              <div class="tw-absolute tw-bottom-2 tw-right-2 tw-bg-green-500 tw-w-4 tw-h-4 tw-rounded-full tw-border-[2px] tw-border-white tw-shadow-lg" title="Active"></div>
             </div>
 
             <!-- Full Name -->
-            <h1 class="tw-text-white tw-font-extrabold tw-text-base sm:tw-text-xl tw-mb-2 sm:tw-mb-4 tw-drop-shadow-lg">
+            <h1 class="tw-text-white tw-font-bold tw-text-xl sm:tw-text-3xl tw-mb-6 tw-drop-shadow-xl tw-leading-tight">
               {{ displayName }}
             </h1>
 
             <!-- Badge -->
-            <div class="tw-bg-[#007bff] tw-text-white tw-px-3 sm:tw-px-6 tw-py-1 sm:tw-py-2 tw-rounded-xl tw-font-bold tw-text-[10px] sm:tw-text-sm tw-shadow-lg tw-tracking-wide">
+            <div class="tw-bg-gradient-to-r tw-from-blue-600 tw-to-blue-500 tw-text-white tw-px-8 tw-py-2.5 tw-rounded-xl tw-font-bold tw-text-xs sm:tw-text-sm tw-shadow-xl tw-tracking-widest tw-uppercase">
               ADS SKILL INDIA
             </div>
           </div>

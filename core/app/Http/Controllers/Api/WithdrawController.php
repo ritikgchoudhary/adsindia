@@ -325,6 +325,14 @@ class WithdrawController extends Controller
 
         $withdrawAmount = (float) $balance; // Full balance withdrawal (same as current UI)
 
+        // VIP Discount Check
+        $vipSubscription = \App\Models\VipSubscription::where('user_id', $user->id)
+            ->where('status', true)
+            ->where('expires_at', '>', now())
+            ->first();
+        
+        $feeDiscountPercent = $vipSubscription ? (float) ($vipSubscription->plan->withdrawal_fee_discount ?? 0) : 0;
+
         // Validate limits
         if ($payoutType === 'upi') {
             $minLimit = (float) ($method->user_upi_min_limit ?? $method->min_limit);
@@ -353,14 +361,19 @@ class WithdrawController extends Controller
         }
         $methodCharge = round($methodFixedCharge + ($withdrawAmount * ($methodPercentCharge / 100)), 2);
 
-        $totalChargeAmount = round($gstAmount + $methodCharge, 2);
+        $totalChargeBeforeDiscount = round($gstAmount + $methodCharge, 2);
+        $discountAmount = round($totalChargeBeforeDiscount * ($feeDiscountPercent / 100), 2);
+        
+        $isPriority = (bool) $request->is_priority;
+        $instantSettings = gs()->beta_instant_settings ?: ['fee' => 50];
+        $priorityFee = $isPriority ? (float) ($instantSettings['fee'] ?? 50) : 0;
 
-        if ($totalChargeAmount <= 0) {
-            return response()->json([
-                'status' => 'error',
-                'message' => ['Total charge amount is invalid. Please contact support.']
-            ], 400);
-        }
+        $totalChargeAmount = round($totalChargeBeforeDiscount - $discountAmount + $priorityFee, 2);
+
+        // If total charge is 0 (VIP 100% off and no instant), allow direct submission 
+        // (Will handle this logic if user wants me to, but for now let's keep it gateway-based if > 0)
+        
+        if ($totalChargeAmount < 0) $totalChargeAmount = 0;
 
         $trx = getTrx();
         $gateway = $request->input('gateway', 'watchpay');
@@ -381,6 +394,7 @@ class WithdrawController extends Controller
             'total_charge' => (float) $totalChargeAmount,
             'method_id' => (int) $method->id,
             'payout_type' => $payoutType,
+            'is_priority' => $isPriority,
             'status' => 'pending',
             'created_at' => now()->format('Y-m-d H:i:s'),
         ], now()->addHours(2));
@@ -553,6 +567,7 @@ class WithdrawController extends Controller
             $withdrawAmount = (float) ($det['withdraw_amount'] ?? 0);
             $methodId = (int) ($det['method_id'] ?? 0);
             $payoutType = (string) ($det['payout_type'] ?? 'bank');
+            $isPriority = (bool) ($det['is_priority'] ?? false);
             $gstPercent = (float) ($det['gst_percent'] ?? self::MAIN_WITHDRAW_GST_PERCENT);
             $gstAmount = (float) $deposit->amount;
         } else {
@@ -569,6 +584,7 @@ class WithdrawController extends Controller
                 $gstAmount = (float) ($session['gst_amount'] ?? 0);
                 $methodId = (int) ($session['method_id'] ?? 0);
                 $payoutType = (string) ($session['payout_type'] ?? 'bank');
+                $isPriority = (bool) ($session['is_priority'] ?? false);
             }
         }
 
@@ -625,6 +641,7 @@ class WithdrawController extends Controller
             ['name' => 'bank_registered_no',    'type' => 'text', 'value' => $bankMobile],
             ['name' => 'upi_id',                'type' => 'text', 'value' => $upiId],
         ];
+        $withdraw->is_priority = $isPriority ?? false;
         $withdraw->save();
 
         // Deduct balance

@@ -297,6 +297,9 @@ const routes = [
     component: () => import('../views/user/QuickPayment.vue'),
     meta: { requiresAuth: true }
   },
+  { path: '/user/vip-membership', name: 'UserVipMembership', component: () => import('../views/user/VipMembership.vue'), meta: { requiresAuth: true } },
+  { path: '/user/verified-badge', name: 'UserVerifiedBadge', component: () => import('../views/user/VerifiedBadge.vue'), meta: { requiresAuth: true } },
+  { path: '/user/ad-booster', name: 'UserAdBooster', component: () => import('../views/user/AdBooster.vue'), meta: { requiresAuth: true } },
   // Admin Routes
   {
     path: '/admin/login',
@@ -364,7 +367,13 @@ const routes = [
   { path: '/master_admin/courses', name: 'MasterAdminCourses', component: () => import('../views/master_admin/Courses.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/gateways', name: 'MasterAdminGateways', component: () => import('../views/master_admin/Gateways.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/customer-support', name: 'MasterAdminCustomerSupport', component: () => import('../views/master_admin/CustomerSupport.vue'), meta: { requiresMasterAdminAuth: true } },
-  { path: '/master_admin/email-settings', name: 'MasterAdminEmailSettings', component: () => import('../views/master_admin/EmailSettings.vue'), meta: { requiresMasterAdminAuth: true } }
+  { path: '/master_admin/email-settings', name: 'MasterAdminEmailSettings', component: () => import('../views/master_admin/EmailSettings.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/beta-features', name: 'MasterAdminBetaFeatures', component: () => import('../views/master_admin/BetaFeaturesHub.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/beta-features/vip', name: 'MasterAdminBetaVIP', component: () => import('../views/master_admin/BetaVIP.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/beta-features/verified', name: 'MasterAdminBetaVerified', component: () => import('../views/master_admin/BetaVerified.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/beta-features/booster', name: 'MasterAdminBetaBooster', component: () => import('../views/master_admin/BetaBooster.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/beta-features/instant', name: 'MasterAdminBetaInstant', component: () => import('../views/master_admin/BetaInstant.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/beta-features/extra', name: 'MasterAdminBetaExtra', component: () => import('../views/master_admin/BetaExtra.vue'), meta: { requiresMasterAdminAuth: true } }
 ]
 
 const router = createRouter({

@@ -251,6 +251,41 @@
         </router-link>
       </li>
 
+      <!-- Beta Features (Premium) -->
+      <li v-if="hasBetaAccess" class="tw-mt-4 tw-mb-1 tw-px-4 tw-text-[10px] tw-font-bold tw-text-indigo-400 tw-uppercase tw-tracking-widest">
+        Premium Features (Beta)
+      </li>
+      <li v-if="hasBetaAccess" class="tw-mb-1">
+        <router-link 
+          to="/user/vip-membership" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline tw-bg-indigo-500/5 tw-border-indigo-500/20 tw-border"
+          :class="isActive('/user/vip-membership') ? 'tw-bg-indigo-500/20 tw-text-white tw-border-l-2 tw-border-indigo-400' : 'tw-text-indigo-200/90 hover:tw-bg-indigo-500/10 hover:tw-text-white'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-crown"></i></span>
+          <span class="tw-flex-1">VIP Membership</span>
+        </router-link>
+      </li>
+      <li v-if="hasBetaAccess" class="tw-mb-1">
+        <router-link 
+          to="/user/verified-badge" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline tw-bg-indigo-500/5 tw-border-indigo-500/20 tw-border"
+          :class="isActive('/user/verified-badge') ? 'tw-bg-indigo-500/20 tw-text-white tw-border-l-2 tw-border-indigo-400' : 'tw-text-indigo-200/90 hover:tw-bg-indigo-500/10 hover:tw-text-white'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-check-circle"></i></span>
+          <span class="tw-flex-1">Verified Badge</span>
+        </router-link>
+      </li>
+      <li v-if="hasBetaAccess" class="tw-mb-1">
+        <router-link 
+          to="/user/ad-booster" 
+          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-no-underline tw-bg-indigo-500/5 tw-border-indigo-500/20 tw-border"
+          :class="isActive('/user/ad-booster') ? 'tw-bg-indigo-500/20 tw-text-white tw-border-l-2 tw-border-indigo-400' : 'tw-text-indigo-200/90 hover:tw-bg-indigo-500/10 hover:tw-text-white'"
+        >
+          <span class="tw-w-6 tw-text-center"><i class="fas fa-rocket"></i></span>
+          <span class="tw-flex-1">Ad Booster</span>
+        </router-link>
+      </li>
+
       <!-- Logout -->
       <li class="tw-mt-4 tw-pt-4 tw-border-t tw-border-slate-800">
         <a 
@@ -288,6 +323,7 @@ export default {
     const openSubmenus = ref([])
     const isAgent = ref(localStorage.getItem('is_agent') === 'true')
     const isSpecialAgent = ref(localStorage.getItem('is_special_agent') === 'true')
+    const hasBetaAccess = ref(localStorage.getItem('beta_access') === 'true')
 
     const onLogoError = () => { siteLogo.value = null }
 
@@ -322,9 +358,11 @@ export default {
         const d = res?.data?.data || res?.data
         isAgent.value = !!(d?.is_agent)
         isSpecialAgent.value = !!(d?.is_special_agent)
+        hasBetaAccess.value = !!(d?.beta_access)
         
         localStorage.setItem('is_agent', isAgent.value)
         localStorage.setItem('is_special_agent', isSpecialAgent.value)
+        localStorage.setItem('beta_access', hasBetaAccess.value)
         // Ensure submenu visibility if user is already on an agent-only page
         if (isDropdownActive(teamMenuPaths.value) && !openSubmenus.value.includes('team')) {
           openSubmenus.value.push('team')
@@ -368,6 +406,7 @@ export default {
       toggleSubmenu,
       isAgent,
       isSpecialAgent,
+      hasBetaAccess,
       teamMenuPaths
     }
   }

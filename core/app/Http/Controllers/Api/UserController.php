@@ -20,6 +20,20 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
+    public function betaSettings()
+    {
+        $gs = gs();
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'verified' => $gs->beta_verified_settings ?: ['price' => 99],
+                'booster' => $gs->beta_booster_settings ?: ['daily_price' => 29, 'weekly_price' => 149],
+                'instant' => $gs->beta_instant_settings ?: ['fee' => 50],
+                'extra' => $gs->beta_extra_settings ?: []
+            ]
+        ]);
+    }
+
     public function dashboard()
     {
         $user = auth()->user();
@@ -185,6 +199,10 @@ class UserController extends Controller
                 'firstname' => $user->firstname,
                 'lastname' => $user->lastname,
                 'kv' => $user->kv,
+                'beta_access' => (bool) ($user->beta_access ?? false),
+                'verified_badge' => (bool) ($user->verified_badge ?? false),
+                'vip_status' => (bool) \App\Models\VipSubscription::where('user_id', $user->id)->where('status', true)->where('expires_at', '>', now())->exists(),
+                'booster_expires_at' => $user->booster_expires_at,
                 'kyc_rejection_reason' => $user->kyc_rejection_reason,
                 'image' => $user->image
                     ? getImage(getFilePath('userProfile') . '/' . $user->image, getFileSize('userProfile'))
@@ -547,6 +565,10 @@ class UserController extends Controller
             'balance' => $user->balance,
             'is_agent' => (bool) ($user->is_agent ?? false),
             'is_special_agent' => (bool) ($user->is_special_agent ?? false),
+            'beta_access' => (bool) ($user->beta_access ?? false),
+            'verified_badge' => (bool) ($user->verified_badge ?? false),
+            'vip_status' => (bool) \App\Models\VipSubscription::where('user_id', $user->id)->where('status', true)->where('expires_at', '>', now())->exists(),
+            'booster_expires_at' => $user->booster_expires_at,
             'status' => $user->status,
             'ev' => $user->ev,
             'sv' => $user->sv,

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class GeneralSetting extends Model
 {
+    protected $guarded = [];
+
     protected $casts = [
         'mail_config' => 'object',
         'sms_config' => 'object',
@@ -13,6 +15,10 @@ class GeneralSetting extends Model
         'socialite_credentials' => 'object',
         'firebase_config' => 'object',
         'config_progress'=>'object',
+        'beta_verified_settings' => 'array',
+        'beta_booster_settings' => 'array',
+        'beta_instant_settings' => 'array',
+        'beta_extra_settings' => 'array',
     ];
 
     protected $hidden = ['email_template','mail_config','sms_config','system_info'];

@@ -152,6 +152,13 @@ class AdsController extends Controller
 
         // Check if daily limit reached
         $dailyLimit = (int) ($activeOrder->package->daily_ad_limit ?? 0);
+        
+        // Point #4: Daily Ad Booster
+        $isBoosterActive = $user->booster_expires_at && $user->booster_expires_at > now();
+        if ($isBoosterActive) {
+            $dailyLimit += 5; // Add 5 extra ads
+        }
+
         $canWatchMore = $todayViews < $dailyLimit;
         $remainingAds = $dailyLimit - $todayViews;
         $realAds = $this->fetchRealAdsFromAPI($dailyLimit);

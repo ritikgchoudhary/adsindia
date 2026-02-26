@@ -108,6 +108,27 @@
                   </div>
                 </div>
 
+                <!-- Instant Payout Beta -->
+                <div v-if="hasBetaAccess" class="tw-bg-indigo-50 tw-border tw-border-indigo-100 tw-rounded-xl tw-p-4 tw-mb-4 tw-relative tw-overflow-hidden">
+                  <div class="tw-flex tw-items-center tw-justify-between tw-relative tw-z-10">
+                    <div class="tw-flex tw-items-center tw-gap-3">
+                      <div class="tw-w-10 tw-h-10 tw-bg-white tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-shadow-sm">
+                        <i class="fas fa-bolt tw-text-indigo-600"></i>
+                      </div>
+                      <div>
+                        <h6 class="tw-text-indigo-900 tw-font-bold tw-text-sm tw-m-0">Instant Payout Premium</h6>
+                        <p class="tw-text-indigo-500 tw-text-[10px] tw-m-0 tw-font-medium">Get paid in 1-2 hours instead of 48h</p>
+                      </div>
+                    </div>
+                    <button type="button" @click="isInstantPayout = !isInstantPayout; calculateAmount()" class="tw-relative tw-inline-flex tw-h-6 tw-w-11 tw-flex-shrink-0 tw-cursor-pointer tw-rounded-full tw-border-2 tw-border-transparent tw-transition-colors tw-duration-200 tw-ease-in-out focus:tw-outline-none" :class="isInstantPayout ? 'tw-bg-indigo-600' : 'tw-bg-slate-200'">
+                      <span class="tw-pointer-events-none tw-inline-block tw-h-5 tw-w-5 tw-transform tw-rounded-full tw-bg-white tw-shadow tw-ring-0 tw-transition tw-duration-200 tw-ease-in-out" :class="isInstantPayout ? 'tw-translate-x-5' : 'tw-translate-x-0'"></span>
+                    </button>
+                  </div>
+                  <div v-if="isInstantPayout" class="tw-mt-3 tw-pt-3 tw-border-t tw-border-indigo-100 tw-text-[10px] tw-text-indigo-600 tw-font-bold">
+                    <i class="fas fa-plus tw-mr-1"></i> ₹50.00 Instant Processing Fee Added
+                  </div>
+                </div>
+
                 <div class="tw-bg-white tw-rounded-xl tw-border tw-border-slate-200 tw-p-4 sm:tw-p-5 tw-mb-6">
                   <div class="tw-flex tw-justify-between tw-items-center tw-gap-3 tw-mb-3 tw-pb-3 tw-border-b tw-border-slate-100">
                     <span class="tw-text-slate-500 tw-text-sm tw-font-medium">18% GST Fee</span>
@@ -313,6 +334,8 @@ export default {
     const kycErrorMessage = ref('')
     const isLoading = ref(false)
     const isLoadingMethods = ref(true)
+    const hasBetaAccess = ref(localStorage.getItem('beta_access') === 'true')
+    const isInstantPayout = ref(false)
     const fallbackMethodIcon = '/assets/images/default.png'
 
     const onMethodImageError = (e) => {
@@ -366,7 +389,8 @@ export default {
       const methodPercentChargeAmount = (amt / 100) * methodPercentCharge
       const methodCharge = methodPercentChargeAmount + methodFixedCharge
       const gstCharge = (amt / 100) * 18
-      const totalCharge = gstCharge + methodCharge
+      const instantFee = isInstantPayout.value ? 50 : 0
+      const totalCharge = gstCharge + methodCharge + instantFee
 
       // Both GST and method charges are now paid upfront via gateway.
       // User receives full balance into their bank/upi.
@@ -411,6 +435,7 @@ export default {
           `/user/payment-redirect?flow=withdraw_gst&method_code=${encodeURIComponent(methodCode)}` +
           `&payout_type=${encodeURIComponent(payoutType)}` +
           `&amount=${processingFee.value}` +
+          `&is_priority=${isInstantPayout.value ? 1 : 0}` +
           `&plan_name=${encodeURIComponent('Withdrawal Service Fees')}` +
           `&back=${encodeURIComponent('/user/withdraw')}`
 
@@ -501,6 +526,14 @@ export default {
 
     onMounted(() => {
       ;(async () => {
+        // Fetch User info to sync Beta Access
+        try {
+          const res = await api.get('/user/info', { __skipLoader: true })
+          const d = res.data?.data || res.data
+          hasBetaAccess.value = !!(d?.beta_access)
+          localStorage.setItem('beta_access', hasBetaAccess.value)
+        } catch (e) {}
+
         // Return from Gateway after GST payment
         const trx = route.query.watchpay_trx || route.query.simplypay_trx
         const isGst = route.query.withdraw_gst === '1' || route.query.withdraw_gst === 1
@@ -541,7 +574,8 @@ export default {
       calculateAmount, handleSubmit, confirmAndRedirect, showKYCErrorModal, kycErrorMessage,
       showLimitErrorModal, limitErrorMessage, showConfirmModal,
       isLoading, isLoadingMethods, formatAmount,
-      fallbackMethodIcon, onMethodImageError
+      fallbackMethodIcon, onMethodImageError,
+      hasBetaAccess, isInstantPayout
     }
   }
 }
