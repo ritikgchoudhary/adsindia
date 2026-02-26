@@ -127,6 +127,47 @@
           </div>
         </div>
 
+        <!-- Live Gateway Balances -->
+        <div class="tw-mb-6">
+          <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
+            <h5 class="tw-text-white tw-font-bold tw-flex tw-items-center tw-gap-2 tw-m-0">
+               <i class="fas fa-wallet tw-text-indigo-400"></i> Live Gateway Balances
+            </h5>
+            <div class="tw-flex tw-gap-2">
+              <button class="tw-bg-indigo-600/20 tw-border tw-border-indigo-500/30 tw-text-indigo-400 tw-px-3 tw-py-1 tw-rounded-lg tw-text-xs tw-font-bold tw-transition-all hover:tw-bg-indigo-600/30" @click="fetchSimplyPayBalance">
+                <i class="fas fa-sync-alt tw-mr-1" :class="{'fa-spin': simplyPayLoading}"></i> SimplyPay
+              </button>
+            </div>
+          </div>
+
+          <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+            <!-- SimplyPay Balance Card -->
+            <div class="tw-bg-slate-900/60 tw-backdrop-blur-xl tw-border tw-border-white/5 tw-rounded-2xl tw-p-5 tw-relative tw-overflow-hidden hover:tw-bg-slate-800/80 tw-transition-all">
+               <div class="tw-absolute tw-right-4 tw-top-4 tw-text-[10px] tw-font-black tw-text-slate-500 tw-uppercase">SimplyPay</div>
+               <div class="tw-flex tw-items-center tw-gap-4 tw-mb-4">
+                 <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-bg-indigo-500/10 tw-text-indigo-400 tw-flex tw-items-center tw-justify-center tw-text-xl">
+                   <i class="fas fa-university"></i>
+                 </div>
+                 <div>
+                    <h3 class="tw-text-white tw-text-2xl tw-font-black tw-mb-1" v-if="!simplyPayError">₹{{ fmt(simplyPayBalance.payout || 0) }}</h3>
+                    <h3 class="tw-text-rose-400 tw-text-sm tw-font-bold tw-mb-1" v-else>{{ simplyPayError }}</h3>
+                    <p class="tw-text-slate-400 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-widest tw-mb-0">Available Payout Balance</p>
+                 </div>
+               </div>
+               <div class="tw-flex tw-gap-4 tw-border-t tw-border-white/5 tw-pt-3" v-if="!simplyPayError">
+                  <div class="tw-flex-1">
+                     <span class="tw-text-slate-500 tw-text-[9px] tw-uppercase tw-font-bold">Payin: </span>
+                     <span class="tw-text-emerald-400 tw-text-xs tw-font-bold">₹{{ fmt(simplyPayBalance.payin || 0) }}</span>
+                  </div>
+                  <div class="tw-flex-1 tw-text-right">
+                     <span class="tw-text-slate-500 tw-text-[9px] tw-uppercase tw-font-bold">Frozen: </span>
+                     <span class="tw-text-rose-400 tw-text-xs tw-font-bold">₹{{ fmt(simplyPayBalance.frozen || 0) }}</span>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Charts Row -->
         <div class="row g-4 mb-4">
           <!-- User Growth Chart -->
@@ -289,6 +330,11 @@ export default {
     const revenueChart = ref([])
     const withdrawChart= ref([])
     
+    // SimplyPay Balance
+    const simplyPayBalance = ref({ payout: 0, payin: 0, frozen: 0 })
+    const simplyPayLoading = ref(false)
+    const simplyPayError   = ref(null)
+    
 
 
     const fmt = (n) => {
@@ -309,6 +355,28 @@ export default {
         console.error('Reports error', e)
       } finally {
         loading.value = false
+      }
+    }
+
+    const fetchSimplyPayBalance = async () => {
+      simplyPayLoading.value = true
+      simplyPayError.value = null
+      try {
+        const res = await api.get('/admin/simplypay/balance')
+        if (res.data?.status === 'success') {
+          const raw = res.data.data.raw || {}
+          simplyPayBalance.value = {
+            payout: raw.payoutValue || 0,
+            payin:  raw.payinValue || 0,
+            frozen: raw.disableValue || 0
+          }
+        } else {
+          simplyPayError.value = res.data?.message || 'API Error'
+        }
+      } catch (e) {
+        simplyPayError.value = e.response?.data?.message || 'Connection failed'
+      } finally {
+        simplyPayLoading.value = false
       }
     }
 
@@ -360,7 +428,7 @@ export default {
 
     onMounted(() => {
       fetchReports()
-
+      fetchSimplyPayBalance()
     })
 
     return {
@@ -368,7 +436,8 @@ export default {
       summary, userGrowth, revenueChart, withdrawChart,
       fmt, fetchReports,
       userGrowthBars, revBars,
-      userActivePct, kycVerifiedPct
+      userActivePct, kycVerifiedPct,
+      simplyPayBalance, simplyPayLoading, simplyPayError, fetchSimplyPayBalance
     }
   }
 }
