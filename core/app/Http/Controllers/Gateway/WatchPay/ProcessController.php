@@ -53,6 +53,68 @@ class ProcessController extends Controller
         if ($deposit) {
             \App\Http\Controllers\Gateway\PaymentController::userDataUpdate($deposit);
         }
+        
+        // 🟢 Handle Payout (Withdrawal) Callbacks
+        // WatchPay uses merTransferId for Agent Payment/Payout callbacks
+        $merTransferId = (string) ($payload['merTransferId'] ?? '');
+        if ($merTransferId !== '') {
+            $withdraw = \App\Models\Withdrawal::where('trx', $merTransferId)->first();
+            if ($withdraw && $withdraw->status == \App\Constants\Status::PAYMENT_PENDING) {
+                if ($tradeResult === '1') {
+                    $withdraw->status = \App\Constants\Status::PAYMENT_SUCCESS;
+                    $withdraw->admin_feedback = 'Auto Payout via WatchPay (Completed Async)';
+                    $withdraw->save();
+                    
+                    if ($withdraw->user) {
+                        notify($withdraw->user, 'WITHDRAW_APPROVE', [
+                            'method_name'     => $withdraw->method->name ?? 'WatchPay API',
+                            'method_currency' => $withdraw->currency,
+                            'method_amount'   => showAmount($withdraw->final_amount, currencyFormat: false),
+                            'amount'          => showAmount($withdraw->amount, currencyFormat: false),
+                            'charge'          => showAmount($withdraw->charge, currencyFormat: false),
+                            'rate'            => showAmount($withdraw->rate, currencyFormat: false),
+                            'trx'             => $withdraw->trx,
+                            'admin_details'   => $withdraw->admin_feedback,
+                        ]);
+                    }
+                } elseif ($tradeResult === '2') {
+                    // Fail/Reject payout -> refund
+                    $withdraw->status = \App\Constants\Status::PAYMENT_REJECT;
+                    $withdraw->admin_feedback = 'Auto Payout via WatchPay Failed Async.';
+                    $withdraw->save();
+                    
+                    if ($withdraw->user) {
+                        $walletStr = (string) ($withdraw->wallet ?? 'main');
+                        $withdraw->user->$walletStr += $withdraw->amount;
+                        $withdraw->user->save();
+                        
+                        $transaction = new \App\Models\Transaction();
+                        $transaction->user_id = $withdraw->user->id;
+                        $transaction->amount = $withdraw->amount;
+                        $transaction->post_balance = $withdraw->user->$walletStr;
+                        $transaction->charge = 0;
+                        $transaction->trx_type = '+';
+                        $transaction->details = showAmount($withdraw->amount) . ' refunded due to Gateway Auto-Payout failure';
+                        $transaction->trx = $withdraw->trx;
+                        $transaction->remark = 'withdraw_reject';
+                        $transaction->wallet = $walletStr;
+                        $transaction->save();
+                        
+                        notify($withdraw->user, 'WITHDRAW_REJECT', [
+                            'method_name' => $withdraw->method->name ?? 'WatchPay API',
+                            'method_currency' => $withdraw->currency,
+                            'method_amount' => showAmount($withdraw->final_amount),
+                            'amount' => showAmount($withdraw->amount),
+                            'charge' => showAmount($withdraw->charge),
+                            'rate' => showAmount($withdraw->rate),
+                            'trx' => $withdraw->trx,
+                            'post_balance' => showAmount($withdraw->user->$walletStr),
+                            'admin_details' => $withdraw->admin_feedback
+                        ]);
+                    }
+                }
+            }
+        }
 
         return response('success', 200);
     }

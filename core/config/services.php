@@ -42,7 +42,7 @@ return [
     'simplypay' => [
         'app_id' => env('SIMPLYPAY_APP_ID'),
         'app_secret' => env('SIMPLYPAY_APP_SECRET'),
-        'api_url' => env('SIMPLYPAY_API_URL', 'https://api.simplypay.vip/api/v2/payment/order/create'),
+        'base_url' => env('SIMPLYPAY_BASE_URL', 'https://api.paysimply.net'),
     ],
 
     'watchpay' => [

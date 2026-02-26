@@ -93,6 +93,9 @@ class WithdrawalController extends Controller {
     }
 
     public function approve(Request $request) {
+        if (!$this->checkPermission('edit_withdrawals')) {
+            return responseError('permission_denied', ['You do not have permission to approve withdrawals.']);
+        }
         $request->validate(['id' => 'required|integer']);
         $withdraw                 = Withdrawal::where('id', $request->id)->where('status', Status::PAYMENT_PENDING)->with('user')->firstOrFail();
         $withdraw->status         = Status::PAYMENT_SUCCESS;
@@ -115,6 +118,9 @@ class WithdrawalController extends Controller {
     }
 
     public function reject(Request $request) {
+        if (!$this->checkPermission('edit_withdrawals')) {
+            return responseError('permission_denied', ['You do not have permission to reject withdrawals.']);
+        }
         $request->validate([
             'id' => 'required|integer',
             // Rejection reason is mandatory (shown to user)

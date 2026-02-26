@@ -6,7 +6,7 @@ class WatchPayGateway
 {
     public static function mchId(): string
     {
-        return (string) (config('services.watchpay.mch_id') ?: '100225567');
+        return (string) (config('services.watchpay.mch_id') ?: '100666857');
     }
 
     /**
@@ -15,13 +15,15 @@ class WatchPayGateway
      */
     public static function merchantKey(): string
     {
-        return (string) (config('services.watchpay.web_merchant_key') ?: (config('services.watchpay.merchant_key') ?: '49fd706f0a924b679df02131a3df8794'));
+        return (string) (config('services.watchpay.web_merchant_key') ?: (config('services.watchpay.merchant_key') ?: 'M6U0SXPYVVA7A1VABFB3L2KD1MJ7TJNU'));
     }
 
     public static function webApiUrl(): string
     {
         return (string) (config('services.watchpay.web_api_url') ?: 'https://api.watchglb.com/pay/web');
     }
+
+
 
     /**
      * Generate lowercase MD5 sign.
@@ -105,9 +107,6 @@ class WatchPayGateway
         ];
     }
 
-    /**
-     * Verify callback signature.
-     */
     public static function verifyCallback(array $payload): bool
     {
         $merchantKey = static::merchantKey();
@@ -118,5 +117,9 @@ class WatchPayGateway
         $expected = static::sign($payload, $merchantKey);
         return hash_equals($expected, strtolower($received));
     }
+
+
+
+
 }
 

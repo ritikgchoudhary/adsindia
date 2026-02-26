@@ -103,6 +103,8 @@
           </div>
         </div>
 
+
+
         <!-- Today's Quick Highlights -->
         <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-mb-6">
           <div class="tw-bg-indigo-900/20 tw-backdrop-blur-xl tw-border tw-border-indigo-500/20 tw-rounded-2xl tw-p-5 tw-flex tw-items-center tw-gap-5">
@@ -286,6 +288,8 @@ export default {
     const userGrowth   = ref([])
     const revenueChart = ref([])
     const withdrawChart= ref([])
+    
+
 
     const fmt = (n) => {
       const num = parseFloat(n) || 0
@@ -307,6 +311,8 @@ export default {
         loading.value = false
       }
     }
+
+
 
     // Bar chart helpers
     const userGrowthBars = computed(() => {
@@ -352,7 +358,10 @@ export default {
     })
 
 
-    onMounted(fetchReports)
+    onMounted(() => {
+      fetchReports()
+
+    })
 
     return {
       loading, range, ranges,

@@ -2,156 +2,172 @@
 
 namespace App\Lib;
 
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
 class SimplyPayGateway
 {
     public static function appId(): string
     {
-        return (string) (config('services.simplypay.app_id') ?: '');
+        return (string) config('services.simplypay.app_id');
     }
 
     public static function appSecret(): string
     {
-        return (string) (config('services.simplypay.app_secret') ?: '');
+        return (string) config('services.simplypay.app_secret');
     }
 
-    public static function apiUrl(): string
+    public static function baseUrl(): string
     {
-        return (string) (config('services.simplypay.api_url') ?: 'https://api.simplypay.vip/api/v2/payment/order/create');
+        return rtrim((string) config('services.simplypay.base_url'), '/');
     }
 
     /**
-     * Generate lowercase SHA256 sign.
-     * Excludes sign, and empty values.
+     * Create Signature based on SimplyPay rules
      */
-    public static function sign(array $params, string $appSecret): string
+    public static function createSign($params, $secret): string
     {
-        unset($params['sign']);
-        ksort($params);
+        $signStr = self::createSignStr($params, $secret);
+        return hash('sha256', $signStr);
+    }
 
-        $parts = [];
-        foreach ($params as $k => $v) {
-            if ($v === '' || $v === null) continue;
-            
-            if (is_array($v) || is_object($v)) {
-                if ($k === 'extra') {
-                    // For 'extra' field (request), serialize as sorted query string WITHOUT trailing &
-                    $sub = (array) $v;
-                    ksort($sub);
-                    $subParts = [];
-                    foreach ($sub as $sk => $sv) {
-                        $subParts[] = $sk . '=' . $sv;
-                    }
-                    $v = implode('&', $subParts);
-                } else {
-                    // For others (like 'params' in response), serialize as JSON with unescaped slashes
-                    $v = json_encode($v, JSON_UNESCAPED_SLASHES);
-                }
-            }
-            $parts[] = $k . '=' . $v;
+    /**
+     * Create the base string for signing
+     */
+    public static function createSignStr($params, $secret): string
+    {
+        $joined = self::joinMap($params);
+        $finalStr = $joined . '&key=' . $secret;
+        Log::info('SimplyPay Signature Base String', ['string' => $finalStr]);
+        return $finalStr;
+    }
+
+    /**
+     * Recursively join map for signing
+     */
+    private static function joinMap($map): string
+    {
+        if (!is_array($map)) {
+            return '';
         }
-        $parts[] = 'key=' . $appSecret;
-        $queryString = implode('&', $parts);
 
-        \Log::info('SimplyPay Signature Base String', ['string' => $queryString]);
+        // 1. Filter out sign and empty values
+        $clean = [];
+        foreach ($map as $k => $v) {
+            if ($k === 'sign') continue;
+            
+            // For 'extra', we process it even if it's an array
+            if ($k === 'extra' && is_array($v)) {
+                $clean[$k] = self::joinMap($v);
+                continue;
+            }
 
-        return strtolower(hash('sha256', $queryString));
+            // Skip empty values (null or empty string)
+            if ($v === null || $v === '') continue;
+            
+            $clean[$k] = $v;
+        }
+
+        // 2. Sort by key (Unicode/Alphabetical)
+        ksort($clean);
+
+        // 3. Concatenate key=value
+        $pairs = [];
+        foreach ($clean as $k => $v) {
+            $pairs[] = $k . '=' . $v;
+        }
+
+        return implode('&', $pairs);
     }
 
     /**
-     * Create a SimplyPay payment and return paymentLink + order numbers.
-     *
-     * @return array{pay_link:string, order_no:string, mch_order_no:string, raw:array}
+     * Create Payment Order (Pay-in)
      */
-    public static function createPayment(array $data): array
+    public static function createPayment($data)
     {
-        \Log::info('SimplyPay createPayment data', ['data' => $data]);
-        $appId = static::appId();
-        $appSecret = static::appSecret();
-        $requestUrl = static::apiUrl();
+        $url = self::baseUrl() . '/api/v2/payment/order/create';
+
+        $amount = (string) $data['amount'];
+        if (strpos($amount, '.') !== false) {
+            $amount = rtrim(rtrim($amount, '0'), '.');
+        }
 
         $params = [
-            'appId'      => $appId,
+            'appId' => self::appId(),
             'merOrderNo' => (string) $data['merOrderNo'],
-            'notifyUrl'  => (string) $data['notifyUrl'],
-            'returnUrl'  => (string) $data['returnUrl'],
-            'currency'   => (string) ($data['currency'] ?? 'INR'),
-            'amount'     => number_format((float)$data['amount'], 2, '.', ''),
-            'attach'     => (string) ($data['attach'] ?? 'Payment'),
-            'extra'      => [
-                'name'   => (string) ($data['name'] ?? ($data['extra']['name'] ?? 'User')),
-                'email'  => (string) ($data['email'] ?? ($data['extra']['email'] ?? 'user@example.com')),
-                'mobile' => (string) ($data['mobile'] ?? ($data['extra']['mobile'] ?? '0000000000')),
-            ],
+            'currency' => $data['currency'] ?? 'INR',
+            'amount' => $amount,
+            'notifyUrl' => $data['notifyUrl'],
+            'returnUrl' => $data['returnUrl'] ?? $data['notifyUrl'],
+            'attach' => $data['attach'] ?? 'Payment',
+            'extra' => [
+                'name' => $data['name'] ?? 'ADS User',
+                'email' => $data['email'] ?? 'user@example.com',
+                'mobile' => (string) ($data['mobile'] ?? '9999999999'),
+            ]
         ];
 
-        $params['sign'] = static::sign($params, $appSecret);
+        $params['sign'] = self::createSign($params, self::appSecret());
 
-        \Log::info('SimplyPay Request', ['url' => $requestUrl, 'params' => $params]);
+        Log::info('SimplyPay Create Payment Request', ['url' => $url, 'params' => $params]);
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_URL, $requestUrl);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params, JSON_UNESCAPED_SLASHES));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Accept: application/json',
-        ]);
-        
-        $response = curl_exec($ch);
-        $error = curl_error($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json;charset=utf-8'
+        ])->post($url, $params);
 
-        if ($error) {
-            \Log::error('SimplyPay CURL Error', ['error' => $error]);
-            throw new \RuntimeException('Gateway connection error');
+        if ($response->failed()) {
+            Log::error('SimplyPay Payment Request Failed', ['status' => $response->status(), 'body' => $response->body()]);
+            throw new \Exception('SimplyPay connection failed');
         }
 
-        \Log::info('SimplyPay Response', ['code' => $httpCode, 'response' => $response]);
+        $resData = $response->json();
+        Log::info('SimplyPay Payment Response', $resData);
 
-        $resData = json_decode((string) $response, true);
-        if (!is_array($resData)) {
-            throw new \RuntimeException('Invalid SimplyPay response: ' . substr((string) $response, 0, 300));
-        }
-
-        if (($resData['code'] ?? null) !== 0) {
-            $msg = (string) ($resData['msg'] ?? 'Payment API failed');
-            \Log::error('SimplyPay API Error: ' . json_encode($resData));
-            throw new \RuntimeException('SimplyPay error: ' . $msg);
-        }
-
-        $paymentData = $resData['data'] ?? [];
-        $paramsData  = $paymentData['params'] ?? [];
-        $paymentUrl  = (string) ($paramsData['url'] ?? ($paramsData['paymentLink'] ?? ''));
-        $orderNo     = (string) ($paymentData['orderNo'] ?? '');
-        $mchNo       = (string) ($paymentData['merOrderNo'] ?? ($data['merOrderNo'] ?? ''));
-
-        if ($paymentUrl === '') {
-            throw new \RuntimeException('SimplyPay response missing payment URL');
+        if (($resData['code'] ?? -1) !== 0) {
+            throw new \Exception('SimplyPay error: ' . ($resData['msg'] ?? 'Unknown error'));
         }
 
         return [
-            'pay_link' => $paymentUrl,
-            'order_no' => $orderNo,
-            'mch_order_no' => $mchNo,
-            'raw' => $resData,
+            'pay_link' => $resData['data']['params']['paymentLink'] ?? null,
+            'order_no' => $resData['data']['orderNo'] ?? null,
+            'mer_order_no' => $resData['data']['merOrderNo'] ?? null,
         ];
     }
 
+
+
     /**
-     * Verify callback signature.
+     * Query Payment Order Status
      */
-    public static function verifyCallback(array $payload): bool
+    public static function queryPayment($merOrderNo)
     {
-        $appSecret = static::appSecret();
+        $url = self::baseUrl() . '/api/v2/payment/order/query';
 
-        $received = (string) ($payload['sign'] ?? '');
-        if ($received === '') return false;
+        $params = [
+            'appId' => self::appId(),
+            'merOrderNo' => (string) $merOrderNo,
+        ];
 
-        $expected = static::sign($payload, $appSecret);
-        return hash_equals($expected, strtolower($received));
+        $params['sign'] = self::createSign($params, self::appSecret());
+
+        $response = Http::get($url, $params);
+        return $response->json();
+    }
+
+
+
+
+
+    /**
+     * Verify Webhook Signature
+     */
+    public static function verifySign($data): bool
+    {
+        if (!isset($data['sign'])) return false;
+        
+        $receivedSign = $data['sign'];
+        $calculatedSign = self::createSign($data, self::appSecret());
+
+        return hash_equals($receivedSign, $calculatedSign);
     }
 }

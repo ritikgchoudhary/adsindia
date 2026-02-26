@@ -20,7 +20,10 @@
               <div class="ma-stat-card__icon"><i class="fas fa-clock"></i></div>
               <div class="ma-stat-card__content">
                 <span class="ma-stat-card__lbl">Pending/Processing</span>
-                <span class="ma-stat-card__val">₹{{ formatAmount(summary.processing || 0) }}</span>
+                <span class="ma-stat-card__val">
+                  ₹{{ formatAmount(summary.processing || 0) }}
+                  <span class="ma-stat-card__count" v-if="summary.processing_count">({{ summary.processing_count }})</span>
+                </span>
               </div>
               <div class="ma-stat-card__glow"></div>
             </div>
@@ -30,7 +33,10 @@
               <div class="ma-stat-card__icon"><i class="fas fa-check-double"></i></div>
               <div class="ma-stat-card__content">
                 <span class="ma-stat-card__lbl">Approved Total</span>
-                <span class="ma-stat-card__val">₹{{ formatAmount(summary.success || 0) }}</span>
+                <span class="ma-stat-card__val">
+                  ₹{{ formatAmount(summary.success || 0) }}
+                  <span class="ma-stat-card__count" v-if="summary.success_count">({{ summary.success_count }})</span>
+                </span>
               </div>
               <div class="ma-stat-card__glow"></div>
             </div>
@@ -40,7 +46,10 @@
               <div class="ma-stat-card__icon"><i class="fas fa-times-circle"></i></div>
               <div class="ma-stat-card__content">
                 <span class="ma-stat-card__lbl">Rejected/Refunded</span>
-                <span class="ma-stat-card__val">₹{{ formatAmount(summary.rejected || 0) }}</span>
+                <span class="ma-stat-card__val">
+                  ₹{{ formatAmount(summary.rejected || 0) }}
+                  <span class="ma-stat-card__count" v-if="summary.rejected_count">({{ summary.rejected_count }})</span>
+                </span>
               </div>
               <div class="ma-stat-card__glow"></div>
             </div>
@@ -153,10 +162,11 @@
                     <i class="fas fa-receipt"></i>
                   </button>
                   <template v-if="isPending(w)">
-                    <button class="btn-action btn-approve" @click="approve(w)">
+
+                    <button class="btn-action btn-approve" @click="approve(w)" title="Manual Approve">
                       <i class="fas fa-check"></i>
                     </button>
-                    <button class="btn-action btn-reject" @click="reject(w)">
+                    <button class="btn-action btn-reject" @click="reject(w)" title="Reject & Refund">
                       <i class="fas fa-times"></i>
                     </button>
                   </template>
@@ -256,7 +266,8 @@
                       <i class="fas fa-receipt"></i>
                     </button>
                     <template v-if="isPending(w)">
-                      <button class="btn-action btn-approve" @click="approve(w)" title="Approve Payout">
+
+                      <button class="btn-action btn-approve" @click="approve(w)" title="Manual Approve">
                         <i class="fas fa-check"></i>
                       </button>
                       <button class="btn-action btn-reject" @click="reject(w)" title="Reject & Refund">
@@ -334,12 +345,12 @@
                 <div class="ma-modal-card ma-modal-card--bank flex-grow-1">
                   <div class="ma-modal-card__label"><i class="fas fa-university me-2"></i>BANK / UPI DETAILS</div>
                   <div class="ma-detail-table mt-2">
-                    <template v-if="getWithdrawInfo(selectedWithdrawal.withdraw_information, 'payout_type') === 'upi'">
+                    <template v-if="getWithdrawalDetail(selectedWithdrawal, 'payout_type') === 'upi' || (!getWithdrawalDetail(selectedWithdrawal, 'account_number') && getWithdrawalDetail(selectedWithdrawal, 'upi_id'))">
                       <!-- Account Holder Name - UPI -->
                       <div class="ma-detail-row ma-detail-row--highlight">
                         <span class="ma-detail-key"><i class="fas fa-user"></i> Account Holder</span>
                         <span class="ma-detail-val fw-bold" style="color:#fbbf24">
-                          {{ getWithdrawInfo(selectedWithdrawal.withdraw_information, 'account_holder_name') || '—' }}
+                          {{ getWithdrawalDetail(selectedWithdrawal, 'account_holder_name') || '—' }}
                         </span>
                       </div>
                       <div class="ma-detail-row">
@@ -348,7 +359,7 @@
                       </div>
                       <div class="ma-detail-row">
                         <span class="ma-detail-key"><i class="fas fa-at"></i> UPI ID</span>
-                        <span class="ma-detail-val ma-detail-val--mono">{{ getWithdrawInfo(selectedWithdrawal.withdraw_information, 'upi_id') || '—' }}</span>
+                        <span class="ma-detail-val ma-detail-val--mono">{{ getWithdrawalDetail(selectedWithdrawal, 'upi_id') || '—' }}</span>
                       </div>
                     </template>
                     <template v-else>
@@ -356,7 +367,7 @@
                       <div class="ma-detail-row ma-detail-row--highlight">
                         <span class="ma-detail-key"><i class="fas fa-user"></i> Account Holder</span>
                         <span class="ma-detail-val fw-bold" style="color:#fbbf24">
-                          {{ getWithdrawInfo(selectedWithdrawal.withdraw_information, 'account_holder_name') || '—' }}
+                          {{ getWithdrawalDetail(selectedWithdrawal, 'account_holder_name') || '—' }}
                         </span>
                       </div>
                       <div class="ma-detail-row">
@@ -365,23 +376,23 @@
                       </div>
                       <div class="ma-detail-row">
                         <span class="ma-detail-key"><i class="fas fa-building"></i> Bank Name</span>
-                        <span class="ma-detail-val fw-bold">{{ getWithdrawInfo(selectedWithdrawal.withdraw_information, 'bank_name') || '—' }}</span>
+                        <span class="ma-detail-val fw-bold">{{ getWithdrawalDetail(selectedWithdrawal, 'bank_name') || '—' }}</span>
                       </div>
                       <div class="ma-detail-row">
                         <span class="ma-detail-key"><i class="fas fa-hashtag"></i> Account No.</span>
-                        <span class="ma-detail-val ma-detail-val--mono">{{ getWithdrawInfo(selectedWithdrawal.withdraw_information, 'account_number') || '—' }}</span>
+                        <span class="ma-detail-val ma-detail-val--mono">{{ getWithdrawalDetail(selectedWithdrawal, 'account_number') || '—' }}</span>
                       </div>
                       <div class="ma-detail-row">
                         <span class="ma-detail-key"><i class="fas fa-code"></i> IFSC Code</span>
-                        <span class="ma-detail-val ma-detail-val--mono">{{ getWithdrawInfo(selectedWithdrawal.withdraw_information, 'ifsc_code') || '—' }}</span>
+                        <span class="ma-detail-val ma-detail-val--mono">{{ getWithdrawalDetail(selectedWithdrawal, 'ifsc_code') || '—' }}</span>
                       </div>
-                      <div class="ma-detail-row" v-if="getWithdrawInfo(selectedWithdrawal.withdraw_information, 'bank_registered_no')">
+                      <div class="ma-detail-row" v-if="getWithdrawalDetail(selectedWithdrawal, 'bank_registered_no')">
                         <span class="ma-detail-key"><i class="fas fa-phone"></i> Reg. Mobile</span>
-                        <span class="ma-detail-val ma-detail-val--mono">{{ getWithdrawInfo(selectedWithdrawal.withdraw_information, 'bank_registered_no') }}</span>
+                        <span class="ma-detail-val ma-detail-val--mono">{{ getWithdrawalDetail(selectedWithdrawal, 'bank_registered_no') }}</span>
                       </div>
-                      <div class="ma-detail-row" v-if="getWithdrawInfo(selectedWithdrawal.withdraw_information, 'upi_id')">
+                      <div class="ma-detail-row" v-if="getWithdrawalDetail(selectedWithdrawal, 'upi_id')">
                         <span class="ma-detail-key"><i class="fas fa-at"></i> UPI ID</span>
-                        <span class="ma-detail-val">{{ getWithdrawInfo(selectedWithdrawal.withdraw_information, 'upi_id') }}</span>
+                        <span class="ma-detail-val">{{ getWithdrawalDetail(selectedWithdrawal, 'upi_id') }}</span>
                       </div>
                     </template>
                   </div>
@@ -461,7 +472,9 @@
               <div class="d-flex gap-2">
                 <button class="ma-modal-btn ma-modal-btn--secondary" @click="selectedWithdrawal = null">Close</button>
                 <template v-if="isPending(selectedWithdrawal)">
-                  <button class="ma-modal-btn ma-modal-btn--success" @click="approve(selectedWithdrawal); selectedWithdrawal = null">Approve Payout</button>
+                  <button class="ma-modal-btn ma-modal-btn--primary" style="background:#4f46e5;color:white;border:none" @click="approveAndPay(selectedWithdrawal, 'simplypay'); selectedWithdrawal = null">Pay (SimplyPay)</button>
+                  <button class="ma-modal-btn ma-modal-btn--primary" style="background:#9333ea;color:white;border:none" @click="approveAndPay(selectedWithdrawal, 'watchpay'); selectedWithdrawal = null">Pay (WatchPay)</button>
+                  <button class="ma-modal-btn ma-modal-btn--success" @click="approve(selectedWithdrawal); selectedWithdrawal = null">Manual</button>
                   <button class="ma-modal-btn ma-modal-btn--danger" @click="reject(selectedWithdrawal); selectedWithdrawal = null">Reject</button>
                 </template>
               </div>
@@ -600,7 +613,7 @@ export default {
 
     const approve = async (w) => {
       if (!isPending(w)) return
-      if (!confirm(`Finalize payout for #${w.id}? Funds will be marked as paid.`)) return
+      if (!confirm(`Finalize payout MANUALLY for #${w.id}? (Funds will be marked as paid, but you must transfer them yourself.)`)) return
       try {
         const res = await api.post('/admin/withdraw/approve', { id: w.id })
         if (res.data?.status === 'success') {
@@ -611,6 +624,8 @@ export default {
         if (window.notify) window.notify('error', e.response?.data?.message || 'Approval Failed');
       }
     }
+
+
 
     const reject = async (w) => {
       if (!isPending(w)) return
@@ -628,9 +643,20 @@ export default {
     }
 
     const getWithdrawInfo = (info, key) => {
-      if (!Array.isArray(info)) return null
+      if (!info || !Array.isArray(info)) return null
       const found = info.find(i => i.name === key)
       return found ? found.value : null
+    }
+
+    const getWithdrawalDetail = (w, key) => {
+      // 1. Check withdraw_information (Dynamic form data)
+      let val = getWithdrawInfo(w.withdraw_information, key);
+      if (val) return val;
+
+      // 2. Fallback to User object fields
+      if (w.user && w.user[key]) return w.user[key];
+
+      return null;
     }
 
     onMounted(() => fetchWithdrawals(1))
@@ -640,7 +666,7 @@ export default {
       loading, total, currentPage, lastPage, paginationPages,
       formatAmount, formatDateTime, getInitials, isPending, statusInfo, walletIcon,
       fetchWithdrawals, debounceSearch, copyTrx, viewDetails, approve, reject,
-      selectedWithdrawal, getWithdrawInfo
+      selectedWithdrawal, getWithdrawInfo, getWithdrawalDetail
     }
   }
 }
@@ -689,6 +715,7 @@ export default {
 .ma-stat-card__content { z-index: 1; }
 .ma-stat-card__lbl { display: block; font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
 .ma-stat-card__val { display: block; font-size: 1.5rem; font-weight: 900; color: #f1f5f9; margin-top: 4px; }
+.ma-stat-card__count { font-size: 0.8rem; color: #94a3b8; font-weight: 600; vertical-align: middle; margin-left: 6px; opacity: 0.7; }
 
 /* Filter Bar Visuals */
 .ma-filter-bar {
@@ -819,6 +846,7 @@ export default {
 .btn-action:hover { transform: translateY(-3px); color: #fff; }
 .btn-view:hover { background: #6366f1; border-color: #818cf8; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
 .btn-approve:hover { background: #10b981; border-color: #34d399; box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+.btn-pay:hover { background: #6366f1; border-color: #818cf8; box-shadow: 0 4px 12px rgba(99,102,241,0.3); color: #fff; }
 .btn-reject:hover { background: #ef4444; border-color: #f87171; box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
 
 /* Premium Pagination */

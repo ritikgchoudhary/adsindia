@@ -348,9 +348,9 @@ class UserController extends Controller
             $kycFee = 990;
         }
 
-        $gateway = $request->input('gateway', 'watchpay');
-        if (!in_array($gateway, ['watchpay', 'simplypay', 'rupeerush', 'custom_qr'])) {
-            $gateway = 'watchpay';
+        $gateway = $request->input('gateway', 'simplypay');
+        if (!in_array($gateway, ['watchpay', 'simplypay', 'custom_qr'])) {
+            $gateway = 'simplypay';
         }
 
         // Check if payment already made (gateway-only proof; NOT wallet balance payment)
@@ -394,7 +394,6 @@ class UserController extends Controller
 
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
-        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
         if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $cacheKey = $cachePrefix . $trx;
@@ -408,7 +407,6 @@ class UserController extends Controller
 
         $gw_param = 'watchpay_trx=';
         if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
-        if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
         if ($gateway === 'custom_qr') $gw_param = 'custom_qr_trx=';
         
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
@@ -416,30 +414,7 @@ class UserController extends Controller
         $notifyUrl = $base . '/ipn/' . $gateway;
 
         try {
-            if ($gateway === 'simplypay') {
-                $sp = \App\Lib\SimplyPayGateway::createPayment([
-                    'merOrderNo' => $trx,
-                    'amount' => $kycFee,
-                    'notifyUrl' => $notifyUrl,
-                    'returnUrl' => $pageUrl,
-                    'name' => $user->fullname ?: $user->username,
-                    'email' => $user->email,
-                    'mobile' => $user->mobile,
-                    'attach' => 'KYC Verification Fee',
-                ]);
-                $paymentUrl = $sp['pay_link'];
-            } elseif ($gateway === 'rupeerush') {
-                $ap = \App\Lib\RupeeRushGateway::createPayment([
-                    'outTradeNo' => $trx,
-                    'totalAmount' => $kycFee,
-                    'notifyUrl' => $notifyUrl,
-                    'payViewUrl' => $pageUrl,
-                    'payName' => $user->fullname ?: $user->username,
-                    'email' => $user->email,
-                    'payPhone' => $user->mobile,
-                ]);
-                $paymentUrl = $ap['pay_link'];
-            } elseif ($gateway === 'custom_qr') {
+            if ($gateway === 'custom_qr') {
                 $qrImages = $gate->extra ?? [];
                 $fullQrImages = array_map(function($img) {
                     return asset(getFilePath('gateway') . '/' . $img);
@@ -452,6 +427,18 @@ class UserController extends Controller
                     'trx' => $trx,
                     'amount' => (float) $kycFee,
                 ]);
+            } elseif ($gateway === 'simplypay') {
+                $sp = \App\Lib\SimplyPayGateway::createPayment([
+                    'merOrderNo' => $trx,
+                    'amount' => $kycFee,
+                    'notifyUrl' => $notifyUrl,
+                    'returnUrl' => $pageUrl,
+                    'name' => $user->fullname ?: $user->username,
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'attach' => 'KYC Verification Fee',
+                ]);
+                $paymentUrl = $sp['pay_link'];
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -477,7 +464,7 @@ class UserController extends Controller
             'trx' => $trx,
             'amount' => $kycFee,
             'currency_symbol' => $general->cur_sym ?? '₹',
-            'gateway_name' => ($gateway === 'simplypay' ? 'SimplyPay' : ($gateway === 'rupeerush' ? 'RupeeRush' : 'WatchPay')),
+            'gateway_name' => ($gateway === 'custom_qr' ? 'Manual QR' : ($gateway === 'simplypay' ? 'SimplyPay' : 'WatchPay')),
         ]);
     }
 
@@ -485,7 +472,7 @@ class UserController extends Controller
     {
         $request->validate([
             'trx' => 'required|string',
-            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush',
+            'gateway' => 'nullable|string|in:watchpay,simplypay',
         ]);
 
         $user = auth()->user();
@@ -496,13 +483,12 @@ class UserController extends Controller
         }
 
         $trx = (string) $request->trx;
-        $gateway = $request->input('gateway', 'watchpay');
-        if (!in_array($gateway, ['simplypay', 'watchpay', 'rupeerush', 'custom_qr'])) {
-            $gateway = 'watchpay';
+        $gateway = $request->input('gateway', 'simplypay');
+        if (!in_array($gateway, ['watchpay', 'simplypay', 'custom_qr'])) {
+            $gateway = 'simplypay';
         }
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
-        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
         if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $cacheKey = $cachePrefix . $trx;

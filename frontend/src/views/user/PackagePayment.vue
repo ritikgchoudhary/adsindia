@@ -281,4 +281,27 @@ export default {
 .progress {
   background-color: #e2e8f0;
 }
+@media (max-width: 640px) {
+  .card-body.p-5 { padding: 1.5rem !important; }
+  h4.mb-3 { font-size: 1.25rem !important; }
+  p.text-muted { font-size: 0.85rem !important; }
+  
+  /* Gateway Cards */
+  .tw-p-4 { padding: 0.85rem !important; border-radius: 1rem !important; }
+  .tw-w-12.tw-h-12 { width: 2.5rem !important; height: 2.5rem !important; margin-right: 0.75rem !important; border-radius: 0.65rem !important; }
+  .tw-w-12.tw-h-12 i { font-size: 1.15rem !important; }
+  .tw-font-bold.tw-text-slate-900 { font-size: 0.95rem !important; }
+  .tw-text-xs.tw-text-slate-500 { font-size: 10px !important; }
+  
+  /* Buttons */
+  .btn-lg { padding: 0.75rem 1rem !important; font-size: 0.95rem !important; border-radius: 0.85rem !important; }
+  .px-5 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+  
+  /* Alert box */
+  .alert { padding: 0.85rem !important; border-radius: 0.85rem !important; }
+  .alert p { font-size: 0.8rem !important; }
+  
+  /* Success circle */
+  .fa-5x { font-size: 3.5rem !important; }
+}
 </style>

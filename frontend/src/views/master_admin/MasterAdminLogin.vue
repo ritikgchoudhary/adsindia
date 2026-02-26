@@ -61,6 +61,10 @@ export default {
           const token = payload.token ?? payload.admin?.token ?? data.token
           if (token) {
             localStorage.setItem('admin_token', token)
+            // Save admin info (permissions, is_super_admin)
+            if (payload.admin) {
+              localStorage.setItem('admin_user', JSON.stringify(payload.admin))
+            }
             if (window.notify) window.notify('success', 'Login successful')
             router.push('/master_admin/dashboard')
           } else {

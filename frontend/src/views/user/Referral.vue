@@ -3,25 +3,25 @@
     <!-- Partner Program Restriction Modal -->
     <div v-if="showPartnerModal" class="tw-fixed tw-inset-0 tw-z-[100] tw-flex tw-items-center tw-justify-center tw-px-4">
       <div class="tw-absolute tw-inset-0 tw-bg-slate-950/80 tw-backdrop-blur-md" @click="showPartnerModal = false"></div>
-      <div class="tw-bg-[#151921] tw-rounded-[34px] tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden tw-border tw-border-white/10 tw-animate-fade-in-up">
-        <div class="tw-p-10 tw-text-center">
-          <div class="tw-w-20 tw-h-20 tw-bg-indigo-500/10 tw-rounded-3xl tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-8 tw-border tw-border-indigo-500/20">
-            <i class="fas fa-crown tw-text-4xl tw-text-indigo-400"></i>
+      <div class="tw-bg-[#151921] tw-rounded-2xl sm:tw-rounded-[34px] tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden tw-border tw-border-white/10 tw-animate-fade-in-up">
+        <div class="tw-p-6 sm:tw-p-10 tw-text-center">
+          <div class="tw-w-14 tw-h-14 sm:tw-w-20 sm:tw-h-20 tw-bg-indigo-500/10 tw-rounded-xl sm:tw-rounded-3xl tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4 sm:tw-mb-8 tw-border tw-border-indigo-500/20">
+            <i class="fas fa-crown tw-text-2xl sm:tw-text-4xl tw-text-indigo-400"></i>
           </div>
-          <h3 class="tw-text-2xl tw-font-black tw-text-white tw-mb-4">Join Partner Program</h3>
-          <p class="tw-text-slate-400 tw-leading-relaxed tw-mb-8 tw-text-sm">
+          <h3 class="tw-text-lg sm:tw-text-2xl tw-font-black tw-text-white tw-mb-2 sm:tw-mb-4">Join Partner Program</h3>
+          <p class="tw-text-slate-400 tw-leading-relaxed tw-mb-6 sm:tw-mb-8 tw-text-xs sm:tw-text-sm">
             You need to join our <b>Partner Program</b> to access the Referral & Team Building tools. Unlock your earning potential today!
           </p>
-          <div class="tw-flex tw-flex-col tw-gap-4">
+          <div class="tw-flex tw-flex-col tw-gap-3 sm:tw-gap-4">
             <router-link
               to="/user/partner-program"
-              class="tw-w-full tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-black tw-rounded-2xl tw-transition-all tw-no-underline tw-flex tw-items-center tw-justify-center tw-gap-2 tw-shadow-lg tw-shadow-indigo-500/20"
+              class="tw-w-full tw-py-3 sm:tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-black tw-rounded-xl sm:tw-rounded-2xl tw-transition-all tw-no-underline tw-flex tw-items-center tw-justify-center tw-gap-2 tw-shadow-lg tw-shadow-indigo-500/20 tw-text-sm sm:tw-text-base"
             >
               <i class="fas fa-rocket"></i> View Partner Plans
             </router-link>
             <button
               @click="showPartnerModal = false"
-              class="tw-w-full tw-py-4 tw-bg-white/5 hover:tw-bg-white/10 tw-text-slate-300 tw-font-bold tw-rounded-2xl tw-transition-all tw-border-0 tw-cursor-pointer"
+              class="tw-w-full tw-py-3 sm:tw-py-4 tw-bg-white/5 hover:tw-bg-white/10 tw-text-slate-400 tw-font-bold tw-rounded-xl sm:tw-rounded-2xl tw-transition-all tw-border-0 tw-cursor-pointer tw-text-xs sm:tw-text-sm"
             >
               Maybe Later
             </button>

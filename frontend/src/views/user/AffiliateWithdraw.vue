@@ -1,7 +1,7 @@
 <template>
   <DashboardLayout page-title="Affiliate Withdraw" :dark-theme="true">
     <div class="tw-min-h-screen tw-py-4 sm:tw-py-8 tw-px-3 sm:tw-px-4">
-      <div class="tw-max-w-5xl tw-mx-auto">
+      <div class="tw-w-full">
         <!-- Header Section -->
         <div class="tw-mb-4 sm:tw-mb-8 tw-flex tw-flex-col md:tw-flex-row md:tw-items-center tw-justify-between tw-gap-3 sm:tw-gap-4">
           <div>
@@ -147,9 +147,9 @@
                 </div>
                 
                 <div class="tw-pt-2 tw-mt-4 tw-p-4 tw-bg-indigo-500/10 tw-rounded-2xl tw-border tw-border-indigo-500/20">
-                  <div class="tw-flex tw-justify-between tw-items-center">
-                    <span class="tw-text-indigo-200 tw-text-xs tw-font-bold tw-uppercase">Net Payout</span>
-                    <span class="tw-text-white tw-text-2xl tw-font-black">{{ currencySymbol }}{{ finalAmount }}</span>
+                  <div class="tw-flex tw-justify-between tw-items-center tw-w-full" style="display: flex !important; justify-content: space-between !important; width: 100% !important; gap: 12px !important;">
+                    <span class="tw-text-indigo-200 tw-text-[10px] tw-font-bold tw-uppercase tw-flex-1" style="text-align: left !important;">Net Payout</span>
+                    <span class="tw-text-white tw-text-xl sm:tw-text-2xl tw-font-black tw-whitespace-nowrap tw-flex-initial" style="text-align: right !important;">{{ currencySymbol }}{{ finalAmount }}</span>
                   </div>
                 </div>
               </div>
@@ -289,9 +289,9 @@
                 <span class="tw-text-rose-400 tw-font-black">{{ currencySymbol }}{{ processingFee }}</span>
               </div>
               <div class="tw-bg-emerald-500/10 tw-p-4 tw-rounded-2xl tw-mt-4 tw-border tw-border-emerald-500/20">
-                <div class="tw-flex tw-justify-between tw-items-center">
-                  <span class="tw-text-emerald-300 tw-text-xs tw-font-black tw-uppercase tw-tracking-widest">Net Payout</span>
-                  <span class="tw-text-emerald-400 tw-text-xl tw-font-black">{{ currencySymbol }}{{ finalAmount }}</span>
+                <div class="tw-flex tw-justify-between tw-items-center tw-w-full" style="display: flex !important; justify-content: space-between !important; width: 100% !important; gap: 12px !important;">
+                  <span class="tw-text-emerald-300 tw-text-[8px] tw-font-black tw-uppercase tw-tracking-widest tw-flex-1" style="text-align: left !important;">Net Payout</span>
+                  <span class="tw-text-emerald-400 tw-text-lg tw-font-black tw-whitespace-nowrap tw-flex-initial" style="text-align: right !important;">{{ currencySymbol }}{{ finalAmount }}</span>
                 </div>
               </div>
             </div>
@@ -568,10 +568,91 @@ export default {
   
   /* Back button */
   .tw-px-4.tw-py-2.tw-bg-white\/5 { padding: 0.5rem 0.75rem !important; border-radius: 0.85rem !important; }
+
+  /* Modals - Ultra-Sleek & Compact Mobile */
+  .tw-rounded-\[2\.5rem\] { border-radius: 0.5rem !important; }
+  .tw-w-full.tw-max-w-md { width: 95% !important; max-width: 290px !important; margin: auto !important; display: block !important; }
+  
+  /* Top Section - Slim & Simple (Targeting Confirm Modal specifically where possible) */
+  .tw-bg-gradient-to-br.tw-from-indigo-500.tw-p-10 { 
+    background: #1e293b !important; 
+    padding: 0.5rem !important; 
+    border-bottom: 2px solid rgba(16, 185, 129, 0.2);
+    text-align: center !important;
+  }
+  
+  /* Limit Error Modal - Keep its character but compact */
+  .tw-from-amber-400.tw-p-10 {
+    padding: 1rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .tw-from-amber-400 .tw-w-20.tw-h-20 { 
+    display: flex !important; 
+    width: 2.5rem !important; 
+    height: 2.5rem !important; 
+    margin-bottom: 0.5rem !important; 
+    border-radius: 0.75rem !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .tw-from-amber-400 .tw-text-4xl { font-size: 1.25rem !important; }
+  .tw-from-amber-400 h3 { text-align: center !important; width: 100% !important; margin: 0 auto !important; }
+  
+  .tw-w-20.tw-h-20:not(.tw-from-amber-400 *) { display: none !important; }
+  
+  h3.tw-text-2xl { font-size: 0.85rem !important; margin: 0 !important; color: #fff !important; width: 100% !important; font-weight: 900 !important; text-align: center !important; }
+  p.tw-text-sm.tw-opacity-80, .tw-p-10 p.tw-text-indigo-100 { display: none !important; } 
+  
+  /* Message Text Sizing & Centering */
+  .tw-p-8.tw-text-center p.tw-text-base { font-size: 0.75rem !important; line-height: 1.4 !important; text-align: center !important; }
+  .tw-p-10 { padding: 0.75rem !important; }
+  .tw-p-8 { padding: 0.75rem !important; }
+  .tw-mx-auto.tw-mb-6 { margin-left: auto !important; margin-right: auto !important; margin-bottom: 0.5rem !important; }
+  .tw-text-center { text-align: center !important; }  
+  /* Body Section Alignment */
+  .tw-p-10:not(.tw-bg-gradient-to-br) { padding: 0.5rem 0.65rem !important; }
+  .tw-p-6.tw-mb-8 { margin-bottom: 0.25rem !important; padding: 0.45rem !important; border-radius: 0.4rem !important; background: rgba(15,23,42,0.6) !important; }
+  
+  /* Target only the actual rows to separate labels and values */
+  .tw-space-y-4 > div.tw-flex { 
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    margin-top: 0.25rem !important;
+    align-items: center !important;
+  }
+  
+  /* Summary/Net Payout Box Internal Fix - NO JOINING */
+  .tw-bg-indigo-500\/10 .tw-flex.tw-justify-between,
+  .tw-bg-emerald-500\/10 .tw-flex.tw-justify-between {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+  
+  .tw-text-xs.tw-font-bold.tw-uppercase { font-size: 6.5px !important; opacity: 0.6; flex: 1 !important; text-align: left !important; }
+  .tw-font-black { font-size: 10px !important; text-align: right !important; white-space: nowrap !important; }
+  .tw-text-xl.tw-font-black { font-size: 0.95rem !important; text-align: right !important; color: #10b981 !important; white-space: nowrap !important; }
+
+  /* Summary Box */
+  .tw-bg-emerald-500\/10.tw-p-4 { padding: 0.4rem !important; margin-top: 0.35rem !important; border-radius: 0.4rem !important; }
+  .tw-flex.tw-flex-col.tw-gap-4 { gap: 0.35rem !important; }
+  
+  /* Buttons Centering */
+  .tw-py-4 { padding: 0.5rem !important; border-radius: 0.5rem !important; font-size: 0.8rem !important; width: 100% !important; height: auto !important; }
+  .tw-mt-8 { margin-top: 0.4rem !important; }
+  .tw-mb-8 { margin-bottom: 0.2rem !important; }
+  
+  /* Backdrops */
+  .tw-absolute.tw-inset-0.tw-bg-black\/80 { background: rgba(0,0,0,0.85) !important; backdrop-filter: blur(2px) !important; }
 }
 
 @media (max-width: 400px) {
-  .tw-grid.tw-grid-cols-1.md\:tw-grid-cols-2 { gap: 0.5rem !important; }
+  .tw-grid.tw-grid-cols-1.md\:tw-grid-cols-2 { gap: 0.15rem !important; }
   .tw-text-2xl.sm\:tw-text-5xl { font-size: 1.4rem !important; }
 }
 </style>

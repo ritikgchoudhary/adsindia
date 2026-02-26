@@ -324,8 +324,7 @@ export default {
 
 <style scoped>
 .income-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
   padding-bottom: 3rem;
 }
 

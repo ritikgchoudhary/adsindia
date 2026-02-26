@@ -35,8 +35,14 @@ export default {
     onMounted(async () => {
       try {
         const res = await api.get('/admin/user')
-        if (res.data?.status === 'success')
-          adminName.value = res.data.data?.name || res.data.data?.username || 'Master Admin'
+        if (res.data?.status === 'success') {
+          const data = res.data.data
+          adminName.value = data?.name || data?.username || 'Master Admin'
+          // Sync local storage to handle permission updates without logout
+          if (data) {
+            localStorage.setItem('admin_user', JSON.stringify(data))
+          }
+        }
       } catch (e) {}
     })
     return { adminName }

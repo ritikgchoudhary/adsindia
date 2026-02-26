@@ -64,7 +64,7 @@
                   <i class="fas fa-check tw-text-[10px] sm:tw-text-xs"></i>
                 </div>
                 <span class="tw-text-slate-600 tw-text-xs sm:tw-text-sm">
-                  Valid: <strong class="tw-text-slate-800">{{ plan.validity_days }} days</strong>
+                  Valid: <strong class="tw-text-slate-800">{{ plan.validity_days }} days ({{ formatValidity(plan.validity_days) }})</strong>
                 </span>
               </li>
               <li class="tw-flex tw-items-start tw-gap-2 sm:tw-gap-3">
@@ -80,7 +80,7 @@
                   <i class="fas fa-check tw-text-[10px] sm:tw-text-xs"></i>
                 </div>
                 <span class="tw-text-slate-600 tw-text-xs sm:tw-text-sm">
-                  Earn: <strong class="tw-text-slate-800">{{ currencySymbol }}{{ formatAmount(Math.round(plan.daily_earning_max ?? 0)) }}</strong> / day
+                  Instant reward after each ad
                 </span>
               </li>
               <li class="tw-flex tw-items-start tw-gap-2 sm:tw-gap-3">
@@ -258,9 +258,10 @@ export default {
 
     const formatValidity = (days) => {
       const d = Number(days) || 0
-      if (d <= 7) return '1 week'
-      if (d <= 15) return '15 days'
       if (d <= 30) return '1 month'
+      if (d <= 60) return '2 months'
+      if (d <= 180) return '6 months'
+      if (d <= 365) return '12 months'
       const months = Math.round(d / 30)
       return `${months} month${months > 1 ? 's' : ''}`
     }

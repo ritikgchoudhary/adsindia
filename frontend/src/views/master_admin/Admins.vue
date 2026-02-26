@@ -91,6 +91,14 @@
                 <td>
                   <div class="ma-command-actions justify-content-end">
                     <button 
+                      class="cmd-btn cmd-btn--edit" 
+                      @click="openEditAdmin(admin)" 
+                      title="Adjust Clearances"
+                      v-if="!admin.is_super_admin"
+                    >
+                      <i class="fas fa-user-shield"></i>
+                    </button>
+                    <button 
                       class="cmd-btn" 
                       :class="admin.status ? 'cmd-btn--restrict' : 'cmd-btn--activate'"
                       @click="toggleAdmin(admin)"
@@ -105,6 +113,7 @@
                       class="cmd-btn cmd-btn--danger" 
                       @click="confirmDelete(admin)" 
                       title="Decommission Account"
+                      v-if="!admin.is_super_admin"
                     >
                       <i class="fas fa-trash-alt"></i>
                     </button>
@@ -191,7 +200,78 @@
                 <div v-if="pwdError" class="ma-error-glow mb-3">{{ pwdError }}</div>
                 <button class="ma-btn-premium btn--warning w-100" :disabled="resettingPwd" @click="doResetPwd">
                    {{ resettingPwd ? 'Updating Cryptography...' : 'Apply Security Override' }}
-                </button>
+                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- Edit Admin & Permissions -->
+      <Transition name="ma-slide-up">
+        <div v-if="showEdit" class="ma-overlay-glass" @click.self="showEdit = false">
+          <div class="ma-premium-sheet">
+            <div class="sheet-header">
+              <div class="header-deco deco--primary"></div>
+              <h3 class="sheet-title"><i class="fas fa-user-shield me-3"></i>Clearance Settings</h3>
+              <button class="sheet-close" @click="showEdit = false"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="sheet-body">
+              <div class="ma-premium-form">
+                <div class="grid-row mb-4">
+                  <div class="form-row">
+                    <label>Full Name</label>
+                    <div class="input-wrapper">
+                      <i class="far fa-user"></i>
+                      <input v-model="editForm.name" type="text">
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <label>Personnel Email</label>
+                    <div class="input-wrapper">
+                      <i class="far fa-envelope"></i>
+                      <input v-model="editForm.email" type="email">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="security-divider mb-4">
+                  <span>Downline Restriction Linkage</span>
+                </div>
+
+                <div class="form-row mb-4">
+                  <label>Linked User ID (For Downline Visibility)</label>
+                  <p class="text-muted small mb-2">If linked, this admin will ONLY see data for users in their referral tree.</p>
+                  <div class="input-wrapper">
+                    <i class="fas fa-link"></i>
+                    <input v-model="editForm.user_id" type="number" placeholder="Enter User ID or leave empty for all access">
+                  </div>
+                  <div v-if="editForm.user_name" class="mt-2 small text-info">
+                    Linked to User: <strong>{{ editForm.user_name }}</strong>
+                  </div>
+                </div>
+
+                <div class="security-divider mb-4">
+                   <span>Menu Permissions (On / Off)</span>
+                </div>
+
+                <div class="permission-grid">
+                  <div v-for="(label, key) in permissionLabels" :key="key" class="perm-item">
+                    <span class="perm-label">{{ label }}</span>
+                    <label class="premium-switch">
+                      <input type="checkbox" v-model="editForm.permissions[key]">
+                      <span class="switch-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div v-if="editError" class="ma-error-glow mt-3">{{ editError }}</div>
+                <div class="form-footer mt-4 gap-3 d-flex">
+                   <button class="ma-btn-premium w-100" :disabled="updating" @click="updateAdmin">
+                      <span v-if="!updating">Save Clearances</span>
+                      <span v-else><i class="fas fa-circle-notch fa-spin"></i> Saving...</span>
+                   </button>
+                </div>
               </div>
             </div>
           </div>
@@ -283,6 +363,63 @@ export default {
       }
     }
 
+    const showEdit = ref(false)
+    const updating = ref(false)
+    const editError = ref('')
+    const editForm = ref({ id: null, name: '', email: '', user_id: null, permissions: {} })
+    
+    const permissionLabels = {
+      view_users: 'User Management (View)',
+      edit_users: 'User Control (Edit/Ban)',
+      view_orders: 'Orders Management',
+      view_deposits: 'Deposits (View)',
+      edit_deposits: 'Deposits (Approve/Reject)',
+      view_withdrawals: 'Withdrawals (View)',
+      edit_withdrawals: 'Withdrawals (Approve/Reject)',
+      view_transactions: 'Transactions History',
+      view_ledger: 'Account Ledger',
+      view_reports: 'Home Reports'
+    }
+
+    const openEditAdmin = (admin) => {
+      selectedAdmin.value = admin
+      editForm.value = {
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        user_id: admin.user_id,
+        user_name: admin.user_name,
+        permissions: admin.permissions || {
+          view_users: true,
+          edit_users: false,
+          view_orders: false,
+          view_deposits: false,
+          edit_deposits: false,
+          view_withdrawals: false,
+          edit_withdrawals: true,
+          view_transactions: false,
+          view_ledger: false,
+          view_reports: true
+        }
+      }
+      showEdit.value = true
+    }
+
+    const updateAdmin = async () => {
+      editError.value = ''
+      updating.value = true
+      try {
+        await api.post(`/admin/admins/${editForm.value.id}/update`, editForm.value)
+        showEdit.value = false
+        showToast('Clearances updated successfully.')
+        fetchAdmins()
+      } catch (e) {
+        editError.value = e.response?.data?.message || 'Failed to update clearance.'
+      } finally {
+        updating.value = false
+      }
+    }
+
     const createAdmin = async () => {
       createError.value = ''
       if (!createForm.value.name || !createForm.value.username || !createForm.value.email || !createForm.value.password) {
@@ -356,14 +493,24 @@ export default {
       }
     }
 
-    onMounted(fetchAdmins)
+    onMounted(() => {
+      const admin = JSON.parse(localStorage.getItem('admin_user') || '{}')
+      if (!admin.is_super_admin) {
+        if (window.notify) window.notify('error', 'Restricted access: Master Admin only.')
+        router.push('/master_admin/dashboard')
+        return
+      }
+      fetchAdmins()
+    })
 
     return {
       admins, loading, showCreate, creating, createError, createForm,
       showResetPwd, resettingPwd, newPwd, pwdError, selectedAdmin,
       showDeleteConfirm, deleting,
+      showEdit, updating, editError, editForm, permissionLabels,
       toast, formatDate, getInitials,
-      fetchAdmins, createAdmin, toggleAdmin, openResetPwd, doResetPwd, confirmDelete, doDelete
+      fetchAdmins, createAdmin, toggleAdmin, openResetPwd, doResetPwd, confirmDelete, doDelete,
+      openEditAdmin, updateAdmin
     }
   }
 }
@@ -843,6 +990,41 @@ export default {
 }
 
 @keyframes maSpin { to { transform: rotate(360deg); } }
+
+/* Permission Grid */
+.security-divider {
+  display: flex; align-items: center; gap: 15px; color: #6366f1;
+  font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+}
+.security-divider::after { content: ''; flex: 1; height: 1px; background: rgba(99, 102, 241, 0.2); }
+
+.permission-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+}
+.perm-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 18px; background: rgba(255, 255, 255, 0.03);
+  border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.perm-label { font-size: 0.9rem; color: #cbd5e1; }
+
+.premium-switch {
+  position: relative; width: 44px; height: 24px; cursor: pointer;
+}
+.premium-switch input { opacity: 0; width: 0; height: 0; }
+.switch-slider {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.1); transition: .4s; border-radius: 34px;
+}
+.switch-slider:before {
+  position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+  background: white; transition: .4s; border-radius: 50%;
+}
+input:checked + .switch-slider { background: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
+input:checked + .switch-slider:before { transform: translateX(20px); }
+
+.cmd-btn--edit { color: #6366f1; }
+.cmd-btn--edit:hover { background: rgba(99, 102, 241, 0.15); box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
 
 /* Transitions */
 .ma-slide-up-enter-active, .ma-slide-up-leave-active { transition: all 0.4s ease; }

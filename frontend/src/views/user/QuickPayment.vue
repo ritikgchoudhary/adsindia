@@ -1,6 +1,6 @@
 <template>
   <DashboardLayout page-title="Quick Payment" :dark-theme="true">
-    <div class="tw-min-h-[85vh] tw-p-4 sm:tw-p-6 tw-font-sans tw-max-w-[1200px] tw-mx-auto">
+    <div class="tw-min-h-[85vh] tw-p-4 sm:tw-p-6 tw-font-sans tw-w-full">
       
       <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-12 tw-gap-8">
         

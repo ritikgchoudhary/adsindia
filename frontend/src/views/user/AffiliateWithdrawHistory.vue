@@ -34,9 +34,9 @@
           </div>
         </div>
 
-        <!-- Payout Table (Scrollable on Mobile) -->
-        <div class="tw-overflow-x-auto">
-          <table class="ma-modern-table" style="min-width: 800px;">
+        <!-- Desktop Table -->
+        <div class="tw-hidden lg:tw-block">
+          <table class="ma-modern-table">
             <thead>
               <tr>
                 <th>Gateway & TRX</th>
@@ -99,6 +99,44 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Mobile / Tablet Card Layout -->
+        <div class="lg:tw-hidden tw-p-3 sm:tw-p-4 tw-space-y-4">
+           <div v-for="withdraw in withdraws" :key="withdraw.id" class="mobile-payout-card">
+              <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
+                 <div class="tw-flex tw-items-center tw-gap-3">
+                    <div class="method-icon-mini">
+                       <i :class="getMethodIcon(withdraw.method?.name)"></i>
+                    </div>
+                    <div>
+                       <div class="tw-text-white tw-font-bold tw-text-sm">{{ withdraw.method?.name }}</div>
+                       <div class="tw-text-[10px] tw-text-indigo-400/60 tw-font-mono">{{ withdraw.trx }}</div>
+                    </div>
+                 </div>
+                 <div class="status-badge-container tw-scale-90 tw-origin-right" v-html="withdraw.status_badge"></div>
+              </div>
+              
+              <div class="tw-flex tw-justify-between tw-items-end">
+                 <div>
+                    <div class="tw-text-white tw-font-black tw-text-xl">
+                       <span class="tw-text-indigo-400 tw-text-xs tw-font-bold tw-mr-0.5">{{ currencySymbol }}</span>{{ formatAmount(withdraw.amount) }}
+                    </div>
+                    <div class="tw-text-[8px] tw-text-slate-500 tw-mt-1">
+                       <i class="far fa-clock"></i> {{ withdraw.created_at_human }}
+                    </div>
+                 </div>
+                 <button @click="showDetails(withdraw)" class="mobile-action-btn">
+                    Details <i class="fas fa-chevron-right tw-ml-0.5"></i>
+                 </button>
+              </div>
+           </div>
+           
+           <div v-if="withdraws.length === 0 && !loading" class="empty-state-container">
+              <div class="empty-state-icon"><i class="fas fa-search"></i></div>
+              <h4 class="tw-text-white">No history records</h4>
+              <p class="tw-text-slate-500">You haven't made any withdrawal requests yet.</p>
+           </div>
         </div>
 
         <!-- Loader -->
@@ -425,14 +463,14 @@ export default {
   .search-btn { left: 12px !important; }
   .ma-btn-create { padding: 0.65rem 1rem !important; font-size: 0.75rem !important; border-radius: 0.75rem !important; }
 
-  /* Mobile Payout Cards */
-  .lg\:tw-hidden.tw-p-4 { padding: 0.85rem !important; gap: 0.75rem !important; }
-  .mobile-payout-card { padding: 1.15rem !important; border-radius: 1.25rem !important; }
-  .method-icon-mini { width: 2.25rem !important; height: 2.25rem !important; border-radius: 0.75rem !important; font-size: 1rem !important; }
-  .tw-text-white.tw-font-bold.tw-text-sm { font-size: 0.85rem !important; }
-  .tw-text-white.tw-font-black.tw-text-2xl { font-size: 1.5rem !important; }
-  .mobile-action-btn { padding: 0.5rem 1rem !important; border-radius: 0.75rem !important; font-size: 9px !important; }
-  .tw-mt-4.tw-pt-4 { margin-top: 0.75rem !important; padding-top: 0.75rem !important; }
+  /* Mobile Payout Cards - Compact */
+  .lg\:tw-hidden.tw-p-4 { padding: 0.65rem !important; gap: 0.5rem !important; }
+  .mobile-payout-card { padding: 0.85rem 1rem !important; border-radius: 1rem !important; }
+  .method-icon-mini { width: 1.75rem !important; height: 1.75rem !important; border-radius: 0.5rem !important; font-size: 0.85rem !important; }
+  .tw-text-white.tw-font-bold.tw-text-sm { font-size: 0.75rem !important; }
+  .tw-text-white.tw-font-black.tw-text-2xl { font-size: 1.25rem !important; }
+  .mobile-action-btn { padding: 0.4rem 0.75rem !important; border-radius: 0.5rem !important; font-size: 8px !important; }
+  .tw-mt-4.tw-pt-4 { margin-top: 0.5rem !important; padding-top: 0.5rem !important; }
 
   /* Modal */
   .modal-inner { border-radius: 1.75rem !important; }

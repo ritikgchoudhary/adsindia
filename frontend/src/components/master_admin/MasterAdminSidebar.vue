@@ -43,7 +43,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../../services/api'
 
@@ -64,49 +64,68 @@ export default {
       // detailed error handling or fallback if needed
     }
 
-    const menuGroups = [
+    const admin = ref(JSON.parse(localStorage.getItem('admin_user') || '{}'))
+    const perms = computed(() => admin.value.permissions || {})
+    const isSuper = computed(() => admin.value.is_super_admin)
+
+    const fullMenuGroups = [
       {
         label: 'Dashboard',
         items: [
-          { title: 'Home', path: '/master_admin/dashboard', icon: 'fas fa-home' },
-          { title: 'Account Ledger', path: '/master_admin/account-ledger', icon: 'fas fa-book-open' },
+          { title: 'Home', path: '/master_admin/dashboard', icon: 'fas fa-home', perm: 'view_reports' },
+          { title: 'Account Ledger', path: '/master_admin/account-ledger', icon: 'fas fa-book-open', perm: 'view_ledger' },
         ]
       },
       {
         label: 'User Management',
         items: [
-          { title: 'All Users', path: '/master_admin/users', icon: 'fas fa-users' },
-          { title: 'KYC Management', path: '/master_admin/kyc', icon: 'fas fa-id-card' },
-          { title: 'Admins', path: '/master_admin/admins', icon: 'fas fa-user-shield' },
+          { title: 'All Users', path: '/master_admin/users', icon: 'fas fa-users', perm: 'view_users' },
+          { title: 'KYC Management', path: '/master_admin/kyc', icon: 'fas fa-id-card', perm: 'view_users' },
+          { title: 'Admins', path: '/master_admin/admins', icon: 'fas fa-user-shield', superOnly: true },
         ]
       },
       {
         label: 'Financials',
         items: [
-          { title: 'All Orders', path: '/master_admin/orders', icon: 'fas fa-receipt' },
-          { title: 'Deposits', path: '/master_admin/deposits', icon: 'fas fa-arrow-down' },
-          { title: 'Withdrawals', path: '/master_admin/withdrawals', icon: 'fas fa-arrow-up' },
-          { title: 'Transactions', path: '/master_admin/transactions', icon: 'fas fa-exchange-alt' },
-          { title: 'Commissions', path: '/master_admin/commissions', icon: 'fas fa-coins' },
-          { title: 'Support Tickets', path: '/master_admin/customer-support', icon: 'fas fa-headset' },
+          { title: 'All Orders', path: '/master_admin/orders', icon: 'fas fa-receipt', perm: 'view_orders' },
+          { title: 'Deposits', path: '/master_admin/deposits', icon: 'fas fa-arrow-down', perm: 'view_deposits' },
+          { title: 'Withdrawals', path: '/master_admin/withdrawals', icon: 'fas fa-arrow-up', perm: 'view_withdrawals' },
+          { title: 'Transactions', path: '/master_admin/transactions', icon: 'fas fa-exchange-alt', perm: 'view_transactions' },
+          { title: 'Commissions', path: '/master_admin/commissions', icon: 'fas fa-coins', superOnly: true },
+          { title: 'Support Tickets', path: '/master_admin/customer-support', icon: 'fas fa-headset', superOnly: true },
         ]
       },
       {
         label: 'Platform Assets',
         items: [
-          { title: 'Gateways', path: '/master_admin/gateways', icon: 'fas fa-credit-card' },
-          { title: 'Special Links', path: '/master_admin/special-links', icon: 'fas fa-tag' },
-          { title: 'Courses & Videos', path: '/master_admin/courses', icon: 'fas fa-play-circle' },
+          { title: 'Gateways', path: '/master_admin/gateways', icon: 'fas fa-credit-card', superOnly: true },
+          { title: 'Special Links', path: '/master_admin/special-links', icon: 'fas fa-tag', superOnly: true },
+          { title: 'Courses & Videos', path: '/master_admin/courses', icon: 'fas fa-play-circle', superOnly: true },
         ]
       },
       {
         label: 'System',
         items: [
-          { title: 'Settings', path: '/master_admin/settings', icon: 'fas fa-cog' },
-          { title: 'Email Settings', path: '/master_admin/email-settings', icon: 'fas fa-envelope' },
+          { title: 'Settings', path: '/master_admin/settings', icon: 'fas fa-cog', superOnly: true },
+          { title: 'Email Settings', path: '/master_admin/email-settings', icon: 'fas fa-envelope', superOnly: true },
         ]
       }
     ]
+
+    const menuGroups = computed(() => {
+      // Safety: If no admin data, default to showing nothing (but if it's the first time, show all for Super)
+      if (!admin.value || !admin.value.id) return fullMenuGroups
+
+      return fullMenuGroups.map(group => {
+        const filteredItems = group.items.filter(item => {
+          if (isSuper.value) return true
+          if (item.superOnly) return false
+          if (item.perm) return perms.value[item.perm]
+          return true
+        })
+        return { ...group, items: filteredItems }
+      }).filter(group => group.items.length > 0)
+    })
 
     const handleLogout = async () => {
       try { await api.post('/admin/logout') } catch (e) {}

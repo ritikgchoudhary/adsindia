@@ -311,16 +311,16 @@
         </div>
         <div class="ma-modal__footer d-flex justify-content-between align-items-center gap-2 p-3 border-top border-white-5">
            <div>
-             <button class="ma-btn ma-btn--delete" @click="deleteOrder(selectedOrder); selectedOrder = null">
+             <button v-if="isSuper || (selectedOrder.source === 'withdrawal' ? perms.edit_withdrawals : perms.edit_deposits)" class="ma-btn ma-btn--delete" @click="deleteOrder(selectedOrder); selectedOrder = null">
                <i class="fas fa-trash-alt me-1"></i>Delete
              </button>
            </div>
            <div class="d-flex gap-2">
              <button class="ma-btn ma-btn--secondary" @click="selectedOrder = null">Close</button>
-             <button v-if="isPending(selectedOrder)" class="ma-btn ma-btn--reject" @click="rejectOrder(selectedOrder); selectedOrder = null">
+             <button v-if="isPending(selectedOrder) && (isSuper || (selectedOrder.source === 'withdrawal' ? perms.edit_withdrawals : perms.edit_deposits))" class="ma-btn ma-btn--reject" @click="rejectOrder(selectedOrder); selectedOrder = null">
                <i class="fas fa-times me-1"></i>Reject
              </button>
-             <button v-if="isPending(selectedOrder)" class="ma-btn ma-btn--approve" @click="approveOrder(selectedOrder); selectedOrder = null">
+             <button v-if="isPending(selectedOrder) && (isSuper || (selectedOrder.source === 'withdrawal' ? perms.edit_withdrawals : perms.edit_deposits))" class="ma-btn ma-btn--approve" @click="approveOrder(selectedOrder); selectedOrder = null">
                <i class="fas fa-check me-1"></i>Approve
              </button>
            </div>
@@ -351,6 +351,10 @@ export default {
     const lastPage = ref(1)
     const selectedOrder = ref(null)
     const summary = ref({ total: 0, successful: 0, pending: 0, rejected: 0, initiated: 0 })
+    
+    const adminUser = ref(JSON.parse(localStorage.getItem('admin_user') || '{}'))
+    const perms = computed(() => adminUser.value.permissions || {})
+    const isSuper = computed(() => adminUser.value.is_super_admin)
     let searchTimeout = null
 
     const formatAmount = (n) => {
@@ -511,7 +515,8 @@ export default {
       totalOrders, currentPage, lastPage, paginationPages, summary, selectedOrder,
       formatAmount, formatDateTime, getInitials, isPending,
       fetchOrders, debounceSearch, copyTrx,
-      approveOrder, rejectOrder, deleteOrder, viewOrder
+      approveOrder, rejectOrder, deleteOrder, viewOrder,
+      isSuper, perms
     }
   }
 }

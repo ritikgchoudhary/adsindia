@@ -1,6 +1,6 @@
 <template>
   <DashboardLayout page-title="Certificates" :dark-theme="true">
-    <div class="tw-max-w-7xl tw-mx-auto tw-pb-10">
+    <div class="tw-w-full tw-pb-10">
       
       <!-- Simplified Header -->
       <div class="tw-mb-4 sm:tw-mb-8 tw-rounded-xl sm:tw-rounded-2xl tw-overflow-hidden tw-border tw-border-indigo-500/30 tw-bg-gradient-to-r tw-from-indigo-600/20 tw-to-purple-600/20 tw-backdrop-blur-md">

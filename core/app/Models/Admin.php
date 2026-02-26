@@ -10,12 +10,17 @@ class Admin extends Authenticatable
     use HasApiTokens;
 
     /**
-     * The attributes that should be hidden for arrays.
+     * The attributes that should be cast to native types.
      *
      * @var array
      */
-    protected $hidden = [
-        'password', 'remember_token',
+    protected $casts = [
+        'permissions' => 'object',
+        'is_super_admin' => 'boolean',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

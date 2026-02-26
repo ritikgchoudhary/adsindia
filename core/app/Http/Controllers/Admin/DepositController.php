@@ -114,6 +114,9 @@ class DepositController extends Controller {
     }
 
     public function approve($id) {
+        if (!$this->checkPermission('edit_deposits')) {
+            return responseError('permission_denied', ['You do not have permission to approve deposits.']);
+        }
         try {
             $deposit = Deposit::where('id', $id)->where('status', Status::PAYMENT_PENDING)->firstOrFail();
 
@@ -135,6 +138,9 @@ class DepositController extends Controller {
     }
 
     public function reject(Request $request) {
+        if (!$this->checkPermission('edit_deposits')) {
+            return responseError('permission_denied', ['You do not have permission to reject deposits.']);
+        }
         try {
             $request->validate([
                 'id'      => 'required|integer',

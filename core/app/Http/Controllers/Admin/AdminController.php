@@ -33,6 +33,49 @@ use Illuminate\Support\Facades\DB;
 class AdminController extends Controller {
 
     /**
+     * Get IDs of all users in the referral tree for a given user.
+     * Used for agent-restricted views.
+     */
+    private function getDownlineUserIds($userId): array
+    {
+        $allIds = [];
+        $searchIds = [$userId];
+
+        while (!empty($searchIds)) {
+            $nextIds = User::whereIn('ref_by', $searchIds)->pluck('id')->toArray();
+            if (empty($nextIds)) break;
+            
+            // Avoid infinite loops (unlikely but safe)
+            $newIds = array_diff($nextIds, $allIds);
+            if (empty($newIds)) break;
+
+            $allIds = array_merge($allIds, $newIds);
+            $searchIds = $newIds;
+        }
+
+        return $allIds;
+    }
+
+    /**
+     * Common method to get allowed user IDs for the current logged-in admin.
+     * If super admin, returns null (meaning ALL).
+     */
+    private function getAllowedUserIds()
+    {
+        $admin = auth()->user();
+        if ($admin->is_super_admin) return null;
+        
+        // If it's an agent/manager linked to a user account
+        if ($admin->user_id) {
+            return $this->getDownlineUserIds($admin->user_id);
+        }
+
+        // No link means no users visible by default for security
+        return [0];
+    }
+
+
+    /**
      * Normalize kyc_data into a simple object the SPA can render.
      *
      * Stored format (from API KYC submit) is usually:
@@ -145,6 +188,12 @@ class AdminController extends Controller {
             $query->where('is_agent', 1);
         }
 
+        // Apply Downline Restriction
+        $allowedIds = $this->getAllowedUserIds();
+        if ($allowedIds !== null) {
+            $query->whereIn('id', $allowedIds);
+        }
+
         $users = $query->paginate($perPage);
 
         // Get all user IDs for this page
@@ -249,12 +298,19 @@ class AdminController extends Controller {
      */
     public function allUsersCounts()
     {
+        $allowedIds = $this->getAllowedUserIds();
+        $query = \App\Models\User::query();
+        
+        if ($allowedIds !== null) {
+            $query->whereIn('id', $allowedIds);
+        }
+
         return responseSuccess('user_counts', ['User counts retrieved'], [
-            'active' => \App\Models\User::where('status', 1)->count(),
-            'banned' => \App\Models\User::where('status', 0)->count(),
-            'kyc_pending' => \App\Models\User::where('kv', \App\Constants\Status::KYC_PENDING)->count(),
-            'partner' => \App\Models\User::whereNotNull('partner_plan_id')->where('partner_plan_valid_until', '>', now())->count(),
-            'agent' => \App\Models\User::where('is_agent', 1)->count(),
+            'active' => (clone $query)->where('status', 1)->count(),
+            'banned' => (clone $query)->where('status', 0)->count(),
+            'kyc_pending' => (clone $query)->where('kv', \App\Constants\Status::KYC_PENDING)->count(),
+            'partner' => (clone $query)->whereNotNull('partner_plan_id')->where('partner_plan_valid_until', '>', now())->count(),
+            'agent' => (clone $query)->where('is_agent', 1)->count(),
         ]);
     }
 
@@ -264,6 +320,9 @@ class AdminController extends Controller {
      */
     public function createUser(Request $request)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to create users.']);
+        }
         // Phase 2: Simplified Create User form.
         // Accept either (name) OR (firstname+lastname) for backward compatibility.
         $request->validate([
@@ -462,6 +521,9 @@ class AdminController extends Controller {
      */
     public function banUser($id)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to ban users.']);
+        }
         try {
             $user = User::findOrFail($id);
             $user->status = 0;
@@ -477,6 +539,9 @@ class AdminController extends Controller {
      */
     public function unbanUser($id)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to unban users.']);
+        }
         try {
             $user = User::findOrFail($id);
             $user->status = 1;
@@ -529,6 +594,9 @@ class AdminController extends Controller {
     }
 
     public function updateAdCertificate(Request $request, $id) {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to update user certificates.']);
+        }
         $user = User::findOrFail($id);
         if ($request->has('has_ad_certificate')) {
             $user->has_ad_certificate = $request->boolean('has_ad_certificate');
@@ -547,6 +615,9 @@ class AdminController extends Controller {
      */
     public function updateUserBasic(Request $request, $id)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to edit user details.']);
+        }
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $id,
@@ -595,6 +666,9 @@ class AdminController extends Controller {
      */
     public function resetUserPassword(Request $request, $id)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to reset user passwords.']);
+        }
         $request->validate([
             'password' => 'required|string|min:6|max:255',
         ]);
@@ -632,6 +706,9 @@ class AdminController extends Controller {
      */
     public function setUserAgent(Request $request, $id)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to manage agent status.']);
+        }
         $request->validate([
             'is_agent' => 'nullable|boolean',
             'is_special_agent' => 'nullable|boolean',
@@ -713,6 +790,9 @@ class AdminController extends Controller {
      */
     public function updateAgentCommissionSettings(Request $request, $id)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to edit agent commissions.']);
+        }
         $user = User::findOrFail($id);
 
         $request->validate([
@@ -1174,6 +1254,9 @@ class AdminController extends Controller {
      */
     public function changeUserSponsor(Request $request, $id)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to change user sponsor.']);
+        }
         \Log::info("changeUserSponsor called for ID: {$id} with input: " . json_encode($request->all()));
         
         $request->validate([
@@ -1215,6 +1298,9 @@ class AdminController extends Controller {
      */
     public function approveKyc($id)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to approve KYC.']);
+        }
         try {
             $user = User::findOrFail($id);
 
@@ -1243,6 +1329,9 @@ class AdminController extends Controller {
      */
     public function rejectKyc(Request $request, $id)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to reject KYC.']);
+        }
         $request->validate(['reason' => 'required|string|max:1000']);
         try {
             $user = User::findOrFail($id);
@@ -1266,6 +1355,9 @@ class AdminController extends Controller {
      */
     public function unapproveKyc($id)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to unapprove KYC.']);
+        }
         try {
             $user = User::findOrFail($id);
             $user->kv = Status::KYC_UNVERIFIED;
@@ -1287,6 +1379,9 @@ class AdminController extends Controller {
      */
     public function updateUserBankDetails(Request $request, $id)
     {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to edit bank details.']);
+        }
         try {
             $user = User::findOrFail($id);
             
@@ -1322,6 +1417,11 @@ class AdminController extends Controller {
         $perPage = $request->get('per_page', 20);
 
         $query = Transaction::with('user')->orderBy('id', 'desc');
+
+        $allowedIds = $this->getAllowedUserIds();
+        if ($allowedIds !== null) {
+            $query->whereIn('user_id', $allowedIds);
+        }
 
         $gs = gs();
         if ($gs->admin_transactions_cleared_at) {
@@ -1404,6 +1504,11 @@ class AdminController extends Controller {
 
         // Joined with gateways to get method name correctly
         $query = Deposit::with(['user', 'gateway'])->orderBy('id', 'desc');
+
+        $allowedIds = $this->getAllowedUserIds();
+        if ($allowedIds !== null) {
+            $query->whereIn('user_id', $allowedIds);
+        }
 
         $gs = gs();
         if ($gs->admin_deposits_cleared_at) {
@@ -1569,6 +1674,11 @@ class AdminController extends Controller {
             ->where('method_code', '>=', 1000)
             ->where('method_code', '<', 5000)
             ->orderBy('id', 'desc');
+
+        $allowedIds = $this->getAllowedUserIds();
+        if ($allowedIds !== null) {
+            $query->whereIn('user_id', $allowedIds);
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -1749,8 +1859,14 @@ class AdminController extends Controller {
 
         $depositQ = DB::table('deposits as d')
             ->leftJoin('users as u', 'u.id', '=', 'd.user_id')
-            ->leftJoin('gateways as g', 'g.code', '=', 'd.method_code')
-            ->where('d.method_code', '>=', 500)
+            ->leftJoin('gateways as g', 'g.code', '=', 'd.method_code');
+
+        $allowedIds = $this->getAllowedUserIds();
+        if ($allowedIds !== null) {
+            $depositQ->whereIn('d.user_id', $allowedIds);
+        }
+
+        $depositQ->where('d.method_code', '>=', 500)
             ->where('d.method_code', '<', 10000)
             ->select([
                 DB::raw("'deposit' as source"),
@@ -2004,6 +2120,11 @@ class AdminController extends Controller {
             ->where('status', '!=', Status::PAYMENT_INITIATE)
             ->orderBy('id', 'desc');
 
+        $allowedIds = $this->getAllowedUserIds();
+        if ($allowedIds !== null) {
+            $query->whereIn('user_id', $allowedIds);
+        }
+
         $gs = gs();
         if ($gs->admin_withdrawals_cleared_at) {
             $query->where('created_at', '>', $gs->admin_withdrawals_cleared_at);
@@ -2078,6 +2199,13 @@ class AdminController extends Controller {
                     'firstname' => $w->user->firstname,
                     'lastname' => $w->user->lastname,
                     'mobile' => $w->user->mobile,
+                    'account_number' => $w->user->account_number,
+                    'account_holder_name' => $w->user->account_holder_name,
+                    'ifsc_code' => $w->user->ifsc_code,
+                    'bank_name' => $w->user->bank_name,
+                    'bank_registered_no' => $w->user->bank_registered_no,
+                    'upi_id' => $w->user->upi_id,
+                    'ads_id' => 'ADS' . (15000 + $w->user->id), // Common format in this project
                 ] : null,
                 'created_at' => $w->created_at ? $w->created_at->format('Y-m-d H:i:s') : null,
                 'created_at_human' => $w->created_at ? $w->created_at->diffForHumans() : null,
@@ -2094,10 +2222,13 @@ class AdminController extends Controller {
         } catch (\Throwable $e) {}
 
         $summary = [
-            'total'      => (clone $summaryQuery)->count(),
-            'pending'    => (clone $summaryQuery)->where('status', Status::PAYMENT_PENDING)->count(),
-            'successful' => (clone $summaryQuery)->where('status', Status::PAYMENT_SUCCESS)->count(),
-            'rejected'   => (clone $summaryQuery)->where('status', Status::PAYMENT_REJECT)->count(),
+            'total'             => (clone $summaryQuery)->count(),
+            'processing'        => (clone $summaryQuery)->where('status', Status::PAYMENT_PENDING)->sum('amount'),
+            'processing_count'  => (clone $summaryQuery)->where('status', Status::PAYMENT_PENDING)->count(),
+            'success'           => (clone $summaryQuery)->where('status', Status::PAYMENT_SUCCESS)->sum('amount'),
+            'success_count'     => (clone $summaryQuery)->where('status', Status::PAYMENT_SUCCESS)->count(),
+            'rejected'          => (clone $summaryQuery)->where('status', Status::PAYMENT_REJECT)->sum('amount'),
+            'rejected_count'    => (clone $summaryQuery)->where('status', Status::PAYMENT_REJECT)->count(),
         ];
 
         return responseSuccess('withdrawals', ['Withdrawals retrieved successfully'], [
@@ -2115,6 +2246,9 @@ class AdminController extends Controller {
      */
     public function approveWithdrawal(Request $request)
     {
+        if (!$this->checkPermission('edit_withdrawals')) {
+            return responseError('permission_denied', ['You do not have permission to approve withdrawals.']);
+        }
         $request->validate(['id' => 'required|integer']);
 
         $withdraw = Withdrawal::where('id', (int) $request->id)
@@ -2174,11 +2308,16 @@ class AdminController extends Controller {
         return responseSuccess('withdraw_approved', ['Withdrawal approved successfully']);
     }
 
+
+
     /**
      * Reject a withdrawal (Admin API) + refund to correct wallet.
      */
     public function rejectWithdrawal(Request $request)
     {
+        if (!$this->checkPermission('edit_withdrawals')) {
+            return responseError('permission_denied', ['You do not have permission to reject withdrawals.']);
+        }
         $request->validate([
             'id' => 'required|integer',
             'details' => 'required|string|max:1000',
@@ -2234,20 +2373,36 @@ class AdminController extends Controller {
     }
 
     public function dashboard() {
+        $allowedIds = $this->getAllowedUserIds();
+
         // Check if API request
         if (request()->expectsJson() || request()->is('api/*')) {
+            $userQuery = User::query();
+            $campaignQuery = Campaign::query();
+            $depositQuery = Deposit::successful();
+            $withdrawalQuery = Withdrawal::approved();
+
+            if ($allowedIds !== null) {
+                $userQuery->whereIn('id', $allowedIds);
+                $campaignQuery->where(function($q) use ($allowedIds) {
+                    $q->whereIn('user_id', $allowedIds);
+                });
+                $depositQuery->whereIn('user_id', $allowedIds);
+                $withdrawalQuery->whereIn('user_id', $allowedIds);
+            }
+
             $widget = [
-                'total_users'        => User::count(),
-                'verified_users'     => User::active()->count(),
-                'email_unverified_users' => User::emailUnverified()->count(),
-                'mobile_unverified_users' => User::mobileUnverified()->count(),
-                'total_campaigns'    => Campaign::count(),
-                'pending_campaigns'  => Campaign::pending()->count(),
-                'approved_campaigns' => Campaign::approved()->count(),
-                'rejected_campaigns' => Campaign::rejected()->count(),
+                'total_users'        => (clone $userQuery)->count(),
+                'verified_users'     => (clone $userQuery)->where('status', 1)->where('ev', Status::VERIFIED)->where('sv', Status::VERIFIED)->count(),
+                'email_unverified_users' => (clone $userQuery)->where('ev', 0)->count(),
+                'mobile_unverified_users' => (clone $userQuery)->where('sv', 0)->count(),
+                'total_campaigns'    => $campaignQuery->count(),
+                'pending_campaigns'  => (clone $campaignQuery)->where('status', 2)->count(),
+                'approved_campaigns' => (clone $campaignQuery)->where('status', 1)->count(),
+                'rejected_campaigns' => (clone $campaignQuery)->where('status', 3)->count(),
                 'total_courses'      => \App\Models\Course::count(),
-                'total_revenue'      => Deposit::successful()->sum('amount') - Withdrawal::approved()->sum('amount'),
-                'kyc_pending_users'  => User::where('kv', \App\Constants\Status::KYC_PENDING)->count(),
+                'total_revenue'      => $depositQuery->sum('amount') - $withdrawalQuery->sum('amount'),
+                'kyc_pending_users'  => (clone $userQuery)->where('kv', Status::KYC_PENDING)->count(),
             ];
 
             return responseSuccess('dashboard', ['Dashboard data retrieved successfully'], $widget);
@@ -2297,28 +2452,16 @@ class AdminController extends Controller {
     }
 
     public function user() {
-        // For API requests, use Sanctum auth
-        if (request()->expectsJson() || request()->is('api/*')) {
-            $user = auth('sanctum')->user();
-            if (!$user || !($user instanceof \App\Models\Admin)) {
-                return responseError('unauthorized', ['Unauthorized']);
-            }
+        $admin = auth()->user();
+        if (!$admin) return responseError('unauthorized', ['Unauthorized']);
 
-            return responseSuccess('admin_user', ['Admin user retrieved successfully'], [
-                'id' => $user->id,
-                'name' => $user->name,
-                'username' => $user->username,
-                'email' => $user->email,
-            ]);
-        }
-
-        // For Blade requests
-        $admin = auth('admin')->user();
         return responseSuccess('admin_user', ['Admin user retrieved successfully'], [
             'id' => $admin->id,
             'name' => $admin->name,
             'username' => $admin->username,
             'email' => $admin->email,
+            'is_super_admin' => (bool)$admin->is_super_admin,
+            'permissions' => $admin->permissions,
         ]);
     }
 
@@ -2334,18 +2477,31 @@ class AdminController extends Controller {
         } else {
             $dates = $this->getAllMonths($request->start_date, $request->end_date);
         }
-        $deposits = Deposit::successful()
+        $depositsQuery = Deposit::successful()
             ->whereDate('created_at', '>=', $request->start_date)
-            ->whereDate('created_at', '<=', $request->end_date)
+            ->whereDate('created_at', '<=', $request->end_date);
+
+        $allowedIds = $this->getAllowedUserIds();
+        if ($allowedIds !== null) {
+            $depositsQuery->whereIn('user_id', $allowedIds);
+        }
+
+        $deposits = $depositsQuery
             ->selectRaw('SUM(amount) AS amount')
             ->selectRaw("DATE_FORMAT(created_at, '{$format}') as created_on")
             ->latest()
             ->groupBy('created_on')
             ->get();
 
-        $withdrawals = Withdrawal::approved()
+        $withdrawalsQuery = Withdrawal::approved()
             ->whereDate('created_at', '>=', $request->start_date)
-            ->whereDate('created_at', '<=', $request->end_date)
+            ->whereDate('created_at', '<=', $request->end_date);
+
+        if ($allowedIds !== null) {
+            $withdrawalsQuery->whereIn('user_id', $allowedIds);
+        }
+
+        $withdrawals = $withdrawalsQuery
             ->selectRaw('SUM(amount) AS amount')
             ->selectRaw("DATE_FORMAT(created_at, '{$format}') as created_on")
             ->latest()
@@ -2393,18 +2549,28 @@ class AdminController extends Controller {
             $dates = $this->getAllMonths($request->start_date, $request->end_date);
         }
 
-        $plusTransactions = Transaction::where('trx_type', '+')
+        $plusQuery = Transaction::where('trx_type', '+')
             ->whereDate('created_at', '>=', $request->start_date)
-            ->whereDate('created_at', '<=', $request->end_date)
+            ->whereDate('created_at', '<=', $request->end_date);
+
+        $minusQuery = Transaction::where('trx_type', '-')
+            ->whereDate('created_at', '>=', $request->start_date)
+            ->whereDate('created_at', '<=', $request->end_date);
+
+        $allowedIds = $this->getAllowedUserIds();
+        if ($allowedIds !== null) {
+            $plusQuery->whereIn('user_id', $allowedIds);
+            $minusQuery->whereIn('user_id', $allowedIds);
+        }
+
+        $plusTransactions = $plusQuery
             ->selectRaw('SUM(amount) AS amount')
             ->selectRaw("DATE_FORMAT(created_at, '{$format}') as created_on")
             ->latest()
             ->groupBy('created_on')
             ->get();
 
-        $minusTransactions = Transaction::where('trx_type', '-')
-            ->whereDate('created_at', '>=', $request->start_date)
-            ->whereDate('created_at', '<=', $request->end_date)
+        $minusTransactions = $minusQuery
             ->selectRaw('SUM(amount) AS amount')
             ->selectRaw("DATE_FORMAT(created_at, '{$format}') as created_on")
             ->latest()
@@ -2627,9 +2793,12 @@ class AdminController extends Controller {
     }
 
     public function resetUserData($id) {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to reset user data.']);
+        }
         $user = User::findOrFail($id);
         
-        DB::transaction(function () use ($user) {
+        DB::transaction(function () use ($user, $id) {
             Transaction::where('user_id', $user->id)->delete();
             Deposit::where('user_id', $user->id)->delete();
             Withdrawal::where('user_id', $user->id)->delete();
@@ -2637,13 +2806,17 @@ class AdminController extends Controller {
             CoursePlanOrder::where('user_id', $user->id)->delete();
             UserCertificate::where('user_id', $user->id)->delete();
             NotificationLog::where('user_id', $user->id)->delete();
+            \App\Models\Conversion::where('user_id', $user->id)->delete(); // clear conversions/clicks
             
             // Also delete agent settings if any
             DB::table('agent_commission_settings')->where('user_id', $user->id)->delete();
             
             $user->balance = 0;
             $user->affiliate_balance = 0;
+            $user->special_agent_balance = 0;
+            
             $user->new_user_ads_watched = 0;
+            
             $user->kv = Status::KYC_UNVERIFIED;
             $user->kyc_data = null;
             
@@ -2652,9 +2825,19 @@ class AdminController extends Controller {
             $user->kyc_fee_trx = null;
             $user->kyc_fee_paid_at = null;
             \Log::info("RESET KYC FEE (USER DATA RESET) FOR USER $id");
+            
             $user->profile_complete = 0;
+            
+            // Reset network status
             $user->is_agent = 0;
+            $user->is_special_agent = 0;
+            $user->partner_plan_id = 0;
+            $user->partner_plan_valid_until = null;
+            
+            // Reset certificate
             $user->has_ad_certificate = false;
+            $user->has_ad_certificate_view = false;
+            
             $user->save();
         });
 
@@ -2662,10 +2845,13 @@ class AdminController extends Controller {
     }
 
     public function adjustBalance(Request $request, $id) {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to adjust user balance.']);
+        }
         $request->validate([
             'amount' => 'required|numeric|gt:0',
             'type' => 'required|in:add,subtract',
-            'wallet' => 'nullable|in:main,special_agent',
+            'wallet' => 'nullable|in:main,special_agent,affiliate',
             'reason' => 'required|string|max:255',
         ]);
 
@@ -2674,7 +2860,12 @@ class AdminController extends Controller {
         $reason = $request->reason;
         $wallet = $request->get('wallet', 'main');
 
-        $balanceField = ($wallet === 'special_agent') ? 'special_agent_balance' : 'balance';
+        $balanceField = 'balance';
+        if ($wallet === 'special_agent') {
+            $balanceField = 'special_agent_balance';
+        } elseif ($wallet === 'affiliate') {
+            $balanceField = 'affiliate_balance';
+        }
 
         if ($request->type == 'add') {
             $user->$balanceField += $amount;
@@ -2698,12 +2889,16 @@ class AdminController extends Controller {
         $transaction->details = "Admin adjustment: " . $reason;
         $transaction->trx = getTrx();
         $transaction->remark = 'admin_adjustment';
+        $transaction->wallet = $wallet;
         $transaction->save();
 
         return responseSuccess('balance_adjusted', ['User balance adjusted successfully']);
     }
 
     public function deleteBankDetails($id) {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to delete bank details.']);
+        }
         $user = User::findOrFail($id);
         
         $user->account_holder_name = null;
@@ -2728,6 +2923,9 @@ class AdminController extends Controller {
     }
 
     public function deleteUser($id) {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to delete users.']);
+        }
         $user = User::findOrFail($id);
         
         DB::transaction(function () use ($user) {
@@ -2746,6 +2944,9 @@ class AdminController extends Controller {
     }
 
     public function updateCoursePackage(Request $request, $id) {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to update course packages.']);
+        }
         $user = User::findOrFail($id);
         $planId = (int)$request->course_plan_id;
 
@@ -2766,6 +2967,9 @@ class AdminController extends Controller {
     }
 
     public function updateAdsPlan(Request $request, $id) {
+        if (!$this->checkPermission('edit_users')) {
+            return responseError('permission_denied', ['You do not have permission to update ads plans.']);
+        }
         $user = User::findOrFail($id);
         $planId = (int)$request->ads_plan_id;
 
@@ -2814,6 +3018,9 @@ class AdminController extends Controller {
     }
 
     public function toggleGateway($id) {
+        if (!$this->checkPermission('manage_settings')) {
+            return responseError('permission_denied', ['You do not have permission to manage gateways.']);
+        }
         $gateway = Gateway::findOrFail($id);
         $gateway->status = $gateway->status == 1 ? 0 : 1;
         $gateway->save();
@@ -2822,6 +3029,9 @@ class AdminController extends Controller {
     }
 
     public function uploadGatewayQr(Request $request) {
+        if (!$this->checkPermission('manage_settings')) {
+            return responseError('permission_denied', ['You do not have permission to manage gateways.']);
+        }
         $request->validate([
             'qr_images.*' => ['nullable', new FileTypeValidate(['jpg', 'jpeg', 'png', 'webp'])]
         ]);
@@ -2858,6 +3068,9 @@ class AdminController extends Controller {
     }
 
     public function removeGatewayQr($index) {
+        if (!$this->checkPermission('manage_settings')) {
+            return responseError('permission_denied', ['You do not have permission to manage gateways.']);
+        }
         $gateway = Gateway::where('alias', 'custom_qr')->firstOrFail();
         $qrImages = $gateway->extra ?? [];
 
@@ -2874,6 +3087,15 @@ class AdminController extends Controller {
 
     public function approveOrder(Request $request, $id) {
         $source = $request->get('source', 'deposit');
+        if ($source === 'withdrawal') {
+            if (!$this->checkPermission('edit_withdrawals')) {
+                return responseError('permission_denied', ['You do not have permission to approve withdrawals.']);
+            }
+        } else {
+            if (!$this->checkPermission('edit_deposits')) {
+                return responseError('permission_denied', ['You do not have permission to approve deposits.']);
+            }
+        }
         if ($source === 'withdrawal') {
             $withdraw = Withdrawal::where('id', $id)->where('status', Status::PAYMENT_PENDING)->with(['user', 'method'])->firstOrFail();
             $withdraw->status = Status::PAYMENT_SUCCESS;
@@ -2900,6 +3122,15 @@ class AdminController extends Controller {
 
     public function rejectOrder(Request $request, $id) {
         $source = $request->get('source', 'deposit');
+        if ($source === 'withdrawal') {
+            if (!$this->checkPermission('edit_withdrawals')) {
+                return responseError('permission_denied', ['You do not have permission to reject withdrawals.']);
+            }
+        } else {
+            if (!$this->checkPermission('edit_deposits')) {
+                return responseError('permission_denied', ['You do not have permission to reject deposits.']);
+            }
+        }
         if ($source === 'withdrawal') {
             $request->validate(['reason' => 'required|string|max:1000']);
             $withdraw = Withdrawal::where('id', $id)->where('status', Status::PAYMENT_PENDING)->with(['user', 'method'])->firstOrFail();
@@ -2962,6 +3193,15 @@ class AdminController extends Controller {
     public function deleteOrder(Request $request, $id) {
         $source = $request->get('source', 'deposit');
         if ($source === 'withdrawal') {
+            if (!$this->checkPermission('edit_withdrawals')) {
+                return responseError('permission_denied', ['You do not have permission to delete withdrawal records.']);
+            }
+        } else {
+            if (!$this->checkPermission('edit_deposits')) {
+                return responseError('permission_denied', ['You do not have permission to delete deposit records.']);
+            }
+        }
+        if ($source === 'withdrawal') {
             $withdraw = Withdrawal::findOrFail($id);
             $withdraw->delete();
         } else {
@@ -2976,13 +3216,20 @@ class AdminController extends Controller {
     /** List all admin accounts */
     public function listAdmins()
     {
-        $admins = \App\Models\Admin::orderBy('id', 'desc')->get()->map(function($a) {
+        if (!auth()->user()->is_super_admin) {
+            return responseError('forbidden', ['Only master admins can list other admins.']);
+        }
+        $admins = \App\Models\Admin::with('user:id,username')->orderBy('id', 'desc')->get()->map(function($a) {
             return [
                 'id'         => $a->id,
                 'name'       => $a->name,
                 'username'   => $a->username,
                 'email'      => $a->email,
                 'status'     => $a->status ?? 1,
+                'is_super_admin' => (bool) $a->is_super_admin,
+                'user_id'    => $a->user_id,
+                'user_name'  => $a->user?->username,
+                'permissions' => $a->permissions,
                 'created_at' => $a->created_at ? $a->created_at->format('Y-m-d H:i:s') : null,
             ];
         });
@@ -2993,6 +3240,9 @@ class AdminController extends Controller {
     /** Create a new admin account */
     public function createAdmin(Request $request)
     {
+        if (!auth()->user()->is_super_admin) {
+            return responseError('forbidden', ['Only master admins can create other admins.']);
+        }
         $request->validate([
             'name'     => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:admins,username',
@@ -3017,13 +3267,47 @@ class AdminController extends Controller {
                 'username' => $admin->username,
                 'email'    => $admin->email,
                 'status'   => 1,
+                'permissions' => null,
+                'user_id'  => null,
+                'is_super_admin' => false,
             ]
         ]);
+    }
+
+    /** Update admin permissions and linkage */
+    public function updateAdmin(Request $request, $id)
+    {
+        if (!auth()->user()->is_super_admin) {
+            return responseError('forbidden', ['Only master admins can update other admins.']);
+        }
+        $admin = \App\Models\Admin::findOrFail($id);
+        
+        if ($admin->is_super_admin && auth()->user()->id != $admin->id) {
+            return responseError('forbidden', ['You cannot modify another super admin.']);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:admins,email,'.$id,
+            'user_id' => 'nullable|integer|exists:users,id',
+            'permissions' => 'nullable|array',
+        ]);
+
+        $admin->name = $request->name;
+        $admin->email = $request->email;
+        $admin->user_id = $request->user_id;
+        $admin->permissions = $request->permissions;
+        $admin->save();
+
+        return responseSuccess('admin_updated', ['Admin settings updated successfully']);
     }
 
     /** Toggle admin active/inactive status */
     public function toggleAdmin(Request $request, $id)
     {
+        if (!auth()->user()->is_super_admin) {
+            return responseError('forbidden', ['Only master admins can toggle other admins.']);
+        }
         $admin = \App\Models\Admin::findOrFail($id);
         
         // Safety: ID 1 is the Master Admin and cannot be deactivated or deleted
@@ -3044,6 +3328,9 @@ class AdminController extends Controller {
     /** Reset admin password */
     public function resetAdminPassword(Request $request, $id)
     {
+        if (!auth()->user()->is_super_admin) {
+            return responseError('forbidden', ['Only master admins can reset other admin passwords.']);
+        }
         $request->validate(['password' => 'required|string|min:6|max:255']);
         $admin = \App\Models\Admin::findOrFail($id);
         $admin->password = \Illuminate\Support\Facades\Hash::make($request->password);
@@ -3054,6 +3341,9 @@ class AdminController extends Controller {
     /** Delete an admin account (cannot delete the currently logged-in admin) */
     public function deleteAdmin(Request $request, $id)
     {
+        if (!auth()->user()->is_super_admin) {
+            return responseError('forbidden', ['Only master admins can delete other admins.']);
+        }
         $currentAdmin = $request->user();
         if ($currentAdmin && $currentAdmin->id == $id) {
             return responseError('cannot_delete_self', ['You cannot delete your own account.']);
@@ -3072,8 +3362,13 @@ class AdminController extends Controller {
         $from  = Carbon::now()->subDays($range)->startOfDay();
         $to    = Carbon::now()->endOfDay();
 
-        // User growth (daily new registrations last N days)
-        $userGrowth = User::whereBetween('created_at', [$from, $to])
+        $allowedIds = $this->getAllowedUserIds();
+
+        // User growth
+        $userGrowthQuery = User::whereBetween('created_at', [$from, $to]);
+        if ($allowedIds !== null) $userGrowthQuery->whereIn('id', $allowedIds);
+        
+        $userGrowth = $userGrowthQuery
             ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')
@@ -3081,8 +3376,10 @@ class AdminController extends Controller {
             ->map(fn($r) => ['date' => $r->date, 'count' => (int)$r->count]);
 
         // Revenue chart
-        $revenueChart = Deposit::successful()
-            ->whereBetween('created_at', [$from, $to])
+        $revenueQuery = Deposit::successful()->whereBetween('created_at', [$from, $to]);
+        if ($allowedIds !== null) $revenueQuery->whereIn('user_id', $allowedIds);
+
+        $revenueChart = $revenueQuery
             ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
             ->groupBy('date')
             ->orderBy('date')
@@ -3090,8 +3387,10 @@ class AdminController extends Controller {
             ->map(fn($r) => ['date' => $r->date, 'total' => (float)$r->total]);
 
         // Withdrawal chart
-        $withdrawChart = Withdrawal::approved()
-            ->whereBetween('created_at', [$from, $to])
+        $withdrawQuery = Withdrawal::approved()->whereBetween('created_at', [$from, $to]);
+        if ($allowedIds !== null) $withdrawQuery->whereIn('user_id', $allowedIds);
+
+        $withdrawChart = $withdrawQuery
             ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
             ->groupBy('date')
             ->orderBy('date')
@@ -3103,26 +3402,45 @@ class AdminController extends Controller {
         // Summary stats with clearing support
         $totalDepositsQuery = Deposit::successful();
         if ($gs->admin_deposits_cleared_at) $totalDepositsQuery->where('created_at', '>', $gs->admin_deposits_cleared_at);
+        if ($allowedIds !== null) $totalDepositsQuery->whereIn('user_id', $allowedIds);
         $totalDeposits = $totalDepositsQuery->sum('amount');
 
         $totalWithdrawalsQuery = Withdrawal::approved();
         if ($gs->admin_withdrawals_cleared_at) $totalWithdrawalsQuery->where('created_at', '>', $gs->admin_withdrawals_cleared_at);
+        if ($allowedIds !== null) $totalWithdrawalsQuery->whereIn('user_id', $allowedIds);
         $totalWithdrawals = $totalWithdrawalsQuery->sum('amount');
 
-        $pendingDeposits = Deposit::pending()->count();
-        $pendingWithdrawals = Withdrawal::pending()->count();
-        $totalUsers         = User::count();
-        $activeUsers        = User::where('status', 1)->count();
-        $bannedUsers        = User::where('status', 0)->count();
-        $kycPending         = User::where('kv', \App\Constants\Status::KYC_PENDING)->count();
-        $kycVerified        = User::where('kv', \App\Constants\Status::KYC_VERIFIED)->count();
+        $pendingDepsQuery = Deposit::pending();
+        $pendingWithsQuery = Withdrawal::pending();
+        $userBaseQuery = User::query();
+        if ($allowedIds !== null) {
+            $pendingDepsQuery->whereIn('user_id', $allowedIds);
+            $pendingWithsQuery->whereIn('user_id', $allowedIds);
+            $userBaseQuery->whereIn('id', $allowedIds);
+        }
+
+        $pendingDeposits = $pendingDepsQuery->count();
+        $pendingWithdrawals = $pendingWithsQuery->count();
+        $totalUsers         = (clone $userBaseQuery)->count();
+        $activeUsers        = (clone $userBaseQuery)->where('status', 1)->count();
+        $bannedUsers        = (clone $userBaseQuery)->where('status', 0)->count();
+        $kycPending         = (clone $userBaseQuery)->where('kv', \App\Constants\Status::KYC_PENDING)->count();
+        $kycVerified        = (clone $userBaseQuery)->where('kv', \App\Constants\Status::KYC_VERIFIED)->count();
         
         $totalTransactionsQuery = Transaction::query();
         if ($gs->admin_transactions_cleared_at) $totalTransactionsQuery->where('created_at', '>', $gs->admin_transactions_cleared_at);
+        if ($allowedIds !== null) $totalTransactionsQuery->whereIn('user_id', $allowedIds);
         $totalTransactions  = $totalTransactionsQuery->count();
 
-        $newUsersToday      = User::whereDate('created_at', Carbon::today())->count();
-        $depositsToday      = Deposit::successful()->whereDate('created_at', Carbon::today())->sum('amount');
+        $todayUserQuery = User::whereDate('created_at', Carbon::today());
+        $todayDepQuery = Deposit::successful()->whereDate('created_at', Carbon::today());
+        if ($allowedIds !== null) {
+            $todayUserQuery->whereIn('id', $allowedIds);
+            $todayDepQuery->whereIn('user_id', $allowedIds);
+        }
+
+        $newUsersToday      = $todayUserQuery->count();
+        $depositsToday      = $todayDepQuery->sum('amount');
 
         return responseSuccess('reports', ['Reports retrieved'], [
             'summary' => [
@@ -3230,6 +3548,9 @@ public function clearLedger()
 
     public function updateEmailSettings(Request $request)
     {
+        if (!$this->checkPermission('manage_settings')) {
+            return responseError('permission_denied', ['You do not have permission to update system settings.']);
+        }
         $request->validate([
             'email_from' => 'required|email',
             'mail_method' => 'required|in:php,smtp',
@@ -3293,6 +3614,9 @@ public function clearLedger()
 
     public function updateWithdrawalSettings(Request $request)
     {
+        if (!$this->checkPermission('manage_settings')) {
+            return responseError('permission_denied', ['You do not have permission to update system settings.']);
+        }
         $request->validate([
             'user_bank_fixed_charge' => 'required|numeric|min:0',
             'user_bank_percent_charge' => 'required|numeric|min:0|max:100',

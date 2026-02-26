@@ -10,8 +10,43 @@ use App\Models\Expense;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
+use App\Models\User;
+
 class AccountLedgerController extends Controller
 {
+    /**
+     * Get IDs of all users in the referral tree for a given user.
+     */
+    private function getDownlineUserIds($userId): array
+    {
+        $allIds = [];
+        $searchIds = [$userId];
+
+        while (!empty($searchIds)) {
+            $nextIds = User::whereIn('ref_by', $searchIds)->pluck('id')->toArray();
+            if (empty($nextIds)) break;
+            
+            $newIds = array_diff($nextIds, $allIds);
+            if (empty($newIds)) break;
+
+            $allIds = array_merge($allIds, $newIds);
+            $searchIds = $newIds;
+        }
+
+        return $allIds;
+    }
+
+    /**
+     * Get allowed user IDs for the current admin.
+     */
+    private function getAllowedUserIds()
+    {
+        $admin = auth()->user();
+        if ($admin->is_super_admin) return null;
+        if ($admin->user_id) return $this->getDownlineUserIds($admin->user_id);
+        return [0];
+    }
+
     public function getSummary(Request $request)
     {
         $gs = gs();
@@ -32,6 +67,13 @@ class AccountLedgerController extends Controller
                     $query->whereNotIn(DB::raw("DATE($dateColumn)"), $hiddenDates);
                 }
             }
+            
+            // Downline restriction for deposits/withdrawals
+            $allowedIds = $this->getAllowedUserIds();
+            if ($allowedIds !== null && in_array(get_class($query->getModel()), [Deposit::class, Withdrawal::class])) {
+                $query->whereIn('user_id', $allowedIds);
+            }
+
             return $query;
         };
 
@@ -85,21 +127,31 @@ class AccountLedgerController extends Controller
         $total = count($allDates);
         $paginatedDates = array_slice($allDates, ($page - 1) * $perPage, $perPage);
 
+        $allowedIds = $this->getAllowedUserIds();
+
         $dailyData = [];
         foreach ($paginatedDates as $date) {
-            $recharge = Deposit::where('status', 1)->whereDate('created_at', $date)->sum('amount');
-            $withdraw = Withdrawal::where('status', 1)->whereDate('created_at', $date)->sum('amount');
+            $rechargeQuery = Deposit::where('status', 1)->whereDate('created_at', $date);
+            $withdrawQuery = Withdrawal::where('status', 1)->whereDate('created_at', $date);
+
+            if ($allowedIds !== null) {
+                $rechargeQuery->whereIn('user_id', $allowedIds);
+                $withdrawQuery->whereIn('user_id', $allowedIds);
+            }
+
+            $recharge = $rechargeQuery->sum('amount');
+            $withdraw = $withdrawQuery->sum('amount');
             $expenses = Expense::whereDate('date', $date)->get();
             $expenseSum = $expenses->sum('amount');
             
             $dailyData[] = [
                 'date' => $date,
                 'human_date' => Carbon::parse($date)->format('d M Y'),
-                'recharge' => $recharge,
-                'withdraw' => $withdraw,
-                'expenses_sum' => $expenseSum,
+                'recharge' => (float)$recharge,
+                'withdraw' => (float)$withdraw,
+                'expenses_sum' => (float)$expenseSum,
                 'expenses_list' => $expenses,
-                'net_profit' => $recharge - $withdraw - $expenseSum,
+                'net_profit' => (float)($recharge - $withdraw - $expenseSum),
             ];
         }
 

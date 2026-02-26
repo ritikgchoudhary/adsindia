@@ -58,24 +58,24 @@
                 :key="deposit.id" 
                 class="hover:tw-bg-slate-50/80 tw-transition-colors"
               >
-                <td class="tw-px-6 tw-py-4">
+                <td class="tw-px-6 tw-py-4" data-label="Gateway / TRX">
                   <span class="tw-block tw-font-bold tw-text-slate-900 tw-mb-1">{{ deposit.gateway?.name || deposit.method_name || '–' }}</span>
                   <span class="tw-block tw-text-xs tw-font-mono tw-text-slate-500 tw-bg-slate-100 tw-px-2 tw-py-0.5 tw-rounded tw-w-fit">{{ deposit.trx }}</span>
                 </td>
-                <td class="tw-px-6 tw-py-4">
+                <td class="tw-px-6 tw-py-4" data-label="Date">
                   <div class="tw-font-semibold tw-text-slate-800">{{ formatDate(deposit.created_at) }}</div>
                   <div class="tw-text-xs tw-text-slate-500">{{ deposit.time_human }}</div>
                 </td>
-                <td class="tw-px-6 tw-py-4">
+                <td class="tw-px-6 tw-py-4" data-label="Amount">
                   <div class="tw-font-bold tw-text-slate-900">₹{{ formatAmount(deposit.amount) }}</div>
                   <div class="tw-text-xs tw-text-slate-500">+ ₹{{ formatAmount(deposit.charge) }} charge</div>
                 </td>
-                <td class="tw-px-6 tw-py-4">
+                <td class="tw-px-6 tw-py-4" data-label="Status">
                    <span class="tw-px-2.5 tw-py-1 tw-rounded-lg tw-text-xs tw-font-bold tw-uppercase" :class="getStatusClass(deposit.status)">
                      {{ getStatusText(deposit.status) }}
                    </span>
                 </td>
-                <td class="tw-px-6 tw-py-4 tw-text-center">
+                <td class="tw-px-6 tw-py-4 tw-text-center" data-label="Action">
                   <button 
                     v-if="deposit.detail"
                     type="button" 
@@ -219,6 +219,55 @@ export default {
 }
 </script>
 
+<style>
+@media (max-width: 768px) {
+  /* Header */
+  .tw-p-5.tw-bg-slate-50\/50 { padding: 1rem !important; }
+  h5.tw-text-lg { font-size: 1rem !important; }
+  .tw-flex.tw-gap-2.tw-w-full { flex-direction: column !important; }
+  select.tw-text-sm { font-size: 12px !important; padding: 0.5rem !important; }
+  input.tw-text-sm { font-size: 12px !important; padding: 0.5rem 2.5rem 0.5rem 1rem !important; }
+  
+  /* Table to Cards on mobile */
+  .deposit-history-table thead { display: none; }
+  .deposit-history-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem !important;
+    border-bottom: 8px solid #f1f5f9 !important;
+  }
+  .deposit-history-table tbody td {
+    padding: 0.5rem 0 !important;
+    border: 0 !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100% !important;
+  }
+  .deposit-history-table tbody td:before {
+    content: attr(data-label);
+    font-weight: 700;
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+  }
+  
+  /* Reset Action Button Center */
+  .deposit-history-table tbody td:last-child {
+    justify-content: center !important;
+    padding-top: 1rem !important;
+    border-top: 1px solid #f1f5f9 !important;
+    margin-top: 0.5rem !important;
+  }
+  .deposit-history-table tbody td:last-child:before { content: none; }
+  
+  /* Modal adjustment */
+  .tw-max-w-md { max-width: 90% !important; margin: 0 auto !important; }
+  .tw-p-6 { padding: 1.25rem !important; }
+  .tw-rounded-2xl { border-radius: 1.25rem !important; }
+  h5.tw-text-lg { font-size: 1.1rem !important; }
+}
+</style>
 <style scoped>
 .deposit-history-table tbody tr:hover td,
 .deposit-history-table tbody tr:hover td * {

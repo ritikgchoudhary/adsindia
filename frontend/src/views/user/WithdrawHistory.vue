@@ -96,19 +96,19 @@
                        <i :class="getMethodIcon(withdraw.method?.name)"></i>
                     </div>
                     <div>
-                       <div class="tw-text-white tw-font-bold tw-text-xs">{{ withdraw.method?.name }}</div>
-                       <div class="tw-text-[9px] tw-text-indigo-400 tw-font-mono">{{ withdraw.trx }}</div>
+                       <div class="tw-text-white tw-font-bold tw-text-[11px]">{{ withdraw.method?.name }}</div>
+                       <div class="tw-text-[8px] tw-text-indigo-400 tw-font-mono">{{ withdraw.trx }}</div>
                     </div>
                  </div>
-                 <div class="status-badge-container tw-scale-90" v-html="withdraw.status_badge"></div>
+                 <div class="status-badge-container tw-scale-75 tw-origin-right" v-html="withdraw.status_badge"></div>
               </div>
               <div class="mobile-card-body">
                  <div class="tw-flex tw-justify-between tw-items-center">
                     <div>
-                       <div class="tw-text-white tw-font-black tw-text-lg">
+                       <div class="tw-text-white tw-font-black tw-text-base">
                           {{ currencySymbol }}{{ formatAmount(withdraw.amount) }}
                        </div>
-                       <div class="tw-text-[9px] tw-text-slate-500">
+                       <div class="tw-text-[8px] tw-text-slate-500">
                             {{ withdraw.created_at_human }}
                        </div>
                     </div>
@@ -608,16 +608,16 @@ export default {
   .ma-refresh-btn { width: 2.25rem !important; height: 2.25rem !important; border-radius: 0.75rem !important; }
   .ma-refresh-btn i { font-size: 0.75rem !important; }
 
-  /* Mobile Cards */
-  .lg\:tw-hidden.tw-p-3 { padding: 0.75rem !important; gap: 0.65rem !important; }
-  .ma-mobile-card { padding: 0.85rem !important; border-radius: 1rem !important; }
-  .mobile-card-header { margin-bottom: 0.75rem !important; }
-  .method-icon-mini { width: 1.75rem !important; height: 1.75rem !important; border-radius: 0.5rem !important; font-size: 0.75rem !important; }
-  .mobile-card-header .tw-text-white { font-size: 0.75rem !important; }
-  .tw-text-white.tw-font-black.tw-text-lg { font-size: 1.15rem !important; }
-  .tw-text-\[9px\] { font-size: 7px !important; }
-  .status-badge-container { scale: 0.75 !important; transform-origin: right !important; }
-  .tw-bg-indigo-600.tw-text-white { padding: 0.4rem 0.75rem !important; font-size: 9px !important; border-radius: 0.5rem !important; }
+  /* Mobile Cards - Compact */
+  .lg\:tw-hidden.tw-p-3 { padding: 0.5rem !important; gap: 0.5rem !important; }
+  .ma-mobile-card { padding: 0.65rem 0.75rem !important; border-radius: 0.85rem !important; }
+  .mobile-card-header { margin-bottom: 0.5rem !important; }
+  .method-icon-mini { width: 1.5rem !important; height: 1.5rem !important; border-radius: 0.4rem !important; font-size: 0.65rem !important; }
+  .mobile-card-header .tw-text-white { font-size: 0.7rem !important; }
+  .tw-text-white.tw-font-black.tw-text-lg { font-size: 1rem !important; }
+  .tw-text-\[9px\] { font-size: 6.5px !important; }
+  .status-badge-container { scale: 0.7 !important; transform-origin: right !important; }
+  .tw-bg-indigo-600.tw-text-white { padding: 0.35rem 0.65rem !important; font-size: 8.5px !important; border-radius: 0.4rem !important; }
 
   /* Modal */
   .ma-modal-content { border-radius: 1.5rem !important; }

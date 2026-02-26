@@ -1,7 +1,7 @@
 <template>
   <DashboardLayout page-title="Withdraw Money" :dark-theme="true">
-    <div class="tw-flex tw-justify-center tw-px-3 sm:tw-px-0">
-      <div class="tw-w-full lg:tw-w-3/4 xl:tw-w-2/3">
+    <div class="tw-flex tw-px-3 sm:tw-px-0">
+      <div class="tw-w-full">
         <form @submit.prevent="handleSubmit">
           <div class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-overflow-hidden">
             <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-2 lg:tw-max-h-[800px]">
@@ -57,12 +57,35 @@
 
               <!-- Right Side: Full Balance Withdraw -->
               <div class="tw-p-4 sm:tw-p-6 tw-bg-slate-50/50">
-                <div class="tw-bg-indigo-600 tw-rounded-xl tw-p-4 sm:tw-p-5 tw-text-white tw-mb-6 tw-shadow-lg tw-shadow-indigo-500/20">
-                  <p class="tw-text-indigo-200 tw-font-semibold tw-text-xs tw-uppercase tw-tracking-wider tw-mb-1">Available Balance</p>
-                  <h3 class="tw-text-2xl sm:tw-text-3xl tw-font-bold tw-mb-0">{{ currencySymbol }}{{ formatAmount(availableBalance) }}</h3>
-                  <p class="tw-text-indigo-200 tw-text-sm tw-mt-2 tw-mb-0 tw-leading-relaxed">
-                    Amount is fixed (full balance). You must pay 18% GST via gateway first, then withdrawal will be submitted.
-                  </p>
+                <div class="tw-relative tw-overflow-hidden tw-rounded-2xl tw-bg-gradient-to-br tw-from-slate-800 tw-to-slate-900 tw-p-6 sm:tw-p-8 tw-shadow-2xl tw-border tw-border-white/5 tw-mb-6">
+                  <div class="tw-relative tw-z-10">
+                    <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
+                      <div class="tw-w-10 tw-h-10 sm:tw-w-12 sm:tw-h-12 tw-bg-indigo-500/20 tw-backdrop-blur-md tw-rounded-xl tw-flex tw-items-center tw-justify-center">
+                        <i class="fas fa-wallet tw-text-indigo-400 tw-text-base sm:tw-text-xl"></i>
+                      </div>
+                      <div class="tw-text-right">
+                        <span class="tw-text-white/60 tw-text-[10px] sm:tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest">Available Balance</span>
+                        <div class="tw-flex tw-items-center tw-gap-1 tw-justify-end tw-mt-0.5">
+                          <div class="tw-w-1.5 tw-h-1.5 tw-bg-emerald-400 tw-rounded-full tw-animate-pulse"></div>
+                          <span class="tw-text-emerald-400 tw-text-[8px] sm:tw-text-[10px] tw-font-bold tw-uppercase">Secure</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="tw-mb-4">
+                      <div class="tw-flex tw-items-baseline tw-gap-2">
+                        <span class="tw-text-white tw-text-3xl sm:tw-text-5xl tw-font-black">{{ currencySymbol }}{{ formatAmount(availableBalance) }}</span>
+                      </div>
+                    </div>
+                    
+                    <div class="tw-pt-4 tw-border-t tw-border-white/10">
+                      <p class="tw-text-slate-400 tw-text-[10px] sm:tw-text-xs tw-leading-relaxed tw-m-0">
+                        Amount is fixed. Payout process begins after 18% GST verification via secure gateway.
+                      </p>
+                    </div>
+                  </div>
+                  <!-- Decorative blur -->
+                  <div class="tw-absolute tw-top-[-20%] tw-right-[-10%] tw-w-64 tw-h-64 tw-bg-indigo-500/5 tw-rounded-full tw-blur-3xl"></div>
                 </div>
 
                 <div class="tw-bg-slate-100 tw-rounded-xl tw-border tw-border-slate-200 tw-p-4 tw-mb-4">
@@ -105,9 +128,9 @@
                     <span class="tw-text-indigo-600 tw-text-sm tw-font-bold">Total Payable via Gateway</span>
                     <span class="tw-text-indigo-600 tw-font-black">{{ currencySymbol }}{{ processingFee }}</span>
                   </div>
-                  <div class="tw-flex tw-justify-between tw-items-center tw-gap-3 tw-mb-0 tw-mt-2">
-                    <span class="tw-text-slate-800 tw-text-sm tw-font-bold">You will receive</span>
-                    <span class="tw-text-green-600 tw-font-extrabold tw-text-base sm:tw-text-lg">{{ currencySymbol }}{{ finalAmount }}</span>
+                  <div class="tw-flex tw-justify-between tw-items-center tw-gap-3 tw-mb-0 tw-mt-2" style="display: flex !important; justify-content: space-between !important; width: 100% !important; gap: 12px !important;">
+                    <span class="tw-text-slate-800 tw-text-sm tw-font-bold tw-flex-1" style="text-align: left !important;">You will receive</span>
+                    <span class="tw-text-green-600 tw-font-extrabold tw-text-base sm:tw-text-lg tw-flex-initial tw-whitespace-nowrap" style="text-align: right !important;">{{ currencySymbol }}{{ finalAmount }}</span>
                   </div>
                 </div>
 
@@ -236,9 +259,9 @@
                 <span class="tw-text-white tw-font-black">{{ currencySymbol }}{{ methodFee }}</span>
               </div>
               <div class="tw-bg-indigo-500/10 tw-p-4 tw-rounded-2xl tw-mt-4 tw-border tw-border-indigo-500/20">
-                <div class="tw-flex tw-justify-between tw-items-center">
-                  <span class="tw-text-indigo-300 tw-text-xs tw-font-black tw-uppercase tw-tracking-widest">Total Payable</span>
-                  <span class="tw-text-indigo-400 tw-text-xl tw-font-black">{{ currencySymbol }}{{ processingFee }}</span>
+                <div class="tw-flex tw-justify-between tw-items-center tw-w-full" style="display: flex !important; justify-content: space-between !important; width: 100% !important; gap: 12px !important;">
+                  <span class="tw-text-indigo-300 tw-text-[8px] tw-font-black tw-uppercase tw-tracking-widest tw-flex-1" style="text-align: left !important;">Total Payable</span>
+                  <span class="tw-text-indigo-400 tw-text-lg tw-font-black tw-whitespace-nowrap tw-flex-initial" style="text-align: right !important;">{{ currencySymbol }}{{ processingFee }}</span>
                 </div>
               </div>
             </div>
@@ -558,11 +581,12 @@ export default {
   span.tw-text-sm { font-size: 0.75rem !important; }
   .tw-w-6.tw-h-6 { width: 1.25rem !important; height: 1.25rem !important; top: 0.5rem !important; right: 0.5rem !important; font-size: 10px !important; }
   
-  /* Balance card */
-  .tw-bg-indigo-600.tw-rounded-xl { padding: 0.85rem 1rem !important; margin-bottom: 0.85rem !important; border-radius: 1rem; }
-  .tw-text-xs.tw-uppercase { font-size: 7px !important; }
-  h3.tw-text-2xl { font-size: 1.35rem !important; }
-  .tw-text-sm.tw-mt-2 { font-size: 0.7rem !important; margin-top: 0.35rem !important; line-height: 1.3; }
+  /* New Redesigned Wallet Card - Mobile */
+  .tw-bg-gradient-to-br.tw-from-slate-800 { padding: 1.25rem !important; margin-bottom: 1.25rem !important; border-radius: 1.25rem !important; }
+  .tw-w-10.tw-h-10 { width: 2.25rem !important; height: 2.25rem !important; border-radius: 0.75rem !important; }
+  .tw-text-3xl.sm\:tw-text-5xl { font-size: 2rem !important; line-height: 1 !important; margin: 0.25rem 0 !important; }
+  .tw-text-white\/60 { font-size: 9px !important; }
+  .tw-text-slate-400.tw-text-\[10px\] { font-size: 10px !important; margin-top: 0.75rem !important; opacity: 0.7; }
   
   /* Info box */
   .tw-bg-slate-100 { padding: 0.65rem 0.85rem !important; border-radius: 0.75rem; margin-bottom: 0.75rem !important; }
@@ -587,19 +611,88 @@ export default {
   button.tw-py-3.5 { padding: 0.75rem !important; font-size: 0.9rem !important; border-radius: 0.75rem !important; }
   .tw-mt-4.tw-text-center.tw-text-xs { font-size: 9px !important; margin-top: 0.5rem !important; }
 
-  /* Modals */
-  .tw-rounded-\[2\.5rem\] { border-radius: 1.25rem !important; }
-  .tw-p-10 { padding: 1.25rem !important; }
-  .tw-w-20.tw-h-20 { width: 3.5rem !important; height: 3.5rem !important; border-radius: 1rem !important; margin-bottom: 1.25rem !important; }
-  .tw-w-20.tw-h-20 i { font-size: 1.5rem !important; }
-  h3.tw-text-2xl { font-size: 1.15rem !important; }
-  .tw-p-6.tw-rounded-3xl, .tw-p-8.tw-rounded-3xl { padding: 1rem !important; border-radius: 1rem !important; }
-  .tw-py-4 { padding: 0.75rem !important; border-radius: 1rem !important; font-size: 0.9rem !important; }
-  .tw-mb-8 { margin-bottom: 1rem !important; }
+  /* Modals - Ultra-Sleek & Compact Mobile */
+  .tw-rounded-\[2\.5rem\] { border-radius: 0.5rem !important; }
+  .tw-w-full.tw-max-w-md { width: 95% !important; max-width: 290px !important; margin: auto !important; display: block !important; }
+  
+  /* Top Section - Slim & Simple (Targeting Confirm Modal specifically where possible) */
+  .tw-bg-gradient-to-br.tw-from-indigo-500.tw-p-10 { 
+    background: #1e293b !important; 
+    padding: 0.5rem !important; 
+    border-bottom: 2px solid rgba(99, 102, 241, 0.2);
+    text-align: center !important;
+  }
+  
+  /* Limit Error Modal - Keep its character but compact */
+  .tw-from-amber-400.tw-p-10 {
+    padding: 1rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .tw-from-amber-400 .tw-w-20.tw-h-20 { 
+    display: flex !important; 
+    width: 2.5rem !important; 
+    height: 2.5rem !important; 
+    margin-bottom: 0.5rem !important; 
+    border-radius: 0.75rem !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .tw-from-amber-400 .tw-text-4xl { font-size: 1.25rem !important; }
+  .tw-from-amber-400 h3 { text-align: center !important; width: 100% !important; margin: 0 auto !important; }
+  
+  .tw-w-20.tw-h-20:not(.tw-from-amber-400 *) { display: none !important; }
+  
+  h3.tw-text-2xl { font-size: 0.85rem !important; margin: 0 !important; color: #fff !important; width: 100% !important; font-weight: 900 !important; text-align: center !important; }
+  p.tw-text-sm.tw-opacity-80, .tw-p-10 p.tw-text-indigo-100 { display: none !important; } 
+  
+  /* Message Text Sizing & Centering */
+  .tw-p-8.tw-text-center p.tw-text-base { font-size: 0.75rem !important; line-height: 1.4 !important; text-align: center !important; }
+  .tw-p-10 { padding: 0.75rem !important; }
+  .tw-p-8 { padding: 0.75rem !important; }
+  .tw-mx-auto.tw-mb-6 { margin-left: auto !important; margin-right: auto !important; margin-bottom: 0.5rem !important; }
+  .tw-text-center { text-align: center !important; }  
+  /* Body Section Alignment */
+  .tw-p-10:not(.tw-bg-gradient-to-br) { padding: 0.5rem 0.65rem !important; }
+  .tw-p-6.tw-mb-8 { margin-bottom: 0.25rem !important; padding: 0.45rem !important; border-radius: 0.4rem !important; background: rgba(15,23,42,0.6) !important; }
+  
+  /* Target only the actual rows to reduce spacing */
+  .tw-space-y-4 > div.tw-flex.tw-justify-between { 
+    margin-top: 0.2rem !important; 
+    width: 100% !important;
+  }
+  
+  /* Reset the summary box internal flex */
+  .tw-bg-indigo-500\/10 .tw-flex.tw-justify-between,
+  .tw-bg-emerald-500\/10 .tw-flex.tw-justify-between {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    align-items: center !important;
+  }
+  
+  .tw-text-xs.tw-font-bold.tw-uppercase { font-size: 6.5px !important; opacity: 0.6; letter-spacing: 0px !important; flex-shrink: 0 !important; }
+  .tw-font-black { font-size: 10px !important; text-align: right !important; white-space: nowrap !important; }
+  .tw-text-xl.tw-font-black { font-size: 0.95rem !important; text-align: right !important; color: #10b981 !important; white-space: nowrap !important; }
+
+  /* Summary Box */
+  .tw-bg-indigo-500\/10.tw-p-4 { padding: 0.4rem !important; margin-top: 0.35rem !important; border-radius: 0.4rem !important; }
+  .tw-flex.tw-flex-col.tw-gap-4 { gap: 0.35rem !important; }
+  
+  /* Buttons Centering */
+  .tw-py-4 { padding: 0.5rem !important; border-radius: 0.5rem !important; font-size: 0.8rem !important; width: 100% !important; height: auto !important; }
+  .tw-mt-6 { margin-top: 0.4rem !important; }
+  .tw-mb-8 { margin-bottom: 0.2rem !important; }
+  
+  /* Backdrops */
+  .tw-absolute.tw-inset-0.tw-bg-black\/80 { background: rgba(0,0,0,0.85) !important; backdrop-filter: blur(2px) !important; }
+  
+  .tw-text-\[10px\] { font-size: 6.5px !important; opacity: 0.4; margin-top: 0.35rem !important; display: block !important; width: 100% !important; text-align: center !important; }
 }
 
 @media (max-width: 400px) {
-  .tw-grid.tw-grid-cols-1.md\:tw-grid-cols-2 { gap: 0.5rem; }
-  .tw-p-4.sm\:tw-p-6 { padding: 0.65rem !important; }
+  .tw-grid.tw-grid-cols-1.md\:tw-grid-cols-2 { gap: 0.15rem; }
 }
 </style>

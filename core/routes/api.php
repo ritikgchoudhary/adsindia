@@ -385,6 +385,7 @@ Route::namespace('Api')->name('api.')->group(function(){
             // Admin Management (Master Admin)
             Route::get('admins', [\App\Http\Controllers\Admin\AdminController::class, 'listAdmins']);
             Route::post('admins/create', [\App\Http\Controllers\Admin\AdminController::class, 'createAdmin']);
+            Route::post('admins/{id}/update', [\App\Http\Controllers\Admin\AdminController::class, 'updateAdmin']);
             Route::post('admins/{id}/toggle', [\App\Http\Controllers\Admin\AdminController::class, 'toggleAdmin']);
             Route::post('admins/{id}/reset-password', [\App\Http\Controllers\Admin\AdminController::class, 'resetAdminPassword']);
             Route::post('admins/{id}/delete', [\App\Http\Controllers\Admin\AdminController::class, 'deleteAdmin']);

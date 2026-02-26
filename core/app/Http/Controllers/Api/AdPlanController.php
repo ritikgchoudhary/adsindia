@@ -43,7 +43,7 @@ class AdPlanController extends Controller
                 'ads_count' => 750, // 25 ads * 30 days
                 'validity_days' => 30,
                 'daily_ad_limit' => 25,
-                'reward_per_ad' => 30,
+                'reward_per_ad' => 30, // 25 * 30 * 30 = 22500 total (Wait, 2999 price)
                 'duration_minutes' => 1,
                 'is_recommended' => false,
             ],
@@ -51,10 +51,10 @@ class AdPlanController extends Controller
                 'name' => 'Popular Plan',
                 'slug' => 'popular-plan',
                 'price' => 4999,
-                'ads_count' => 3600, // 60 ads * 60 days
+                'ads_count' => 4800, // 80 ads * 60 days
                 'validity_days' => 60,
-                'daily_ad_limit' => 60,
-                'reward_per_ad' => 33.33,
+                'daily_ad_limit' => 80,
+                'reward_per_ad' => 40,
                 'duration_minutes' => 1,
                 'is_recommended' => true,
             ],
@@ -62,10 +62,10 @@ class AdPlanController extends Controller
                 'name' => 'Premium Plan',
                 'slug' => 'premium-plan',
                 'price' => 7499,
-                'ads_count' => 18000, // 100 ads * 180 days
+                'ads_count' => 27000, // 150 ads * 180 days
                 'validity_days' => 180,
-                'daily_ad_limit' => 100,
-                'reward_per_ad' => 40,
+                'daily_ad_limit' => 150,
+                'reward_per_ad' => 50,
                 'duration_minutes' => 1,
                 'is_recommended' => false,
             ],
@@ -73,10 +73,10 @@ class AdPlanController extends Controller
                 'name' => 'Elite Plan',
                 'slug' => 'elite-plan',
                 'price' => 9999,
-                'ads_count' => 73000, // 200 ads * 365 days
+                'ads_count' => 109500, // 300 ads * 365 days
                 'validity_days' => 365,
-                'daily_ad_limit' => 200,
-                'reward_per_ad' => 50,
+                'daily_ad_limit' => 300,
+                'reward_per_ad' => 60,
                 'duration_minutes' => 1,
                 'is_recommended' => false,
             ],

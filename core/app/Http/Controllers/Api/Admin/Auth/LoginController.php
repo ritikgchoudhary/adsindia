@@ -59,6 +59,8 @@ class LoginController extends Controller
                 'name' => $admin->name ?? $admin->username,
                 'username' => $admin->username,
                 'email' => $admin->email ?? '',
+                'is_super_admin' => (bool) $admin->is_super_admin,
+                'permissions' => $admin->permissions ?? null,
             ]
         ]);
     }

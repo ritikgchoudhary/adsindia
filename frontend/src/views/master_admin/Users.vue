@@ -73,7 +73,7 @@
             <option value="agent" class="tw-bg-slate-950">Agents</option>
           </select>
 
-          <button @click="openCreateUserModal" class="tw-whitespace-nowrap tw-px-6 tw-py-3.5 tw-bg-white tw-text-slate-950 tw-font-black tw-rounded-2xl tw-text-sm tw-flex tw-items-center tw-gap-2 hover:tw-bg-indigo-50 tw-transition-all active:tw-scale-95">
+          <button v-if="isSuper || perms.edit_users" @click="openCreateUserModal" class="tw-whitespace-nowrap tw-px-6 tw-py-3.5 tw-bg-white tw-text-slate-950 tw-font-black tw-rounded-2xl tw-text-sm tw-flex tw-items-center tw-gap-2 hover:tw-bg-indigo-50 tw-transition-all active:tw-scale-95">
             <i class="fas fa-plus tw-text-xs"></i>
             Create User
           </button>
@@ -263,13 +263,13 @@
                 </td>
                 <td class="tw-px-6 tw-py-5 tw-text-right">
                   <div class="tw-flex tw-justify-end tw-gap-2">
-                    <button @click="openManageUser(user)" class="tw-w-8 tw-h-8 tw-bg-indigo-500/10 tw-text-indigo-400 tw-rounded-lg hover:tw-bg-indigo-500 hover:tw-text-white tw-transition-all tw-border-0 tw-cursor-pointer">
+                    <button v-if="isSuper || perms.edit_users" @click="openManageUser(user)" class="tw-w-8 tw-h-8 tw-bg-indigo-500/10 tw-text-indigo-400 tw-rounded-lg hover:tw-bg-indigo-500 hover:tw-text-white tw-transition-all tw-border-0 tw-cursor-pointer">
                       <i class="fas fa-cog tw-text-xs"></i>
                     </button>
                     <button @click="viewKYC(user)" class="tw-w-8 tw-h-8 tw-bg-blue-500/10 tw-text-blue-400 tw-rounded-lg hover:tw-bg-blue-500 hover:tw-text-white tw-transition-all tw-border-0 tw-cursor-pointer">
                       <i class="fas fa-university tw-text-xs"></i>
                     </button>
-                    <button @click="toggleUserStatus(user)" :class="`tw-w-8 tw-h-8 tw-rounded-lg tw-transition-all tw-border-0 tw-cursor-pointer ${
+                    <button v-if="isSuper || perms.edit_users" @click="toggleUserStatus(user)" :class="`tw-w-8 tw-h-8 tw-rounded-lg tw-transition-all tw-border-0 tw-cursor-pointer ${
                       user.status === 'active' ? 'tw-bg-rose-500/10 tw-text-rose-400 hover:tw-bg-rose-500' : 'tw-bg-emerald-500/10 tw-text-emerald-400 hover:tw-bg-emerald-500'
                     }`">
                       <i :class="`fas ${user.status === 'active' ? 'fa-ban' : 'fa-check-circle'} tw-text-xs`" class="hover:tw-text-white"></i>
@@ -337,19 +337,19 @@
               <div class="row g-3">
                 <div class="col-12">
                   <label class="ma-form-label">Name</label>
-                  <input v-model="basicForm.name" type="text" class="ma-form-input">
+                  <input v-model="basicForm.name" type="text" class="ma-form-input" :disabled="!isSuper && !perms.edit_users">
                 </div>
                 <div class="col-md-6">
                   <label class="ma-form-label">Email</label>
-                  <input v-model="basicForm.email" type="email" class="ma-form-input">
+                  <input v-model="basicForm.email" type="email" class="ma-form-input" :disabled="!isSuper && !perms.edit_users">
                 </div>
                 <div class="col-md-6">
                   <label class="ma-form-label">Mobile</label>
-                  <input v-model="basicForm.mobile" type="text" class="ma-form-input">
+                  <input v-model="basicForm.mobile" type="text" class="ma-form-input" :disabled="!isSuper && !perms.edit_users">
                 </div>
                 <div class="col-md-6">
                   <label class="ma-form-label">State</label>
-                  <select v-model="basicForm.state" class="ma-form-input">
+                  <select v-model="basicForm.state" class="ma-form-input" :disabled="!isSuper && !perms.edit_users">
                     <option value="">Select State</option>
                     <option v-for="state in indianStates" :key="state" :value="state">{{ state }}</option>
                   </select>
@@ -369,7 +369,7 @@
                   </div>
                 </div>
               </div>
-              <div class="ma-form-actions mt-4">
+              <div v-if="isSuper || perms.edit_users" class="ma-form-actions mt-4">
                 <button class="ma-btn ma-btn--primary" :disabled="savingBasic" @click="saveBasic">
                   {{ savingBasic ? 'Saving...' : 'Save Changes' }}
                 </button>
@@ -401,10 +401,10 @@
                 </div>
                 <div class="col-md-6">
                    <label class="ma-form-label">Bank Registered No</label>
-                   <input v-model="bankForm.bank_registered_no" type="text" class="ma-form-input">
+                   <input v-model="bankForm.bank_registered_no" type="text" class="ma-form-input" :disabled="!isSuper && !perms.edit_users">
                 </div>
               </div>
-              <div class="ma-form-actions mt-4 gap-2">
+              <div v-if="isSuper || perms.edit_users" class="ma-form-actions mt-4 gap-2">
                 <button class="ma-btn ma-btn--primary" :disabled="savingBank" @click="saveBank">
                   {{ savingBank ? 'Saving...' : 'Save Bank Details' }}
                 </button>
@@ -424,11 +424,11 @@
                       <div class="text-muted small mb-1">Current</div>
                       <div class="ma-badge ma-badge--secondary w-100 justify-content-start">{{ manageUser?.active_course_plan?.name || 'None' }}</div>
                     </div>
-                    <select v-model="userCoursePlanId" class="ma-form-input mb-3">
+                    <select v-model="userCoursePlanId" class="ma-form-input mb-3" :disabled="!isSuper && !perms.edit_users">
                       <option :value="0">Remove Package</option>
                       <option v-for="p in hardcodedCoursePlans" :key="p.id" :value="p.id">{{ p.name }} (₹{{ p.price }})</option>
                     </select>
-                    <button class="ma-btn ma-btn--primary w-100" :disabled="updatingPackage" @click="updateCoursePackage">Update Course</button>
+                    <button v-if="isSuper || perms.edit_users" class="ma-btn ma-btn--primary w-100" :disabled="updatingPackage" @click="updateCoursePackage">Update Course</button>
                   </div>
                 </div>
                 <div class="col-md-6">
@@ -438,11 +438,11 @@
                       <div class="text-muted small mb-1">Current</div>
                       <div class="ma-badge ma-badge--secondary w-100 justify-content-start">{{ manageUser?.active_ads_plan?.name || 'None' }}</div>
                     </div>
-                    <select v-model="userAdsPlanId" class="ma-form-input mb-3">
+                    <select v-model="userAdsPlanId" class="ma-form-input mb-3" :disabled="!isSuper && !perms.edit_users">
                       <option :value="0">Remove Plan</option>
                       <option v-for="p in hardcodedAdsPlans" :key="p.id" :value="p.id">{{ p.name }}</option>
                     </select>
-                    <button class="ma-btn ma-btn--primary w-100" :disabled="updatingAdsPlan" @click="updateAdsPlan">Update Ads Plan</button>
+                    <button v-if="isSuper || perms.edit_users" class="ma-btn ma-btn--primary w-100" :disabled="updatingAdsPlan" @click="updateAdsPlan">Update Ads Plan</button>
                   </div>
                 </div>
               </div>
@@ -456,7 +456,7 @@
                   </div>
                   <div class="tw-flex tw-items-center tw-gap-3">
                     <span v-if="manageUser?.has_ad_certificate" class="tw-text-[10px] tw-font-bold tw-text-emerald-500 tw-uppercase tw-tracking-wider tw-bg-emerald-500/10 tw-px-2 tw-py-1 tw-rounded">Activated</span>
-                    <button @click="toggleAdCertificate('course')" class="ma-btn" :class="manageUser?.has_ad_certificate ? 'ma-btn--danger' : 'ma-btn--primary'">
+                    <button v-if="isSuper || perms.edit_users" @click="toggleAdCertificate('course')" class="ma-btn" :class="manageUser?.has_ad_certificate ? 'ma-btn--danger' : 'ma-btn--primary'">
                       {{ manageUser?.has_ad_certificate ? 'Remove Access' : 'Mark as Purchased' }}
                     </button>
                   </div>
@@ -472,7 +472,7 @@
                   </div>
                   <div class="tw-flex tw-items-center tw-gap-3">
                     <span v-if="manageUser?.has_ad_certificate_view" class="tw-text-[10px] tw-font-bold tw-text-purple-500 tw-uppercase tw-tracking-wider tw-bg-purple-500/10 tw-px-2 tw-py-1 tw-rounded">Activated</span>
-                    <button @click="toggleAdCertificate('view')" class="ma-btn" :class="manageUser?.has_ad_certificate_view ? 'ma-btn--danger' : 'ma-btn--primary'">
+                    <button v-if="isSuper || perms.edit_users" @click="toggleAdCertificate('view')" class="ma-btn" :class="manageUser?.has_ad_certificate_view ? 'ma-btn--danger' : 'ma-btn--primary'">
                       {{ manageUser?.has_ad_certificate_view ? 'Remove Access' : 'Mark as Purchased' }}
                     </button>
                   </div>
@@ -583,6 +583,7 @@
                     <select v-model="balanceForm.wallet" class="ma-form-input">
                        <option value="main">Main Balance</option>
                        <option value="special_agent">Quick Payment</option>
+                       <option value="affiliate">Affiliate Balance</option>
                     </select>
                   </div>
                   <div class="col-md-2">
@@ -600,12 +601,12 @@
                     <label class="ma-form-label">Reason</label>
                     <input v-model="balanceForm.reason" type="text" class="ma-form-input" placeholder="Admin adjustment">
                   </div>
-                  <div class="col-md-2">
+                  <div v-if="isSuper || perms.edit_users" class="col-md-2">
                     <button class="ma-btn ma-btn--primary w-100" :disabled="adjustingBalance || !balanceForm.amount" @click="adjustBalance">Submit</button>
                   </div>
                 </div>
               </div>
-              <div class="row g-3 mt-3">
+              <div v-if="isSuper || perms.edit_users" class="row g-3 mt-3">
                 <div class="col-md-6">
                   <button class="tw-w-full tw-py-3 tw-bg-amber-500 hover:tw-bg-amber-600 tw-text-white tw-font-bold tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-transition-all active:tw-scale-95" :disabled="resettingUser" @click="resetUserData">
                     <i class="fas fa-undo"></i> Reset All User Data
@@ -628,13 +629,13 @@
                 <div class="col-12">
                   <label class="ma-form-label">New Sponsor ID (ADS ID Only)</label>
                   <div class="d-flex gap-2">
-                    <input v-model="sponsorId" type="text" class="ma-form-input" placeholder="ADS15001" @input="sponsorId = sponsorId.toUpperCase()">
-                    <button class="ma-btn ma-btn--secondary" style="white-space: nowrap" @click="sponsorId = ''; saveSponsor()">Set to None</button>
+                    <input v-model="sponsorId" type="text" class="ma-form-input" placeholder="ADS15001" @input="sponsorId = sponsorId.toUpperCase()" :disabled="!isSuper && !perms.edit_users">
+                    <button v-if="isSuper || perms.edit_users" class="ma-btn ma-btn--secondary" style="white-space: nowrap" @click="sponsorId = ''; saveSponsor()">Set to None</button>
                   </div>
                   <small class="text-muted">Enter ADS ID or click "Set to None" to clear.</small>
                 </div>
               </div>
-              <div class="ma-form-actions mt-4">
+              <div v-if="isSuper || perms.edit_users" class="ma-form-actions mt-4">
                 <button class="ma-btn ma-btn--primary" :disabled="savingSponsor" @click="saveSponsor">Update Sponsor</button>
               </div>
             </div>
@@ -662,11 +663,11 @@
 
               <div class="ma-soft-box">
                 <div class="d-flex align-items-center gap-3">
-                  <input id="is_agent" type="checkbox" v-model="agentForm.is_agent">
+                  <input id="is_agent" type="checkbox" v-model="agentForm.is_agent" :disabled="!isSuper && !perms.edit_users">
                   <label for="is_agent" class="mb-0"><strong>Mark User as Agent</strong> (Gives access to agent portal)</label>
                 </div>
                 <div class="mt-4 d-flex align-items-center gap-3">
-                  <input id="is_special_agent" type="checkbox" v-model="agentForm.is_special_agent">
+                  <input id="is_special_agent" type="checkbox" v-model="agentForm.is_special_agent" :disabled="!isSuper && !perms.edit_users">
                   <label for="is_special_agent" class="mb-0"><strong>Mark as Special Agent</strong> (Gives access to Quick Payment menu)</label>
                 </div>
                 <div class="mt-3 text-info small">
@@ -687,7 +688,7 @@
                   </div>
                 </div>
               </div>
-              <div class="ma-form-actions mt-4">
+              <div v-if="isSuper || perms.edit_users" class="ma-form-actions mt-4">
                 <button class="ma-btn ma-btn--primary" :disabled="savingAgent" @click="saveAgentSettings">Update Agent Status</button>
               </div>
             </div>
@@ -700,7 +701,7 @@
                   <input v-model="newPassword" type="text" class="ma-form-input" placeholder="Enter new password">
                 </div>
               </div>
-              <div class="ma-form-actions mt-4">
+              <div v-if="isSuper || perms.edit_users" class="ma-form-actions mt-4">
                 <button class="ma-btn ma-btn--primary" :disabled="savingPassword" @click="resetPassword">Reset Password</button>
               </div>
             </div>
@@ -828,7 +829,7 @@
               </div>
             </div>
           </div>
-            <div class="ma-form-actions tw-px-8 tw-pb-8 tw-flex tw-flex-wrap tw-gap-3">
+            <div v-if="isSuper || perms.edit_users" class="ma-form-actions tw-px-8 tw-pb-8 tw-flex tw-flex-wrap tw-gap-3">
               <!-- If Pending (kv=2) -->
               <template v-if="selectedUser?.kv === 2">
                 <button class="ma-btn ma-btn--primary" @click="approveKYC">Verify KYC</button>
@@ -874,6 +875,10 @@ export default {
     const filterStatus = ref('')
     const currentPage = ref(1)
     const lastPage = ref(1)
+    
+    const admin = ref(JSON.parse(localStorage.getItem('admin_user') || '{}'))
+    const perms = computed(() => admin.value.permissions || {})
+    const isSuper = computed(() => admin.value.is_super_admin)
 
     const activeCount = ref(0)
     const bannedCount = ref(0)
@@ -1262,23 +1267,48 @@ export default {
     }
 
     const resetUserData = async () => {
-      if (!confirm('This will wipe all transactions and earnings for this user. Continue?')) return
+      // Step 1: Normal confirmation
+      if (!confirm('WARNING: This will wipe ALL transactions, ad packages, course plans, KYC, certificates, and earnings for this user (ADS' + manageUser.value.id + '). Continue?')) return
+      
+      // Step 2: High security Prompt
+      const confirmWord = window.prompt(`To proceed, please type "RESET" (all caps) below to clear all data for user ADS${manageUser.value.id}:`)
+      
+      if (confirmWord !== 'RESET') {
+        if (window.notify) window.notify('info', 'User reset operation cancelled.')
+        return
+      }
+
       resettingUser.value = true
       try {
         await api.post(`/admin/user/${manageUser.value.id}/reset-data`)
-        if (window.notify) window.notify('success', 'User data reset')
+        if (window.notify) window.notify('success', `User (ADS${manageUser.value.id}) data completely reset!`)
         fetchUsers(currentPage.value)
+        
+        // Also update local ui
+        manageUser.value.balance = '0.00'
+        manageUser.value.affiliate_balance = '0.00'
+        manageUser.value.special_agent_balance = '0.00'
+        
+      } catch(e) {
+        if (window.notify) window.notify('error', 'Error resetting user data.')
       } finally {
         resettingUser.value = false
       }
     }
 
     const deleteUser = async () => {
-      if (!confirm('Permanently DELETE this user? This cannot be undone.')) return
+      if (!confirm(`WARNING: You are about to PERMANENTLY DELETE user ADS${manageUser.value.id}. This cannot be undone. Continue?`)) return
+      
+      const confirmWord = window.prompt(`To PROCEED with deletion, please type "DELETE" (all caps) below:`)
+      if (confirmWord !== 'DELETE') {
+        if (window.notify) window.notify('info', 'Delete operation cancelled.')
+        return
+      }
+
       deletingUser.value = true
       try {
         await api.post(`/admin/user/${manageUser.value.id}/delete`)
-        if (window.notify) window.notify('success', 'User deleted')
+        if (window.notify) window.notify('success', 'User permanently deleted.')
         closeManageModal()
         fetchUsers(1)
       } finally {
@@ -1414,6 +1444,8 @@ export default {
     }
 
     onMounted(() => {
+      // Refresh admin data from localStorage to pick up any background updates (from Header sync)
+      admin.value = JSON.parse(localStorage.getItem('admin_user') || '{}')
       fetchUsers(1)
       fetchCounts()
     })
@@ -1438,7 +1470,8 @@ export default {
         rejectionReason.value = ''; 
       },
       showCreateUserModal, creatingUser, createForm, openCreateUserModal, closeCreateUserModal, createUser,
-      detailLoading, referrals, commissions, paymentsHistory: paymentsHistory, fetchUserDetail, toggleAdCertificate
+      detailLoading, referrals, commissions, paymentsHistory: paymentsHistory, fetchUserDetail, toggleAdCertificate,
+      isSuper, perms
     }
   }
 }
