@@ -134,6 +134,84 @@ class SimplyPayGateway
         ];
     }
 
+    /**
+     * Create Payout (Transfer) Order
+     */
+    public static function createPayout($data)
+    {
+        $url = self::baseUrl() . '/api/v2/payout/order/create';
+
+        $amount = (string) $data['amount'];
+        if (strpos($amount, '.') !== false) {
+            $amount = rtrim(rtrim($amount, '0'), '.');
+        }
+
+        $params = [
+            'appId' => self::appId(),
+            'merOrderNo' => (string) $data['merOrderNo'],
+            'currency' => $data['currency'] ?? 'INR',
+            'amount' => $amount,
+            'notifyUrl' => $data['notifyUrl'],
+            'attach' => $data['attach'] ?? ('Payout_' . $data['merOrderNo']),
+            'extra' => [
+                'payoutType' => $data['payoutType'] ?? 'IFSC', // or 'UPI'
+                'name' => $data['name'],
+                'email' => $data['email'] ?? 'user@example.com',
+                'mobile' => (string) ($data['mobile'] ?? '9999999999'),
+            ]
+        ];
+
+        if (($data['payoutType'] ?? 'IFSC') === 'UPI') {
+            $params['extra']['account'] = $data['upiId'];
+        } else {
+            $params['extra']['account'] = $data['accountNumber'];
+            $params['extra']['ifsc'] = $data['ifscCode'];
+        }
+
+        $params['sign'] = self::createSign($params, self::appSecret());
+
+        Log::info('SimplyPay Create Payout Request', ['url' => $url, 'params' => $params]);
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json;charset=utf-8'
+        ])->post($url, $params);
+
+        if ($response->failed()) {
+            Log::error('SimplyPay Payout Request Failed', ['status' => $response->status(), 'body' => $response->body()]);
+            throw new \Exception('SimplyPay connection failed');
+        }
+
+        $resData = $response->json();
+        Log::info('SimplyPay Payout Response', $resData);
+
+        return $resData;
+    }
+
+    /**
+     * Query Merchant Balance
+     */
+    public static function queryBalance()
+    {
+        $url = self::baseUrl() . '/api/v2/account/balance/query';
+
+        $params = [
+            'appId' => self::appId(),
+        ];
+
+        $params['sign'] = self::createSign($params, self::appSecret());
+
+        $response = Http::get($url, $params);
+        
+        if ($response->failed()) {
+            return ['code' => -1, 'msg' => 'Connection failed'];
+        }
+
+        $resData = $response->json();
+        Log::info('SimplyPay Balance Response', $resData);
+        
+        return $resData;
+    }
+
 
 
     /**

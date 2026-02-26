@@ -2321,6 +2321,100 @@ class AdminController extends Controller {
         return responseSuccess('withdraw_approved', ['Withdrawal approved successfully']);
     }
 
+    /**
+     * SimplyPay: Fetch Merchant Balance
+     */
+    public function simplyPayBalance()
+    {
+        if (!$this->checkPermission('view_gateways')) {
+            return responseError('permission_denied', ['You do not have permission to view balances.']);
+        }
+
+        try {
+            $res = \App\Lib\SimplyPayGateway::queryBalance();
+            if (($res['code'] ?? -1) === 0) {
+                return responseSuccess('balance_retrieved', ['SimplyPay balance retrieved'], [
+                    'balance' => $res['data']['payoutValue'] ?? 0,
+                    'currency' => $res['data']['currency'] ?? 'INR',
+                    'raw' => $res['data']
+                ]);
+            }
+            return responseError('balance_error', [$res['msg'] ?? 'SimplyPay returned an error']);
+        } catch (\Throwable $e) {
+            return responseError('simplypay_connection_error', [$e->getMessage()]);
+        }
+    }
+
+    /**
+     * SimplyPay: Auto Payout (Master Admin Action)
+     */
+    public function simplyPayAutoPayout(Request $request)
+    {
+        if (!$this->checkPermission('edit_withdrawals')) {
+            return responseError('permission_denied', ['You do not have permission to process auto-payouts.']);
+        }
+        $request->validate(['id' => 'required|integer']);
+
+        $withdraw = Withdrawal::where('id', (int) $request->id)
+            ->where('status', Status::PAYMENT_PENDING)
+            ->with(['user', 'method'])
+            ->firstOrFail();
+
+        // Extract bank/upi details from withdraw_information array
+        $infoRows = $withdraw->withdraw_information;
+        $payoutType = 'IFSC';
+        $name = '';
+        $accNo = '';
+        $ifsc = '';
+        $upiId = '';
+        $email = $withdraw->user->email ?? 'user@example.com';
+        $mobile = $withdraw->user->mobile ?? '9999999999';
+
+        if (is_array($infoRows)) {
+            foreach ($infoRows as $row) {
+                $n = (string) ($row['name'] ?? '');
+                $v = (string) ($row['value'] ?? '');
+                if ($n === 'payout_type') {
+                    $payoutType = (strtoupper($v) === 'UPI') ? 'UPI' : 'IFSC';
+                }
+                if ($n === 'account_holder_name' || $n === 'name') $name = $v;
+                if ($n === 'account_number') $accNo = $v;
+                if ($n === 'ifsc_code') $ifsc = $v;
+                if ($n === 'upi_id') $upiId = $v;
+            }
+        }
+
+        if (!$name) $name = $withdraw->user->fullname ?: $withdraw->user->username;
+
+        try {
+            $res = \App\Lib\SimplyPayGateway::createPayout([
+                'merOrderNo' => $withdraw->trx,
+                'amount' => $withdraw->final_amount,
+                'payoutType' => $payoutType,
+                'name' => $name,
+                'email' => $email,
+                'mobile' => $mobile,
+                'accountNumber' => $accNo,
+                'ifscCode' => $ifsc,
+                'upiId' => $upiId,
+                'notifyUrl' => url('/ipn/simplypay')
+            ]);
+
+            if (($res['code'] ?? -1) === 0) {
+                // If API returns SUCCESS immediately (or pending, which is common for payouts)
+                $withdraw->admin_feedback = 'Auto Payout initiated via SimplyPay. Status: ' . ($res['msg'] ?? 'Pending');
+                $withdraw->save();
+
+                return responseSuccess('payout_initiated', ['SimplyPay Auto-Payout initiated successfully! Please check status in a few minutes.']);
+            } else {
+                return responseError('payout_failed', [$res['msg'] ?? $res['error'] ?? 'SimplyPay API rejected the request']);
+            }
+
+        } catch (\Throwable $e) {
+            return responseError('simplypay_error', ['Unable to connect to SimplyPay: ' . $e->getMessage()]);
+        }
+    }
+
 
 
     /**

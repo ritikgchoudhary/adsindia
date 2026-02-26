@@ -299,6 +299,7 @@ const routes = [
   },
   { path: '/user/vip-membership', name: 'UserVipMembership', component: () => import('../views/user/VipMembership.vue'), meta: { requiresAuth: true } },
   { path: '/user/verified-badge', name: 'UserVerifiedBadge', component: () => import('../views/user/VerifiedBadge.vue'), meta: { requiresAuth: true } },
+  { path: '/user/beta-features', name: 'UserBetaFeatures', component: () => import('../views/user/BetaFeatures.vue'), meta: { requiresAuth: true } },
   { path: '/user/ad-booster', name: 'UserAdBooster', component: () => import('../views/user/AdBooster.vue'), meta: { requiresAuth: true } },
   // Admin Routes
   {

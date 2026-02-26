@@ -11,7 +11,9 @@ class BetaFeaturesController extends Controller
 {
     public function getSummary()
     {
+        $testerCount = \App\Models\User::where('beta_access', true)->count();
         return responseSuccess('beta_summary', ['Beta summary retrieved'], [
+            'tester_count' => $testerCount,
             'points' => [
                 'vip' => [
                     'title' => 'VIP Membership',
@@ -26,6 +28,18 @@ class BetaFeaturesController extends Controller
                     'enabled' => true,
                 ]
             ]
+        ]);
+    }
+
+    public function toggleBetaAccess(Request $request)
+    {
+        $request->validate(['user_id' => 'required|integer']);
+        $user = \App\Models\User::findOrFail($request->user_id);
+        $user->beta_access = !$user->beta_access;
+        $user->save();
+
+        return responseSuccess('beta_toggled', ['Beta access updated for ' . $user->username], [
+            'beta_access' => $user->beta_access
         ]);
     }
 

@@ -63,8 +63,9 @@
         <div class="lg:tw-col-span-1">
           <div class="tw-h-full tw-bg-gradient-to-b tw-from-yellow-400 tw-to-yellow-600 tw-rounded-[32px] tw-p-6 sm:tw-p-8 tw-text-center tw-shadow-2xl tw-border-2 tw-border-white/50 tw-flex tw-flex-col tw-items-center tw-justify-center">
             <!-- UID -->
-            <h2 class="tw-text-white tw-font-bold tw-text-xl sm:tw-text-2xl tw-mb-4 tw-drop-shadow-lg tw-uppercase tw-tracking-widest">
+            <h2 class="tw-text-white tw-font-bold tw-text-xl sm:tw-text-2xl tw-mb-4 tw-drop-shadow-lg tw-uppercase tw-tracking-widest tw-flex tw-items-center tw-justify-center tw-gap-2">
               {{ referralCode || user.uid || user.id || 'USER' }}
+              <i v-if="user.verified_badge" class="fas fa-check-circle tw-text-blue-400 tw-text-sm" title="Verified Partner"></i>
             </h2>
             
             <!-- Profile Image -->
@@ -84,6 +85,11 @@
                 >
               </div>
               <div class="tw-absolute tw-bottom-2 tw-right-2 tw-bg-green-500 tw-w-4 tw-h-4 tw-rounded-full tw-border-[2px] tw-border-white tw-shadow-lg" title="Active"></div>
+              
+              <!-- Beta Ribbon -->
+              <div v-if="user.beta_access" class="tw-absolute -tw-top-2 -tw-right-6 tw-bg-indigo-600 tw-text-white tw-text-[7px] tw-font-black tw-px-2 tw-py-0.5 tw-rounded-md tw-rotate-12 tw-shadow-lg tw-border tw-border-white/20">
+                BETA PARTNER
+              </div>
             </div>
 
             <!-- Full Name -->
@@ -92,8 +98,13 @@
             </h1>
 
             <!-- Badge -->
-            <div class="tw-bg-gradient-to-r tw-from-blue-600 tw-to-blue-500 tw-text-white tw-px-8 tw-py-2.5 tw-rounded-xl tw-font-bold tw-text-xs sm:tw-text-sm tw-shadow-xl tw-tracking-widest tw-uppercase">
-              ADS SKILL INDIA
+            <div class="tw-relative">
+              <div class="tw-bg-gradient-to-r tw-from-blue-600 tw-to-blue-500 tw-text-white tw-px-8 tw-py-2.5 tw-rounded-xl tw-font-bold tw-text-xs sm:tw-text-sm tw-shadow-xl tw-tracking-widest tw-uppercase">
+                ADS SKILL INDIA
+              </div>
+              <div v-if="user.vip_status" class="tw-absolute -tw-top-3 -tw-right-1 tw-bg-amber-500 tw-text-white tw-w-6 tw-h-6 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-shadow-lg tw-border-2 tw-border-white">
+                 <i class="fas fa-crown tw-text-[10px]"></i>
+              </div>
             </div>
           </div>
         </div>

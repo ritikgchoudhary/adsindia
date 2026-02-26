@@ -334,6 +334,8 @@ Route::prefix('admin')->group(function () {
         Route::post('deposit/reject', [\App\Http\Controllers\Admin\DepositController::class, 'reject']);
         Route::post('withdraw/approve', [\App\Http\Controllers\Admin\AdminController::class, 'approveWithdrawal']);
         Route::post('withdraw/reject', [\App\Http\Controllers\Admin\AdminController::class, 'rejectWithdrawal']);
+        Route::get('simplypay/balance', [\App\Http\Controllers\Admin\AdminController::class, 'simplyPayBalance']);
+        Route::post('withdraw/auto-payout/simplypay', [\App\Http\Controllers\Admin\AdminController::class, 'simplyPayAutoPayout']);
         // Master Admin Settings & History Clear
         Route::get('agents', [\App\Http\Controllers\Admin\AdminController::class, 'getAgents']);
         Route::post('clear-history/transactions', [\App\Http\Controllers\Admin\AdminController::class, 'clearTransactions']);
@@ -428,6 +430,8 @@ Route::prefix('admin')->group(function () {
             Route::get('instant/settings', [$c, 'getInstantSettings']);
             Route::post('instant/settings', [$c, 'saveInstantSettings']);
 
+            Route::post('toggle-access', [$c, 'toggleBetaAccess']);
+            
             // Additional Points Placeholders
             Route::get('extra/settings', [$c, 'getExtraSettings']);
             Route::post('extra/settings', [$c, 'saveExtraSettings']);

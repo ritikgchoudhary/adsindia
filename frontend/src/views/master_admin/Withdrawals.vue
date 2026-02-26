@@ -54,6 +54,23 @@
               <div class="ma-stat-card__glow"></div>
             </div>
           </div>
+          <div class="col-md-3">
+            <div class="ma-stat-card ma-stat-card--indigo" @click="fetchSimplyPayBalance">
+              <div class="ma-stat-card__icon"><i class="fas fa-wallet"></i></div>
+              <div class="ma-stat-card__content">
+                <span class="ma-stat-card__lbl">SimplyPay Balance</span>
+                <span class="ma-stat-card__val">
+                  <template v-if="simplyPayLoading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                  </template>
+                  <template v-else>
+                    ₹{{ formatAmount(simplyPayBalance) }}
+                  </template>
+                </span>
+              </div>
+              <div class="ma-stat-card__glow"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -163,6 +180,9 @@
                   </button>
                   <template v-if="isPending(w)">
 
+                    <button class="btn-action btn-pay" @click="simplyPayPayout(w)" title="SimplyPay Auto Payout">
+                      <i class="fas fa-bolt"></i>
+                    </button>
                     <button class="btn-action btn-approve" @click="approve(w)" title="Manual Approve">
                       <i class="fas fa-check"></i>
                     </button>
@@ -267,6 +287,9 @@
                     </button>
                     <template v-if="isPending(w)">
 
+                      <button class="btn-action btn-pay" @click="simplyPayPayout(w)" title="SimplyPay Auto Payout">
+                        <i class="fas fa-bolt"></i>
+                      </button>
                       <button class="btn-action btn-approve" @click="approve(w)" title="Manual Approve">
                         <i class="fas fa-check"></i>
                       </button>
@@ -472,6 +495,7 @@
               <div class="d-flex gap-2">
                 <button class="ma-modal-btn ma-modal-btn--secondary" @click="selectedWithdrawal = null">Close</button>
                 <template v-if="isPending(selectedWithdrawal)">
+                  <button class="ma-modal-btn ma-modal-btn--primary" @click="simplyPayPayout(selectedWithdrawal); selectedWithdrawal = null">SimplyPay</button>
                   <button class="ma-modal-btn ma-modal-btn--success" @click="approve(selectedWithdrawal); selectedWithdrawal = null">Manual</button>
                   <button class="ma-modal-btn ma-modal-btn--danger" @click="reject(selectedWithdrawal); selectedWithdrawal = null">Reject</button>
                 </template>
@@ -506,6 +530,9 @@ export default {
     const total = ref(0)
     const currentPage = ref(1)
     const lastPage = ref(1)
+
+    const simplyPayBalance = ref(0)
+    const simplyPayLoading = ref(false)
 
     let searchTimeout = null
 
@@ -640,6 +667,35 @@ export default {
       }
     }
 
+    const fetchSimplyPayBalance = async () => {
+      simplyPayLoading.value = true
+      try {
+        const res = await api.get('/admin/simplypay/balance')
+        if (res.data?.status === 'success') {
+          simplyPayBalance.value = res.data.data.balance || 0
+        }
+      } catch (e) {
+        console.error('SimplyPay Balance Error:', e)
+      } finally {
+        simplyPayLoading.value = false
+      }
+    }
+
+    const simplyPayPayout = async (w) => {
+      if (!isPending(w)) return
+      if (!confirm(`Initiate SimplyPay AUTO-PAYOUT for #${w.id}?`)) return
+      try {
+        const res = await api.post('/admin/withdraw/auto-payout/simplypay', { id: w.id })
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', res.data.message || 'Payout Initiated');
+          fetchWithdrawals()
+          fetchSimplyPayBalance()
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', e.response?.data?.message || 'Payout Failed');
+      }
+    }
+
     const getWithdrawInfo = (info, key) => {
       if (!info || !Array.isArray(info)) return null
       const found = info.find(i => i.name === key)
@@ -657,14 +713,18 @@ export default {
       return null;
     }
 
-    onMounted(() => fetchWithdrawals(1))
+    onMounted(() => {
+      fetchWithdrawals(1)
+      fetchSimplyPayBalance()
+    })
 
     return {
       withdrawals, summary, searchQuery, filterStatus, filterWallet, startDate, endDate,
       loading, total, currentPage, lastPage, paginationPages,
       formatAmount, formatDateTime, getInitials, isPending, statusInfo, walletIcon,
       fetchWithdrawals, debounceSearch, copyTrx, viewDetails, approve, reject,
-      selectedWithdrawal, getWithdrawInfo, getWithdrawalDetail
+      selectedWithdrawal, getWithdrawInfo, getWithdrawalDetail,
+      simplyPayBalance, simplyPayLoading, fetchSimplyPayBalance, simplyPayPayout
     }
   }
 }
@@ -709,6 +769,7 @@ export default {
 .ma-stat-card--warning .ma-stat-card__icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .ma-stat-card--success .ma-stat-card__icon { background: linear-gradient(135deg, #10b981, #059669); }
 .ma-stat-card--danger  .ma-stat-card__icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.ma-stat-card--indigo  .ma-stat-card__icon { background: linear-gradient(135deg, #6366f1, #4338ca); }
 
 .ma-stat-card__content { z-index: 1; }
 .ma-stat-card__lbl { display: block; font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -937,6 +998,7 @@ export default {
 .ma-modal-btn:hover { transform: translateY(-2px); }
 .ma-modal-btn--secondary { background: rgba(255,255,255,0.05); color: #fff; border-color: rgba(255,255,255,0.1); }
 .ma-modal-btn--success { background: #10b981; color: #fff; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
+.ma-modal-btn--primary { background: #6366f1; color: #fff; box-shadow: 0 4px 15px rgba(99,102,241,0.3); }
 .ma-modal-btn--danger { background: #ef4444; color: #fff; box-shadow: 0 4px 15px rgba(239,68,68,0.3); }
 
 .ma-modal--wide { max-width: 800px !important; }
