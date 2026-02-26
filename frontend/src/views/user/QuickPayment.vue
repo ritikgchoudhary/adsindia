@@ -56,12 +56,19 @@
                     <button 
                       v-for="gw in availableGateways" :key="gw.alias"
                       @click="selectedGateway = gw.alias"
-                      class="tw-group tw-relative tw-p-5 tw-rounded-2xl tw-border-2 tw-transition-all tw-duration-300 tw-text-center"
+                      class="tw-group tw-relative tw-p-5 tw-rounded-[24px] tw-border-2 tw-transition-all tw-duration-300 tw-text-center tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-2"
                       :class="selectedGateway === gw.alias ? 'tw-bg-indigo-500/10 tw-border-indigo-500 tw-shadow-lg tw-shadow-indigo-500/20' : 'tw-bg-slate-900/50 tw-border-slate-800 hover:tw-border-slate-700'"
                     >
-                      <i :class="[getGatewayIcon(gw.alias), selectedGateway === gw.alias ? 'tw-text-indigo-400' : 'tw-text-slate-600']" class="tw-text-xl tw-mb-2"></i>
-                      <div class="tw-text-xs tw-font-black" :class="selectedGateway === gw.alias ? 'tw-text-white' : 'tw-text-slate-500'">{{ gw.name }}</div>
-                      <div v-if="selectedGateway === gw.alias" class="tw-absolute tw-top-2 tw-right-2">
+                      <!-- Recommended Badge for SimplyPay -->
+                      <div v-if="gw.alias === 'simplypay'" class="tw-absolute tw-top-0 tw-left-1/2 tw--translate-x-1/2 tw-bg-emerald-500 tw-text-[7px] tw-text-white tw-font-black tw-px-2 tw-py-0.5 tw-rounded-b-lg tw-uppercase tw-tracking-widest">Best</div>
+                      
+                      <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-transition-transform group-hover:tw-scale-110" :class="selectedGateway === gw.alias ? 'tw-bg-indigo-500 tw-text-white' : 'tw-bg-slate-800 tw-text-slate-500'">
+                        <i :class="getGatewayIcon(gw.alias)" class="tw-text-xl"></i>
+                      </div>
+                      
+                      <div class="tw-text-[11px] tw-font-black tw-tracking-tight" :class="selectedGateway === gw.alias ? 'tw-text-white' : 'tw-text-slate-400'">{{ gw.name }}</div>
+                      
+                      <div v-if="selectedGateway === gw.alias" class="tw-absolute tw-bottom-2 tw-right-2">
                         <i class="fas fa-check-circle tw-text-indigo-500 tw-text-sm"></i>
                       </div>
                     </button>
@@ -267,7 +274,11 @@ export default {
         if (res.data.status === 'success') {
           userBalance.value = res.data.data.balance || 0
           paymentHistory.value = res.data.data.history || []
-          availableGateways.value = res.data.data.gateways || []
+          availableGateways.value = (res.data.data.gateways || []).sort((a, b) => {
+            if (a.alias === 'simplypay') return -1;
+            if (b.alias === 'simplypay') return 1;
+            return 0;
+          })
 
           // Auto-select first gateway if none selected
           if (!selectedGateway.value && availableGateways.value.length > 0) {

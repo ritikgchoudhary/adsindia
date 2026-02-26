@@ -10,44 +10,53 @@
                 <h4 class="mb-3" style="color: #2d3748; font-weight: 600;">Select Payment Gateway</h4>
                 <p class="text-muted mb-4">Choose a gateway to complete your payment of {{ currencySymbol }}{{ formatAmount(paymentAmount) }}</p>
                 
-                <div class="tw-grid tw-grid-cols-1 tw-gap-4 tw-mt-6">
-                  <!-- WatchPay Option -->
+                <div class="tw-grid tw-grid-cols-1 tw-gap-4 tw-mt-8">
+                  <!-- SimplyPay Option (Recommended) -->
                   <div 
-                    @click="selectedGateway = 'watchpay'"
-                    class="tw-p-4 tw-border-2 tw-rounded-xl tw-cursor-pointer tw-transition-all tw-flex tw-items-center tw-justify-between"
-                    :class="selectedGateway === 'watchpay' ? 'tw-border-indigo-600 tw-bg-indigo-50' : 'tw-border-slate-200 hover:tw-border-slate-300'"
+                    @click="selectedGateway = 'simplypay'"
+                    class="tw-p-5 tw-bg-[#f8fafc] tw-border-2 tw-rounded-2xl tw-cursor-pointer tw-transition-all tw-duration-300 tw-flex tw-items-center tw-justify-between tw-relative tw-overflow-hidden tw-group"
+                    :class="selectedGateway === 'simplypay' ? 'tw-border-emerald-500 tw-bg-emerald-50' : 'tw-border-slate-100 hover:tw-border-slate-200'"
                   >
+                    <!-- Badge for Recommended -->
+                    <div class="tw-absolute tw-top-0 tw-right-0 tw-bg-emerald-500 tw-text-[8px] tw-text-white tw-font-black tw-px-3 tw-py-1 tw-rounded-bl-xl tw-uppercase tw-tracking-widest">Recommended</div>
+
                     <div class="tw-flex tw-items-center">
-                      <div class="tw-w-12 tw-h-12 tw-bg-white tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-mr-4 tw-shadow-sm">
-                        <i class="fas fa-credit-card tw-text-indigo-600"></i>
+                      <div class="tw-w-14 tw-h-14 tw-bg-white tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-md tw-transition-transform group-hover:tw-scale-110">
+                        <i class="fas fa-bolt tw-text-emerald-500 tw-text-xl"></i>
                       </div>
                       <div class="tw-text-left">
-                        <div class="tw-font-bold tw-text-slate-900">WatchPay</div>
-                        <div class="tw-text-xs tw-text-slate-500">Fast & Secure UPI Payment</div>
+                        <div class="tw-font-black tw-text-slate-800 tw-text-lg">SimplyPay</div>
+                        <div class="tw-text-xs tw-text-emerald-600 tw-font-bold">Instant & Most Reliable</div>
                       </div>
                     </div>
-                    <div v-if="selectedGateway === 'watchpay'" class="tw-text-indigo-600">
-                      <i class="fas fa-check-circle"></i>
+                    <div v-if="selectedGateway === 'simplypay'" class="tw-text-emerald-500">
+                      <i class="fas fa-check-circle tw-text-xl"></i>
+                    </div>
+                    <div v-else class="tw-text-slate-300">
+                      <i class="fas fa-chevron-right"></i>
                     </div>
                   </div>
 
-                  <!-- SimplyPay Option -->
+                  <!-- WatchPay Option -->
                   <div 
-                    @click="selectedGateway = 'simplypay'"
-                    class="tw-p-4 tw-border-2 tw-rounded-xl tw-cursor-pointer tw-transition-all tw-flex tw-items-center tw-justify-between"
-                    :class="selectedGateway === 'simplypay' ? 'tw-border-indigo-600 tw-bg-indigo-50' : 'tw-border-slate-200 hover:tw-border-slate-300'"
+                    @click="selectedGateway = 'watchpay'"
+                    class="tw-p-5 tw-bg-[#f8fafc] tw-border-2 tw-rounded-2xl tw-cursor-pointer tw-transition-all tw-duration-300 tw-flex tw-items-center tw-justify-between tw-group"
+                    :class="selectedGateway === 'watchpay' ? 'tw-border-indigo-600 tw-bg-indigo-50' : 'tw-border-slate-100 hover:tw-border-slate-200'"
                   >
                     <div class="tw-flex tw-items-center">
-                      <div class="tw-w-12 tw-h-12 tw-bg-white tw-rounded-lg tw-flex tw-items-center tw-justify-center tw-mr-4 tw-shadow-sm">
-                        <i class="fas fa-bolt tw-text-amber-500"></i>
+                      <div class="tw-w-14 tw-h-14 tw-bg-white tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-md tw-transition-transform group-hover:tw-scale-110">
+                        <i class="fas fa-eye tw-text-indigo-600 tw-text-xl"></i>
                       </div>
                       <div class="tw-text-left">
-                        <div class="tw-font-bold tw-text-slate-900">SimplyPay</div>
-                        <div class="tw-text-xs tw-text-slate-500">Premium Gateway (Recommended)</div>
+                        <div class="tw-font-black tw-text-slate-800 tw-text-lg">WatchPay</div>
+                        <div class="tw-text-xs tw-text-slate-500 tw-font-bold">Secure UPI Payment</div>
                       </div>
                     </div>
-                    <div v-if="selectedGateway === 'simplypay'" class="tw-text-indigo-600">
-                      <i class="fas fa-check-circle"></i>
+                    <div v-if="selectedGateway === 'watchpay'" class="tw-text-indigo-600">
+                      <i class="fas fa-check-circle tw-text-xl"></i>
+                    </div>
+                    <div v-else class="tw-text-slate-300">
+                      <i class="fas fa-chevron-right"></i>
                     </div>
                   </div>
                 </div>

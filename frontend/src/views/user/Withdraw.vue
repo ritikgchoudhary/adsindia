@@ -3,23 +3,16 @@
     <div class="tw-flex tw-px-3 sm:tw-px-0">
       <div class="tw-w-full">
         <form @submit.prevent="handleSubmit">
-          <div class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200 tw-overflow-hidden">
-            <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-2 lg:tw-max-h-[800px]">
+          <div class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200">
+            <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-2">
               
               <!-- Left Side: Payment Methods -->
-              <div class="tw-p-4 sm:tw-p-6 tw-border-b lg:tw-border-b-0 lg:tw-border-r tw-border-slate-200 lg:tw-overflow-y-auto custom-scrollbar lg:tw-max-h-[600px] lg:tw-h-auto">
+              <div class="tw-p-4 sm:tw-p-6 tw-border-b lg:tw-border-b-0 lg:tw-border-r tw-border-slate-200">
                 <h5 class="tw-text-slate-800 tw-font-bold tw-text-lg tw-mb-4">Select Withdrawal Method</h5>
-                                <div v-if="isLoadingMethods" class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-py-12">
+                <div v-if="isLoadingMethods" class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-py-12">
                    <i class="fas fa-spinner fa-spin tw-text-indigo-600 tw-text-3xl tw-mb-3"></i>
                    <p class="tw-text-slate-500 tw-text-sm">Loading methods...</p>
                 </div>
-
-                <div v-else-if="withdrawMethods.length === 0" class="tw-text-center tw-py-12 tw-bg-amber-50 tw-rounded-xl tw-border tw-border-amber-100">
-                  <i class="fas fa-exclamation-circle tw-text-amber-500 tw-text-4xl tw-mb-3"></i>
-                  <p class="tw-text-slate-700 tw-font-semibold">No withdrawal methods available.</p>
-                  <p class="tw-text-slate-500 tw-text-sm">Please check back later or contact support.</p>
-                </div>
-
                 <div v-else class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
                   <label 
                     v-for="(method, index) in withdrawMethods" 

@@ -45,42 +45,26 @@
               Select Payment Gateway
             </div>
 
-            <div class="tw-flex tw-flex-col tw-gap-5 tw-mb-10">
-              <!-- WatchPay Option -->
-              <button 
-                v-if="gatewayStatuses.watchpay"
-                @click="selectedGateway = 'watchpay'"
-                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-indigo-500/50 hover:tw-shadow-lg hover:tw-shadow-indigo-500/5 tw-flex tw-items-center tw-justify-between"
-                :class="selectedGateway === 'watchpay' ? 'tw-border-indigo-500 tw-bg-indigo-500/5 tw-ring-1 tw-ring-indigo-500/50' : ''"
-              >
-                <div class="tw-flex tw-items-center">
-                  <div class="tw-w-14 tw-h-14 tw-bg-indigo-600 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-indigo-600/20 tw-transition-transform group-hover:tw-scale-110">
-                    <i class="fas fa-eye tw-text-white tw-text-xl"></i>
-                  </div>
-                  <div>
-                    <div class="tw-font-bold tw-text-white tw-text-lg">WatchPay</div>
-                    <div class="tw-text-xs tw-text-slate-500">Fast & Secure UPI Payment</div>
-                  </div>
-                </div>
-                <div class="tw-w-10 tw-h-10 tw-bg-slate-800/50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-transition-colors group-hover:tw-bg-indigo-500/20">
-                    <i class="fas fa-chevron-right tw-text-slate-500 tw-text-sm tw-transition-transform group-hover:tw-translate-x-0.5 group-hover:tw-text-indigo-400"></i>
-                </div>
-              </button>
-
-              <!-- SimplyPay Option -->
+            <div class="tw-flex tw-flex-col tw-gap-4 tw-mb-10">
+              <!-- SimplyPay Option (Recommended) -->
               <button 
                 v-if="gatewayStatuses.simplypay"
                 @click="selectedGateway = 'simplypay'"
-                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-emerald-500/50 hover:tw-shadow-lg hover:tw-shadow-emerald-500/5 tw-flex tw-items-center tw-justify-between"
-                :class="selectedGateway === 'simplypay' ? 'tw-border-emerald-500 tw-bg-emerald-500/5 tw-ring-1 tw-ring-emerald-500/50' : ''"
+                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/40 tw-border tw-border-slate-800 tw-rounded-[28px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-emerald-500/5 hover:tw-border-emerald-500/50 hover:tw-shadow-[0_0_30px_-10px_rgba(16,185,129,0.2)] tw-flex tw-items-center tw-justify-between tw-relative tw-overflow-hidden"
+                :class="selectedGateway === 'simplypay' ? 'tw-border-emerald-500 tw-bg-emerald-500/10 tw-ring-1 tw-ring-emerald-500/50' : ''"
               >
+                <!-- Badge for Recommended -->
+                <div class="tw-absolute tw-top-0 tw-right-0 tw-bg-emerald-500 tw-text-[9px] tw-text-white tw-font-black tw-px-3 tw-py-1 tw-rounded-bl-xl tw-uppercase tw-tracking-widest">Recommended</div>
+                
                 <div class="tw-flex tw-items-center">
-                  <div class="tw-w-14 tw-h-14 tw-bg-emerald-600 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-emerald-600/20 tw-transition-transform group-hover:tw-scale-110">
-                    <i class="fas fa-credit-card tw-text-white tw-text-xl"></i>
+                  <div class="tw-w-14 tw-h-14 tw-bg-gradient-to-br tw-from-emerald-400 tw-to-emerald-600 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-emerald-600/20 tw-transition-transform group-hover:tw-scale-110">
+                    <i class="fas fa-bolt tw-text-white tw-text-xl"></i>
                   </div>
                   <div>
-                    <div class="tw-font-bold tw-text-white tw-text-lg">SimplyPay</div>
-                    <div class="tw-text-xs tw-text-slate-500">Cards, Netbanking & Wallets</div>
+                    <div class="tw-font-bold tw-text-white tw-text-lg tw-flex tw-items-center tw-gap-2">
+                      SimplyPay
+                    </div>
+                    <div class="tw-text-xs tw-text-emerald-400/80 tw-font-medium">Instant & Most Reliable</div>
                   </div>
                 </div>
                 <div class="tw-w-10 tw-h-10 tw-bg-slate-800/50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-transition-colors group-hover:tw-bg-emerald-500/20">
@@ -88,20 +72,41 @@
                 </div>
               </button>
 
+              <!-- WatchPay Option -->
+              <button 
+                v-if="gatewayStatuses.watchpay"
+                @click="selectedGateway = 'watchpay'"
+                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/40 tw-border tw-border-slate-800 tw-rounded-[28px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-indigo-500/5 hover:tw-border-indigo-500/50 hover:tw-shadow-[0_0_30px_-10px_rgba(99,102,241,0.2)] tw-flex tw-items-center tw-justify-between"
+                :class="selectedGateway === 'watchpay' ? 'tw-border-indigo-500 tw-bg-indigo-500/10 tw-ring-1 tw-ring-indigo-500/50' : ''"
+              >
+                <div class="tw-flex tw-items-center">
+                  <div class="tw-w-14 tw-h-14 tw-bg-gradient-to-br tw-from-indigo-400 tw-to-indigo-600 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-indigo-600/20 tw-transition-transform group-hover:tw-scale-110">
+                    <i class="fas fa-eye tw-text-white tw-text-xl"></i>
+                  </div>
+                  <div>
+                    <div class="tw-font-bold tw-text-white tw-text-lg">WatchPay</div>
+                    <div class="tw-text-xs tw-text-slate-400/80 tw-font-medium">Secure UPI Payments</div>
+                  </div>
+                </div>
+                <div class="tw-w-10 tw-h-10 tw-bg-slate-800/50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-transition-colors group-hover:tw-bg-indigo-500/20">
+                    <i class="fas fa-chevron-right tw-text-slate-500 tw-text-sm tw-transition-transform group-hover:tw-translate-x-0.5 group-hover:tw-text-indigo-400"></i>
+                </div>
+              </button>
+
               <!-- RupeeRush Option -->
               <button 
                 v-if="gatewayStatuses.rupeerush"
                 @click="selectedGateway = 'rupeerush'"
-                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-orange-500/50 hover:tw-shadow-lg hover:tw-shadow-orange-500/5 tw-flex tw-items-center tw-justify-between"
-                :class="selectedGateway === 'rupeerush' ? 'tw-border-orange-500 tw-bg-orange-500/5 tw-ring-1 tw-ring-orange-500/50' : ''"
+                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/40 tw-border tw-border-slate-800 tw-rounded-[28px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-orange-500/5 hover:tw-border-orange-500/50 hover:tw-shadow-[0_0_30px_-10px_rgba(249,115,22,0.2)] tw-flex tw-items-center tw-justify-between"
+                :class="selectedGateway === 'rupeerush' ? 'tw-border-orange-500 tw-bg-orange-500/10 tw-ring-1 tw-ring-orange-500/50' : ''"
               >
                 <div class="tw-flex tw-items-center">
-                  <div class="tw-w-14 tw-h-14 tw-bg-orange-600 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-orange-600/20 tw-transition-transform group-hover:tw-scale-110">
+                  <div class="tw-w-14 tw-h-14 tw-bg-gradient-to-br tw-from-orange-400 tw-to-orange-600 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-orange-600/20 tw-transition-transform group-hover:tw-scale-110">
                     <i class="fas fa-indian-rupee-sign tw-text-white tw-text-xl"></i>
                   </div>
                   <div>
                     <div class="tw-font-bold tw-text-white tw-text-lg">RupeeRush</div>
-                    <div class="tw-text-xs tw-text-slate-500">UPI Gateway - Rupee Rush</div>
+                    <div class="tw-text-xs tw-text-slate-400/80 tw-font-medium">UPI Direct Gateway</div>
                   </div>
                 </div>
                 <div class="tw-w-10 tw-h-10 tw-bg-slate-800/50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-transition-colors group-hover:tw-bg-orange-500/20">
@@ -113,16 +118,16 @@
               <button 
                 v-if="gatewayStatuses.customqr"
                 @click="selectedGateway = 'custom_qr'"
-                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/50 tw-border tw-border-slate-800 tw-rounded-[24px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-800/50 hover:tw-border-slate-500/50 hover:tw-shadow-lg hover:tw-shadow-slate-500/5 tw-flex tw-items-center tw-justify-between"
-                :class="selectedGateway === 'custom_qr' ? 'tw-border-slate-400 tw-bg-slate-500/5 tw-ring-1 tw-ring-slate-400/50' : ''"
+                class="tw-group tw-w-full tw-text-left tw-bg-slate-900/40 tw-border tw-border-slate-800 tw-rounded-[28px] tw-p-5 tw-transition-all tw-duration-300 hover:tw-bg-slate-500/5 hover:tw-border-slate-500/50 hover:tw-shadow-[0_0_30px_-10px_rgba(148,163,184,0.2)] tw-flex tw-items-center tw-justify-between"
+                :class="selectedGateway === 'custom_qr' ? 'tw-border-slate-400 tw-bg-slate-500/10 tw-ring-1 tw-ring-slate-400/50' : ''"
               >
                 <div class="tw-flex tw-items-center">
-                  <div class="tw-w-14 tw-h-14 tw-bg-slate-700 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-slate-600/20 tw-transition-transform group-hover:tw-scale-110">
+                  <div class="tw-w-14 tw-h-14 tw-bg-gradient-to-br tw-from-slate-500 tw-to-slate-700 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mr-5 tw-shadow-lg tw-shadow-slate-600/20 tw-transition-transform group-hover:tw-scale-110">
                     <i class="fas fa-qrcode tw-text-white tw-text-xl"></i>
                   </div>
                   <div>
                     <div class="tw-font-bold tw-text-white tw-text-lg">Manual QR</div>
-                    <div class="tw-text-xs tw-text-slate-500">Scan & Upload Screenshot</div>
+                    <div class="tw-text-xs tw-text-slate-400/80 tw-font-medium">Scan & Upload Screenshot</div>
                   </div>
                 </div>
                 <div class="tw-w-10 tw-h-10 tw-bg-slate-800/50 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-transition-colors group-hover:tw-bg-slate-500/20">
@@ -510,42 +515,47 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .tw-p-8.sm\:tw-p-12 { padding: 1.25rem !important; }
-  .tw-rounded-\[40px\] { border-radius: 1.5rem !important; }
-  .tw-w-20.tw-h-20 { width: 4rem !important; height: 4rem !important; }
-  .tw-text-3xl { font-size: 1.5rem !important; }
-  .tw-text-6xl { font-size: 2.25rem !important; }
-  .tw-text-3xl.tw-font-bold { font-size: 1.25rem !important; }
-  h5.tw-text-slate-400 { font-size: 11px !important; margin-bottom: 0.5rem !important; }
+  .tw-p-8.sm\:tw-p-12 { padding: 1.25rem 1rem !important; }
+  .tw-rounded-\[40px\] { border-radius: 2rem !important; }
+  .tw-w-20.tw-h-20 { width: 3.5rem !important; height: 3.5rem !important; margin-bottom: 1.25rem !important; }
+  .tw-text-3xl { font-size: 1.25rem !important; }
+  .tw-text-6xl { font-size: 2.5rem !important; }
+  .tw-text-3xl.tw-font-bold { font-size: 1.5rem !important; }
+  h5.tw-text-slate-400 { font-size: 10px !important; margin-bottom: 0.25rem !important; letter-spacing: 0.15em !important; }
   
-  .tw-mb-10 { margin-bottom: 1.5rem !important; }
-  .tw-mb-8 { margin-bottom: 1rem !important; }
+  .tw-mb-10 { margin-bottom: 1.25rem !important; }
+  .tw-mb-8 { margin-bottom: 0.75rem !important; }
   
   /* Gateway Buttons */
-  .tw-p-5 { padding: 0.75rem !important; border-radius: 1rem !important; }
-  .tw-w-14.tw-h-14 { width: 3rem !important; height: 3rem !important; border-radius: 0.75rem !important; margin-right: 0.75rem !important; }
-  .tw-w-14.tw-h-14 i { font-size: 1.1rem !important; }
-  .tw-text-lg { font-size: 1rem !important; }
+  .tw-p-5 { padding: 0.85rem !important; border-radius: 1.25rem !important; }
+  .tw-w-14.tw-h-14 { width: 2.75rem !important; height: 2.75rem !important; border-radius: 0.85rem !important; margin-right: 0.75rem !important; }
+  .tw-w-14.tw-h-14 i { font-size: 1rem !important; }
+  .tw-text-lg { font-size: 0.95rem !important; }
   .tw-text-xs { font-size: 10px !important; }
-  .tw-w-10.tw-h-10 { width: 2.25rem !important; height: 2.25rem !important; }
+  .tw-w-10.tw-h-10 { width: 2rem !important; height: 2rem !important; }
+  .tw-flex-col.tw-gap-5 { gap: 0.75rem !important; }
   
   /* Manual QR Section */
-  .tw-bg-white.tw-p-4 { padding: 0.75rem !important; border-radius: 1.25rem !important; }
-  .tw-w-64 { width: 12rem !important; }
-  .tw-bg-slate-900\/50.tw-p-5 { padding: 1rem !important; border-radius: 1rem !important; }
-  input.tw-p-4 { padding: 0.65rem !important; font-size: 0.9rem !important; }
+  .tw-bg-white.tw-p-4 { padding: 0.65rem !important; border-radius: 1rem !important; }
+  .tw-w-64 { width: 10rem !important; }
+  .tw-bg-slate-900\/50.tw-p-5 { padding: 0.85rem !important; border-radius: 1.25rem !important; }
+  input.tw-p-4 { padding: 0.65rem !important; font-size: 0.85rem !important; }
   .tw-py-4.tw-px-4 { padding: 0.65rem !important; }
   
-  .tw-py-5 { padding: 1rem !important; font-size: 0.95rem !important; border-radius: 1rem !important; }
-  .tw-text-2xl { font-size: 1.25rem !important; }
+  .tw-py-5 { padding: 0.85rem !important; font-size: 0.9rem !important; border-radius: 1.25rem !important; }
+  .tw-text-2xl { font-size: 1.15rem !important; }
   
   /* Modal-like card padding on very small devices */
-  .tw-min-h-\[85vh\] { min-height: auto !important; padding: 1rem 0.5rem !important; }
+  .tw-min-h-\[85vh\] { min-height: auto !important; padding: 1rem 0.75rem !important; }
 }
 
 @media (max-width: 480px) {
-  .tw-text-6xl { font-size: 1.85rem !important; }
-  .tw-flex-col.tw-gap-5 { gap: 0.75rem !important; }
+  .tw-text-6xl { font-size: 2.2rem !important; }
+  .tw-text-3xl.tw-font-bold { font-size: 1.25rem !important; }
+  .tw-flex-col.tw-gap-5 { gap: 0.6rem !important; }
   .tw-w-14.tw-h-14 { width: 2.5rem !important; height: 2.5rem !important; }
+  .tw-rounded-\[40px\] { border-radius: 1.5rem !important; }
+  .tw-p-8.sm\:tw-p-12 { padding: 1.5rem 1rem !important; }
+  .tw-bg-[#0f172a] { max-width: 100% !important; margin: 0 !important; }
 }
 </style>

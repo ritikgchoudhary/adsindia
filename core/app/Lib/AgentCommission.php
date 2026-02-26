@@ -23,6 +23,7 @@ class AgentCommission
             'partner' => 'agent_partner_commission',
             'certificate' => 'agent_certificate_commission',
             'partner_override' => 'agent_partner_override_commission',
+            'passive' => 'agent_passive_commission',
             default => 'agent_commission',
         };
     }
@@ -78,6 +79,10 @@ class AgentCommission
             $enabledField = 'special_discount_enabled';
             $modeField = 'special_discount_mode';
             $valueField = 'special_discount_value';
+        } elseif ($type === 'passive') {
+            $enabledField = 'passive_enabled';
+            $modeField = 'passive_mode';
+            $valueField = 'passive_value';
         } elseif ($type === 'partner_override') {
             // Partner override is percent only
             if (!(bool) ($settings->partner_override_enabled ?? false)) return 0.0;
@@ -88,18 +93,30 @@ class AgentCommission
             return 0.0;
         }
 
-        if (!(bool) ($settings->{$enabledField} ?? false)) return 0.0;
+        if ($type !== 'passive' && !(bool) ($settings->{$enabledField} ?? false)) return 0.0;
 
         // 1. Check Granular Settings for this specific Agent (Highest priority)
         if (!empty($meta['plan_id'])) {
             $granular = is_string($settings->granular_settings) ? json_decode($settings->granular_settings, true) : (array)($settings->granular_settings ?? []);
             $planId = (string) $meta['plan_id'];
-            if (isset($granular[$type][$planId])) {
-                $item = $granular[$type][$planId];
+            
+            $lookupType = $type;
+            if ($type === 'passive' && !empty($meta['plan_type'])) {
+                $lookupType = ($meta['plan_type'] === 'package' ? 'course' : $meta['plan_type']);
+            }
+
+            if (isset($granular[$lookupType][$planId])) {
+                $item = $granular[$lookupType][$planId];
                 $mode = (string) ($item['mode'] ?? 'percent');
                 $value = (float) ($item['value'] ?? 0);
+
+                if ($type === 'passive') {
+                    $value = (float) ($item['passive_value'] ?? 0);
+                }
+
                 if ($value > 0) {
-                    if ($mode === 'fixed') {
+                    // Passive is always fixed
+                    if ($mode === 'fixed' || $type === 'passive') {
                         return round($value, 8);
                     }
                     return round($baseAmount * $value / 100, 8);
@@ -139,6 +156,7 @@ class AgentCommission
         }
 
         // percent
+        if ($type === 'passive') return round($value, 8); // Force fixed for passive fallback
         return round($baseAmount * $value / 100, 8);
     }
 

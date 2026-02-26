@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Constants\Status;
 use App\Lib\AgentCommission;
 use App\Lib\DirectAffiliateCommission;
+use App\Lib\PassiveCommission;
 use App\Models\User;
 use App\Models\UserLogin;
 use App\Models\AdminNotification;
@@ -600,6 +601,14 @@ class RegisterController extends Controller
         try {
             if ($packageId) {
                 DirectAffiliateCommission::creditForPackage(
+                    $user,
+                    (int) $packageId,
+                    (float) $finalPackagePrice,
+                    (string) $regFeeTrx,
+                    (string) $packageName
+                );
+
+                PassiveCommission::creditForPackage(
                     $user,
                     (int) $packageId,
                     (float) $finalPackagePrice,

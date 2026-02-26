@@ -834,6 +834,10 @@ class AdminController extends Controller {
             'special_discount_enabled' => 'nullable|boolean',
             'special_discount_mode' => 'nullable|in:percent,fixed',
             'special_discount_value' => 'nullable|numeric|min:0',
+            
+            'passive_enabled' => 'nullable|boolean',
+            'passive_mode' => 'nullable|in:percent,fixed',
+            'passive_value' => 'nullable|numeric|min:0',
 
             'granular_settings' => 'nullable|array',
         ]);
@@ -851,6 +855,7 @@ class AdminController extends Controller {
                 'partner_enabled','partner_mode','partner_value',
                 'certificate_enabled','certificate_mode','certificate_value',
                 'special_discount_enabled','special_discount_mode','special_discount_value',
+                'passive_enabled', 'passive_mode', 'passive_value',
                 'granular_settings'
             ])
         );
@@ -887,6 +892,7 @@ class AdminController extends Controller {
                 'package_price' => (float) $p['price'],
                 'enabled' => $r ? (bool) ($r->enabled ?? false) : false,
                 'commission_amount' => $r ? (float) ($r->commission_amount ?? 0) : 0,
+                'passive_amount' => $r ? (float) ($r->passive_amount ?? 0) : 0,
                 'updated_at' => $r ? (string) ($r->updated_at ?? '') : null,
             ];
         }, $packages);
@@ -901,6 +907,7 @@ class AdminController extends Controller {
         $request->validate([
             'enabled' => 'required|boolean',
             'commission_amount' => 'required|numeric|min:0',
+            'passive_amount' => 'nullable|numeric|min:0',
         ]);
 
         $packageId = (int) $packageId;
@@ -920,6 +927,7 @@ class AdminController extends Controller {
             'package_id' => $packageId,
             'package_price' => (float) ($meta['price'] ?? 0),
             'commission_amount' => (float) $request->commission_amount,
+            'passive_amount' => (float) ($request->passive_amount ?? 0),
             'enabled' => (bool) $request->enabled,
             'updated_at' => now(),
         ];
@@ -1097,6 +1105,10 @@ class AdminController extends Controller {
             'certificate_enabled' => 'nullable|boolean',
             'certificate_mode' => 'nullable|in:percent,fixed',
             'certificate_value' => 'nullable|numeric|min:0',
+            
+            'passive_enabled' => 'nullable|boolean',
+            'passive_mode' => 'nullable|in:percent,fixed',
+            'passive_value' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -1118,6 +1130,7 @@ class AdminController extends Controller {
                 'course_enabled','course_mode','course_value',
                 'partner_enabled','partner_mode','partner_value',
                 'certificate_enabled','certificate_mode','certificate_value',
+                'passive_enabled','passive_mode','passive_value',
             ] as $f) {
                 if ($request->has($f)) $payload[$f] = $request->input($f);
             }

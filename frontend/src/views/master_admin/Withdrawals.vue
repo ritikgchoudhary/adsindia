@@ -472,8 +472,6 @@
               <div class="d-flex gap-2">
                 <button class="ma-modal-btn ma-modal-btn--secondary" @click="selectedWithdrawal = null">Close</button>
                 <template v-if="isPending(selectedWithdrawal)">
-                  <button class="ma-modal-btn ma-modal-btn--primary" style="background:#4f46e5;color:white;border:none" @click="approveAndPay(selectedWithdrawal, 'simplypay'); selectedWithdrawal = null">Pay (SimplyPay)</button>
-                  <button class="ma-modal-btn ma-modal-btn--primary" style="background:#9333ea;color:white;border:none" @click="approveAndPay(selectedWithdrawal, 'watchpay'); selectedWithdrawal = null">Pay (WatchPay)</button>
                   <button class="ma-modal-btn ma-modal-btn--success" @click="approve(selectedWithdrawal); selectedWithdrawal = null">Manual</button>
                   <button class="ma-modal-btn ma-modal-btn--danger" @click="reject(selectedWithdrawal); selectedWithdrawal = null">Reject</button>
                 </template>

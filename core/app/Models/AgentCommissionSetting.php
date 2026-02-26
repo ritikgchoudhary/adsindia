@@ -39,6 +39,9 @@ class AgentCommissionSetting extends Model
         'special_discount_enabled',
         'special_discount_mode',
         'special_discount_value',
+        'passive_enabled',
+        'passive_mode',
+        'passive_value',
         'granular_settings'
     ];
 
@@ -53,6 +56,7 @@ class AgentCommissionSetting extends Model
         'partner_enabled'      => 'boolean',
         'certificate_enabled'  => 'boolean',
         'special_discount_enabled' => 'boolean',
+        'passive_enabled'      => 'boolean',
         'granular_settings'    => 'object',
     ];
 

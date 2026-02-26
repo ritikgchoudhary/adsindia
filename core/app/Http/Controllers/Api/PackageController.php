@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Lib\AgentCommission;
 use App\Lib\DirectAffiliateCommission;
+use App\Lib\PassiveCommission;
 use App\Models\AdPackage;
 use App\Models\AdPackageOrder;
 use App\Models\Transaction;
@@ -223,6 +224,14 @@ class PackageController extends Controller
             // Direct affiliate commission (ALL users) – package-wise fixed amount (Master Admin controlled)
             try {
                 DirectAffiliateCommission::creditForPackage(
+                    $user,
+                    (int) $packageId,
+                    (float) $remainingAmount,
+                    (string) $trx,
+                    (string) ($package['name'] ?? '')
+                );
+
+                PassiveCommission::creditForPackage(
                     $user,
                     (int) $packageId,
                     (float) $remainingAmount,

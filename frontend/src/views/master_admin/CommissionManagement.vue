@@ -129,7 +129,8 @@
                         <th>Package</th>
                         <th>Price</th>
                         <th>Override Mode</th>
-                        <th>Override Value</th>
+                        <th>Override Direct (₹/%)</th>
+                        <th>Passive (₹)</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -144,6 +145,9 @@
                         </td>
                         <td>
                           <input type="number" step="0.01" class="ma-input ma-input--sm" v-model.number="granular.course[p.id].value" placeholder="0.00" />
+                        </td>
+                        <td>
+                          <input type="number" step="0.01" class="ma-input ma-input--sm" v-model.number="granular.course[p.id].passive_value" placeholder="0.00" />
                         </td>
                       </tr>
                     </tbody>
@@ -249,7 +253,8 @@
                   <th>Package</th>
                   <th>Price</th>
                   <th>Enabled</th>
-                  <th>Commission Amount</th>
+                  <th>Direct (₹)</th>
+                  <th>Passive (₹)</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -270,9 +275,19 @@
                     <input
                       type="number"
                       min="0"
-                      step="0.01"
+                      step="1"
                       class="ma-input"
                       v-model.number="r.commission_amount"
+                      :disabled="!r.enabled"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      class="ma-input"
+                      v-model.number="r.passive_amount"
                       :disabled="!r.enabled"
                     />
                   </td>
@@ -469,6 +484,7 @@ export default {
             package_price: r.package_price,
             enabled: !!r.enabled,
             commission_amount: Number(r.commission_amount || 0),
+            passive_amount: Number(r.passive_amount || 0),
           }))
         }
       } catch (e) {
@@ -481,7 +497,7 @@ export default {
     const saveDirect = async (row) => {
       savingKey.value = `d:${row.package_id}`
       try {
-        const payload = { enabled: !!row.enabled, commission_amount: Number(row.commission_amount || 0) }
+        const payload = { enabled: !!row.enabled, commission_amount: Number(row.commission_amount || 0), passive_amount: Number(row.passive_amount || 0) }
         const res = await api.post(`/admin/commissions/direct-affiliate/${row.package_id}`, payload)
         if (res.data?.status === 'success') {
           if (window.notify) window.notify('success', 'Saved')
@@ -520,7 +536,7 @@ export default {
           // Sanitize all *_value fields from DB (removes trailing zeros like 50.00000000 → 50)
           const rawSettings = res.data.data?.settings || {}
           Object.keys(rawSettings).forEach(k => {
-            if (k.endsWith('_value') && rawSettings[k] !== null && rawSettings[k] !== undefined) {
+            if ((k.endsWith('_value') || k === 'passive_value') && rawSettings[k] !== null && rawSettings[k] !== undefined) {
               const f = parseFloat(rawSettings[k])
               rawSettings[k] = isNaN(f) ? 0 : (Number.isInteger(f) ? f : parseFloat(f.toFixed(2)))
             }
@@ -533,7 +549,13 @@ export default {
           
           staticCourses.forEach(p => {
             const saved = rawGranular.course?.[p.id] || {}
-            const cv = parseFloat(saved.value ?? 0); newGranular.course[p.id] = { mode: saved.mode || 'percent', value: isNaN(cv) ? 0 : (Number.isInteger(cv) ? cv : parseFloat(cv.toFixed(2))) }
+            const cv = parseFloat(saved.value ?? 0)
+            const cpv = parseFloat(saved.passive_value ?? 0)
+            newGranular.course[p.id] = { 
+              mode: saved.mode || 'fixed', 
+              value: isNaN(cv) ? 0 : (Number.isInteger(cv) ? cv : parseFloat(cv.toFixed(2))),
+              passive_value: isNaN(cpv) ? 0 : (Number.isInteger(cpv) ? cpv : parseFloat(cpv.toFixed(2)))
+            }
           })
           staticAds.forEach(p => {
             const saved = rawGranular.adplan?.[p.id] || {}
