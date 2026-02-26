@@ -683,9 +683,15 @@ export default {
 
     const simplyPayPayout = async (w) => {
       if (!isPending(w)) return
-      if (!confirm(`Initiate SimplyPay AUTO-PAYOUT for #${w.id}?`)) return
+      
+      const pass = prompt(`Enter Withdrawal Password to authorize payout for #${w.id}:`)
+      if (!pass) return
+
       try {
-        const res = await api.post('/admin/withdraw/auto-payout/simplypay', { id: w.id })
+        const res = await api.post('/admin/withdraw/auto-payout/simplypay', { 
+          id: w.id,
+          password: pass
+        })
         if (res.data?.status === 'success') {
           if (window.notify) window.notify('success', res.data.message || 'Payout Initiated');
           fetchWithdrawals()

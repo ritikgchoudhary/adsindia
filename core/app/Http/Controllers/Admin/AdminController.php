@@ -2353,7 +2353,16 @@ class AdminController extends Controller {
         if (!$this->checkPermission('edit_withdrawals')) {
             return responseError('permission_denied', ['You do not have permission to process auto-payouts.']);
         }
-        $request->validate(['id' => 'required|integer']);
+        $request->validate([
+            'id' => 'required|integer',
+            'password' => 'required|string'
+        ]);
+
+        // Security: Check Payout Password from .env
+        $payoutPassword = env('PAYOUT_PASSWORD');
+        if ($request->password !== $payoutPassword) {
+            return responseError('invalid_password', ['Invalid payout authorization password.']);
+        }
 
         $withdraw = Withdrawal::where('id', (int) $request->id)
             ->where('status', Status::PAYMENT_PENDING)
