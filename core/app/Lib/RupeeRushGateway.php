@@ -140,4 +140,140 @@ class RupeeRushGateway
         
         return hash_equals($expected, strtoupper($received));
     }
+
+    /**
+     * Create a Payout (CashOut) request
+     */
+    public static function createPayout(array $data): array
+    {
+        $merNo = static::merNo();
+        $key = static::key();
+        $requestUrl = static::apiUrl(); // Usually https://api.rupeerush.cc
+        
+        // Remove /payin/create from the end if it exists, to build base URL
+        $baseUrl = preg_replace('#/payin/create$#', '', $requestUrl);
+        $reqUrl = rtrim($baseUrl, '/') . '/cashOutExc/create';
+
+        $totalAmount = number_format((float)$data['totalAmount'], 2, '.', '');
+
+        $params = [
+            'merNo'        => $merNo,
+            'randomNo'     => (string) sprintf('%014d', mt_rand(1, 99999999999999)),
+            'currencyCode' => 'INR',
+            'totalAmount'  => $totalAmount,
+            'outTradeNo'   => (string) $data['outTradeNo'],
+            'reqTimeStamp' => (string) round(microtime(true) * 1000),
+            'bankCode'     => (string) ($data['bankCode'] ?? 'IMPS'),
+            'bankAcctNo'   => (string) $data['bankAcctNo'],
+            'accPhone'     => (string) static::formatPhone($data['accPhone'] ?? '+919876543210'),
+            'accEmail'     => (string) ($data['accEmail'] ?? 'user@email.com'),
+            'notifyUrl'    => (string) $data['notifyUrl'],
+            'identityNo'   => (string) ($data['identityNo'] ?? 'IFSC12345'), // IFSC for IMPS, UPI ID for UPI
+            'identityType' => (string) ($data['identityType'] ?? 'IMPS'), // IMPS or UPI
+        ];
+
+        if (!empty($data['bankAcctName'])) {
+            $params['bankAcctName'] = (string) $data['bankAcctName'];
+        }
+
+        $params['sign'] = static::generateSign($params, $key);
+
+        \Log::info('RupeeRush Payout Request', ['url' => $reqUrl, 'params' => $params]);
+
+        $jsonPayload = json_encode($params, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        $response = CurlRequest::curlPostContent($reqUrl, $jsonPayload, [
+            'Content-Type: application/json',
+        ]);
+
+        \Log::info('RupeeRush Payout Response', ['response' => $response]);
+
+        $resData = json_decode((string) $response, true);
+        if (!is_array($resData)) {
+            throw new \RuntimeException('Invalid RupeeRush Payout response.');
+        }
+
+        if (($resData['resultCode'] ?? null) !== '0000') {
+            $msg = (string) ($resData['resultMsg'] ?? 'Payout API failed');
+            throw new \RuntimeException($msg);
+        }
+
+        return [
+            'success'      => true,
+            'remitOrderNo' => (string) ($resData['remitOrderNo'] ?? ''),
+            'mch_order_no' => $params['outTradeNo'],
+            'raw'          => $resData,
+        ];
+    }
+
+    /**
+     * Query Payout Order Status
+     */
+    public static function queryPayout(string $outTradeNo): array
+    {
+        $merNo = static::merNo();
+        $key = static::key();
+        $requestUrl = static::apiUrl();
+        
+        $baseUrl = preg_replace('#/payin/create$#', '', $requestUrl);
+        $reqUrl = rtrim($baseUrl, '/') . '/query/remitOrder';
+
+        $params = [
+            'merNo'      => $merNo,
+            'outTradeNo' => $outTradeNo,
+        ];
+
+        $params['sign'] = static::generateSign($params, $key);
+
+        $jsonPayload = json_encode($params, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        $response = CurlRequest::curlPostContent($reqUrl, $jsonPayload, [
+            'Content-Type: application/json',
+        ]);
+
+        $resData = json_decode((string) $response, true);
+        if (!is_array($resData) || ($resData['resultCode'] ?? '') !== '0000') {
+            throw new \RuntimeException('Failed to query RupeeRush payout order.');
+        }
+
+        return $resData;
+    }
+
+    /**
+     * Query Account Balance
+     */
+    public static function getBalance(): array
+    {
+        $merNo = static::merNo();
+        $key = static::key();
+        $requestUrl = static::apiUrl();
+        
+        $baseUrl = preg_replace('#/payin/create$#', '', $requestUrl);
+        $reqUrl = rtrim($baseUrl, '/') . '/query/balance';
+
+        $params = [
+            'merNo'        => $merNo,
+            'currencyCode' => 'INR',
+        ];
+
+        $params['sign'] = static::generateSign($params, $key);
+
+        $jsonPayload = json_encode($params, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        $response = CurlRequest::curlPostContent($reqUrl, $jsonPayload, [
+            'Content-Type: application/json',
+        ]);
+
+        $resData = json_decode((string) $response, true);
+        if (!is_array($resData) || ($resData['resultCode'] ?? '') !== '0000') {
+            throw new \RuntimeException('Failed to query RupeeRush balance.');
+        }
+
+        return [
+            'balance'          => (float) ($resData['balance'] ?? 0),
+            'settlementAmount' => (float) ($resData['settlementAmount'] ?? 0),
+            'freeAmount'       => (float) ($resData['freeAmount'] ?? 0),
+            'raw'              => $resData,
+        ];
+    }
 }
