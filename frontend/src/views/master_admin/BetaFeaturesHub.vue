@@ -34,10 +34,10 @@
           <div class="progress-track"><div class="progress-bar" style="width: 33%"></div></div>
         </div>
         <div class="stat-card">
-           <div class="stat-icon"><i class="fas fa-users-cog"></i></div>
+           <div class="stat-icon"><i class="fas fa-user-shield"></i></div>
            <div class="stat-info">
-             <span class="label">Beta Testers</span>
-             <span class="value">{{ testerCount }} Users</span>
+             <span class="label">Primary Tester</span>
+             <span class="value">ADS1 Only</span>
            </div>
         </div>
         <div class="stat-card">

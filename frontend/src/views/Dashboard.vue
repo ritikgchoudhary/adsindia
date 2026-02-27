@@ -59,13 +59,64 @@
 
       <!-- New Profile & Earnings Section -->
       <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-4 md:tw-gap-8 tw-mb-6 md:tw-mb-8">
-        <!-- Profile Card (Left) -->
-        <div class="lg:tw-col-span-1">
+        <!-- Premium Beta Profile Card -->
+        <div v-if="user.beta_access" class="lg:tw-col-span-1 border-glow-anim">
+          <div class="tw-h-full tw-bg-[#0f172a] tw-rounded-[32px] tw-p-6 sm:tw-p-8 tw-text-center tw-shadow-[0_0_30px_rgba(6,182,212,0.15)] tw-border-2 tw-border-cyan-500/30 hover:tw-border-cyan-400/60 tw-transition-all tw-duration-500 tw-flex tw-flex-col tw-items-center tw-justify-center tw-relative tw-overflow-hidden">
+
+            <!-- High-tech subtle dot background & glow -->
+            <div class="tw-absolute tw-inset-0 tw-opacity-[0.03]" style="background-image: radial-gradient(#38bdf8 1px, transparent 1px); background-size: 20px 20px;"></div>
+            <div class="tw-absolute -tw-top-20 -tw-left-20 tw-w-64 tw-h-64 tw-bg-cyan-500 tw-rounded-full tw-blur-[100px] tw-opacity-20 tw-pointer-events-none"></div>
+            <div class="tw-absolute -tw-bottom-20 -tw-right-20 tw-w-64 tw-h-64 tw-bg-blue-600 tw-rounded-full tw-blur-[100px] tw-opacity-20 tw-pointer-events-none"></div>
+
+            <!-- UID -->
+            <h2 class="tw-text-slate-200 tw-font-bold tw-text-xl sm:tw-text-2xl tw-mb-4 tw-uppercase tw-tracking-[0.2em] tw-flex tw-items-center tw-justify-center tw-gap-2 tw-relative tw-z-10">
+              <i class="fas fa-fingerprint tw-text-cyan-400 tw-text-sm tw-opacity-70"></i>
+              {{ referralCode || user.uid || user.id || 'USER' }}
+            </h2>
+            
+            <!-- Profile Image -->
+            <div class="tw-relative tw-mb-6 tw-z-10 tw-mt-2">
+              <div class="tw-w-28 tw-h-28 sm:tw-w-44 sm:tw-h-44 tw-rounded-full tw-border-[2px] tw-border-cyan-500/50 tw-p-1 tw-mx-auto tw-bg-transparent tw-flex tw-items-center tw-justify-center tw-relative">
+                <div class="tw-absolute tw-inset-0 tw-rounded-full tw-border tw-border-cyan-500/20 tw-animate-ping tw-opacity-20"></div>
+                <div class="tw-w-full tw-h-full tw-rounded-full tw-overflow-hidden tw-bg-slate-900 shadow-inner">
+                  <img 
+                    v-if="user.image"
+                    :src="user.image" 
+                    alt="Profile" 
+                    class="tw-w-full tw-h-full tw-object-cover"
+                  >
+                  <img 
+                    v-else
+                    :src="profileAvatarUrl" 
+                    alt="Profile" 
+                    class="tw-w-full tw-h-full tw-object-cover tw-opacity-90 grayscale-[20%]"
+                  >
+                </div>
+              </div>
+              <!-- Green status dot -->
+              <div class="tw-absolute tw-bottom-2 tw-right-2 sm:tw-bottom-3 sm:tw-right-3 tw-bg-emerald-400 tw-w-4 tw-h-4 sm:tw-w-5 sm:tw-h-5 tw-rounded-full tw-border-[3px] tw-border-[#0f172a] tw-shadow-[0_0_10px_rgba(52,211,153,0.5)]" title="Active"></div>
+            </div>
+
+            <!-- Full Name -->
+            <h1 class="tw-text-white tw-font-black tw-text-2xl sm:tw-text-3xl tw-mb-6 tw-drop-shadow-lg tw-leading-tight tw-relative tw-z-10">
+              {{ displayName }}
+            </h1>
+
+            <!-- Badge -->
+            <div class="tw-relative tw-inline-block tw-z-10">
+              <div class="tw-bg-gradient-to-r tw-from-cyan-500 tw-to-blue-600 tw-text-white tw-px-10 tw-py-3 tw-rounded-xl tw-font-bold tw-text-xs sm:tw-text-sm tw-shadow-[0_10px_20px_-10px_rgba(6,182,212,0.5)] tw-tracking-[0.15em] tw-uppercase tw-border tw-border-white/10">
+                ADS SKILL INDIA
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Classic Profile Card (Live / Non-Beta) -->
+        <div v-else class="lg:tw-col-span-1">
           <div class="tw-h-full tw-bg-gradient-to-b tw-from-yellow-400 tw-to-yellow-600 tw-rounded-[32px] tw-p-6 sm:tw-p-8 tw-text-center tw-shadow-2xl tw-border-2 tw-border-white/50 tw-flex tw-flex-col tw-items-center tw-justify-center">
             <!-- UID -->
-            <h2 class="tw-text-white tw-font-bold tw-text-xl sm:tw-text-2xl tw-mb-4 tw-drop-shadow-lg tw-uppercase tw-tracking-widest tw-flex tw-items-center tw-justify-center tw-gap-2">
+            <h2 class="tw-text-white tw-font-bold tw-text-xl sm:tw-text-2xl tw-mb-4 tw-drop-shadow-lg tw-uppercase tw-tracking-widest">
               {{ referralCode || user.uid || user.id || 'USER' }}
-              <i v-if="user.verified_badge" class="fas fa-check-circle tw-text-blue-400 tw-text-sm" title="Verified Partner"></i>
             </h2>
             
             <!-- Profile Image -->
@@ -85,11 +136,6 @@
                 >
               </div>
               <div class="tw-absolute tw-bottom-2 tw-right-2 tw-bg-green-500 tw-w-4 tw-h-4 tw-rounded-full tw-border-[2px] tw-border-white tw-shadow-lg" title="Active"></div>
-              
-              <!-- Beta Ribbon -->
-              <div v-if="user.beta_access" class="tw-absolute -tw-top-2 -tw-right-6 tw-bg-indigo-600 tw-text-white tw-text-[7px] tw-font-black tw-px-2 tw-py-0.5 tw-rounded-md tw-rotate-12 tw-shadow-lg tw-border tw-border-white/20">
-                BETA PARTNER
-              </div>
             </div>
 
             <!-- Full Name -->
@@ -98,13 +144,8 @@
             </h1>
 
             <!-- Badge -->
-            <div class="tw-relative">
-              <div class="tw-bg-gradient-to-r tw-from-blue-600 tw-to-blue-500 tw-text-white tw-px-8 tw-py-2.5 tw-rounded-xl tw-font-bold tw-text-xs sm:tw-text-sm tw-shadow-xl tw-tracking-widest tw-uppercase">
-                ADS SKILL INDIA
-              </div>
-              <div v-if="user.vip_status" class="tw-absolute -tw-top-3 -tw-right-1 tw-bg-amber-500 tw-text-white tw-w-6 tw-h-6 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-shadow-lg tw-border-2 tw-border-white">
-                 <i class="fas fa-crown tw-text-[10px]"></i>
-              </div>
+            <div class="tw-bg-gradient-to-r tw-from-blue-600 tw-to-blue-500 tw-text-white tw-px-8 tw-py-2.5 tw-rounded-xl tw-font-bold tw-text-xs sm:tw-text-sm tw-shadow-xl tw-tracking-widest tw-uppercase">
+              ADS SKILL INDIA
             </div>
           </div>
         </div>
@@ -641,5 +682,13 @@ export default {
   .tw-w-12.tw-h-12.tw-mx-auto { width: 3rem !important; height: 3rem !important; margin-bottom: 0.75rem !important; }
   .tw-text-3xl.tw-font-extrabold.tw-mb-5 { font-size: 1.85rem !important; margin-bottom: 1.25rem !important; }
   .tw-py-4.tw-bg-gradient-to-r { padding: 0.85rem !important; font-size: 1rem !important; border-radius: 1rem !important; }
+}
+@keyframes borderGlow {
+  0% { box-shadow: 0 0 10px rgba(6, 182, 212, 0.2), inset 0 0 10px rgba(6, 182, 212, 0.1); }
+  50% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.5), inset 0 0 20px rgba(6, 182, 212, 0.2); }
+  100% { box-shadow: 0 0 10px rgba(6, 182, 212, 0.2), inset 0 0 10px rgba(6, 182, 212, 0.1); }
+}
+.border-glow-anim > div {
+  animation: borderGlow 3s infinite alternate ease-in-out;
 }
 </style>

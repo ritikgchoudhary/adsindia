@@ -92,7 +92,7 @@ class BetaFeaturesController extends Controller
     public function getVerifiedSettings()
     {
         $settings = gs()->beta_verified_settings;
-        return responseSuccess('success', ['settings' => $settings ?: ['price' => 99, 'auto_enable' => true]]);
+        return responseSuccess('success', ['Verified settings retrieved'], ['settings' => $settings ?: ['price' => 99, 'auto_enable' => true]]);
     }
 
     public function saveVerifiedSettings(Request $request)
@@ -106,7 +106,7 @@ class BetaFeaturesController extends Controller
     public function getBoosterSettings()
     {
         $settings = gs()->beta_booster_settings;
-        return responseSuccess('success', ['settings' => $settings ?: ['daily_price' => 29, 'weekly_price' => 149, 'extra_ads' => 5]]);
+        return responseSuccess('success', ['Booster settings retrieved'], ['settings' => $settings ?: ['daily_price' => 29, 'weekly_price' => 149, 'extra_ads' => 5]]);
     }
 
     public function saveBoosterSettings(Request $request)
@@ -120,7 +120,7 @@ class BetaFeaturesController extends Controller
     public function getInstantSettings()
     {
         $settings = gs()->beta_instant_settings;
-        return responseSuccess('success', ['settings' => $settings ?: ['fee' => 50, 'highlight' => true]]);
+        return responseSuccess('success', ['Instant settings retrieved'], ['settings' => $settings ?: ['fee' => 50, 'highlight' => true]]);
     }
 
     public function saveInstantSettings(Request $request)
@@ -134,7 +134,7 @@ class BetaFeaturesController extends Controller
     public function getExtraSettings()
     {
         $settings = gs()->beta_extra_settings;
-        return responseSuccess('success', ['settings' => $settings ?: [
+        return responseSuccess('success', ['Extra settings retrieved'], ['settings' => $settings ?: [
             'p6_referral_booster' => ['price' => 299, 'bonus' => 10],
             'p7_kyc_fast' => ['price' => 49],
             'p8_withdraw_pass' => ['price' => 499],

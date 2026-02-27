@@ -84,7 +84,7 @@ Route::namespace('Api')->name('api.')->group(function(){
         Route::post('user-data-submit', 'UserController@userDataSubmit');
 
         //authorization
-        Route::middleware('registration.complete')->controller('AuthorizationController')->group(function(){
+        Route::controller('\App\Http\Controllers\User\AuthorizationController')->middleware('registration.complete')->group(function(){
             // authorization, kyc, verify
             Route::get('authorization', 'authorization');
             Route::get('resend-verify/{type}', 'sendVerifyCode');
@@ -163,7 +163,7 @@ Route::namespace('Api')->name('api.')->group(function(){
                 });
 
                 // Payment
-                Route::controller('PaymentController')->group(function(){
+                Route::controller('\App\Http\Controllers\Gateway\PaymentController')->group(function(){
                     Route::get('deposit/methods', 'methods');
                     Route::post('deposit/insert', 'depositInsert');
                     Route::post('app/payment/confirm', 'appPaymentConfirm');
@@ -174,7 +174,7 @@ Route::namespace('Api')->name('api.')->group(function(){
                     Route::post('manual-payment/submit', 'submitManualPayment');
                 });
 
-                Route::controller('TicketController')->prefix('ticket')->group(function () {
+                Route::controller('\App\Http\Controllers\TicketController')->prefix('ticket')->group(function () {
                     Route::get('/', 'supportTicket');
                     Route::post('create', 'storeSupportTicket');
                     Route::get('view/{ticket}', 'viewTicket');
@@ -430,8 +430,6 @@ Route::prefix('admin')->group(function () {
             Route::get('instant/settings', [$c, 'getInstantSettings']);
             Route::post('instant/settings', [$c, 'saveInstantSettings']);
 
-            Route::post('toggle-access', [$c, 'toggleBetaAccess']);
-            
             // Additional Points Placeholders
             Route::get('extra/settings', [$c, 'getExtraSettings']);
             Route::post('extra/settings', [$c, 'saveExtraSettings']);
