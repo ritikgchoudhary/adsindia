@@ -108,7 +108,6 @@
                 <div>
                   <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Amount</div>
                   <div class="tw-text-emerald-400 tw-text-xs tw-font-bold">₹{{ formatAmount(o.amount) }}</div>
-                  <div class="tw-text-white/30 tw-text-[9px]">A: ₹{{ formatAmount(o.after_charge) }}</div>
                 </div>
                 <div>
                   <div class="tw-text-slate-500 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-tight tw-mb-1">Type/Trx</div>
@@ -139,8 +138,6 @@
                 <th><i class="fas fa-barcode me-1"></i>Transaction ID</th>
                 <th><i class="fas fa-user me-1"></i>User</th>
                 <th><i class="fas fa-rupee-sign me-1"></i>Amount</th>
-                <th><i class="fas fa-percentage me-1"></i>Charge</th>
-                <th><i class="fas fa-wallet me-1"></i>After Charge</th>
                 <th><i class="fas fa-credit-card me-1"></i>Gateway</th>
                 <th><i class="fas fa-layer-group me-1"></i>Type</th>
                 <th><i class="fas fa-info-circle me-1"></i>Status</th>
@@ -150,10 +147,10 @@
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="11" class="ma-table__loading"><div class="ma-spinner"></div></td>
+                <td colspan="9" class="ma-table__loading"><div class="ma-spinner"></div></td>
               </tr>
               <tr v-else-if="orders.length === 0">
-                <td colspan="11" class="ma-table__empty">
+                <td colspan="9" class="ma-table__empty">
                   <i class="fas fa-receipt"></i>
                   <p>No orders found</p>
                 </td>
@@ -187,13 +184,6 @@
                   <div class="ma-amount-cell ma-amount-credit">
                     <i class="fas fa-arrow-down"></i>
                     <span>₹{{ formatAmount(o.amount) }}</span>
-                  </div>
-                </td>
-                <td><span class="ma-table__charge">₹{{ formatAmount(o.charge) }}</span></td>
-                <td>
-                  <div class="ma-balance-cell">
-                    <i class="fas fa-wallet"></i>
-                    <span class="ma-table__balance">₹{{ formatAmount(o.after_charge) }}</span>
                   </div>
                 </td>
                 <td>
@@ -291,8 +281,6 @@
                   <h6 class="ma-modal-card__title"><i class="fas fa-file-invoice-dollar me-2"></i>Amount Summary</h6>
                   <div class="ma-modal-info">
                     <div class="ma-modal-info__row"><span>Amount:</span><span class="text-white fw-bold" style="font-size:1.1rem">₹{{ formatAmount(selectedOrder.amount) }}</span></div>
-                    <div class="ma-modal-info__row"><span>Charge:</span><span class="text-danger-bright fw-bold">₹{{ formatAmount(selectedOrder.charge) }}</span></div>
-                    <div class="ma-modal-info__row"><span>Final:</span><span class="text-success-bright fw-extrabold" style="font-size:1.3rem">₹{{ formatAmount(selectedOrder.after_charge) }}</span></div>
                   </div>
                 </div>
               </div>

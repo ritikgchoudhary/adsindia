@@ -2463,8 +2463,8 @@ class AdminController extends Controller {
             foreach ($infoRows as $row) {
                 $n = strtolower(string: (string) ($row['name'] ?? ''));
                 $v = (string) ($row['value'] ?? '');
-                if ($n === 'payout_type' && strtoupper(string: $v) === 'UPI') $isUpi = true;
-                if ($n === 'account_holder_name' || $n === 'name') $name = $v;
+                if ($n === 'payout_type' && strtoupper($v) === 'UPI') $isUpi = true;
+                if (in_array($n, ['account_holder_name', 'account_name', 'name'])) $name = $v;
                 if ($n === 'account_number') $accNo = $v;
                 if ($n === 'ifsc_code') $ifsc = $v;
                 if ($n === 'upi_id') $upiId = $v;
