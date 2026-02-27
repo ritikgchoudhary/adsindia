@@ -373,10 +373,10 @@ export default {
 
     onMounted(() => {
       ;(async () => {
-        const trx = route.query.watchpay_trx || route.query.simplypay_trx
+        const trx = route.query.watchpay_trx || route.query.simplypay_trx || route.query.rupeerush_trx
         if (trx) {
           try {
-            const gateway = route.query.simplypay_trx ? 'simplypay' : 'watchpay'
+            const gateway = route.query.simplypay_trx ? 'simplypay' : (route.query.rupeerush_trx ? 'rupeerush' : 'watchpay')
             const confirmRes = await api.post('/ad-certificate/payment/confirm', { trx, gateway })
             if (confirmRes.data.status === 'success') {
               if (window.notify) window.notify('success', 'Certificate unlocked successfully!')

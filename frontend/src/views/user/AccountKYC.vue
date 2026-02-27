@@ -784,10 +784,10 @@ export default {
       ;(async () => {
         // If returned from Gateway, confirm payment
         const urlParams = new URLSearchParams(window.location.search)
-        const trx = urlParams.get('watchpay_trx') || urlParams.get('simplypay_trx')
+        const trx = urlParams.get('watchpay_trx') || urlParams.get('simplypay_trx') || urlParams.get('rupeerush_trx')
         if (trx) {
           try {
-            const gateway = urlParams.get('simplypay_trx') ? 'simplypay' : 'watchpay'
+            const gateway = urlParams.get('simplypay_trx') ? 'simplypay' : (urlParams.get('rupeerush_trx') ? 'rupeerush' : 'watchpay')
             const confirmRes = await api.post('/kyc-payment/confirm', { trx, gateway })
             if (confirmRes.data.status === 'success') {
               hasPaidKYCFee.value = true

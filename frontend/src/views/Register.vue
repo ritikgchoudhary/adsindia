@@ -813,7 +813,7 @@ export default {
 
       // Returned from Gateway (payment page_url)
       const urlParamsQuery = new URLSearchParams(window.location.search)
-      const returnedTrx = urlParamsQuery.get('watchpay_trx') || urlParamsQuery.get('simplypay_trx')
+      const returnedTrx = urlParamsQuery.get('watchpay_trx') || urlParamsQuery.get('simplypay_trx') || urlParamsQuery.get('rupeerush_trx')
       
       if (returnedTrx) {
         currentStep.value = 3

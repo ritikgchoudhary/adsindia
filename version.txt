@@ -1,4 +1,4 @@
-LIVE_BUILD=2026-02-27 07:31:32
+LIVE_BUILD=2026-02-27 08:18:18
 SERVER=/www/wwwroot/a22-com.site
 Open this URL in browser: https://adsskillindia.in/version.txt
 If you see this date, the site is from this server. Do hard refresh (Ctrl+Shift+R) on /user/courses to see changes.

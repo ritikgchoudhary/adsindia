@@ -259,7 +259,7 @@ export default {
         planId.value = route.query.plan_id || route.params.plan_id
         paymentAmount.value = parseFloat(route.query.amount) || 0
         planName.value = route.query.plan_name || 'Ad Plan'
-        transactionId.value = route.query.watchpay_trx || route.query.simplypay_trx || route.query.trx || ''
+        transactionId.value = route.query.watchpay_trx || route.query.simplypay_trx || route.query.rupeerush_trx || route.query.trx || ''
 
         if (!planId.value) {
           paymentStatus.value = 'failed'
@@ -269,7 +269,7 @@ export default {
 
         if (transactionId.value) {
           paymentStatus.value = 'processing'
-          const gateway = route.query.simplypay_trx ? 'simplypay' : 'watchpay'
+          const gateway = route.query.simplypay_trx ? 'simplypay' : (route.query.rupeerush_trx ? 'rupeerush' : 'watchpay')
           const maxTries = 12
           for (let i = 0; i < maxTries; i++) {
             try {

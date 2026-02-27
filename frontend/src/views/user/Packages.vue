@@ -308,11 +308,11 @@ export default {
 
     onMounted(() => {
       ;(async () => {
-        const trx = route.query.watchpay_trx || route.query.simplypay_trx
+        const trx = route.query.watchpay_trx || route.query.simplypay_trx || route.query.rupeerush_trx
         const coursePlanId = route.query.course_plan_id
         if (trx && coursePlanId) {
           try {
-            const gateway = route.query.simplypay_trx ? 'simplypay' : 'watchpay'
+            const gateway = route.query.simplypay_trx ? 'simplypay' : (route.query.rupeerush_trx ? 'rupeerush' : 'watchpay')
             const confirmRes = await api.post('/course-plans/payment/confirm', {
               trx,
               plan_id: parseInt(coursePlanId),

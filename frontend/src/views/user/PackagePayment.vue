@@ -177,7 +177,7 @@ export default {
         packageId.value = route.query.package_id || route.params.package_id
         paymentAmount.value = parseFloat(route.query.amount) || 0
         packageName.value = route.query.package_name || 'Package'
-        transactionId.value = route.query.watchpay_trx || route.query.simplypay_trx || route.query.trx || ''
+        transactionId.value = route.query.watchpay_trx || route.query.simplypay_trx || route.query.rupeerush_trx || route.query.trx || ''
 
         if (!packageId.value) {
           paymentStatus.value = 'failed'
@@ -188,7 +188,7 @@ export default {
         // If we have a trx (returned from Gateway), confirm payment
         if (transactionId.value) {
           paymentStatus.value = 'processing'
-          const gateway = route.query.simplypay_trx ? 'simplypay' : 'watchpay'
+          const gateway = route.query.simplypay_trx ? 'simplypay' : (route.query.rupeerush_trx ? 'rupeerush' : 'watchpay')
           const maxTries = 12
           for (let i = 0; i < maxTries; i++) {
             try {
