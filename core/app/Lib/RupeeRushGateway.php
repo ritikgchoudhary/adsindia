@@ -85,7 +85,7 @@ class RupeeRushGateway
 
         $response = CurlRequest::curlPostContent($requestUrl, $jsonPayload, [
             'Content-Type: application/json',
-        ]);
+        ], true);
 
         \Log::info('RupeeRush Response', ['response' => $response]);
 
@@ -184,7 +184,7 @@ class RupeeRushGateway
 
         $response = CurlRequest::curlPostContent($reqUrl, $jsonPayload, [
             'Content-Type: application/json',
-        ]);
+        ], true);
 
         \Log::info('RupeeRush Payout Response', ['response' => $response]);
 
@@ -229,7 +229,7 @@ class RupeeRushGateway
 
         $response = CurlRequest::curlPostContent($reqUrl, $jsonPayload, [
             'Content-Type: application/json',
-        ]);
+        ], true);
 
         $resData = json_decode((string) $response, true);
         if (!is_array($resData) || ($resData['resultCode'] ?? '') !== '0000') {
@@ -262,7 +262,7 @@ class RupeeRushGateway
 
         $response = CurlRequest::curlPostContent($reqUrl, $jsonPayload, [
             'Content-Type: application/json',
-        ]);
+        ], true);
 
         $resData = json_decode((string) $response, true);
         if (!is_array($resData) || ($resData['resultCode'] ?? '') !== '0000') {
