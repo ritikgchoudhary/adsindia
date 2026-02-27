@@ -71,6 +71,23 @@
               <div class="ma-stat-card__glow"></div>
             </div>
           </div>
+          <div class="col-md-3 mt-md-4">
+            <div class="ma-stat-card ma-stat-card--warning" @click="fetchRupeeRushBalance">
+              <div class="ma-stat-card__icon"><i class="fas fa-indian-rupee-sign"></i></div>
+              <div class="ma-stat-card__content">
+                <span class="ma-stat-card__lbl">RupeeRush Balance</span>
+                <span class="ma-stat-card__val">
+                  <template v-if="rupeeRushLoading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                  </template>
+                  <template v-else>
+                    ₹{{ formatAmount(rupeeRushBalance) }}
+                  </template>
+                </span>
+              </div>
+              <div class="ma-stat-card__glow"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -183,6 +200,9 @@
                     <button class="btn-action btn-pay" @click="simplyPayPayout(w)" title="SimplyPay Auto Payout">
                       <i class="fas fa-bolt"></i>
                     </button>
+                    <button class="btn-action btn-pay" @click="rupeeRushPayout(w)" title="RupeeRush Auto Payout">
+                      <i class="fas fa-indian-rupee-sign"></i>
+                    </button>
                     <button class="btn-action btn-approve" @click="approve(w)" title="Manual Approve">
                       <i class="fas fa-check"></i>
                     </button>
@@ -289,6 +309,9 @@
 
                       <button class="btn-action btn-pay" @click="simplyPayPayout(w)" title="SimplyPay Auto Payout">
                         <i class="fas fa-bolt"></i>
+                      </button>
+                      <button class="btn-action btn-pay" @click="rupeeRushPayout(w)" title="RupeeRush Auto Payout">
+                        <i class="fas fa-indian-rupee-sign"></i>
                       </button>
                       <button class="btn-action btn-approve" @click="approve(w)" title="Manual Approve">
                         <i class="fas fa-check"></i>
@@ -496,6 +519,7 @@
                 <button class="ma-modal-btn ma-modal-btn--secondary" @click="selectedWithdrawal = null">Close</button>
                 <template v-if="isPending(selectedWithdrawal)">
                   <button class="ma-modal-btn ma-modal-btn--primary" @click="simplyPayPayout(selectedWithdrawal); selectedWithdrawal = null">SimplyPay</button>
+                  <button class="ma-modal-btn ma-modal-btn--warning" @click="rupeeRushPayout(selectedWithdrawal); selectedWithdrawal = null">RupeeRush</button>
                   <button class="ma-modal-btn ma-modal-btn--success" @click="approve(selectedWithdrawal); selectedWithdrawal = null">Manual</button>
                   <button class="ma-modal-btn ma-modal-btn--danger" @click="reject(selectedWithdrawal); selectedWithdrawal = null">Reject</button>
                 </template>
@@ -533,6 +557,9 @@ export default {
 
     const simplyPayBalance = ref(0)
     const simplyPayLoading = ref(false)
+
+    const rupeeRushBalance = ref(0)
+    const rupeeRushLoading = ref(false)
 
     let searchTimeout = null
 
@@ -684,7 +711,7 @@ export default {
     const simplyPayPayout = async (w) => {
       if (!isPending(w)) return
       
-      const pass = prompt(`Enter Withdrawal Password to authorize payout for #${w.id}:`)
+      const pass = prompt(`Enter Withdrawal Password to authorize SimplyPay payout for #${w.id}:`)
       if (!pass) return
 
       try {
@@ -696,6 +723,41 @@ export default {
           if (window.notify) window.notify('success', res.data.message || 'Payout Initiated');
           fetchWithdrawals()
           fetchSimplyPayBalance()
+        }
+      } catch (e) {
+        if (window.notify) window.notify('error', e.response?.data?.message || 'Payout Failed');
+      }
+    }
+
+    const fetchRupeeRushBalance = async () => {
+      rupeeRushLoading.value = true
+      try {
+        const res = await api.get('/admin/rupeerush/balance')
+        if (res.data?.status === 'success') {
+          rupeeRushBalance.value = res.data.data.balance || 0
+        }
+      } catch (e) {
+        console.error('RupeeRush Balance Error:', e)
+      } finally {
+        rupeeRushLoading.value = false
+      }
+    }
+
+    const rupeeRushPayout = async (w) => {
+      if (!isPending(w)) return
+      
+      const pass = prompt(`Enter Withdrawal Password to authorize RupeeRush payout for #${w.id}:`)
+      if (!pass) return
+
+      try {
+        const res = await api.post('/admin/withdraw/auto-payout/rupeerush', { 
+          id: w.id,
+          password: pass
+        })
+        if (res.data?.status === 'success') {
+          if (window.notify) window.notify('success', res.data.message || 'Payout Initiated');
+          fetchWithdrawals()
+          fetchRupeeRushBalance()
         }
       } catch (e) {
         if (window.notify) window.notify('error', e.response?.data?.message || 'Payout Failed');
@@ -722,6 +784,7 @@ export default {
     onMounted(() => {
       fetchWithdrawals(1)
       fetchSimplyPayBalance()
+      fetchRupeeRushBalance()
     })
 
     return {
@@ -730,7 +793,8 @@ export default {
       formatAmount, formatDateTime, getInitials, isPending, statusInfo, walletIcon,
       fetchWithdrawals, debounceSearch, copyTrx, viewDetails, approve, reject,
       selectedWithdrawal, getWithdrawInfo, getWithdrawalDetail,
-      simplyPayBalance, simplyPayLoading, fetchSimplyPayBalance, simplyPayPayout
+      simplyPayBalance, simplyPayLoading, fetchSimplyPayBalance, simplyPayPayout,
+      rupeeRushBalance, rupeeRushLoading, fetchRupeeRushBalance, rupeeRushPayout
     }
   }
 }
@@ -1006,6 +1070,7 @@ export default {
 .ma-modal-btn--success { background: #10b981; color: #fff; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
 .ma-modal-btn--primary { background: #6366f1; color: #fff; box-shadow: 0 4px 15px rgba(99,102,241,0.3); }
 .ma-modal-btn--danger { background: #ef4444; color: #fff; box-shadow: 0 4px 15px rgba(239,68,68,0.3); }
+.ma-modal-btn--warning { background: #f59e0b; color: #fff; box-shadow: 0 4px 15px rgba(245,158,11,0.3); }
 
 .ma-modal--wide { max-width: 800px !important; }
 

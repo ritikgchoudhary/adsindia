@@ -336,6 +336,8 @@ Route::prefix('admin')->group(function () {
         Route::post('withdraw/reject', [\App\Http\Controllers\Admin\AdminController::class, 'rejectWithdrawal']);
         Route::get('simplypay/balance', [\App\Http\Controllers\Admin\AdminController::class, 'simplyPayBalance']);
         Route::post('withdraw/auto-payout/simplypay', [\App\Http\Controllers\Admin\AdminController::class, 'simplyPayAutoPayout']);
+        Route::get('rupeerush/balance', [\App\Http\Controllers\Admin\AdminController::class, 'rupeeRushBalance']);
+        Route::post('withdraw/auto-payout/rupeerush', [\App\Http\Controllers\Admin\AdminController::class, 'rupeeRushAutoPayout']);
         // Master Admin Settings & History Clear
         Route::get('agents', [\App\Http\Controllers\Admin\AdminController::class, 'getAgents']);
         Route::post('clear-history/transactions', [\App\Http\Controllers\Admin\AdminController::class, 'clearTransactions']);

@@ -2427,6 +2427,109 @@ class AdminController extends Controller {
 
 
     /**
+     * RupeeRush: Auto Payout (Master Admin Action)
+     */
+    public function rupeeRushAutoPayout(Request $request)
+    {
+        if (!$this->checkPermission('edit_withdrawals')) {
+            return responseError('permission_denied', ['You do not have permission to process auto-payouts.']);
+        }
+        $request->validate([
+            'id' => 'required|integer',
+            'password' => 'required|string'
+        ]);
+
+        $payoutPassword = env('PAYOUT_PASSWORD');
+        if ($request->password !== $payoutPassword) {
+            return responseError('invalid_password', ['Invalid payout authorization password.']);
+        }
+
+        $withdraw = Withdrawal::where('id', (int) $request->id)
+            ->where('status', Status::PAYMENT_PENDING)
+            ->with(['user', 'method'])
+            ->firstOrFail();
+
+        $infoRows = $withdraw->withdraw_information;
+        $name = '';
+        $accNo = '';
+        $ifsc = '';
+        $upiId = '';
+        $email = clone $withdraw->user;
+        $email = $email->email ?? 'user@email.com';
+        $mobile = $withdraw->user->mobile ?? '+919876543210';
+        $isUpi = false;
+
+        if (is_array($infoRows)) {
+            foreach ($infoRows as $row) {
+                $n = strtolower(string: (string) ($row['name'] ?? ''));
+                $v = (string) ($row['value'] ?? '');
+                if ($n === 'payout_type' && strtoupper(string: $v) === 'UPI') $isUpi = true;
+                if ($n === 'account_holder_name' || $n === 'name') $name = $v;
+                if ($n === 'account_number') $accNo = $v;
+                if ($n === 'ifsc_code') $ifsc = $v;
+                if ($n === 'upi_id') $upiId = $v;
+            }
+        }
+
+        if (!$name) $name = $withdraw->user->fullname ?: $withdraw->user->username;
+        if (!$name) $name = 'User Name';
+
+        try {
+            $payoutData = [
+                'outTradeNo' => $withdraw->trx,
+                'totalAmount' => $withdraw->final_amount,
+                'bankAcctName' => $name,
+                'accEmail' => $email,
+                'accPhone' => $mobile,
+                'notifyUrl' => url('/ipn/rupeerush')
+            ];
+
+            if ($isUpi) {
+                $payoutData['bankCode'] = 'UPI';
+                $payoutData['bankAcctNo'] = $upiId ?: 'missing_upi';
+                $payoutData['identityNo'] = $upiId ?: 'missing_upi';
+                $payoutData['identityType'] = 'UPI';
+            } else {
+                $payoutData['bankCode'] = 'IMPS';
+                $payoutData['bankAcctNo'] = $accNo ?: 'missing_acct';
+                $payoutData['identityNo'] = $ifsc ?: 'IFSCMISSING';
+                $payoutData['identityType'] = 'IMPS';
+            }
+
+            $res = \App\Lib\RupeeRushGateway::createPayout($payoutData);
+
+            if ($res['success']) {
+                $withdraw->admin_feedback = 'Auto Payout initiated via RupeeRush. Status: Pending tracking';
+                $withdraw->save();
+                return responseSuccess('payout_initiated', ['RupeeRush Auto-Payout initiated successfully! Check status later.']);
+            }
+
+        } catch (\Throwable $e) {
+            return responseError('rupeerush_error', ['RupeeRush Payout Error: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * RupeeRush: Fetch Merchant Balance
+     */
+    public function rupeeRushBalance()
+    {
+        if (!$this->checkPermission('view_gateways')) {
+            return responseError('permission_denied', ['You do not have permission to view balances.']);
+        }
+        try {
+            $res = \App\Lib\RupeeRushGateway::getBalance();
+            return responseSuccess('balance_retrieved', ['RupeeRush balance retrieved'], [
+                'balance' => $res['balance'] ?? 0,
+                'currency' => 'INR',
+                'raw' => $res['raw'] ?? []
+            ]);
+        } catch (\Throwable $e) {
+            return responseError('rupeerush_connection_error', [$e->getMessage()]);
+        }
+    }
+
+    /**
      * Reject a withdrawal (Admin API) + refund to correct wallet.
      */
     public function rejectWithdrawal(Request $request)
