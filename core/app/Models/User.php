@@ -99,6 +99,18 @@ class User extends Authenticatable {
         );
     }
 
+    public function virtualId(): Attribute {
+        return new Attribute(
+            get: fn() => $this->id,
+        );
+    }
+
+    public function displayId(): Attribute {
+        return new Attribute(
+            get: fn() => 'ADS' . $this->virtual_id,
+        );
+    }
+
     // SCOPES
     public function scopeActive($query) {
         return $query->where('status', Status::USER_ACTIVE)->where('ev', Status::VERIFIED)->where('sv', Status::VERIFIED);

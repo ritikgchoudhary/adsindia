@@ -129,7 +129,7 @@
                 <div class="col-12">
                   <label class="ma-form-label">Sponsor ID</label>
                   <input v-model="createForm.sponsor_id" type="text" class="ma-form-input" placeholder="ADS15001" @input="createForm.sponsor_id = createForm.sponsor_id.toUpperCase()">
-                  <small class="text-muted">Required. Only ADS series allowed (e.g., ADS15001).</small>
+                  <small class="text-muted">Required for network placement. Only ADS series allowed.</small>
                 </div>
                 <div class="col-12">
                   <label class="ma-form-label">Password</label>
@@ -201,7 +201,7 @@
               <tr v-else v-for="user in users" :key="user.id" class="tw-group hover:tw-bg-white/[0.02] tw-transition-all tw-border-b tw-border-white/5 last:tw-border-0">
                 <td class="tw-px-6 tw-py-5">
                    <div class="tw-flex tw-flex-col tw-gap-1">
-                      <code class="tw-text-[11px] tw-text-indigo-400 tw-font-mono tw-bg-indigo-500/10 tw-px-2 tw-py-0.5 tw-rounded tw-font-bold">ADS{{ user.id }}</code>
+                      <code class="tw-text-[11px] tw-text-indigo-400 tw-font-mono tw-bg-indigo-500/10 tw-px-2 tw-py-0.5 tw-rounded tw-font-bold">{{ (user.ads_id ? 'ADS' + user.ads_id : 'ADS' + user.id) }}</code>
                       <span class="tw-text-slate-600 tw-text-[9px] tw-font-black">{{ user.id }}</span>
                    </div>
                 </td>
@@ -969,9 +969,9 @@ export default {
           params: { page, search: searchQuery.value, status: filterStatus.value } 
         })
         if (res.data?.status === 'success' && res.data.data) {
-          users.value = res.data.data.users || []
-          totalUsers.value = Number(res.data.data.total || 0)
-          lastPage.value = Number(res.data.data.last_page || 1)
+          users.value = res.data.data.users.data || []
+          totalUsers.value = Number(res.data.data.users.total || 0)
+          lastPage.value = Number(res.data.data.users.last_page || 1)
         } else {
           users.value = []
           totalUsers.value = 0
@@ -1472,7 +1472,7 @@ export default {
         showRejectForm.value = false; 
         rejectionReason.value = ''; 
       },
-      showCreateUserModal, creatingUser, createForm, openCreateUserModal, closeCreateUserModal, createUser,
+      showCreateUserModal, creatingUser, createForm, openCreateUserModal, closeCreateUserModal, createUser, 
       detailLoading, referrals, commissions, paymentsHistory: paymentsHistory, fetchUserDetail, toggleAdCertificate,
       isSuper, perms
     }
@@ -1549,8 +1549,8 @@ export default {
 .ma-action-btn--view:hover { border-color: #6366f1; color: #6366f1; }
 .ma-action-btn--ban:hover { border-color: #ef4444; color: #ef4444; }
 
-.ma-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
-.ma-modal { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+.ma-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 10px; }
+.ma-modal { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
 .ma-modal--lg { max-width: 850px; }
 .ma-modal__header { padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
 .ma-modal__title { margin: 0; color: #f1f5f9; font-weight: 700; font-size: 1.1rem; }

@@ -191,6 +191,10 @@ class ManageUsersController extends Controller {
                 }
             }
             $user->kyc_data = null;
+            $user->has_paid_kyc_fee = 0;
+            $user->is_kyc_priority = 0;
+            $user->kyc_fee_trx = null;
+            $user->kyc_fee_paid_at = null;
         } else {
             $user->kv = Status::KYC_VERIFIED;
         }
@@ -390,6 +394,10 @@ class ManageUsersController extends Controller {
             $user->new_user_ads_watched = 0;
             $user->kv = Status::KYC_UNVERIFIED;
             $user->kyc_data = null;
+            $user->has_paid_kyc_fee = 0;
+            $user->is_kyc_priority = 0;
+            $user->kyc_fee_trx = null;
+            $user->kyc_fee_paid_at = null;
             $user->profile_complete = 0;
             $user->save();
         });

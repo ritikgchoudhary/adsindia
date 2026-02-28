@@ -51,6 +51,10 @@ class AffiliateController extends Controller
             'agent_partner_commission',
             'agent_certificate_commission',
             'agent_partner_override_commission',
+            'agent_passive_commission',
+            'passive_commission',
+            'agent_kyc_fast_track_commission',
+            'agent_instant_payout_commission',
         ];
 
         $referralCount = User::where('ref_by', $user->id)->count();
@@ -123,12 +127,13 @@ class AffiliateController extends Controller
                 'commission_amount' => (float) ($trx->amount ?? 0),
                 'type' => match ((string) ($trx->remark ?? '')) {
                     'direct_affiliate_commission', 'agent_registration_commission' => 'Direct Registration',
-                    'agent_kyc_commission' => 'KYC Income',
-                    'agent_withdraw_fee_commission' => 'Withdrawal Fee Income',
+                    'agent_kyc_commission', 'agent_kyc_fast_track_commission' => 'KYC Income',
+                    'agent_withdraw_fee_commission', 'agent_instant_payout_commission' => 'Withdrawal Fee Income',
                     'agent_upgrade_commission', 'agent_course_commission' => 'Upgrade Income',
                     'agent_certificate_commission' => 'Ad Certificate Income',
                     'agent_adplan_commission' => 'Ads Plan Income',
                     'agent_partner_commission', 'agent_partner_override_commission' => 'Partner Income',
+                    'agent_passive_commission', 'passive_commission' => 'Passive Income',
                     default => 'Other Commission',
                 },
                 'date' => $trx->created_at ? $trx->created_at->format('Y-m-d H:i:s') : null,
@@ -144,12 +149,14 @@ class AffiliateController extends Controller
 
         $breakdowns = [];
         foreach ($periods as $key => $date) {
-            $q = Transaction::where('user_id', $user->id)->whereIn('remark', $remarks)->where('wallet', 'affiliate')->where('trx_type', '+');
+            $baseQuery = Transaction::where('user_id', $user->id)
+                ->where('wallet', 'affiliate')
+                ->where('trx_type', '+');
+
             if ($date) {
-                $q->where('created_at', '>=', $date);
+                $baseQuery->where('created_at', '>=', $date);
             }
 
-            // Map keys
             $manualKey = match($key) {
                 'today' => 'lead_aff_today',
                 'this_week' => 'lead_aff_weekly',
@@ -158,14 +165,15 @@ class AffiliateController extends Controller
             };
 
             $breakdowns[$key] = [
-                'direct_registration_income' => (float) (clone $q)->whereIn('remark', ['direct_affiliate_commission', 'agent_registration_commission'])->sum('amount') + (float)($user->$manualKey ?? 0),
-                'kyc_income' => (float) (clone $q)->where('remark', 'agent_kyc_commission')->sum('amount'),
-                'withdrawal_fee_income' => (float) (clone $q)->where('remark', 'agent_withdraw_fee_commission')->sum('amount'),
-                'upgrade_income' => (float) (clone $q)->whereIn('remark', ['agent_upgrade_commission', 'agent_course_commission'])->sum('amount'),
-                'ad_certificate_income' => (float) (clone $q)->where('remark', 'agent_certificate_commission')->sum('amount'),
-                'ads_plan_income' => (float) (clone $q)->where('remark', 'agent_adplan_commission')->sum('amount'),
-                'partner_program_income' => (float) (clone $q)->whereIn('remark', ['agent_partner_commission', 'agent_partner_override_commission'])->sum('amount'),
-                'total' => (float) (clone $q)->sum('amount') + (float)($user->$manualKey ?? 0),
+                'direct_registration_income' => (float) (clone $baseQuery)->whereIn('remark', ['direct_affiliate_commission', 'agent_registration_commission'])->sum('amount') + (float)($user->$manualKey ?? 0),
+                'kyc_income' => (float) (clone $baseQuery)->whereIn('remark', ['agent_kyc_commission', 'agent_kyc_fast_track_commission'])->sum('amount'),
+                'withdrawal_fee_income' => (float) (clone $baseQuery)->whereIn('remark', ['agent_withdraw_fee_commission', 'agent_instant_payout_commission'])->sum('amount'),
+                'upgrade_income' => (float) (clone $baseQuery)->whereIn('remark', ['agent_upgrade_commission', 'agent_course_commission'])->sum('amount'),
+                'ad_certificate_income' => (float) (clone $baseQuery)->where('remark', 'agent_certificate_commission')->sum('amount'),
+                'ads_plan_income' => (float) (clone $baseQuery)->where('remark', 'agent_adplan_commission')->sum('amount'),
+                'partner_program_income' => (float) (clone $baseQuery)->whereIn('remark', ['agent_partner_commission', 'agent_partner_override_commission'])->sum('amount'),
+                'passive_income' => (float) (clone $baseQuery)->whereIn('remark', ['agent_passive_commission', 'passive_commission'])->sum('amount'),
+                'total' => (float) (clone $baseQuery)->whereIn('remark', $remarks)->sum('amount') + (float)($user->$manualKey ?? 0),
             ];
         }
 

@@ -1,7 +1,7 @@
 <template>
   <MasterAdminLayout page-title="Commission Management">
     <div class="ma-wrap">
-      <div class="ma-card mb-4">
+      <div class="ma-card mb-4" v-if="admin.is_super_admin">
         <div class="ma-card__body">
           <div class="ma-tabs">
             <button type="button" class="ma-tab" :class="{ active: activeTab === 'direct' }" @click="activeTab = 'direct'">
@@ -47,16 +47,17 @@
                     <div class="tw-text-xs tw-text-indigo-400 tw-font-bold">ADS{{ agent.id }}</div>
                   </td>
                   <td>
-                    <div v-if="agent.settings" class="tw-flex tw-flex-wrap tw-gap-1">
-                       <span class="ma-mini-badge tw-bg-emerald-500/10 tw-text-emerald-400">ADS: {{ displayMiniSetting(agent.settings, 'adplan') }}</span>
-                       <span class="ma-mini-badge tw-bg-indigo-500/10 tw-text-indigo-400">COURSE: {{ displayMiniSetting(agent.settings, 'course') }}</span>
-                       <span class="ma-mini-badge tw-bg-purple-500/10 tw-text-purple-400">PARTNER: {{ displayMiniSetting(agent.settings, 'partner') }}</span>
-                       <span class="ma-mini-badge tw-bg-sky-500/10 tw-text-sky-400">CERT: {{ displayMiniSetting(agent.settings, 'certificate') }}</span>
+                     <div v-if="agent.settings" class="tw-flex tw-flex-wrap tw-gap-1">
+                        <span class="ma-mini-badge tw-bg-emerald-500/10 tw-text-emerald-400">ADS: {{ displayMiniSetting(agent.settings, 'adplan') }}</span>
+                        <span class="ma-mini-badge tw-bg-indigo-500/10 tw-text-indigo-400">COURSE: {{ displayMiniSetting(agent.settings, 'course') }}</span>
+                        <span class="ma-mini-badge tw-bg-purple-500/10 tw-text-purple-400">PARTNER: {{ displayMiniSetting(agent.settings, 'partner') }}</span>
+                        <span class="ma-mini-badge tw-bg-pink-500/10 tw-text-pink-400">WITHDRAW: {{ displayMiniSetting(agent.settings, 'withdraw_fee') }}</span>
+                        <span class="ma-mini-badge tw-bg-sky-500/10 tw-text-sky-400">CERT: {{ displayMiniSetting(agent.settings, 'certificate') }}</span>
                         <span class="ma-mini-badge tw-bg-amber-500/10 tw-text-amber-400">KYC: {{ displayMiniSetting(agent.settings, 'kyc') }}</span>
                         <span class="ma-mini-badge tw-bg-rose-500/10 tw-text-rose-400">FAST KYC: {{ displayMiniSetting(agent.settings, 'kyc_fast_track') }}</span>
                         <span class="ma-mini-badge tw-bg-emerald-500/10 tw-text-emerald-400">INSTANT: {{ displayMiniSetting(agent.settings, 'instant_payout') }}</span>
                         <span class="ma-mini-badge tw-bg-rose-500/10 tw-text-rose-400">SPECIAL LINK: {{ displayMiniSetting(agent.settings, 'special_discount') }}</span>
-                    </div>
+                     </div>
                     <div v-else class="tw-text-xs tw-text-slate-500 italic">No custom settings</div>
                   </td>
                   <td>
@@ -398,7 +399,8 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
-    const activeTab = ref(route.query.tab || 'direct')
+    const admin = ref(JSON.parse(localStorage.getItem('admin_user') || '{}'))
+    const activeTab = ref(route.query.tab || (admin.value.is_super_admin ? 'direct' : 'agents'))
     const savingKey = ref('')
 
     // Direct affiliate
@@ -427,23 +429,23 @@ export default {
     const specialLinkRows = ref([])
 
     const staticCourses = [
-      { id: 1, name: 'AdsLite', price: 1499 },
-      { id: 2, name: 'AdsPro', price: 2999 },
-      { id: 3, name: 'AdsSupreme', price: 5999 },
-      { id: 4, name: 'AdsPremium', price: 9999 },
-      { id: 5, name: 'AdsPremium+', price: 15999 }
+      { id: 4, name: 'AdsLite',     price: 1499 },
+      { id: 5, name: 'AdsPro',      price: 2999 },
+      { id: 6, name: 'AdsSupreme',  price: 5999 },
+      { id: 7, name: 'AdsPremium',  price: 9999 },
+      { id: 8, name: 'AdsPremium+', price: 15999 }
     ]
     const staticAds = [
-      { id: 1, name: 'Starter Plan', price: 2999 },
-      { id: 2, name: 'Popular Plan', price: 4999 },
-      { id: 3, name: 'Premium Plan', price: 7499 },
-      { id: 4, name: 'Elite Plan', price: 9999 }
+      { id: 4, name: 'Starter Plan', price: 2999 },
+      { id: 5, name: 'Popular Plan', price: 4999 },
+      { id: 6, name: 'Premium Plan', price: 7499 },
+      { id: 7, name: 'Elite Plan',   price: 9999 }
     ]
     const staticPartners = [
       { id: 1, name: 'Associate Partner', price: 1999 },
       { id: 2, name: 'Executive Partner', price: 3999 },
-      { id: 3, name: 'Master Partner', price: 5999 },
-      { id: 4, name: 'Elite Partner', price: 9999 }
+      { id: 3, name: 'Master Partner',    price: 5999 },
+      { id: 4, name: 'Elite Partner',     price: 9999 }
     ]
 
     // Upgrade rules
@@ -728,6 +730,7 @@ export default {
     })
 
     return {
+      admin,
       activeTab,
       savingKey,
       loadingDirect,
@@ -769,7 +772,21 @@ export default {
       saveSpecialLink,
 
       displayMiniSetting: (settings, type) => {
-        if (!settings) return '0%';
+        if (!settings) return '—';
+        const granular = typeof settings.granular_settings === 'string' ? JSON.parse(settings.granular_settings) : (settings.granular_settings || {});
+        
+        // For special types, check the representative plan in granular to show a FIXED value
+        if (type === 'adplan' && granular.adplan?.[4]) {
+          return '₹' + granular.adplan[4].value;
+        }
+        if (type === 'course') {
+           const v = granular.course?.[4]?.value || granular.course?.[1]?.value;
+           if (v != null) return '₹' + v;
+        }
+        if (type === 'partner' && granular.partner?.[1]) {
+           return '₹' + granular.partner[1].value;
+        }
+
         const mode = settings[type + '_mode'] || 'percent';
         const raw = parseFloat(settings[type + '_value'] || 0);
         const val = Number.isInteger(raw) ? raw : parseFloat(raw.toFixed(2));

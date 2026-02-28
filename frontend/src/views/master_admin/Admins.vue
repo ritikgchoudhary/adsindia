@@ -236,22 +236,6 @@
                 </div>
 
                 <div class="security-divider mb-4">
-                  <span>Downline Restriction Linkage</span>
-                </div>
-
-                <div class="form-row mb-4">
-                  <label>Linked User ID (For Downline Visibility)</label>
-                  <p class="text-muted small mb-2">If linked, this admin will ONLY see data for users in their referral tree.</p>
-                  <div class="input-wrapper">
-                    <i class="fas fa-link"></i>
-                    <input v-model="editForm.user_id" type="number" placeholder="Enter User ID or leave empty for all access">
-                  </div>
-                  <div v-if="editForm.user_name" class="mt-2 small text-info">
-                    Linked to User: <strong>{{ editForm.user_name }}</strong>
-                  </div>
-                </div>
-
-                <div class="security-divider mb-4">
                    <span>Menu Permissions (On / Off)</span>
                 </div>
 
@@ -378,7 +362,8 @@ export default {
       edit_withdrawals: 'Withdrawals (Approve/Reject)',
       view_transactions: 'Transactions History',
       view_ledger: 'Account Ledger',
-      view_reports: 'Home Reports'
+      view_reports: 'Home Reports',
+      manage_commissions: 'Agent Commissions Control'
     }
 
     const openEditAdmin = (admin) => {
@@ -399,7 +384,8 @@ export default {
           edit_withdrawals: true,
           view_transactions: false,
           view_ledger: false,
-          view_reports: true
+          view_reports: true,
+          manage_commissions: false
         }
       }
       showEdit.value = true
@@ -812,10 +798,11 @@ export default {
   background: #0f172a;
   width: 100%;
   max-width: 550px;
+  max-height: 90vh; /* Add max height */
+  overflow-y: auto; /* Enable vertical scroll */
   border-radius: 32px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.8);
-  overflow: hidden;
   animation: maSheetScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 

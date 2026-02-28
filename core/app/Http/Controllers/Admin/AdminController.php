@@ -62,16 +62,25 @@ class AdminController extends Controller {
      */
     private function getAllowedUserIds()
     {
-        $admin = auth()->user();
-        if ($admin->is_super_admin) return null;
-        
-        // If it's an agent/manager linked to a user account
-        if ($admin->user_id) {
-            return $this->getDownlineUserIds($admin->user_id);
-        }
+        // Rollback: No branch restrictions. 
+        // If you still have Agent-only restrictions, we can keep those, 
+        // but for now, making it return null to see all.
+        return null; 
+    }
 
-        // No link means no users visible by default for security
-        return [0];
+    /**
+     * Check if the current admin has access to a specific user.
+     */
+    private function checkUserAccess($userId): bool
+    {
+        $allowed = $this->getAllowedUserIds();
+        if ($allowed === null) return true;
+        return in_array((int)$userId, $allowed);
+    }
+
+    private function getBranchIdOffset()
+    {
+        return 0;
     }
 
 
@@ -160,9 +169,9 @@ class AdminController extends Controller {
         $status = $request->get('status');
         $perPage = $request->get('per_page', 20);
 
-        $query = User::query()->orderBy('id', 'desc');
+        $query = \App\Models\User::query()->orderBy('id', 'desc');
 
-        if ($search) {
+        if ($search && strlen(trim((string)$search)) > 0) {
             $query->where(function ($q) use ($search) {
                 $q->where('username', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
@@ -226,6 +235,8 @@ class AdminController extends Controller {
             ->keyBy('user_id');
 
         $users->getCollection()->transform(function ($user) use ($totalDeposits, $activeCourseOrders, $activeAdsOrders) {
+            $user->ads_id = 'ADS' . $user->id;
+            $user->raw_id = $user->id;
             $totalDeposit = $totalDeposits[$user->id] ?? 0;
             $courseOrder = $activeCourseOrders[$user->id] ?? null;
             $adsOrder    = $activeAdsOrders[$user->id] ?? null;
@@ -254,7 +265,7 @@ class AdminController extends Controller {
                 'is_kyc_priority' => (bool)$user->is_kyc_priority,
                 'has_ad_certificate' => (bool)$user->has_ad_certificate,
                 'has_ad_certificate_view' => (bool)$user->has_ad_certificate_view,
-                'kyc_data'   => $this->normalizeKycData($user->kyc_data ?? null),
+                'kyc_data'   => @json_decode(json_encode($user->kyc_data)) ?? [],
                 'kyc_rejection_reason' => $user->kyc_rejection_reason ?? null,
                 'referral_code' => $user->referral_code ?? '',
                 'referred_by'   => $user->ref_by ? (int) $user->ref_by : 0,
@@ -286,11 +297,7 @@ class AdminController extends Controller {
         });
 
         return responseSuccess('users', ['Users retrieved successfully'], [
-            'users' => $users->items(),
-            'total' => $users->total(),
-            'per_page' => $users->perPage(),
-            'current_page' => $users->currentPage(),
-            'last_page' => $users->lastPage(),
+            'users' => $users,
         ]);
     }
 
@@ -415,9 +422,6 @@ class AdminController extends Controller {
             $user->mobile = $request->mobile;
             $user->state = $request->state;
             $user->ref_by = $refBy;
-
-            // This project uses plain-text password in multiple places (legacy behavior).
-            // Keep it consistent so user login works as expected.
             $user->password = $request->password;
 
             $user->status = Status::USER_ACTIVE; // 1
@@ -463,7 +467,17 @@ class AdminController extends Controller {
                             'registration',
                             (float) ($coursePlan->price ?? 0),
                             $trx2,
-                            'Agent commission from User#' . $user->id . ' – Course package (admin activation): ' . ($coursePlan->name ?? '')
+                            'Agent commission from User#' . $user->id . ' – Course package (admin activation): ' . ($coursePlan->name ?? ''),
+                            ['plan_type' => 'course_plan', 'plan_id' => (int)$coursePlan->id]
+                        );
+                        // Level 2 Passive Commission (Sponsor of Sponsor)
+                        \App\Lib\PassiveCommission::creditForPackage(
+                            $user,
+                            (int) $coursePlan->id,
+                            (float) ($coursePlan->price ?? 0),
+                            $trx2,
+                            (string) ($coursePlan->name ?? ''),
+                            'course_plan'
                         );
                     } catch (\Throwable $e) {
                         // Never block user creation because of commission failure
@@ -526,6 +540,9 @@ class AdminController extends Controller {
             return responseError('permission_denied', ['You do not have permission to ban users.']);
         }
         try {
+            if (!$this->checkUserAccess($id)) {
+                return responseError('permission_denied', ['User not found in your downline.']);
+            }
             $user = User::findOrFail($id);
             $user->status = 0;
             $user->save();
@@ -544,6 +561,9 @@ class AdminController extends Controller {
             return responseError('permission_denied', ['You do not have permission to unban users.']);
         }
         try {
+            if (!$this->checkUserAccess($id)) {
+                return responseError('permission_denied', ['User not found in your downline.']);
+            }
             $user = User::findOrFail($id);
             $user->status = 1;
             $user->save();
@@ -554,6 +574,9 @@ class AdminController extends Controller {
     }
 
     public function userDetail($id) {
+        if (!$this->checkUserAccess($id)) {
+            return responseError('permission_denied', ['User not found in your downline.']);
+        }
         $user = User::findOrFail($id);
         
         // 1. Downline/Referrals
@@ -598,6 +621,9 @@ class AdminController extends Controller {
         if (!$this->checkPermission('edit_users')) {
             return responseError('permission_denied', ['You do not have permission to update user certificates.']);
         }
+        if (!$this->checkUserAccess($id)) {
+            return responseError('permission_denied', ['User not found in your downline.']);
+        }
         $user = User::findOrFail($id);
         if ($request->has('has_ad_certificate')) {
             $user->has_ad_certificate = $request->boolean('has_ad_certificate');
@@ -626,6 +652,10 @@ class AdminController extends Controller {
             // Some legacy users may not have state. Allow it to be optional.
             'state' => 'nullable|string|max:255',
         ]);
+
+        if (!$this->checkUserAccess($id)) {
+            return responseError('permission_denied', ['User not found in your downline.']);
+        }
 
         $user = User::findOrFail($id);
 
@@ -674,6 +704,9 @@ class AdminController extends Controller {
             'password' => 'required|string|min:6|max:255',
         ]);
 
+        if (!$this->checkUserAccess($id)) {
+            return responseError('permission_denied', ['User not found in your downline.']);
+        }
         $user = User::findOrFail($id);
         $user->password = (string) $request->password;
         $user->save();
@@ -715,6 +748,9 @@ class AdminController extends Controller {
             'is_special_agent' => 'nullable|boolean',
         ]);
 
+        if (!$this->checkUserAccess($id)) {
+            return responseError('permission_denied', ['User not found in your downline.']);
+        }
         $user = User::findOrFail($id);
         if ($request->has('is_agent')) {
             $user->is_agent = (bool) $request->is_agent;
@@ -775,6 +811,9 @@ class AdminController extends Controller {
      */
     public function getAgentCommissionSettings($id)
     {
+        if (!$this->checkUserAccess($id)) {
+            return responseError('permission_denied', ['User not found in your downline.']);
+        }
         $user = User::findOrFail($id);
         $settings = \App\Models\AgentCommissionSetting::where('user_id', $user->id)->first();
 
@@ -793,6 +832,9 @@ class AdminController extends Controller {
     {
         if (!$this->checkPermission('edit_users')) {
             return responseError('permission_denied', ['You do not have permission to edit agent commissions.']);
+        }
+        if (!$this->checkUserAccess($id)) {
+            return responseError('permission_denied', ['User not found in your downline.']);
         }
         $user = User::findOrFail($id);
 
@@ -1326,6 +1368,9 @@ class AdminController extends Controller {
             return responseError('permission_denied', ['You do not have permission to approve KYC.']);
         }
         try {
+            if (!$this->checkUserAccess($id)) {
+                return responseError('permission_denied', ['User not found in your downline.']);
+            }
             $user = User::findOrFail($id);
 
             // Gate approval on KYC fee payment (if fee is enabled)
@@ -1358,13 +1403,18 @@ class AdminController extends Controller {
         }
         $request->validate(['reason' => 'required|string|max:1000']);
         try {
+            if (!$this->checkUserAccess($id)) {
+                return responseError('permission_denied', ['User not found in your downline.']);
+            }
             $user = User::findOrFail($id);
             $user->kv = Status::KYC_UNVERIFIED;
             $user->kyc_rejection_reason = $request->reason;
-            // Reset KYC fee flag — user must pay ₹990 again on resubmission
+            // Reset KYC fee flags — user must pay ₹990 again on resubmission
             $user->has_paid_kyc_fee = 0;
             $user->kyc_fee_trx = null;
             $user->kyc_fee_paid_at = null;
+            $user->is_kyc_priority = 0; // Fast Track Reset
+            
             \Log::info("RESET KYC FEE (REJECT) FOR USER $id", ['has_paid' => $user->has_paid_kyc_fee]);
             $user->save();
             notify($user, 'KYC_REJECT', ['reason' => $request->reason]);
@@ -1386,10 +1436,12 @@ class AdminController extends Controller {
             $user = User::findOrFail($id);
             $user->kv = Status::KYC_UNVERIFIED;
             $user->kyc_rejection_reason = null;
-            // Reset KYC fee flag — user must pay ₹990 again
+            // Reset KYC fee flags — user must pay ₹990 again
             $user->has_paid_kyc_fee = 0;
             $user->kyc_fee_trx = null;
             $user->kyc_fee_paid_at = null;
+            $user->is_kyc_priority = 0; // Fast Track Reset
+
             \Log::info("RESET KYC FEE (UNAPPROVE) FOR USER $id", ['has_paid' => $user->has_paid_kyc_fee]);
             $user->save();
             return responseSuccess('kyc_unapproved', ['KYC unapproved successfully']);
@@ -3027,6 +3079,9 @@ class AdminController extends Controller {
         if (!$this->checkPermission('edit_users')) {
             return responseError('permission_denied', ['You do not have permission to reset user data.']);
         }
+        if (!$this->checkUserAccess($id)) {
+            return responseError('permission_denied', ['User not found in your downline.']);
+        }
         $user = User::findOrFail($id);
         
         DB::transaction(function () use ($user, $id) {
@@ -3078,6 +3133,9 @@ class AdminController extends Controller {
     public function adjustBalance(Request $request, $id) {
         if (!$this->checkPermission('edit_users')) {
             return responseError('permission_denied', ['You do not have permission to adjust user balance.']);
+        }
+        if (!$this->checkUserAccess($id)) {
+            return responseError('permission_denied', ['User not found in your downline.']);
         }
         $request->validate([
             'amount' => 'required|numeric|gt:0',
@@ -3142,12 +3200,13 @@ class AdminController extends Controller {
         $user->kv = Status::KYC_UNVERIFIED;
         $user->kyc_data = null;
         
-        // Reset KYC fee flag — user must pay ₹990 again
+        // Reset KYC fee flags — user must pay ₹990 again
         $user->has_paid_kyc_fee = 0;
         $user->kyc_fee_trx = null;
         $user->kyc_fee_paid_at = null;
+        $user->is_kyc_priority = 0; // Fast Track Reset
         
-        \Log::info("RESET KYC FEE FOR USER $id", ['has_paid' => $user->has_paid_kyc_fee]);
+        \Log::info("RESET KYC FEE (BANK DELETE) FOR USER $id", ['has_paid' => $user->has_paid_kyc_fee]);
         $user->save();
 
         return responseSuccess('bank_deleted', ['Bank details deleted successfully. User must re-KYC.']);
@@ -3156,6 +3215,9 @@ class AdminController extends Controller {
     public function deleteUser($id) {
         if (!$this->checkPermission('edit_users')) {
             return responseError('permission_denied', ['You do not have permission to delete users.']);
+        }
+        if (!$this->checkUserAccess($id)) {
+            return responseError('permission_denied', ['User not found in your downline.']);
         }
         $user = User::findOrFail($id);
         
@@ -3230,6 +3292,9 @@ class AdminController extends Controller {
     }
 
     public function allGateways() {
+        if (!auth()->user()->is_super_admin) {
+            return responseError('forbidden', ['Only master admins can manage gateways.']);
+        }
         $allowedAliases = ['SimplyPay', 'simplypay', 'watchpay', 'WatchPay', 'custom_qr', 'CustomQR', 'Rupeerush', 'rupeerush'];
         $gateways = Gateway::whereIn('alias', $allowedAliases)->orderBy('id', 'desc')->get()->makeVisible('extra');
         foreach ($gateways as $gateway) {
@@ -3520,13 +3585,11 @@ class AdminController extends Controller {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:admins,email,'.$id,
-            'user_id' => 'nullable|integer|exists:users,id',
             'permissions' => 'nullable|array',
         ]);
 
         $admin->name = $request->name;
         $admin->email = $request->email;
-        $admin->user_id = $request->user_id;
         $admin->permissions = $request->permissions;
         $admin->save();
 
@@ -3700,8 +3763,12 @@ class AdminController extends Controller {
      */
     public function getAgents()
     {
-        $agents = User::where('is_agent', 1)
-            ->with('agentCommissionSettings')
+        $query = User::where('is_agent', 1);
+        $allowedIds = $this->getAllowedUserIds();
+        if ($allowedIds !== null) {
+            $query->whereIn('id', $allowedIds);
+        }
+        $agents = $query->with('agentCommissionSettings')
             ->orderBy('id', 'desc')
             ->get(['id', 'firstname', 'lastname', 'username', 'email', 'mobile']);
             

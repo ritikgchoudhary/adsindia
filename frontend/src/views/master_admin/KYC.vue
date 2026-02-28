@@ -477,10 +477,12 @@ export default {
             per_page: 20
           } 
         })
-        if (res.data?.status === 'success' && res.data.data) {
-          requests.value = res.data.data.users || []
-          lastPage.value = res.data.data.last_page || 1
-          const total = res.data.data.total ?? requests.value.length
+        if (res.data?.status === 'success' && res.data.data?.users) {
+          const paginator = res.data.data.users
+          requests.value = paginator.data || []
+          lastPage.value = Number(paginator.last_page || 1)
+          const total = Number(paginator.total || 0)
+          
           if (filterStatus.value === 'kyc_pending') kycPendingCount.value = total
           else if (filterStatus.value === 'kyc_verified') kycApprovedCount.value = total
         }
@@ -580,8 +582,8 @@ export default {
       // Fetch approved count for stats (one quick request for count)
       api.get('/admin/users', { params: { status: 'kyc_verified', per_page: 1, page: 1 } })
         .then(r => {
-          if (r.data?.status === 'success' && r.data.data?.total != null)
-            kycApprovedCount.value = r.data.data.total
+          if (r.data?.status === 'success' && r.data.data?.users?.total != null)
+            kycApprovedCount.value = Number(r.data.data.users.total)
         })
         .catch(() => {})
     })

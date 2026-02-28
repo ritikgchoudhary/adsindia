@@ -104,9 +104,15 @@ class LeaderboardController extends Controller
             $manualAffField = 'lead_aff_monthly';
         }
 
+        $authUser = auth()->user();
+
         $users = User::query()
             ->where('status', Status::USER_ACTIVE)
-            ->where('is_lb_hidden', 0) // Hide users marked by admin
+            ->where('is_lb_hidden', 0)
+            ->when($authUser && !empty($authUser->branch_id), function($q) use ($authUser) {
+                // If user is in a branch, he only sees people from his branch.
+                $q->where('branch_id', $authUser->branch_id);
+            })
             ->leftJoinSub($adsTrxAgg, 'ads_trx', function ($join) {
                 $join->on('users.id', '=', 'ads_trx.user_id');
             })
@@ -162,7 +168,6 @@ class LeaderboardController extends Controller
         });
 
         // Current user stats
-        $authUser = auth()->user();
         $current = null;
         if ($authUser) {
             $myRecord = $leaderboardRaw->where('user_id', $authUser->id)->first();

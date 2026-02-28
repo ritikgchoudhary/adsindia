@@ -250,6 +250,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/user/my-team',
+    name: 'MyTeam',
+    component: () => import('../views/user/MyTeam.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/user/affiliate-income',
     name: 'AffiliateIncome',
     component: () => import('../views/user/AffiliateIncome.vue'),
@@ -359,6 +365,9 @@ const routes = [
   { path: '/master_admin/withdrawals', name: 'MasterAdminWithdrawals', component: () => import('../views/master_admin/Withdrawals.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/transactions', name: 'MasterAdminTransactions', component: () => import('../views/master_admin/Transactions.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/commissions', name: 'MasterAdminCommissions', component: () => import('../views/master_admin/CommissionManagement.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/influencer-program', name: 'MasterAdminInfluencerProgram', component: () => import('../views/master_admin/InfluencerProgram.vue'), meta: { requiresMasterAdminAuth: true } },
+  // Compatibility: some users open .php URL. Serve same SPA page.
+  { path: '/master_admin/influencer-program.php', redirect: '/master_admin/influencer-program', meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/account-ledger', name: 'MasterAdminAccountLedger', component: () => import('../views/master_admin/AccountLedger.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/special-links', name: 'MasterAdminSpecialLinks', component: () => import('../views/master_admin/SpecialLinks.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/kyc', name: 'MasterAdminKYC', component: () => import('../views/master_admin/KYC.vue'), meta: { requiresMasterAdminAuth: true } },

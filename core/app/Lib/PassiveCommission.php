@@ -13,7 +13,7 @@ class PassiveCommission
     /**
      * Credits Level 1 passive commission (sponsor of sponsor) into their affiliate wallet.
      */
-    public static function creditForPackage(User $buyer, int $packageId, float $paidAmount, string $trx, string $packageName = ''): float
+    public static function creditForPackage(User $buyer, int $packageId, float $paidAmount, string $trx, string $packageName = '', string $planType = 'package'): float
     {
         // 1. Level 1 Sponsor (Direct)
         $directSponsorId = (int) ($buyer->ref_by ?? 0);
@@ -42,7 +42,7 @@ class PassiveCommission
                 $passiveSponsorId,
                 'passive',
                 $paidAmount,
-                ['plan_type' => 'package', 'plan_id' => $packageId]
+                ['plan_type' => $planType, 'plan_id' => $packageId]
             );
         } 
         // B. Regular User passive rule

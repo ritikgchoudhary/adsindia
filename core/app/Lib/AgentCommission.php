@@ -108,20 +108,45 @@ class AgentCommission
         // 1. Check Granular Settings for this specific Agent (Highest priority)
         if (!empty($meta['plan_id'])) {
             $granular = is_string($settings->granular_settings) ? json_decode($settings->granular_settings, true) : (array)($settings->granular_settings ?? []);
-            $planId = (string) $meta['plan_id'];
-            
-            $lookupType = $type;
-            if ($type === 'passive' && !empty($meta['plan_type'])) {
-                $lookupType = ($meta['plan_type'] === 'package' ? 'course' : $meta['plan_type']);
-            }
 
-            if (isset($granular[$lookupType][$planId])) {
-                $item = $granular[$lookupType][$planId];
-                $mode = (string) ($item['mode'] ?? 'percent');
-                $value = (float) ($item['value'] ?? 0);
+            $lookupType = $type;
+            $lookupId = (string) $meta['plan_id'];
+
+            // Normalize lookup for course packages and other plan types
+            if (!empty($meta['plan_type'])) {
+                $pType = (string) $meta['plan_type'];
+                if ($pType === 'package' || $pType === 'course_plan') {
+                    $lookupType = 'course';
+                    if ($pType === 'package') {
+                        $map = [1 => 4, 2 => 5, 3 => 6, 4 => 7, 5 => 8];
+                        if (isset($map[(int)$lookupId])) {
+                            $lookupId = (string) $map[(int)$lookupId];
+                        }
+                    }
+                } elseif ($pType === 'ad_plan') {
+                    $lookupType = 'adplan';
+                } elseif ($pType === 'partner_program') {
+                    $lookupType = 'partner';
+                }
+            }
+            
+            // Try integer and string keys for robustness
+            $foundItem = null;
+            if (isset($granular[$lookupType])) {
+                $section = $granular[$lookupType];
+                if (isset($section[$lookupId])) {
+                    $foundItem = $section[$lookupId];
+                } elseif (isset($section[(int)$lookupId])) {
+                    $foundItem = $section[(int)$lookupId];
+                }
+            }
+ 
+             if ($foundItem) {
+                $mode = (string) ($foundItem['mode'] ?? 'percent');
+                $value = (float) ($foundItem['value'] ?? 0);
 
                 if ($type === 'passive') {
-                    $value = (float) ($item['passive_value'] ?? 0);
+                    $value = (float) ($foundItem['passive_value'] ?? 0);
                 }
 
                 if ($value > 0) {
@@ -224,6 +249,7 @@ class AgentCommission
 
         $agent = User::find($agentId);
         if (!$agent || !(bool) ($agent->is_agent ?? false)) return 0.0;
+
         // Freeze pending commission for banned/inactive agents
         try {
             if ((int) ($agent->status ?? 1) !== 1) return 0.0;

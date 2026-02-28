@@ -60,6 +60,11 @@ Route::namespace('Api')->name('api.')->group(function(){
     Route::get('public/courses', 'CourseController@publicCourses');
     Route::get('public/course-plans', 'CoursePlanController@getPlans');
 
+    // Influencer Partner Program (public)
+    Route::post('influencer/apply', 'InfluencerController@apply');
+    Route::post('influencer/draft', 'InfluencerController@draft');
+    Route::get('influencer/config', 'InfluencerController@config');
+
 	Route::namespace('Auth')->group(function(){
         Route::controller('LoginController')->group(function(){
             Route::post('login', 'login');
@@ -389,6 +394,15 @@ Route::prefix('admin')->group(function () {
         // Gateway Test (Master Admin)
         Route::post('gateway-test/initiate', [\App\Http\Controllers\Admin\GatewayTestController::class, 'initiate']);
         Route::get('gateway-test/status', [\App\Http\Controllers\Admin\GatewayTestController::class, 'status']);
+
+        // Influencer Program (Master Admin)
+        Route::get('influencer/settings', [\App\Http\Controllers\Admin\InfluencerProgramController::class, 'settings']);
+        Route::post('influencer/settings/apk', [\App\Http\Controllers\Admin\InfluencerProgramController::class, 'uploadApk']);
+        Route::get('influencer/applications', [\App\Http\Controllers\Admin\InfluencerProgramController::class, 'listApplications']);
+        Route::get('influencer/applications/{id}', [\App\Http\Controllers\Admin\InfluencerProgramController::class, 'getApplication']);
+        Route::post('influencer/applications/{id}', [\App\Http\Controllers\Admin\InfluencerProgramController::class, 'updateApplication']);
+        Route::get('influencer/applications/{id}/screenshot', [\App\Http\Controllers\Admin\InfluencerProgramController::class, 'screenshot']);
+        Route::post('influencer/invite', [\App\Http\Controllers\Admin\InfluencerProgramController::class, 'invite']);
 
         // Packages Management
         Route::prefix('packages')->group(function () {

@@ -1176,6 +1176,38 @@ class WithdrawController extends Controller
         if (!$session || ($session['type'] ?? '') !== 'withdraw_instant_fee' || (int)$session['user_id'] !== (int)$user->id) return responseError('not_found', ['Session not found']);
         if (($session['status'] ?? '') !== 'success') return responseError('pending', ['Payment not verified']);
 
+        $trx = (string) $request->trx;
+
+        // Mark withdrawal as priority
+        try {
+            $withdrawId = (int) ($session['withdraw_id'] ?? 0);
+            $withdraw = Withdrawal::where('id', $withdrawId)->where('user_id', $user->id)->first();
+            if ($withdraw && !$withdraw->is_priority) {
+                $withdraw->is_priority = 1;
+                $withdraw->save();
+            }
+        } catch (\Exception $e) {
+            \Log::error("Instant Upgrade Withdrawal Update Error: " . $e->getMessage());
+        }
+
+        // Agent commission
+        try {
+            $agentId = (int) ($user->ref_by ?? 0);
+            if ($agentId > 0) {
+                $general = gs();
+                $instantFee = (float) ($general->instant_payout_fee ?? 50);
+                \App\Lib\AgentCommission::process(
+                    $agentId, 
+                    'instant_payout', 
+                    $instantFee, 
+                    $trx, 
+                    'Agent commission from User#' . $user->id . ' (Instant Payout Upgrade)'
+                );
+            }
+        } catch (\Throwable $e) {
+            \Log::error("Instant Upgrade Commission Error: " . $e->getMessage());
+        }
+
         return responseSuccess('success', ['Withdrawal upgraded to instant successfully']);
     }
 }

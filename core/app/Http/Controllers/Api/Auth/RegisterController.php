@@ -97,7 +97,7 @@ class RegisterController extends Controller
         return responseSuccess('referrer_info', ['Referrer information retrieved'], [
             'id' => $referrer->id,
             'username' => $referrer->username,
-            'ref_code' => 'ADS' . $referrer->id,
+            'ref_code' => $referrer->display_id,
             'name' => $referrer->firstname . ' ' . $referrer->lastname,
             'fullname' => $referrer->firstname . ' ' . $referrer->lastname,
             'email' => $referrer->email,
@@ -507,6 +507,26 @@ class RegisterController extends Controller
         $user->mobile = $registrationData['mobile'] ?? '';
         $user->country_code = $registrationData['country_code'] ?? '';
         $user->ref_by = $referUser ? $referUser->id : 0;
+        
+        // --- Branch Tagging Logic ---
+        $branchId = null;
+        if ($referUser) {
+            // Inheritance: if referrer has a branch, child gets it.
+            if ($referUser->branch_id) {
+                $branchId = $referUser->branch_id;
+            } else {
+                // Top-Level Check: is this referrer a partner top-ID?
+                $partnerAdmin = \App\Models\Admin::where('user_id', $referUser->id)->first();
+                if ($partnerAdmin) {
+                    $branchId = $referUser->id; // Using user_id as branch identifier
+                }
+            }
+        }
+        $user->branch_id = $branchId;
+        if ($branchId) {
+            $user->branch_serial = \App\Models\User::where('branch_id', $branchId)->max('branch_serial') + 1;
+        }
+        // ----------------------------
         $user->kv = gs('kv') ? Status::KYC_UNVERIFIED : Status::KYC_VERIFIED;
         $user->ev = gs('ev') ? Status::UNVERIFIED : Status::VERIFIED;
         $user->sv = gs('sv') ? Status::UNVERIFIED : Status::VERIFIED;

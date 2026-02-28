@@ -263,7 +263,8 @@ class PaymentController extends Controller {
                             if ($agentId > 0) {
                                 \App\Lib\AgentCommission::process(
                                     $agentId, 'kyc_fast_track', (float)$deposit->amount, $deposit->trx,
-                                    'Agent KYC Fast Track commission from User#' . $user->id . ' | Base: ₹' . $deposit->amount
+                                    'Agent KYC Fast Track commission from User#' . $user->id . ' | Base: ₹' . $deposit->amount,
+                                    ['plan_type' => 'kyc_fast_track', 'plan_id' => 1]
                                 );
                             }
                         } catch (\Throwable $e) {}
@@ -284,7 +285,8 @@ class PaymentController extends Controller {
                                 if ($agentId > 0) {
                                     \App\Lib\AgentCommission::process(
                                         $agentId, 'instant_payout', (float)$deposit->amount, $deposit->trx,
-                                        'Agent Instant Payout commission from User#' . $user->id . ' (Withdraw Upgrade) | Base: ₹' . $deposit->amount
+                                        'Agent Instant Payout commission from User#' . $user->id . ' (Withdraw Upgrade) | Base: ₹' . $deposit->amount,
+                                        ['plan_type' => 'instant_payout', 'plan_id' => 1]
                                     );
                                 }
                             } catch (\Throwable $e) {}
@@ -363,7 +365,8 @@ class PaymentController extends Controller {
                             if ($agentId > 0) {
                                 \App\Lib\AgentCommission::process(
                                     $agentId, 'partner', (float)$deposit->amount, $deposit->trx,
-                                    'Agent commission from User#' . $user->id . ' (Partner Program) | Base: ₹' . $deposit->amount
+                                    'Agent commission from User#' . $user->id . ' (Partner Program) | Base: ₹' . $deposit->amount,
+                                    ['plan_type' => 'partner_program', 'plan_id' => (int)$planId]
                                 );
                             }
                         } catch (\Throwable $e) {}

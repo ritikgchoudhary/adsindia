@@ -121,7 +121,10 @@
         <div v-show="openSubmenus.includes('team')" class="tw-pl-4 tw-mt-1 tw-ml-4 tw-border-l tw-border-slate-800">
           <ul class="tw-list-none tw-p-0 tw-m-0">
             <li class="tw-mb-1">
-              <router-link to="/user/referral" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/referral') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Referral</router-link>
+              <router-link to="/user/referral" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/referral') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Referral Links</router-link>
+            </li>
+            <li class="tw-mb-1">
+              <router-link to="/user/my-team" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/my-team') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Team members</router-link>
             </li>
             <li v-if="isAgent" class="tw-mb-1">
               <router-link to="/user/affiliate-income" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/affiliate-income') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Affiliate Income</router-link>
@@ -329,8 +332,8 @@ export default {
 
     const teamMenuPaths = computed(() => {
       return isAgent.value
-        ? ['/user/referral', '/user/affiliate-income', '/user/affiliate-withdraw', '/user/affiliate-withdraw/history']
-        : ['/user/referral']
+        ? ['/user/referral', '/user/my-team', '/user/affiliate-income', '/user/affiliate-withdraw', '/user/affiliate-withdraw/history']
+        : ['/user/referral', '/user/my-team']
     })
 
     const fetchUserInfo = async () => {

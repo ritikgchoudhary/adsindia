@@ -109,8 +109,8 @@ class ReferralController extends Controller
             ['id' => 5, 'name' => 'AdsPremium+', 'price' => 15999, 'discount' => 0],
         ];
 
-        // Ref code format: ADS + user id (e.g. ADS1221)
-        $refCode = 'ADS' . $user->id;
+        // Ref code format: virtualized ID
+        $refCode = $user->display_id;
 
         $referralLinks = [];
         foreach ($packages as $pkg) {
@@ -136,6 +136,7 @@ class ReferralController extends Controller
             ->map(function ($member) {
                 return [
                     'id' => $member->id,
+                    'display_id' => $member->display_id,
                     'firstname' => (string) ($member->firstname ?? ''),
                     'lastname' => (string) ($member->lastname ?? ''),
                     'username' => $member->username,

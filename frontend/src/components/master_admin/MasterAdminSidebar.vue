@@ -92,7 +92,7 @@ export default {
           { title: 'Deposits', path: '/master_admin/deposits', icon: 'fas fa-arrow-down', perm: 'view_deposits' },
           { title: 'Withdrawals', path: '/master_admin/withdrawals', icon: 'fas fa-arrow-up', perm: 'view_withdrawals' },
           { title: 'Transactions', path: '/master_admin/transactions', icon: 'fas fa-exchange-alt', perm: 'view_transactions' },
-          { title: 'Commissions', path: '/master_admin/commissions', icon: 'fas fa-coins', superOnly: true },
+          { title: 'Commissions', path: '/master_admin/commissions', icon: 'fas fa-coins', perm: 'manage_commissions' },
           { title: 'Support Tickets', path: '/master_admin/customer-support', icon: 'fas fa-headset', superOnly: true },
         ]
       },
@@ -114,7 +114,7 @@ export default {
       {
         label: 'Beta & Experimental',
         items: [
-          { title: 'Beta Features Hub', path: '/master_admin/beta-features', icon: 'fas fa-vial' },
+          { title: 'Beta Features Hub', path: '/master_admin/beta-features', icon: 'fas fa-vial', superOnly: true },
         ]
       }
     ]

@@ -379,8 +379,8 @@ export default {
           const planId = parseInt(route.query.plan_id)
           res = await api.post('/ad-plans/purchase', { plan_id: planId, payment_method: 'gateway', gateway })
         } else if (flow === 'partner_plan') {
-          const planId = parseInt(route.query.plan_id)
-          res = await api.post('/partner-program/join', { planId, gateway })
+          const plan_id = parseInt(route.query.plan_id)
+          res = await api.post('/partner-program/join', { plan_id, gateway })
         } else if (flow === 'kyc_fee') {
           res = await api.post('/kyc-payment', { gateway })
         } else if (flow === 'kyc_fast_track_fee') {

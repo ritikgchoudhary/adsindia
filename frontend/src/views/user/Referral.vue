@@ -146,129 +146,9 @@
           </div>
         </div>
 
-        <!-- Premium My Downline Team Section (IMPROVED UI) -->
-        <div class="tw-bg-[#151921] tw-rounded-2xl sm:tw-rounded-[34px] tw-shadow-2xl tw-border tw-border-white/5 tw-overflow-hidden">
-          <div class="tw-px-4 sm:tw-px-8 tw-py-4 sm:tw-py-8 tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-between tw-gap-3 sm:tw-gap-5">
-            <h5 class="tw-text-white tw-font-black tw-text-lg sm:tw-text-2xl tw-m-0 tw-flex tw-items-center">
-              <span class="tw-w-8 tw-h-8 sm:tw-w-10 sm:tw-h-10 tw-bg-indigo-500/20 tw-rounded-lg sm:tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-mr-3 sm:tw-mr-4">
-                <i class="fas fa-users-crown tw-text-indigo-400 tw-text-sm sm:tw-text-base"></i>
-              </span>
-              Team members
-            </h5>
-            <div class="tw-relative tw-w-full sm:tw-w-64">
-                <i class="fas fa-search tw-absolute tw-left-4 tw-top-1/2 -tw-translate-y-1/2 tw-text-slate-500 tw-text-xs"></i>
-                <input 
-                  v-model="searchQuery"
-                  type="text" 
-                  placeholder="Search members..." 
-                  class="tw-w-full tw-pl-10 tw-pr-4 tw-py-2 tw-bg-slate-800/40 tw-backdrop-blur-sm tw-border tw-border-white/10 tw-rounded-xl tw-text-white tw-text-xs focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-indigo-500/30 tw-transition-all"
-                >
-            </div>
-          </div>
-          
-          <div class="tw-px-4 sm:tw-px-8 tw-pb-6 sm:tw-pb-10">
-            <!-- Stats Grid - Premium Deep Gradients -->
-            <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-3 tw-gap-3 sm:tw-gap-6 tw-mb-6 sm:tw-mb-10">
-              <div class="tw-bg-gradient-to-br tw-from-indigo-600 tw-to-indigo-800 tw-rounded-xl sm:tw-rounded-[28px] tw-p-3 sm:tw-p-7 tw-text-white tw-shadow-xl tw-relative tw-overflow-hidden">
-                <h3 class="tw-text-xl sm:tw-text-4xl tw-font-black tw-mb-0.5 sm:tw-mb-1">{{ Math.floor(totalMembersAnim) }}</h3>
-                <p class="tw-text-indigo-200 tw-text-[8px] sm:tw-text-[11px] tw-font-black tw-uppercase tw-tracking-widest tw-m-0">Total Members</p>
-              </div>
-              
-              <div class="tw-bg-gradient-to-br tw-from-emerald-500 tw-to-emerald-700 tw-rounded-xl sm:tw-rounded-[28px] tw-p-3 sm:tw-p-7 tw-text-white tw-shadow-xl tw-relative tw-overflow-hidden">
-                <h3 class="tw-text-xl sm:tw-text-4xl tw-font-black tw-mb-0.5 sm:tw-mb-1">{{ Math.floor(activeMembersAnim) }}</h3>
-                <p class="tw-text-emerald-100 tw-text-[8px] sm:tw-text-[11px] tw-font-black tw-uppercase tw-tracking-widest tw-m-0">Active Members</p>
-              </div>
-              
-              <div class="tw-bg-gradient-to-br tw-from-violet-600 tw-to-purple-800 tw-rounded-xl sm:tw-rounded-[28px] tw-p-3 sm:tw-p-7 tw-text-white tw-shadow-xl tw-relative tw-overflow-hidden tw-col-span-2 md:tw-col-span-1">
-                <h3 class="tw-text-xl sm:tw-text-4xl tw-font-black tw-mb-0.5 sm:tw-mb-1">{{ currencySymbol }}{{ formatAmount(teamEarningAnim) }}</h3>
-                <p class="tw-text-violet-100 tw-text-[8px] sm:tw-text-[11px] tw-font-black tw-uppercase tw-tracking-widest tw-m-0">Team Earning</p>
-              </div>
-            </div>
-
-            <!-- Desktop Table -->
-            <div class="tw-hidden md:tw-block tw-overflow-x-auto">
-              <table class="tw-w-full tw-text-sm tw-border-collapse">
-                <thead>
-                  <tr class="tw-border-b tw-border-white/5">
-                    <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[11px] tw-font-black tw-uppercase tw-text-slate-500 tw-tracking-[2px]">Member Details</th>
-                    <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[11px] tw-font-black tw-uppercase tw-text-slate-500 tw-tracking-[2px]">Join Date</th>
-                    <th class="tw-px-6 tw-py-5 tw-text-left tw-text-[11px] tw-font-black tw-uppercase tw-text-slate-500 tw-tracking-[2px]">Status</th>
-                    <th class="tw-px-6 tw-py-5 tw-text-right tw-text-[11px] tw-font-black tw-uppercase tw-text-slate-500 tw-tracking-[2px]">Income</th>
-                  </tr>
-                </thead>
-                <tbody class="tw-divide-y tw-divide-white/5">
-                  <tr v-for="member in filteredTeam" :key="member.id" class="hover:tw-bg-white/[0.02] tw-transition-colors group">
-                    <td class="tw-px-6 tw-py-6">
-                      <div class="tw-flex tw-items-center tw-gap-5">
-                        <div class="tw-w-12 tw-h-12 tw-rounded-2xl tw-bg-indigo-500/10 tw-text-indigo-400 tw-flex tw-items-center tw-justify-center tw-font-black tw-text-base tw-border tw-border-indigo-500/20 group-hover:tw-scale-105 tw-transition-transform">
-                          {{ (member.firstname?.[0] || member.username?.[0] || '?').toUpperCase() }}
-                        </div>
-                        <div class="tw-min-w-0">
-                          <div class="tw-font-black tw-text-slate-100 tw-text-base tw-mb-0.5">
-                             {{ (String((member.firstname || '') + ' ' + (member.lastname || '')).trim()) || member.username }}
-                          </div>
-                          <div class="tw-flex tw-items-center tw-gap-2.5">
-                            <span class="tw-text-[10px] tw-font-black tw-bg-indigo-500/20 tw-text-indigo-300 tw-px-2 tw-py-0.5 tw-rounded-md tw-tracking-wider">ADS{{ member.id }}</span>
-                            <span class="tw-text-xs tw-text-slate-500 tw-truncate">{{ member.email }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="tw-px-6 tw-py-6 tw-text-slate-400 tw-text-sm tw-font-medium">{{ formatDate(member.joined_at) }}</td>
-                    <td class="tw-px-6 tw-py-6">
-                      <span 
-                        class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-1.5 tw-rounded-full tw-text-[10px] tw-font-black tw-uppercase tw-tracking-[1.5px] tw-shadow-sm"
-                        :class="member.status === 'active' ? 'tw-bg-emerald-500/10 tw-text-emerald-400 tw-border tw-border-emerald-500/20' : 'tw-bg-rose-500/10 tw-text-rose-400 tw-border tw-border-rose-500/20'"
-                      >
-                        <span class="tw-w-1.5 tw-h-1.5 tw-rounded-full tw-bg-current tw-animate-pulse"></span>
-                        {{ member.status }}
-                      </span>
-                    </td>
-                    <td class="tw-px-6 tw-py-6 tw-font-black tw-text-white tw-text-right tw-text-lg">{{ currencySymbol }}{{ formatAmount(member.earning) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Mobile View (Card List) -->
-            <div class="md:tw-hidden tw-space-y-4">
-               <div v-for="member in filteredTeam" :key="member.id" class="tw-bg-white/5 tw-border tw-border-white/5 tw-rounded-xl tw-p-4">
-                  <div class="tw-flex tw-items-center tw-gap-4 tw-mb-3">
-                     <div class="tw-w-10 tw-h-10 tw-rounded-xl tw-bg-indigo-500/20 tw-text-indigo-300 tw-flex tw-items-center tw-justify-center tw-font-black tw-text-sm">
-                        {{ (member.firstname?.[0] || member.username?.[0] || '?').toUpperCase() }}
-                     </div>
-                     <div class="tw-min-w-0">
-                        <div class="tw-font-black tw-text-white tw-text-sm tw-truncate">
-                           {{ (String((member.firstname || '') + ' ' + (member.lastname || '')).trim()) || member.username }}
-                        </div>
-                        <span class="tw-text-[9px] tw-font-black tw-bg-indigo-500/30 tw-text-indigo-200 tw-px-1.5 tw-py-0.5 tw-rounded tw-tracking-widest">ADS{{ member.id }}</span>
-                     </div>
-                  </div>
-                  <div class="tw-flex tw-justify-between tw-items-end tw-pt-3 tw-border-t tw-border-white/5">
-                     <div>
-                        <div class="tw-text-[10px] tw-text-slate-500 tw-mb-0.5">Joined: {{ formatDate(member.joined_at) }}</div>
-                        <span class="tw-text-[8px] tw-font-black tw-uppercase tw-tracking-widest" :class="member.status === 'active' ? 'tw-text-emerald-400' : 'tw-text-rose-400'">
-                           {{ member.status }}
-                        </span>
-                     </div>
-                     <div class="tw-text-right">
-                        <div class="tw-text-[10px] tw-text-slate-500">Income</div>
-                        <div class="tw-text-white tw-font-black">₹{{ formatAmount(member.earning) }}</div>
-                     </div>
-                  </div>
-               </div>
-
-               <div v-if="filteredTeam.length === 0" class="tw-py-20 tw-text-center">
-                  <i class="fas fa-users-slash tw-text-4xl tw-text-slate-700 tw-mb-4"></i>
-                  <p class="tw-text-slate-500 tw-text-sm">No members found</p>
-               </div>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      <!-- Right Sidebar (Sidebar kept exactly same) -->
+      <!-- Right Sidebar -->
       <div class="lg:tw-col-span-4 tw-flex tw-flex-col tw-gap-8">
         
         <!-- Affiliate Wallet -->
@@ -358,27 +238,17 @@ export default {
     const referralLink = ref('')
     const packageLinks = ref([])
     const globalSpecialLinks = ref([])
-    const downlineTeam = ref([])
-    const teamStats = ref({
-      total_members: 0,
-      active_members: 0,
-      total_earning: 0
-    })
     const referralEarning = ref({
       today: 0,
       this_month: 0,
       total: 0
     })
     const currencySymbol = ref('₹')
-    const searchQuery = ref('')
     const isPartner = ref(false)
     const isAgent = ref(false)
     const showPartnerModal = ref(false)
 
     // Count-up animated values
-    const totalMembersAnim = ref(0)
-    const activeMembersAnim = ref(0)
-    const teamEarningAnim = ref(0)
     const todayEarningAnim = ref(0)
     const thisMonthEarningAnim = ref(0)
     const totalEarningAnim = ref(0)
@@ -400,18 +270,6 @@ export default {
       requestAnimationFrame(step)
     }
 
-    const filteredTeam = computed(() => {
-      const q = searchQuery.value.toLowerCase().trim()
-      if (!q) return downlineTeam.value
-      return downlineTeam.value.filter(m => {
-        const name = `${m.firstname} ${m.lastname}`.toLowerCase()
-        const adsId = `ads${m.id}`
-        const username = (m.username || '').toLowerCase()
-        const email = (m.email || '').toLowerCase()
-        return name.includes(q) || username.includes(q) || email.includes(q) || adsId.includes(q)
-      })
-    })
-
     const formatAmount = (amount) => {
       if (!amount && amount !== 0) return '0.00'
       return parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -429,12 +287,6 @@ export default {
         document.execCommand('copy')
         if (window.notify) {
           window.notify('success', 'Referral link copied successfully!')
-        } else if (window.iziToast) {
-          window.iziToast.success({
-            title: 'Success',
-            message: 'Referral link copied to clipboard!',
-            position: 'topRight'
-          })
         }
       }
     }
@@ -447,17 +299,12 @@ export default {
           referralLink.value = response.data.data.referral_link || ''
           packageLinks.value = response.data.data.package_links || []
           globalSpecialLinks.value = response.data.data.global_special_links || []
-          downlineTeam.value = response.data.data.downline_team || []
-          teamStats.value = response.data.data.team_stats || teamStats.value
           referralEarning.value = response.data.data.referral_earning || referralEarning.value
           currencySymbol.value = response.data.data?.currency_symbol || response.data.currency_symbol || '₹'
           isPartner.value = response.data.data.is_partner || false
           isAgent.value = response.data.data.is_agent || false
 
           // Start count-up animations
-          animateTo(totalMembersAnim, teamStats.value.total_members)
-          animateTo(activeMembersAnim, teamStats.value.active_members)
-          animateTo(teamEarningAnim, teamStats.value.total_earning)
           animateTo(todayEarningAnim, referralEarning.value.today)
           animateTo(thisMonthEarningAnim, referralEarning.value.this_month)
           animateTo(totalEarningAnim, referralEarning.value.total)
@@ -473,8 +320,6 @@ export default {
       } else if (isPartner.value) {
         if (window.notify) {
           window.notify('info', 'You have joined the partner program. Please wait for admin to enable your affiliate dashboard.')
-        } else {
-          alert('You have joined the partner program. Please wait for admin to enable your affiliate dashboard.')
         }
       } else {
         showPartnerModal.value = true
@@ -490,18 +335,11 @@ export default {
       referralLink,
       packageLinks,
       globalSpecialLinks,
-      downlineTeam,
-      teamStats,
       referralEarning,
       currencySymbol,
-      searchQuery,
-      filteredTeam,
       formatAmount,
       formatDate,
       copyReferralLink,
-      totalMembersAnim,
-      activeMembersAnim,
-      teamEarningAnim,
       todayEarningAnim,
       thisMonthEarningAnim,
       totalEarningAnim,
@@ -537,28 +375,6 @@ export default {
   .tw-text-\[10px\] { font-size: 0.65rem !important; }
   input.tw-py-1\.5 { padding: 0.5rem !important; font-size: 0.65rem !important; border-radius: 0.5rem !important; }
   .tw-px-3.tw-py-1\.5 { padding: 0.5rem 0.75rem !important; font-size: 0.65rem !important; border-radius: 0.5rem !important; }
-
-  /* Team Section */
-  .tw-bg-\[\#151921\].sm\:tw-rounded-\[34px\] { border-radius: 1.25rem !important; }
-  .tw-px-4.sm\:tw-px-8 { padding-left: 1rem !important; padding-right: 1rem !important; }
-  .tw-py-4.sm\:tw-py-8 { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
-  h5.tw-text-lg { font-size: 1.15rem !important; }
-  .tw-w-8.tw-h-8 { width: 2.25rem !important; height: 2.25rem !important; border-radius: 0.65rem !important; margin-right: 0.5rem !important; }
-  .tw-w-64 { width: 100% !important; margin-top: 0.5rem !important; }
-
-  /* Stats Grid */
-  .tw-grid-cols-2 { gap: 0.75rem !important; }
-  .tw-p-3.sm\:tw-p-7 { padding: 1rem !important; border-radius: 1rem !important; }
-  h3.tw-text-xl { font-size: 1.35rem !important; }
-  .tw-text-\[8px\] { font-size: 7px !important; }
-
-  /* Team Cards (Mobile) */
-  .tw-p-4 { padding: 0.85rem !important; border-radius: 1rem !important; }
-  .tw-w-10.tw-h-10 { width: 2.25rem !important; height: 2.25rem !important; border-radius: 0.75rem !important; }
-  .tw-text-sm.tw-truncate { font-size: 0.85rem !important; }
-  .tw-text-\[9px\] { font-size: 7px !important; }
-  .tw-pt-3 { padding-top: 0.75rem !important; }
-  .tw-text-white.tw-font-black { font-size: 0.9rem !important; }
 
   /* Wallet & Earning Sidebar Cards */
   .tw-p-5 { padding: 0.85rem 1rem !important; }

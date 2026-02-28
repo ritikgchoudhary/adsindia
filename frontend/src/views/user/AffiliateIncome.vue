@@ -96,7 +96,7 @@
             </div>
 
             <div v-if="currentBreakdown" class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-3 sm:tw-gap-4">
-              <div v-for="(val, label) in { 'Direct': bdDirectAnim, 'KYC': bdKycAnim, 'Withdraw': bdWithdrawAnim, 'Upgrade': bdUpgradeAnim, 'Certificate': bdCertificateAnim, 'Ads Plan': bdAdsPlanAnim, 'Partner': bdPartnerAnim, 'Total': bdTotalAnim }" :key="label" 
+              <div v-for="(val, label) in { 'Direct': bdDirectAnim, 'KYC': bdKycAnim, 'Withdraw': bdWithdrawAnim, 'Upgrade': bdUpgradeAnim, 'Certificate': bdCertificateAnim, 'Ads Plan': bdAdsPlanAnim, 'Partner': bdPartnerAnim, 'Passive': bdPassiveAnim, 'Total': bdTotalAnim }" :key="label" 
                    class="tw-rounded-xl tw-border tw-border-slate-100 tw-bg-slate-50/50 tw-p-4 sm:tw-p-5">
                 <div class="tw-text-[10px] sm:tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-wider tw-text-slate-400 tw-mb-1">{{ label }}</div>
                 <div class="tw-text-base sm:tw-text-xl tw-font-extrabold tw-text-slate-900">₹{{ formatAmount(val) }}</div>
@@ -153,8 +153,8 @@
                 <div class="tw-text-[10px] tw-text-slate-400 tw-font-mono">ID: {{ item.affiliate_id }}</div>
               </div>
               <div class="tw-text-right">
-                <div class="tw-text-emerald-600 tw-font-bold tw-text-sm">{{ currencySymbol }}{{ formatAmount(item.commission_amount) }}</div>
-                <span class="tw-text-[9px] tw-font-bold tw-uppercase tw-text-slate-400">{{ item.type }}</span>
+                <div class="tw-text-emerald-500 tw-font-black tw-text-xl tw-leading-none">{{ currencySymbol }}{{ formatAmount(item.commission_amount) }}</div>
+                <div class="tw-text-[8px] tw-font-bold tw-uppercase tw-text-slate-500 tw-mt-2 tw-tracking-widest">{{ item.type }}</div>
               </div>
             </div>
             <div class="tw-text-[10px] tw-text-slate-500 tw-border-t tw-border-slate-50 tw-pt-2">
@@ -211,6 +211,7 @@ export default {
     const bdCertificateAnim = ref(0)
     const bdAdsPlanAnim = ref(0)
     const bdPartnerAnim = ref(0)
+    const bdPassiveAnim = ref(0)
     const bdTotalAnim = ref(0)
 
     const animSeqMap = new WeakMap()
@@ -239,6 +240,7 @@ export default {
       animateTo(bdCertificateAnim, currentBreakdown.value.ad_certificate_income)
       animateTo(bdAdsPlanAnim, currentBreakdown.value.ads_plan_income)
       animateTo(bdPartnerAnim, currentBreakdown.value.partner_program_income)
+      animateTo(bdPassiveAnim, currentBreakdown.value.passive_income)
       animateTo(bdTotalAnim, currentBreakdown.value.total)
     }
 
@@ -315,6 +317,7 @@ export default {
       bdCertificateAnim,
       bdAdsPlanAnim,
       bdPartnerAnim,
+      bdPassiveAnim,
       bdTotalAnim,
       selectPeriod
     }

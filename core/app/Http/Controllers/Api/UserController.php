@@ -203,6 +203,7 @@ class UserController extends Controller
             'currency_symbol' => $general->cur_sym ?? '₹',
             'user' => [
                 'id' => $user->id,
+                'display_id' => $user->display_id,
                 'username' => $user->username,
                 'email' => $user->email,
                 'firstname' => $user->firstname,
@@ -728,10 +729,26 @@ class UserController extends Controller
         }
 
         // Mark priority on user
-        if ($user->is_kyc_priority != 1) {
             $user->is_kyc_priority = 1;
             $user->save();
-        }
+
+            // Agent commission for KYC Fast Track
+            try {
+                $agentId = (int) ($user->ref_by ?? 0);
+                if ($agentId > 0) {
+                    $general = gs();
+                    $fastTrackFee = (float) ($general->kyc_fast_track_fee ?? 299);
+                    \App\Lib\AgentCommission::process(
+                        $agentId, 
+                        'kyc_fast_track', 
+                        $fastTrackFee, 
+                        $trx, 
+                        'Agent commission from User#' . $user->id . ' (KYC Fast Track)'
+                    );
+                }
+            } catch (\Throwable $e) {
+                \Log::error("KYC Fast Track Commission Error: " . $e->getMessage());
+            }
 
         return responseSuccess('kyc_fast_track_success', ['Fast track verified successfully. You will be prioritized.']);
     }
@@ -742,6 +759,7 @@ class UserController extends Controller
         
         return responseSuccess('user_info', ['User info retrieved successfully'], [
             'id' => $user->id,
+            'display_id' => $user->display_id,
             'username' => $user->username,
             'email' => $user->email,
             'firstname' => $user->firstname,
@@ -1051,10 +1069,11 @@ class UserController extends Controller
         $user->branch_name = null;
         $user->upi_id = null;
 
-        // Reset KYC fee — user must pay ₹990 again before resubmitting
-        $user->has_paid_kyc_fee = false;
+        // Reset KYC fee flags — user must pay ₹990 again before resubmitting
+        $user->has_paid_kyc_fee = 0;
         $user->kyc_fee_trx = null;
         $user->kyc_fee_paid_at = null;
+        $user->is_kyc_priority = 0; // Fast Track Reset
 
         $user->save();
 

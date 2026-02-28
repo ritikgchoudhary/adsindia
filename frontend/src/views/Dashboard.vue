@@ -483,6 +483,7 @@ export default {
     }
 
     const referralCode = computed(() => {
+      if (user.value?.display_id) return user.value.display_id
       const id = Number(user.value?.id)
       if (!id || Number.isNaN(id)) return ''
       return `ADS${id}`
