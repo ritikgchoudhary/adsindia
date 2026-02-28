@@ -52,8 +52,10 @@
                        <span class="ma-mini-badge tw-bg-indigo-500/10 tw-text-indigo-400">COURSE: {{ displayMiniSetting(agent.settings, 'course') }}</span>
                        <span class="ma-mini-badge tw-bg-purple-500/10 tw-text-purple-400">PARTNER: {{ displayMiniSetting(agent.settings, 'partner') }}</span>
                        <span class="ma-mini-badge tw-bg-sky-500/10 tw-text-sky-400">CERT: {{ displayMiniSetting(agent.settings, 'certificate') }}</span>
-                       <span class="ma-mini-badge tw-bg-amber-500/10 tw-text-amber-400">KYC: {{ displayMiniSetting(agent.settings, 'kyc') }}</span>
-                       <span class="ma-mini-badge tw-bg-rose-500/10 tw-text-rose-400">SPECIAL LINK: {{ displayMiniSetting(agent.settings, 'special_discount') }}</span>
+                        <span class="ma-mini-badge tw-bg-amber-500/10 tw-text-amber-400">KYC: {{ displayMiniSetting(agent.settings, 'kyc') }}</span>
+                        <span class="ma-mini-badge tw-bg-rose-500/10 tw-text-rose-400">FAST KYC: {{ displayMiniSetting(agent.settings, 'kyc_fast_track') }}</span>
+                        <span class="ma-mini-badge tw-bg-emerald-500/10 tw-text-emerald-400">INSTANT: {{ displayMiniSetting(agent.settings, 'instant_payout') }}</span>
+                        <span class="ma-mini-badge tw-bg-rose-500/10 tw-text-rose-400">SPECIAL LINK: {{ displayMiniSetting(agent.settings, 'special_discount') }}</span>
                     </div>
                     <div v-else class="tw-text-xs tw-text-slate-500 italic">No custom settings</div>
                   </td>
@@ -470,6 +472,8 @@ export default {
       { key: 'certificate', title: 'Ad Certificate Commission', enabledKey: 'certificate_enabled', modeKey: 'certificate_mode', valueKey: 'certificate_value' },
       { key: 'withdraw', title: 'Withdrawal Fees Commission', enabledKey: 'withdraw_fee_enabled', modeKey: 'withdraw_fee_mode', valueKey: 'withdraw_fee_value' },
       { key: 'kyc', title: 'KYC Fees Commission', enabledKey: 'kyc_enabled', modeKey: 'kyc_mode', valueKey: 'kyc_value' },
+      { key: 'kyc_fast_track', title: 'KYC Fast Track Commission', enabledKey: 'kyc_fast_track_enabled', modeKey: 'kyc_fast_track_mode', valueKey: 'kyc_fast_track_value' },
+      { key: 'instant_payout', title: 'Instant Payout Commission', enabledKey: 'instant_payout_enabled', modeKey: 'instant_payout_mode', valueKey: 'instant_payout_value' },
       { key: 'special_discount', title: 'Special Discount Link Commission', enabledKey: 'special_discount_enabled', modeKey: 'special_discount_mode', valueKey: 'special_discount_value' }
     ])
 

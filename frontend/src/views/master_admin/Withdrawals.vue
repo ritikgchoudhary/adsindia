@@ -3,62 +3,56 @@
     <div class="ma-withdrawals">
       
       <!-- Top Summary Overlay -->
-      <div class="ma-summary-overlay animate__animated animate__fadeInDown">
-        <div class="row g-4">
-          <div class="col-md-3">
+       <div class="ma-summary-overlay animate__animated animate__fadeInDown">
+        <div class="row g-3"> <!-- Reduced gap -->
+          <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="ma-stat-card ma-stat-card--primary" @click="filterStatus = ''">
               <div class="ma-stat-card__icon"><i class="fas fa-list-ul"></i></div>
               <div class="ma-stat-card__content">
                 <span class="ma-stat-card__lbl">Total Requests</span>
                 <span class="ma-stat-card__val">{{ summary.total || 0 }}</span>
               </div>
-              <div class="ma-stat-card__glow"></div>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="ma-stat-card ma-stat-card--warning" @click="filterStatus = 'processing'">
               <div class="ma-stat-card__icon"><i class="fas fa-clock"></i></div>
               <div class="ma-stat-card__content">
-                <span class="ma-stat-card__lbl">Pending/Processing</span>
+                <span class="ma-stat-card__lbl">Pending</span>
                 <span class="ma-stat-card__val">
                   ₹{{ formatAmount(summary.processing || 0) }}
                   <span class="ma-stat-card__count" v-if="summary.processing_count">({{ summary.processing_count }})</span>
                 </span>
               </div>
-              <div class="ma-stat-card__glow"></div>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="ma-stat-card ma-stat-card--success" @click="filterStatus = 'success'">
               <div class="ma-stat-card__icon"><i class="fas fa-check-double"></i></div>
               <div class="ma-stat-card__content">
-                <span class="ma-stat-card__lbl">Approved Total</span>
+                <span class="ma-stat-card__lbl">Approved</span>
                 <span class="ma-stat-card__val">
                   ₹{{ formatAmount(summary.success || 0) }}
-                  <span class="ma-stat-card__count" v-if="summary.success_count">({{ summary.success_count }})</span>
                 </span>
               </div>
-              <div class="ma-stat-card__glow"></div>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="ma-stat-card ma-stat-card--danger" @click="filterStatus = 'rejected'">
               <div class="ma-stat-card__icon"><i class="fas fa-times-circle"></i></div>
               <div class="ma-stat-card__content">
-                <span class="ma-stat-card__lbl">Rejected/Refunded</span>
+                <span class="ma-stat-card__lbl">Rejected</span>
                 <span class="ma-stat-card__val">
                   ₹{{ formatAmount(summary.rejected || 0) }}
-                  <span class="ma-stat-card__count" v-if="summary.rejected_count">({{ summary.rejected_count }})</span>
                 </span>
               </div>
-              <div class="ma-stat-card__glow"></div>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="ma-stat-card ma-stat-card--indigo" @click="fetchSimplyPayBalance">
               <div class="ma-stat-card__icon"><i class="fas fa-wallet"></i></div>
               <div class="ma-stat-card__content">
-                <span class="ma-stat-card__lbl">SimplyPay Balance</span>
+                <span class="ma-stat-card__lbl">SimplyPay</span>
                 <span class="ma-stat-card__val">
                   <template v-if="simplyPayLoading">
                     <i class="fas fa-spinner fa-spin"></i>
@@ -68,14 +62,13 @@
                   </template>
                 </span>
               </div>
-              <div class="ma-stat-card__glow"></div>
             </div>
           </div>
-          <div class="col-md-3 mt-md-4">
+          <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="ma-stat-card ma-stat-card--warning" @click="fetchRupeeRushBalance">
               <div class="ma-stat-card__icon"><i class="fas fa-indian-rupee-sign"></i></div>
               <div class="ma-stat-card__content">
-                <span class="ma-stat-card__lbl">RupeeRush Balance</span>
+                <span class="ma-stat-card__lbl">RupeeRush</span>
                 <span class="ma-stat-card__val">
                   <template v-if="rupeeRushLoading">
                     <i class="fas fa-spinner fa-spin"></i>
@@ -85,7 +78,6 @@
                   </template>
                 </span>
               </div>
-              <div class="ma-stat-card__glow"></div>
             </div>
           </div>
         </div>
@@ -166,11 +158,16 @@
                   <div class="ma-avatar">{{ getInitials(w.user) }}</div>
                   <div class="ma-user-info">
                     <div class="ma-name">{{ w.user?.firstname }} {{ w.user?.lastname }}</div>
-                    <div class="ma-username">@{{ w.user?.username }}</div>
+                    <div class="ma-username">{{ w.user?.ads_id || ('ADS' + w.user?.id) }}</div>
                   </div>
                 </div>
-                <div class="ma-status-chip" :class="statusInfo(w).badgeClass">
-                  {{ statusInfo(w).text }}
+                <div class="tw-flex tw-flex-col tw-items-end tw-gap-2">
+                  <div class="ma-status-chip" :class="statusInfo(w).badgeClass">
+                    {{ statusInfo(w).text }}
+                  </div>
+                  <div v-if="w.is_priority" class="tw-bg-indigo-500/20 tw-border tw-border-indigo-500/30 tw-text-indigo-400 tw-px-2 tw-py-1 tw-rounded-md tw-text-[8px] tw-font-black tw-uppercase tw-tracking-widest">
+                    INSTANT
+                  </div>
                 </div>
               </div>
 
@@ -258,7 +255,7 @@
                     <div class="ma-avatar">{{ getInitials(w.user) }}</div>
                     <div class="ma-user-info">
                       <div class="ma-name">{{ w.user.firstname }} {{ w.user.lastname }}</div>
-                      <div class="ma-username">@{{ w.user.username }}</div>
+                      <div class="ma-username">{{ w.user.ads_id || ('ADS' + w.user.id) }}</div>
                     </div>
                   </div>
                   <span v-else class="text-white/30">Unknown User</span>
@@ -291,9 +288,14 @@
                   </div>
                 </td>
                 <td>
-                  <div class="ma-status-chip" :class="statusInfo(w).badgeClass">
-                    <div class="status-dot"></div>
-                    {{ statusInfo(w).text }}
+                  <div class="tw-flex tw-flex-col tw-gap-2">
+                    <div class="ma-status-chip" :class="statusInfo(w).badgeClass">
+                      <div class="status-dot"></div>
+                      {{ statusInfo(w).text }}
+                    </div>
+                    <div v-if="w.is_priority" class="tw-bg-indigo-500/20 tw-border tw-border-indigo-500/30 tw-text-indigo-400 tw-px-2 tw-py-1 tw-rounded-md tw-text-[9px] tw-font-black tw-uppercase tw-tracking-[0.1em] tw-w-fit">
+                      INSTANT PAYOUT
+                    </div>
                   </div>
                 </td>
                 <td class="ma-date-col">
@@ -803,6 +805,8 @@ export default {
 <style scoped>
 .ma-withdrawals {
   padding: 10px;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 /* Glassy Stat Cards */
@@ -815,13 +819,14 @@ export default {
   background: rgba(30, 41, 59, 0.5);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  padding: 24px;
+  border-radius: 16px;
+  padding: 15px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
 }
 .ma-stat-card:hover {
   transform: translateY(-5px);
@@ -829,11 +834,12 @@ export default {
   border-color: rgba(255, 255, 255, 0.15);
 }
 .ma-stat-card__icon {
-  width: 56px; height: 56px;
-  border-radius: 16px;
+  width: 42px; height: 42px;
+  border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem; color: #fff;
+  font-size: 1.1rem; color: #fff;
   z-index: 1;
+  flex-shrink: 0;
 }
 .ma-stat-card--primary .ma-stat-card__icon { background: linear-gradient(135deg, #6366f1, #4f46e5); }
 .ma-stat-card--warning .ma-stat-card__icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
@@ -842,21 +848,21 @@ export default {
 .ma-stat-card--indigo  .ma-stat-card__icon { background: linear-gradient(135deg, #6366f1, #4338ca); }
 
 .ma-stat-card__content { z-index: 1; }
-.ma-stat-card__lbl { display: block; font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
-.ma-stat-card__val { display: block; font-size: 1.5rem; font-weight: 900; color: #f1f5f9; margin-top: 4px; }
-.ma-stat-card__count { font-size: 0.8rem; color: #94a3b8; font-weight: 600; vertical-align: middle; margin-left: 6px; opacity: 0.7; }
+.ma-stat-card__lbl { display: block; font-size: 0.65rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.ma-stat-card__val { display: block; font-size: 1.1rem; font-weight: 900; color: #f1f5f9; white-space: nowrap; }
+.ma-stat-card__count { font-size: 0.7rem; color: #64748b; font-weight: 600; vertical-align: middle; margin-left: 4px; }
 
 /* Filter Bar Visuals */
 .ma-filter-bar {
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
-  padding: 16px 20px;
+  padding: 10px 16px;
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
 }
 .ma-search-wrapper {
   position: relative; flex: 1; min-width: 250px;
@@ -896,7 +902,7 @@ export default {
   overflow: hidden;
 }
 .ma-card-header {
-  padding: 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 16px 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex; justify-content: space-between; align-items: center;
 }
 .ma-card-icon {
@@ -910,11 +916,11 @@ export default {
 /* Elegant Table Stylings */
 .ma-table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .ma-table thead th {
-  padding: 16px 24px; font-size: 0.75rem; color: #64748b; text-transform: uppercase;
-  letter-spacing: 1px; font-weight: 800; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 12px 16px; font-size: 0.7rem; color: #64748b; text-transform: uppercase;
+  letter-spacing: 0.5px; font-weight: 800; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 .ma-table-row:hover { background: rgba(255, 255, 255, 0.02); }
-.ma-table td { padding: 18px 24px; vertical-align: middle; border-bottom: 1px solid rgba(255, 255, 255, 0.02); }
+.ma-table td { padding: 12px 16px; vertical-align: middle; border-bottom: 1px solid rgba(255, 255, 255, 0.02); }
 
 .ma-trx-group { display: flex; flex-direction: column; gap: 6px; }
 .ma-id-label { font-size: 0.7rem; font-weight: 800; color: #6366f1; opacity: 0.8; }

@@ -251,6 +251,7 @@ class AdminController extends Controller {
                 'ev' => $user->ev,
                 'sv' => $user->sv,
                 'kv' => $user->kv,
+                'is_kyc_priority' => (bool)$user->is_kyc_priority,
                 'has_ad_certificate' => (bool)$user->has_ad_certificate,
                 'has_ad_certificate_view' => (bool)$user->has_ad_certificate_view,
                 'kyc_data'   => $this->normalizeKycData($user->kyc_data ?? null),
@@ -839,6 +840,14 @@ class AdminController extends Controller {
             'passive_mode' => 'nullable|in:percent,fixed',
             'passive_value' => 'nullable|numeric|min:0',
 
+            'kyc_fast_track_enabled' => 'nullable|boolean',
+            'kyc_fast_track_mode' => 'nullable|in:percent,fixed',
+            'kyc_fast_track_value' => 'nullable|numeric|min:0',
+
+            'instant_payout_enabled' => 'nullable|boolean',
+            'instant_payout_mode' => 'nullable|in:percent,fixed',
+            'instant_payout_value' => 'nullable|numeric|min:0',
+
             'granular_settings' => 'nullable|array',
         ]);
 
@@ -856,6 +865,8 @@ class AdminController extends Controller {
                 'certificate_enabled','certificate_mode','certificate_value',
                 'special_discount_enabled','special_discount_mode','special_discount_value',
                 'passive_enabled', 'passive_mode', 'passive_value',
+                'kyc_fast_track_enabled','kyc_fast_track_mode','kyc_fast_track_value',
+                'instant_payout_enabled','instant_payout_mode','instant_payout_value',
                 'granular_settings'
             ])
         );
@@ -2202,6 +2213,7 @@ class AdminController extends Controller {
                 'currency' => $w->currency ?? 'INR',
                 'rate' => (float) ($w->rate ?? 1),
                 'status' => (int) $w->status,
+                'is_priority' => (bool) ($w->is_priority ?? false),
                 'status_badge' => $w->status_badge ?? '',
                 'admin_feedback' => $w->admin_feedback ?? '',
                 'withdraw_information' => $w->withdraw_information ?? [],
@@ -2218,7 +2230,7 @@ class AdminController extends Controller {
                     'bank_name' => $w->user->bank_name,
                     'bank_registered_no' => $w->user->bank_registered_no,
                     'upi_id' => $w->user->upi_id,
-                    'ads_id' => 'ADS' . (15000 + $w->user->id), // Common format in this project
+                    'ads_id' => 'ADS' . $w->user->id,
                 ] : null,
                 'created_at' => $w->created_at ? $w->created_at->format('Y-m-d H:i:s') : null,
                 'created_at_human' => $w->created_at ? $w->created_at->diffForHumans() : null,
@@ -3877,5 +3889,45 @@ public function clearLedger()
 
         return responseSuccess('withdrawal_settings_updated', ['Withdrawal settings updated successfully']);
     }
+
+    public function getGeneralSettings()
+    {
+        $gs = gs();
+        return responseSuccess('general_settings', ['General settings retrieved'], [
+            'site_name' => $gs->site_name,
+            'kyc_fee' => (float) ($gs->kyc_fee ?? 990),
+            'kyc_fast_track_fee' => (float) ($gs->kyc_fast_track_fee ?? 299),
+            'instant_payout_fee' => (float) ($gs->instant_payout_fee ?? 50),
+            'system_affiliate_commission' => (float) ($gs->system_affiliate_commission ?? 10),
+        ]);
+    }
+
+    public function updateGeneralSettings(Request $request)
+    {
+        if (!$this->checkPermission('manage_settings')) {
+            return responseError('permission_denied', ['You do not have permission to update system settings.']);
+        }
+
+        $request->validate([
+            'kyc_fee' => 'required|numeric|min:0',
+            'kyc_fast_track_fee' => 'required|numeric|min:0',
+            'instant_payout_fee' => 'required|numeric|min:0',
+            'system_affiliate_commission' => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        $gs = gs();
+        $gs->kyc_fee = $request->kyc_fee;
+        $gs->kyc_fast_track_fee = $request->kyc_fast_track_fee;
+        $gs->instant_payout_fee = $request->instant_payout_fee;
+        if ($request->has('system_affiliate_commission')) {
+            $gs->system_affiliate_commission = $request->system_affiliate_commission;
+        }
+        $gs->save();
+
+        \Illuminate\Support\Facades\Cache::forget('GeneralSetting');
+
+        return responseSuccess('general_settings_updated', ['General settings updated successfully']);
+    }
+
 }
 

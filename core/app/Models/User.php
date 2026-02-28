@@ -52,6 +52,15 @@ class User extends Authenticatable {
         'kyc_fee_paid_at'   => 'datetime',
         'partner_plan_valid_until' => 'datetime',
         'special_agent_balance' => 'float',
+        'lead_ads_today' => 'float',
+        'lead_ads_weekly' => 'float',
+        'lead_ads_monthly' => 'float',
+        'lead_ads_all_time' => 'float',
+        'lead_aff_today' => 'float',
+        'lead_aff_weekly' => 'float',
+        'lead_aff_monthly' => 'float',
+        'lead_aff_all_time' => 'float',
+        'is_lb_hidden' => 'boolean',
     ];
 
     public function loginLogs() {
@@ -112,7 +121,7 @@ class User extends Authenticatable {
     }
 
     public function scopeKycPending($query) {
-        return $query->where('kv', Status::KYC_PENDING);
+        return $query->where('kv', Status::KYC_PENDING)->orderBy('is_kyc_priority', 'desc');
     }
 
     public function scopeEmailVerified($query) {

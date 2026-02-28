@@ -42,6 +42,12 @@ class AgentCommissionSetting extends Model
         'passive_enabled',
         'passive_mode',
         'passive_value',
+        'kyc_fast_track_enabled',
+        'kyc_fast_track_mode',
+        'kyc_fast_track_value',
+        'instant_payout_enabled',
+        'instant_payout_mode',
+        'instant_payout_value',
         'granular_settings'
     ];
 
@@ -57,6 +63,8 @@ class AgentCommissionSetting extends Model
         'certificate_enabled'  => 'boolean',
         'special_discount_enabled' => 'boolean',
         'passive_enabled'      => 'boolean',
+        'kyc_fast_track_enabled' => 'boolean',
+        'instant_payout_enabled' => 'boolean',
         'granular_settings'    => 'object',
     ];
 

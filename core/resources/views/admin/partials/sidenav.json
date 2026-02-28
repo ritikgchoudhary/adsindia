@@ -26,6 +26,21 @@
         "route_name": "admin.dashboard",
         "menu_active": "admin.dashboard"
     },
+    "leaderboard": {
+        "header": "Leaderboard Management",
+        "keyword": [
+            "leaderboard",
+            "control",
+            "hype",
+            "income",
+            "manual",
+            "display"
+        ],
+        "title": "Leaderboard Control",
+        "icon": "las la-trophy",
+        "route_name": "admin.leaderboard.index",
+        "menu_active": "admin.leaderboard*"
+    },
     "category": {
         "keyword": [
             "Category",

@@ -22,6 +22,8 @@ class AgentCommission
             'course' => 'agent_course_commission',
             'partner' => 'agent_partner_commission',
             'certificate' => 'agent_certificate_commission',
+            'kyc_fast_track' => 'agent_kyc_fast_track_commission',
+            'instant_payout' => 'agent_instant_payout_commission',
             'partner_override' => 'agent_partner_override_commission',
             'passive' => 'agent_passive_commission',
             default => 'agent_commission',
@@ -83,6 +85,14 @@ class AgentCommission
             $enabledField = 'passive_enabled';
             $modeField = 'passive_mode';
             $valueField = 'passive_value';
+        } elseif ($type === 'kyc_fast_track') {
+            $enabledField = 'kyc_fast_track_enabled';
+            $modeField = 'kyc_fast_track_mode';
+            $valueField = 'kyc_fast_track_value';
+        } elseif ($type === 'instant_payout') {
+            $enabledField = 'instant_payout_enabled';
+            $modeField = 'instant_payout_mode';
+            $valueField = 'instant_payout_value';
         } elseif ($type === 'partner_override') {
             // Partner override is percent only
             if (!(bool) ($settings->partner_override_enabled ?? false)) return 0.0;

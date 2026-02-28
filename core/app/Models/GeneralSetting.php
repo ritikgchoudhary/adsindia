@@ -19,6 +19,10 @@ class GeneralSetting extends Model
         'beta_booster_settings' => 'array',
         'beta_instant_settings' => 'array',
         'beta_extra_settings' => 'array',
+        'lb_show_today' => 'boolean',
+        'lb_show_weekly' => 'boolean',
+        'lb_show_monthly' => 'boolean',
+        'lb_show_all_time' => 'boolean',
     ];
 
     protected $hidden = ['email_template','mail_config','sms_config','system_info'];

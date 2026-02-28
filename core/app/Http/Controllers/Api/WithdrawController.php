@@ -111,6 +111,7 @@ class WithdrawController extends Controller
             'status' => 'success',
             'message' => ['Withdrawal methods retrieved successfully'],
             'data' => $methods,
+            'instant_payout_fee' => (float) (gs()->instant_payout_fee ?? 50),
         ]);
     }
 
@@ -365,8 +366,7 @@ class WithdrawController extends Controller
         $discountAmount = round($totalChargeBeforeDiscount * ($feeDiscountPercent / 100), 2);
         
         $isPriority = (bool) $request->is_priority;
-        $instantSettings = gs()->beta_instant_settings ?: ['fee' => 50];
-        $priorityFee = $isPriority ? (float) ($instantSettings['fee'] ?? 50) : 0;
+        $priorityFee = $isPriority ? (float) ($general->instant_payout_fee ?? 50) : 0;
 
         $totalChargeAmount = round($totalChargeBeforeDiscount - $discountAmount + $priorityFee, 2);
 
@@ -392,6 +392,7 @@ class WithdrawController extends Controller
             'gst_amount' => (float) $gstAmount,
             'method_charge' => (float) $methodCharge,
             'total_charge' => (float) $totalChargeAmount,
+            'priority_fee' => (float) $priorityFee,
             'method_id' => (int) $method->id,
             'payout_type' => $payoutType,
             'is_priority' => $isPriority,
@@ -423,6 +424,8 @@ class WithdrawController extends Controller
             'gst_amount'      => $gstAmount,
             'method_charge'   => $methodCharge,
             'total_charge'    => $totalChargeAmount,
+            'is_priority'     => $isPriority,
+            'priority_fee'    => $priorityFee,
         ];
         $deposit->status = Status::PAYMENT_INITIATE;
         $deposit->save();
@@ -568,8 +571,11 @@ class WithdrawController extends Controller
             $methodId = (int) ($det['method_id'] ?? 0);
             $payoutType = (string) ($det['payout_type'] ?? 'bank');
             $isPriority = (bool) ($det['is_priority'] ?? false);
+            $priorityFee = (float) ($det['priority_fee'] ?? 0);
             $gstPercent = (float) ($det['gst_percent'] ?? self::MAIN_WITHDRAW_GST_PERCENT);
-            $gstAmount = (float) $deposit->amount;
+            $totalGatewayPaid = (float) $deposit->amount;
+            // The GST/Charge part is total paid minus priority fee
+            $gstAmountCharged = max(0, $totalGatewayPaid - $priorityFee);
         } else {
             // Fallback to cache (for older flows or if deposit record is missing/incomplete)
             // Need to check multiple possible prefixes
@@ -585,6 +591,9 @@ class WithdrawController extends Controller
                 $methodId = (int) ($session['method_id'] ?? 0);
                 $payoutType = (string) ($session['payout_type'] ?? 'bank');
                 $isPriority = (bool) ($session['is_priority'] ?? false);
+                $priorityFee = (float) ($session['priority_fee'] ?? 0);
+                $totalPaid = (float) ($session['total_charge'] ?? ($gstAmount + $priorityFee));
+                $gstAmountCharged = max(0, $totalPaid - $priorityFee);
             }
         }
 
@@ -627,6 +636,7 @@ class WithdrawController extends Controller
         $withdraw->trx = $trx;
         $withdraw->status = Status::PAYMENT_PENDING;
         $withdraw->wallet = 'main';
+        $withdraw->is_priority = $isPriority;
         $withdraw->withdraw_information = [
             ['name' => 'payout_type',          'type' => 'text', 'value' => $payoutType],
             ['name' => 'gst_percent',           'type' => 'text', 'value' => (string) $gstPercent],
@@ -660,6 +670,25 @@ class WithdrawController extends Controller
         $withdrawTransaction->remark = 'withdraw';
         $withdrawTransaction->wallet = 'main';
         $withdrawTransaction->save();
+
+        // Process Agent Commissions for Withdrawal Charges (GST + Instant Payout)
+        try {
+            $agentId = (int) ($user->ref_by ?? 0);
+            if ($agentId > 0) {
+                if (isset($gstAmountCharged) && $gstAmountCharged > 0) {
+                    \App\Lib\AgentCommission::process(
+                        $agentId, 'withdraw_fee', (float)$gstAmountCharged, $trx,
+                        'Agent Withdrawal Fee commission from User#' . $user->id . ' | Base: ₹' . $gstAmountCharged
+                    );
+                }
+                if (isset($priorityFee) && $priorityFee > 0) {
+                    \App\Lib\AgentCommission::process(
+                        $agentId, 'instant_payout', (float)$priorityFee, $trx,
+                        'Agent Instant Payout commission from User#' . $user->id . ' | Base: ₹' . $priorityFee
+                    );
+                }
+            }
+        } catch (\Throwable $e) {}
 
         // Admin notification
         $adminNotification = new AdminNotification();
@@ -754,7 +783,7 @@ class WithdrawController extends Controller
             $q->where('trx', $search);
         }
 
-        $withdrawals = $q->get()->map(function ($withdraw) {
+        $withdrawals = $q->get()->map(function ($withdraw) use ($general) {
             return [
                 'id' => $withdraw->id,
                 'trx' => $withdraw->trx,
@@ -772,6 +801,8 @@ class WithdrawController extends Controller
                 'status_badge' => $withdraw->status_badge ?? '',
                 'withdraw_information' => $withdraw->withdraw_information ?? [],
                 'admin_feedback' => $withdraw->admin_feedback ?? '',
+                'is_priority' => (bool) ($withdraw->is_priority ?? false),
+                'instant_payout_fee' => (float) ($general->instant_payout_fee ?? 50),
                 'created_at' => $withdraw->created_at ? $withdraw->created_at->format('Y-m-d H:i:s') : null,
                 'created_at_human' => $withdraw->created_at ? $withdraw->created_at->diffForHumans() : null,
             ];
@@ -781,6 +812,7 @@ class WithdrawController extends Controller
             'status' => 'success',
             'data' => [
                 'data' => $withdrawals,
+                'gateways' => \App\Models\Gateway::active()->automatic()->get(['name', 'alias', 'image']),
                 'currency_symbol' => $general->cur_sym ?? '₹',
             ],
         ]);
@@ -1039,5 +1071,111 @@ class WithdrawController extends Controller
                 'currency_symbol' => $general->cur_sym ?? '₹',
             ],
         ]);
+    }
+
+    public function initiateInstantUpgrade(Request $request)
+    {
+        $request->validate(['withdraw_id' => 'required|integer']);
+        $user = auth()->user();
+        $withdraw = Withdrawal::where('id', $request->withdraw_id)->where('user_id', $user->id)->first();
+
+        if (!$withdraw) return responseError('not_found', ['Withdrawal request not found.']);
+        if ($withdraw->is_priority) return responseError('already_priority', ['This withdrawal is already marked as priority/instant.']);
+        if ($withdraw->status != Status::PAYMENT_PENDING) return responseError('invalid_status', ['Only pending withdrawals can be upgraded.']);
+
+        $general = gs();
+        $instantFee = (float) ($general->instant_payout_fee ?? 50);
+
+        $gateway = $request->input('gateway', 'simplypay');
+        if (!in_array($gateway, ['watchpay', 'simplypay', 'rupeerush', 'custom_qr'])) {
+            $gateway = 'simplypay';
+        }
+
+        $trx = getTrx();
+        $gate = \App\Models\Gateway::where('alias', $gateway)->first();
+        if (!$gate || $gate->status != 1) return responseError('gateway_unavailable', ['Selected payment gateway is currently unavailable.']);
+
+        $deposit = new \App\Models\Deposit();
+        $deposit->user_id = $user->id;
+        $deposit->method_code = $gate->code ?? 0;
+        $deposit->method_currency = 'INR';
+        $deposit->amount = $instantFee;
+        $deposit->charge = 0;
+        $deposit->rate = 1;
+        $deposit->final_amount = $instantFee;
+        $deposit->trx = $trx;
+        $deposit->remark = 'withdraw_instant_fee';
+        $deposit->detail = json_encode(['withdraw_id' => $withdraw->id]);
+        $deposit->status = Status::PAYMENT_INITIATE;
+        $deposit->save();
+
+        $cachePrefix = $gateway . '_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        
+        cache()->put($cachePrefix . $trx, [
+            'type' => 'withdraw_instant_fee',
+            'user_id' => $user->id,
+            'amount' => $instantFee,
+            'withdraw_id' => $withdraw->id,
+            'status' => 'pending',
+            'created_at' => now()->format('Y-m-d H:i:s'),
+        ], now()->addHours(2));
+
+        $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
+        $gw_param = $gateway . '_trx=';
+        $pageUrl = $base . '/user/withdraw-history?' . $gw_param . urlencode($trx);
+        $notifyUrl = $base . '/ipn/' . $gateway;
+
+        try {
+            if ($gateway === 'simplypay') {
+                $paymentUrl = \App\Lib\SimplyPayGateway::createPayment([
+                    'merOrderNo' => $trx,
+                    'amount' => $instantFee,
+                    'notifyUrl' => $notifyUrl,
+                    'returnUrl' => $pageUrl,
+                    'name' => $user->fullname,
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'attach' => 'Instant Payout Upgrade'
+                ])['pay_link'];
+            } elseif ($gateway === 'rupeerush') {
+                $paymentUrl = \App\Lib\RupeeRushGateway::createPayment([
+                    'outTradeNo' => $trx,
+                    'totalAmount' => $instantFee,
+                    'notifyUrl' => $notifyUrl,
+                    'payViewUrl' => $pageUrl,
+                    'payName' => $user->fullname,
+                ])['pay_link'];
+            } elseif ($gateway === 'watchpay') {
+                $paymentUrl = \App\Lib\WatchPayGateway::createWebPayment($trx, $instantFee, 'Instant Payout Upgrade', $pageUrl, $notifyUrl)['pay_link'];
+            } elseif ($gateway === 'custom_qr') {
+                $qrImages = $gate->extra ?? [];
+                $fullQrImages = array_map(fn($img) => asset(getFilePath('gateway').'/'.$img), (is_string($qrImages) ? json_decode($qrImages, true) : (array)$qrImages));
+                return responseSuccess('initiated', ['Manual QR tracking initiated'], [
+                    'payment_url' => $pageUrl . '&method=custom_qr',
+                    'is_manual' => true,
+                    'qr_images' => $fullQrImages,
+                    'trx' => $trx,
+                    'amount' => (float) $instantFee
+                ]);
+            }
+        } catch (\Throwable $e) {
+            return responseError('gateway_error', [$e->getMessage()]);
+        }
+
+        return responseSuccess('initiated', ['Upgrade payment initiated'], ['payment_url' => $paymentUrl]);
+    }
+
+    public function confirmInstantUpgrade(Request $request)
+    {
+        $request->validate(['trx' => 'required', 'gateway' => 'required']);
+        $user = auth()->user();
+        $cacheKey = strtolower($request->gateway) . '_payment_' . $request->trx;
+        $session = cache()->get($cacheKey);
+
+        if (!$session || ($session['type'] ?? '') !== 'withdraw_instant_fee' || (int)$session['user_id'] !== (int)$user->id) return responseError('not_found', ['Session not found']);
+        if (($session['status'] ?? '') !== 'success') return responseError('pending', ['Payment not verified']);
+
+        return responseSuccess('success', ['Withdrawal upgraded to instant successfully']);
     }
 }

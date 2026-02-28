@@ -16,10 +16,12 @@
                                 <th>@lang('Action')</th>
                             </tr>
                             </thead>
-                            <tbody>
                             @forelse($users as $user)
-                            <tr>
+                            <tr @if($user->is_kyc_priority == 1) style="background-color: rgba(239, 68, 68, 0.1);" @endif>
                                 <td>
+                                    @if($user->is_kyc_priority == 1)
+                                        <span class="badge badge--danger mb-1" style="font-size: 10px;">FAST TRACK</span><br>
+                                    @endif
                                     <span class="fw-bold">{{$user->fullname}}</span>
                                     <br>
                                     <span class="small">

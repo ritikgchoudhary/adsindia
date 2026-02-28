@@ -123,7 +123,7 @@
                     </div>
                     <div>
                       <div class="tw-font-bold tw-text-white">{{ user.firstname }} {{ user.lastname }}</div>
-                      <div class="tw-text-xs tw-text-indigo-400">@{{ user.username }}</div>
+                      <div class="tw-text-xs tw-text-indigo-400">{{ user.ads_id || ('ADS' + user.id) }}</div>
                     </div>
                   </div>
                 </td>
@@ -156,6 +156,9 @@
                   </span>
                   <div class="tw-text-xs tw-text-slate-500 tw-mt-1">
                     {{ formatDate(user.updated_at) }}
+                  </div>
+                  <div v-if="user.is_kyc_priority" class="tw-mt-2">
+                    <span class="tw-bg-rose-500/20 tw-border tw-border-rose-500/30 tw-text-rose-400 tw-px-2 tw-py-1 tw-rounded-md tw-text-[9px] tw-font-black tw-uppercase tw-tracking-[0.1em] tw-animate-pulse">FAST TRACK</span>
                   </div>
                 </td>
                 <td class="tw-px-6 tw-py-4">

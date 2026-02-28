@@ -108,24 +108,52 @@
                   </div>
                 </div>
 
-                <!-- Instant Payout Beta -->
-                <div v-if="hasBetaAccess" class="tw-bg-indigo-50 tw-border tw-border-indigo-100 tw-rounded-xl tw-p-4 tw-mb-4 tw-relative tw-overflow-hidden">
+                <!-- Standard Payout Time Notice -->
+                <div v-if="!isInstantPayout" class="tw-bg-amber-500/5 tw-border tw-border-amber-500/20 tw-rounded-xl tw-p-4 tw-mb-4">
+                  <div class="tw-flex tw-items-center tw-gap-3">
+                    <i class="fas fa-clock tw-text-amber-500 tw-text-lg"></i>
+                    <div>
+                      <h6 class="tw-text-amber-200 tw-text-xs tw-font-bold tw-m-0">Standard Processing Time</h6>
+                      <p class="tw-text-amber-500/80 tw-text-[10px] tw-m-0">Your withdrawal will be processed within <b>24-48 hours</b>.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Instant Payout Premium -->
+                <div class="tw-bg-indigo-600/10 tw-border tw-border-indigo-500/30 tw-rounded-2xl tw-p-5 tw-mb-4 tw-relative tw-overflow-hidden tw-transition-all" :class="isInstantPayout ? 'tw-bg-emerald-500/10 tw-border-emerald-500/50 tw-shadow-[0_0_20px_rgba(16,185,129,0.1)]' : ''">
                   <div class="tw-flex tw-items-center tw-justify-between tw-relative tw-z-10">
-                    <div class="tw-flex tw-items-center tw-gap-3">
-                      <div class="tw-w-10 tw-h-10 tw-bg-white tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-shadow-sm">
-                        <i class="fas fa-bolt tw-text-indigo-600"></i>
+                    <div class="tw-flex tw-items-center tw-gap-4">
+                      <div class="tw-w-11 tw-h-11 tw-bg-indigo-600 tw-rounded-xl tw-flex tw-items-center tw-justify-center tw-shadow-lg tw-shadow-indigo-500/40 tw-transition-all" :class="isInstantPayout ? 'tw-animate-pulse tw-bg-emerald-500 tw-shadow-emerald-500/40' : ''">
+                        <i class="fas fa-bolt tw-text-white"></i>
                       </div>
                       <div>
-                        <h6 class="tw-text-indigo-900 tw-font-bold tw-text-sm tw-m-0">Instant Payout Premium</h6>
-                        <p class="tw-text-indigo-500 tw-text-[10px] tw-m-0 tw-font-medium">Get paid in 1-2 hours instead of 48h</p>
+                        <h6 class="tw-text-white tw-font-bold tw-text-sm tw-m-0">Instant Payout Premium</h6>
+                        <p class="tw-text-indigo-400 tw-text-[10px] tw-m-0 tw-font-bold tw-uppercase tw-tracking-widest tw-transition-colors" :class="isInstantPayout ? 'tw-text-emerald-400' : ''">Get paid in 1-2 hours</p>
                       </div>
                     </div>
-                    <button type="button" @click="isInstantPayout = !isInstantPayout; calculateAmount()" class="tw-relative tw-inline-flex tw-h-6 tw-w-11 tw-flex-shrink-0 tw-cursor-pointer tw-rounded-full tw-border-2 tw-border-transparent tw-transition-colors tw-duration-200 tw-ease-in-out focus:tw-outline-none" :class="isInstantPayout ? 'tw-bg-indigo-600' : 'tw-bg-slate-200'">
-                      <span class="tw-pointer-events-none tw-inline-block tw-h-5 tw-w-5 tw-transform tw-rounded-full tw-bg-white tw-shadow tw-ring-0 tw-transition tw-duration-200 tw-ease-in-out" :class="isInstantPayout ? 'tw-translate-x-5' : 'tw-translate-x-0'"></span>
+                    <button 
+                      type="button" 
+                      @click="isInstantPayout = !isInstantPayout; calculateAmount()" 
+                      class="tw-relative tw-inline-flex tw-h-9 tw-w-20 tw-flex-shrink-0 tw-cursor-pointer tw-rounded-full tw-border-2 tw-transition-all tw-duration-300 tw-ease-in-out focus:tw-outline-none" 
+                      :class="isInstantPayout ? 'tw-bg-emerald-500 tw-border-emerald-400 tw-shadow-[0_0_20px_rgba(16,185,129,0.6)]' : 'tw-bg-slate-900 tw-border-slate-800'"
+                    >
+                      <span 
+                        class="tw-pointer-events-none tw-absolute tw-left-2 tw-top-1/2 tw-transform -tw-translate-y-1/2 tw-text-[9px] tw-font-black tw-text-white tw-transition-opacity tw-duration-300 tw-tracking-widest"
+                        :class="isInstantPayout ? 'tw-opacity-100' : 'tw-opacity-0'"
+                      >ON</span>
+                      <span 
+                        class="tw-pointer-events-none tw-absolute tw-right-2 tw-top-1/2 tw-transform -tw-translate-y-1/2 tw-text-[9px] tw-font-black tw-text-slate-500 tw-transition-opacity tw-duration-300 tw-tracking-widest"
+                        :class="isInstantPayout ? 'tw-opacity-0' : 'tw-opacity-100'"
+                      >OFF</span>
+                      <span 
+                        class="tw-pointer-events-none tw-inline-block tw-h-7 tw-w-7 tw-transform tw-rounded-full tw-bg-white tw-shadow-[0_2px_8px_rgba(0,0,0,0.3)] tw-transition tw-duration-300 tw-ease-in-out tw-absolute tw-top-0.5" 
+                        :class="isInstantPayout ? 'tw-translate-x-11.5' : 'tw-translate-x-0.5'"
+                      ></span>
                     </button>
                   </div>
-                  <div v-if="isInstantPayout" class="tw-mt-3 tw-pt-3 tw-border-t tw-border-indigo-100 tw-text-[10px] tw-text-indigo-600 tw-font-bold">
-                    <i class="fas fa-plus tw-mr-1"></i> ₹50.00 Instant Processing Fee Added
+                  <div v-if="isInstantPayout" class="tw-mt-4 tw-pt-3 tw-border-t tw-border-white/5 tw-text-[11px] tw-text-indigo-300 tw-font-bold tw-flex tw-items-center tw-justify-between">
+                    <span>Priority Processing Enabled</span>
+                    <span class="tw-bg-indigo-500/20 tw-px-2 tw-py-0.5 tw-rounded-md">+ ₹{{ formatAmount(instantPayoutFee) }}</span>
                   </div>
                 </div>
 
@@ -336,6 +364,7 @@ export default {
     const isLoadingMethods = ref(true)
     const hasBetaAccess = ref(localStorage.getItem('beta_access') === 'true')
     const isInstantPayout = ref(false)
+    const instantPayoutFee = ref(50)
     const fallbackMethodIcon = '/assets/images/default.png'
 
     const onMethodImageError = (e) => {
@@ -389,7 +418,7 @@ export default {
       const methodPercentChargeAmount = (amt / 100) * methodPercentCharge
       const methodCharge = methodPercentChargeAmount + methodFixedCharge
       const gstCharge = (amt / 100) * 18
-      const instantFee = isInstantPayout.value ? 50 : 0
+      const instantFee = isInstantPayout.value ? Number(instantPayoutFee.value) : 0
       const totalCharge = gstCharge + methodCharge + instantFee
 
       // Both GST and method charges are now paid upfront via gateway.
@@ -492,9 +521,10 @@ export default {
 
         const balanceRes = await api.get('/dashboard').catch(e => ({ data: { data: {} } }))
 
-        if (methodsRes?.data?.data) {
-          withdrawMethods.value = Array.isArray(methodsRes.data.data) ? methodsRes.data.data : []
-          if (withdrawMethods.value.length > 0) {
+          if (methodsRes?.data?.data) {
+            withdrawMethods.value = Array.isArray(methodsRes.data.data) ? methodsRes.data.data : []
+            instantPayoutFee.value = methodsRes.data.instant_payout_fee || 50
+            if (withdrawMethods.value.length > 0) {
             selectedMethodKey.value = methodKey(withdrawMethods.value[0])
             selectedMethodData.value = withdrawMethods.value[0]
           }
@@ -575,7 +605,7 @@ export default {
       showLimitErrorModal, limitErrorMessage, showConfirmModal,
       isLoading, isLoadingMethods, formatAmount,
       fallbackMethodIcon, onMethodImageError,
-      hasBetaAccess, isInstantPayout
+      hasBetaAccess, isInstantPayout, instantPayoutFee
     }
   }
 }

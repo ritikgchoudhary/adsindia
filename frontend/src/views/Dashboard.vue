@@ -4,54 +4,64 @@
       
       <!-- KYC Alerts -->
       <div v-if="user.kv === 0 && user.kyc_rejection_reason" class="tw-mb-6">
-        <div class="tw-bg-red-50 tw-border tw-border-red-200 tw-border-l-[6px] tw-border-l-red-500 tw-rounded-2xl tw-p-5 tw-shadow-sm">
-          <div class="tw-flex tw-items-center tw-gap-4">
-            <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-bg-red-500/15 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
-              <i class="fa-solid fa-circle-exclamation tw-text-red-500 tw-text-2xl"></i>
+        <div class="tw-bg-rose-500/10 tw-border tw-border-rose-500/20 tw-border-l-[4px] tw-border-l-rose-500 tw-rounded-2xl tw-p-4 sm:tw-p-5 tw-shadow-sm">
+          <div class="tw-flex tw-flex-col sm:tw-flex-row sm:tw-items-center tw-gap-3 sm:tw-gap-4">
+            <div class="tw-flex tw-items-center tw-gap-3 tw-mb-2 sm:tw-mb-0">
+              <div class="tw-w-10 tw-h-10 sm:tw-w-12 sm:tw-h-12 tw-rounded-xl tw-bg-rose-500/20 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
+                <i class="fa-solid fa-circle-exclamation tw-text-rose-400 tw-text-xl sm:tw-text-2xl"></i>
+              </div>
+              <h4 class="tw-text-white tw-font-extrabold tw-text-base sm:tw-text-xl tw-m-0 sm:tw-hidden">KYC Rejected</h4>
             </div>
+            
             <div class="tw-flex-1 tw-min-w-0">
-              <h4 class="tw-text-slate-900 tw-font-extrabold tw-text-xl tw-mb-1">KYC Documents Rejected</h4>
-              <p class="tw-text-slate-700 tw-font-medium tw-leading-relaxed tw-mb-3">
+              <h4 class="tw-text-white tw-font-extrabold tw-text-lg sm:tw-text-xl tw-mb-1 tw-hidden sm:tw-block">KYC Documents Rejected</h4>
+              <p class="tw-text-slate-300 tw-font-medium tw-leading-snug sm:tw-leading-relaxed tw-text-xs sm:tw-text-sm tw-mb-2 sm:tw-mb-0">
                 {{ kycContent?.reject || 'Your KYC documents have been rejected. Please review the reason and resubmit.' }}
               </p>
-              <div class="tw-flex tw-flex-wrap tw-gap-2">
-                <button 
-                  class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-bg-indigo-600 tw-text-white tw-font-semibold tw-text-sm tw-rounded-lg tw-transition-colors hover:tw-bg-indigo-700 tw-border-0 tw-cursor-pointer" 
-                  @click="showKYCRejectionModal = true"
-                >
-                  <i class="fas fa-info-circle"></i> Show Reason
-                </button>
-                <router-link 
-                  to="/user/kyc-form"
-                  class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-bg-white tw-text-slate-900 tw-font-semibold tw-text-sm tw-rounded-lg tw-border tw-border-slate-200 tw-no-underline hover:tw-bg-slate-50 tw-transition-colors"
-                >
-                  <i class="fas fa-redo"></i> Re-submit
-                </router-link>
-              </div>
+            </div>
+            
+            <div class="tw-flex tw-items-center tw-gap-2 tw-mt-2 sm:tw-mt-0">
+              <button 
+                class="tw-flex-1 sm:tw-flex-none tw-inline-flex tw-items-center tw-justify-center tw-gap-2 tw-px-4 tw-py-2 tw-bg-indigo-600/20 hover:tw-bg-indigo-600/40 tw-text-indigo-400 tw-border tw-border-indigo-500/30 tw-font-semibold tw-text-xs sm:tw-text-sm tw-rounded-lg tw-transition-colors tw-cursor-pointer" 
+                @click="showKYCRejectionModal = true"
+              >
+                <i class="fas fa-info-circle"></i> Reason
+              </button>
+              <router-link 
+                to="/user/account-kyc?tab=documents"
+                class="tw-flex-1 sm:tw-flex-none tw-inline-flex tw-items-center tw-justify-center tw-gap-2 tw-px-4 tw-py-2 tw-bg-rose-600 hover:tw-bg-rose-700 tw-text-white tw-font-semibold tw-text-xs sm:tw-text-sm tw-rounded-lg tw-transition-colors tw-no-underline tw-border-0"
+              >
+                <i class="fas fa-redo"></i> Re-submit
+              </router-link>
             </div>
           </div>
         </div>
       </div>
 
       <div v-else-if="user.kv === 2" class="tw-mb-6">
-        <div class="tw-bg-amber-50 tw-border tw-border-amber-200 tw-border-l-[6px] tw-border-l-amber-500 tw-rounded-2xl tw-p-5 tw-shadow-sm">
-          <div class="tw-flex tw-items-center tw-gap-4">
-            <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-bg-amber-500/15 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
-              <i class="fas fa-exclamation-triangle tw-text-amber-600 tw-text-2xl"></i>
-            </div>
-            <div class="tw-flex-1 tw-min-w-0">
-              <h4 class="tw-text-slate-900 tw-font-extrabold tw-text-xl tw-mb-1">KYC Verification Pending</h4>
-              <p class="tw-text-slate-700 tw-font-medium tw-leading-relaxed tw-mb-3 tw-max-w-full">
-                {{ kycContent?.pending || 'Your KYC verification is being reviewed. We might need some additional information. You will get an email update soon. In the meantime, explore our platform with limited features.' }}
-              </p>
-              <div class="tw-flex tw-flex-wrap tw-gap-2">
-                <router-link 
-                  to="/user/kyc-data" 
-                  class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-bg-indigo-600 tw-text-white tw-font-semibold tw-text-sm tw-rounded-lg tw-transition-colors hover:tw-bg-indigo-700 tw-no-underline"
-                >
-                  <i class="fas fa-eye"></i> See Data
-                </router-link>
+        <div class="tw-bg-amber-500/10 tw-border tw-border-amber-500/20 tw-border-l-[4px] tw-border-l-amber-500 tw-rounded-2xl tw-p-4 sm:tw-p-5 tw-shadow-sm">
+          <div class="tw-flex tw-flex-col sm:tw-flex-row sm:tw-items-center tw-gap-3 sm:tw-gap-4">
+            <div class="tw-flex tw-items-center tw-gap-3 tw-mb-2 sm:tw-mb-0">
+              <div class="tw-w-10 tw-h-10 sm:tw-w-12 sm:tw-h-12 tw-rounded-xl tw-bg-amber-500/20 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
+                <i class="fas fa-exclamation-triangle tw-text-amber-500 tw-text-xl sm:tw-text-2xl"></i>
               </div>
+              <h4 class="tw-text-white tw-font-extrabold tw-text-base sm:tw-text-xl tw-m-0 sm:tw-hidden">KYC Pending</h4>
+            </div>
+            
+            <div class="tw-flex-1 tw-min-w-0">
+              <h4 class="tw-text-white tw-font-extrabold tw-text-lg sm:tw-text-xl tw-mb-1 tw-hidden sm:tw-block">KYC Verification Pending</h4>
+              <p class="tw-text-slate-300 tw-font-medium tw-leading-snug sm:tw-leading-relaxed tw-text-xs sm:tw-text-sm tw-mb-2 sm:tw-mb-0 tw-max-w-full">
+                {{ kycContent?.pending || 'Your KYC verification is being reviewed. We might need some additional information. You will get an email update soon.' }}
+              </p>
+            </div>
+            
+            <div class="tw-flex tw-items-center tw-gap-2 tw-mt-2 sm:tw-mt-0">
+              <router-link 
+                to="/user/account-kyc" 
+                class="tw-flex-1 sm:tw-flex-none tw-inline-flex tw-items-center tw-justify-center tw-gap-2 tw-px-4 tw-py-2 tw-bg-amber-500 hover:tw-bg-amber-600 tw-text-white tw-font-semibold tw-text-xs sm:tw-text-sm tw-rounded-lg tw-transition-colors tw-no-underline tw-border-0"
+              >
+                <i class="fas fa-eye"></i> View KYC
+              </router-link>
             </div>
           </div>
         </div>
@@ -345,24 +355,26 @@
     </div>
 
     <!-- KYC Modal (Custom Tailwind) -->
-    <div v-if="showKYCRejectionModal" class="tw-fixed tw-inset-0 tw-z-[60] tw-flex tw-items-center tw-justify-center tw-px-4">
-      <div class="tw-absolute tw-inset-0 tw-bg-black/50 tw-backdrop-blur-sm" @click="showKYCRejectionModal = false"></div>
-      <div class="tw-bg-white tw-rounded-2xl tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden">
-        <div class="tw-p-5 tw-border-b tw-border-slate-100 tw-flex tw-justify-between tw-items-center">
-          <h5 class="tw-text-slate-900 tw-font-bold tw-text-lg tw-m-0"><i class="fas fa-info-circle tw-mr-2"></i>Rejection Reason</h5>
-          <button @click="showKYCRejectionModal = false" class="tw-text-slate-400 hover:tw-text-slate-600 tw-text-xl tw-bg-transparent tw-border-0 tw-cursor-pointer">
+    <div v-if="showKYCRejectionModal" class="tw-fixed tw-inset-0 tw-z-[100] tw-flex tw-items-center tw-justify-center tw-px-4">
+      <div class="tw-absolute tw-inset-0 tw-bg-black/80 tw-backdrop-blur-md" @click="showKYCRejectionModal = false"></div>
+      <div class="tw-bg-[#0f172a] tw-border tw-border-white/10 tw-rounded-2xl tw-shadow-2xl tw-w-full tw-max-w-md tw-relative tw-z-10 tw-overflow-hidden">
+        <div class="tw-p-4 sm:tw-p-5 tw-border-b tw-border-white/10 tw-flex tw-justify-between tw-items-center">
+          <h5 class="tw-text-white tw-font-bold tw-text-base sm:tw-text-lg tw-m-0">
+             <i class="fas fa-info-circle tw-text-rose-500 tw-mr-2"></i>Rejection Reason
+          </h5>
+          <button @click="showKYCRejectionModal = false" class="tw-text-slate-400 hover:tw-text-white tw-text-xl tw-bg-transparent tw-border-0 tw-cursor-pointer tw-transition-colors">
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <div class="tw-p-6">
-          <div class="tw-p-4 tw-bg-slate-50 tw-rounded-xl tw-text-slate-700 tw-font-medium tw-leading-relaxed">
+        <div class="tw-p-5 sm:tw-p-6">
+          <div class="tw-p-4 tw-bg-rose-500/10 tw-border tw-border-rose-500/20 tw-rounded-xl tw-text-white tw-font-medium tw-text-sm sm:tw-text-base tw-leading-relaxed">
             {{ user.kyc_rejection_reason }}
           </div>
         </div>
-        <div class="tw-p-5 tw-pt-0">
+        <div class="tw-p-4 sm:tw-p-5 tw-pt-0">
           <button 
             type="button" 
-            class="tw-w-full tw-py-3 tw-rounded-xl tw-bg-slate-100 tw-text-slate-600 tw-font-bold hover:tw-bg-slate-200 tw-transition-colors tw-border-0 tw-cursor-pointer"
+            class="tw-w-full tw-py-3 tw-rounded-xl tw-bg-gradient-to-r tw-from-slate-700 tw-to-slate-800 hover:tw-from-slate-600 hover:tw-to-slate-700 tw-text-white tw-font-bold tw-transition-all tw-border-0 tw-cursor-pointer"
             @click="showKYCRejectionModal = false"
           >
             Got it

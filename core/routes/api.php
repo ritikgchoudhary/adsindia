@@ -142,6 +142,8 @@ Route::namespace('Api')->name('api.')->group(function(){
                     // Allow fetching methods without KYC (so user can see the page)
                     Route::get('withdraw-method', 'withdrawMethod');
                     Route::get('withdraw/history', 'withdrawLog');
+                    Route::post('withdraw-instant/payment/initiate', 'initiateInstantUpgrade');
+                    Route::post('withdraw-instant/payment/confirm', 'confirmInstantUpgrade');
                     
                     // These routes require KYC verification
                     Route::middleware('kyc')->group(function(){
@@ -194,6 +196,8 @@ Route::namespace('Api')->name('api.')->group(function(){
                 Route::post('bank-details', 'UserController@updateBankDetails');
                 Route::post('kyc-payment', 'UserController@kycPayment');
                 Route::post('kyc-payment/confirm', 'UserController@confirmKycPayment');
+                Route::post('kyc-fast-track-payment', 'UserController@kycFastTrackPayment');
+                Route::post('kyc-fast-track-payment/confirm', 'UserController@confirmKycFastTrackPayment');
                 Route::post('account-kyc/reset', 'UserController@resetAccountKyc');
 
                 // Packages
@@ -403,6 +407,12 @@ Route::prefix('admin')->group(function () {
         Route::post('admins/{id}/reset-password', [\App\Http\Controllers\Admin\AdminController::class, 'resetAdminPassword']);
         Route::post('admins/{id}/delete', [\App\Http\Controllers\Admin\AdminController::class, 'deleteAdmin']);
 
+        // Leaderboard Control (Master Admin)
+        Route::get('leaderboard-control/settings', [\App\Http\Controllers\Admin\LeaderboardControlController::class, 'getSettings']);
+        Route::post('leaderboard-control/settings', [\App\Http\Controllers\Admin\LeaderboardControlController::class, 'updateGlobal']);
+        Route::get('leaderboard-control/users', [\App\Http\Controllers\Admin\LeaderboardControlController::class, 'getUsers']);
+        Route::post('leaderboard-control/user/{id}', [\App\Http\Controllers\Admin\LeaderboardControlController::class, 'updateUser']);
+
         // Reports & Analytics (Master Admin)
         Route::get('reports', [\App\Http\Controllers\Admin\AdminController::class, 'reports']);
 
@@ -413,6 +423,10 @@ Route::prefix('admin')->group(function () {
         // Email Settings
         Route::get('email-settings', [\App\Http\Controllers\Admin\AdminController::class, 'getEmailSettings']);
         Route::post('email-settings', [\App\Http\Controllers\Admin\AdminController::class, 'updateEmailSettings']);
+
+        // General Settings (Master Admin)
+        Route::get('general-settings', [\App\Http\Controllers\Admin\AdminController::class, 'getGeneralSettings']);
+        Route::post('general-settings', [\App\Http\Controllers\Admin\AdminController::class, 'updateGeneralSettings']);
 
         // Beta Features (Master Admin Only)
         Route::prefix('beta')->group(function () {

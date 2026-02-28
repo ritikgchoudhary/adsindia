@@ -67,7 +67,15 @@
                   <div class="tw-text-white tw-font-bold tw-text-lg">{{ currencySymbol }}{{ formatAmount(withdraw.amount) }}</div>
                 </td>
                 <td class="tw-text-left">
-                   <div class="status-badge-container" v-html="withdraw.status_badge"></div>
+                   <div class="tw-flex tw-flex-col tw-gap-1.5">
+                     <div class="status-badge-container" v-html="withdraw.status_badge"></div>
+                     <span v-if="withdraw.is_priority" class="tw-bg-indigo-600/20 tw-text-indigo-400 tw-text-[9px] tw-font-black tw-px-2 tw-py-0.5 tw-rounded-md tw-w-fit tw-border tw-border-indigo-500/30 tw-flex tw-items-center tw-gap-1">
+                       <i class="fas fa-bolt tw-text-[8px]"></i> INSTANT
+                     </span>
+                     <button v-if="withdraw.status == 2 && !withdraw.is_priority" @click="initiateUpgrade(withdraw)" class="tw-bg-indigo-600 tw-text-white tw-text-[9px] tw-font-bold tw-px-2.5 tw-py-1 tw-rounded-md tw-w-fit hover:tw-bg-indigo-500 tw-transition-colors">
+                       🚀 Upgrade to Instant (₹{{ withdraw.instant_payout_fee }})
+                     </button>
+                   </div>
                 </td>
                 <td class="tw-text-right tw-pr-8">
                    <button @click="showDetails(withdraw)" class="ma-action-btn" title="View Reason">
@@ -100,8 +108,18 @@
                        <div class="tw-text-[8px] tw-text-indigo-400 tw-font-mono">{{ withdraw.trx }}</div>
                     </div>
                  </div>
-                 <div class="status-badge-container tw-scale-75 tw-origin-right" v-html="withdraw.status_badge"></div>
-              </div>
+                  <div class="tw-flex tw-flex-col tw-items-end tw-gap-1">
+                    <div class="status-badge-container tw-scale-75 tw-origin-right" v-html="withdraw.status_badge"></div>
+                    <span v-if="withdraw.is_priority" class="tw-bg-indigo-600/20 tw-text-indigo-400 tw-text-[7px] tw-font-black tw-px-1.5 tw-py-0.5 tw-rounded tw-border tw-border-indigo-500/20">
+                      <i class="fas fa-bolt tw-text-[6px]"></i> INSTANT
+                    </span>
+                  </div>
+                </div>
+                <div v-if="withdraw.status == 2 && !withdraw.is_priority" class="tw-mb-3">
+                   <button @click="initiateUpgrade(withdraw)" class="tw-w-full tw-bg-indigo-600/20 tw-text-indigo-400 tw-border tw-border-indigo-500/30 tw-text-[9px] tw-font-bold tw-py-2 tw-rounded-lg">
+                     🚀 Upgrade to Instant Payout (₹{{ withdraw.instant_payout_fee }})
+                   </button>
+                </div>
               <div class="mobile-card-body">
                  <div class="tw-flex tw-justify-between tw-items-center">
                     <div>
@@ -165,8 +183,8 @@
            </div>
            
            <div class="tw-mt-8">
-              <button @click="showModal = false" class="ma-btn-primary tw-w-full">
-                 Close
+              <button @click="showModal = false" class="tw-w-full tw-py-3.5 tw-bg-indigo-600 tw-text-white tw-rounded-xl tw-font-black tw-text-sm tw-transition-all hover:tw-bg-indigo-500 tw-shadow-lg tw-shadow-indigo-500/20 active:tw-scale-[0.98]">
+                 DISMISS REMARK
               </button>
            </div>
         </div>
@@ -177,6 +195,7 @@
 
 <script>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import DashboardLayout from '../../components/DashboardLayout.vue'
 import api from '../../services/api'
 
@@ -186,6 +205,7 @@ export default {
     DashboardLayout
   },
   setup() {
+    const router = useRouter()
     const withdraws = ref([])
     const searchQuery = ref('')
     const loading = ref(false)
@@ -251,14 +271,38 @@ export default {
       }
     }
 
-    onMounted(() => fetchWithdraws())
+    const initiateUpgrade = (withdraw) => {
+      router.push({
+        path: '/user/payment-redirect',
+        query: {
+          flow: 'withdraw_instant_upgrade',
+          withdraw_id: withdraw.id,
+          amount: withdraw.instant_payout_fee,
+          plan_name: 'Instant Payout Upgrade',
+          back: '/user/withdraw/history'
+        }
+      })
+    }
+
+    onMounted(() => {
+      fetchWithdraws()
+      
+      // Handle payment return if needed (optional confirmation)
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.has('simplypay_trx') || urlParams.has('watchpay_trx')) {
+         fetchWithdraws()
+         // Remove query params
+         window.history.replaceState({}, document.title, window.location.pathname)
+      }
+    })
 
     return {
       withdraws, searchQuery, loading, showModal,
       selectedWithdrawFeedback,
       currencySymbol,
       formatAmount, formatDateTime, showDetails,
-      handleSearch, fetchWithdraws, getMethodClass, getMethodIcon
+      handleSearch, fetchWithdraws, getMethodClass, getMethodIcon,
+      initiateUpgrade
     }
   }
 }

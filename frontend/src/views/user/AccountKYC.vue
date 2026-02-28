@@ -285,8 +285,25 @@
               <i class="fas fa-clock tw-text-5xl tw-text-sky-400"></i>
             </div>
             <h3 class="tw-text-3xl tw-font-extrabold tw-text-white tw-mb-3">KYC Under Review</h3>
-            <p class="tw-text-slate-400 tw-leading-relaxed tw-mb-10">Your KYC has been submitted successfully and is currently under review. Please wait for approval, it will be verified within 1 hour.</p>
+            <p class="tw-text-slate-400 tw-leading-relaxed tw-mb-10">Your KYC has been submitted successfully and is currently under review. Please wait for approval, it will be verified within <strong class="tw-text-white">{{ isKycPriority ? '1 hour' : '24-48 hours' }}</strong>.</p>
             
+            <!-- Instant Fast Track Offer -->
+            <div v-if="!isKycPriority" class="tw-bg-indigo-500/10 tw-border tw-border-indigo-500/20 tw-p-5 tw-rounded-2xl tw-mb-10 tw-text-left">
+              <div class="tw-flex tw-gap-4">
+                <div class="tw-text-indigo-400 tw-mt-1">
+                  <i class="fas fa-bolt tw-text-2xl"></i>
+                </div>
+                <div>
+                   <h6 class="tw-text-indigo-400 tw-font-bold tw-text-sm tw-uppercase tw-tracking-widest tw-mb-1">Get Verified Instantly</h6>
+                   <p class="tw-text-indigo-200/80 tw-text-xs tw-mb-4">Skip the 48-hour queue and get your account fully verified in under 1 hour for a small priority fee.</p>
+                   <button @click="processFastTrackPayment" class="tw-w-full tw-py-3 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-indigo-500/30 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-cursor-pointer tw-text-sm">
+                     <i class="fas fa-rocket"></i> Fast Track KYC (₹{{ kycFastTrackFee }})
+                   </button>
+                </div>
+              </div>
+            </div>
+
+
           </div>
 
           <!-- Verified -->
@@ -420,6 +437,8 @@ export default {
     const processingPayment = ref(false)
     const termsAccepted = ref(false)
     const hasPaidKYCFee = ref(false)
+    const isKycPriority = ref(false)
+    const kycFastTrackFee = ref(299)
     const hasSavedBankDetails = ref(false)
     const showBankForm = ref(true)
     const aadhaarInputKey = ref(1)
@@ -649,6 +668,21 @@ export default {
       }
     }
 
+    const processFastTrackPayment = async () => {
+      try {
+        const amount = Number(kycFastTrackFee.value) || 299
+        const redirectUrl = `/user/payment-redirect?flow=kyc_fast_track_fee&amount=${amount}&plan_name=${encodeURIComponent('KYC Fast Track Fee')}&back=${encodeURIComponent('/user/account-kyc')}`
+        const w = window.open(redirectUrl, '_blank')
+        if (!w) {
+          router.push(redirectUrl)
+        } else if (window.notify) {
+          window.notify('info', 'Payment tab opened. Complete payment to get fast-track verification.')
+        }
+      } catch (error) {
+        console.error('Error processing payment:', error)
+      }
+    }
+
     const fetchAccountData = async () => {
       try {
         const response = await api.get('/account-kyc')
@@ -670,6 +704,8 @@ export default {
             if (!Number.isNaN(feeNum)) kycFee.value = feeNum
           }
           hasPaidKYCFee.value = data.has_paid_kyc_fee || false
+          isKycPriority.value = data.is_kyc_priority || false
+          kycFastTrackFee.value = data.kyc_fast_track_fee || 299
           kycFeeTrx.value = data.kyc_fee_trx || null
           kycFeePaidAt.value = data.kyc_fee_paid_at || null
           
@@ -785,23 +821,29 @@ export default {
         // If returned from Gateway, confirm payment
         const urlParams = new URLSearchParams(window.location.search)
         const trx = urlParams.get('watchpay_trx') || urlParams.get('simplypay_trx') || urlParams.get('rupeerush_trx')
+        const isFastTrack = window.location.search.includes('flow=kyc_fast_track_fee') || document.referrer.includes('kyc_fast_track_fee')
+        // We actually don't have the flow param directly if it comes from the gateway return URL without query params string.
+        // It's better to just try confirming standard KYC first, and if that gives "payment not found", try Fast Track.
         if (trx) {
           try {
             const gateway = urlParams.get('simplypay_trx') ? 'simplypay' : (urlParams.get('rupeerush_trx') ? 'rupeerush' : 'watchpay')
-            const confirmRes = await api.post('/kyc-payment/confirm', { trx, gateway })
-            if (confirmRes.data.status === 'success') {
-              hasPaidKYCFee.value = true
-              if (window.notify) window.notify('success', 'KYC fee payment verified successfully.')
-              // Stay on KYC page and move user to document step
-              currentStep.value = 2
-              // remove trx param from URL (optional)
-              try {
-                const clean = window.location.pathname
-                window.history.replaceState({}, document.title, clean)
-              } catch (_) {}
+            let confirmRes
+            try {
+              confirmRes = await api.post('/kyc-payment/confirm', { trx, gateway })
+            } catch (err) {
+              // Try fast track if standard kyc fee confirmation fails (session not found)
+              confirmRes = await api.post('/kyc-fast-track-payment/confirm', { trx, gateway })
+            }
+            if (confirmRes?.data?.status === 'success') {
+              hasPaidKYCFee.value = true // Just in case, this unlocks UI
+              if (confirmRes.data.data?.is_kyc_priority) isKycPriority.value = true
+              if (window.notify) window.notify('success', confirmRes.data.message?.success?.[0] || 'Payment verified successfully.')
+              
+              const clean = window.location.pathname
+              window.history.replaceState({}, document.title, clean)
             }
           } catch (e) {
-            // ignore
+            // ignore logs on reload
           }
         }
 
@@ -842,6 +884,7 @@ export default {
       processPayment,
       submitKYC,
       handleKYCPayment,
+      processFastTrackPayment,
       hasPaidKYCFee,
       checkPaymentStatus,
       hasSavedBankDetails,
@@ -853,6 +896,8 @@ export default {
       panInputKey,
       resetVerifiedKyc,
       maskKeepLast4,
+      isKycPriority,
+      kycFastTrackFee,
     }
   }
 }

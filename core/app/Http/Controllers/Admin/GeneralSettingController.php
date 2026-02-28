@@ -33,6 +33,9 @@ class GeneralSettingController extends Controller {
             'currency_format'             => 'required|in:1,2,3',
             'paginate_number'             => 'required|integer',
             'system_affiliate_commission' => 'required|numeric|max:100',
+            'kyc_fee'                     => 'required|numeric|min:0',
+            'kyc_fast_track_fee'          => 'required|numeric|min:0',
+            'instant_payout_fee'          => 'required|numeric|min:0',
         ]);
 
         $timezones = timezone_identifiers_list();
@@ -47,6 +50,9 @@ class GeneralSettingController extends Controller {
         $general->secondary_color             = str_replace('#', '', $request->secondary_color);
         $general->currency_format             = $request->currency_format;
         $general->system_affiliate_commission = $request->system_affiliate_commission;
+        $general->kyc_fee                     = $request->kyc_fee;
+        $general->kyc_fast_track_fee          = $request->kyc_fast_track_fee;
+        $general->instant_payout_fee          = $request->instant_payout_fee;
         $general->save();
 
         $timezoneFile = config_path('timezone.php');

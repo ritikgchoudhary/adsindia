@@ -90,7 +90,7 @@
                   <div class="ma-user-avatar">{{ getInitials(o.user) }}</div>
                   <div>
                     <span class="ma-user-name">{{ o.user?.firstname }} {{ o.user?.lastname }}</span>
-                    <span class="ma-user-username">@{{ o.user?.username }}</span>
+                    <span class="ma-user-username">{{ o.user?.ads_id || ('ADS' + o.user?.id) }}</span>
                   </div>
                 </div>
                 <span class="ma-badge" :class="{
@@ -175,7 +175,7 @@
                     <div class="ma-user-avatar">{{ getInitials(o.user) }}</div>
                     <div>
                       <span class="ma-user-name">{{ o.user.firstname }} {{ o.user.lastname }}</span>
-                      <span class="ma-user-username">@{{ o.user.username }}</span>
+                      <span class="ma-user-username">{{ o.user.ads_id || ('ADS' + o.user.id) }}</span>
                     </div>
                   </div>
                   <span v-else class="text-muted">N/A</span>

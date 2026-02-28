@@ -19,6 +19,15 @@
           <!-- Period Selector -->
           <div class="period-selector">
             <button
+              v-if="settings.show_today"
+              type="button"
+              class="period-btn"
+              :class="{ 'active': selectedType === 'today' }"
+              @click="changeType('today')">
+              <span>Today</span>
+            </button>
+            <button
+              v-if="settings.show_weekly"
               type="button"
               class="period-btn"
               :class="{ 'active': selectedType === 'weekly' }"
@@ -26,6 +35,7 @@
               <span>Weekly</span>
             </button>
             <button
+              v-if="settings.show_monthly"
               type="button"
               class="period-btn"
               :class="{ 'active': selectedType === 'monthly' }"
@@ -33,6 +43,7 @@
               <span>Monthly</span>
             </button>
             <button
+              v-if="settings.show_all_time"
               type="button"
               class="period-btn"
               :class="{ 'active': selectedType === 'alltime' }"
@@ -122,9 +133,15 @@ export default {
   setup() {
     const leaderboard = ref([])
     const currentUser = ref(null)
-    const selectedType = ref('weekly')
+    const selectedType = ref('') // Start empty, will be set from settings
     const currencySymbol = ref('₹')
     const loading = ref(true)
+    const settings = ref({
+      show_today: true,
+      show_weekly: true,
+      show_monthly: true,
+      show_all_time: true
+    })
 
     // Show only top 10 users
     const topTenLeaderboard = computed(() => {
@@ -145,14 +162,38 @@ export default {
     const fetchLeaderboard = async () => {
       loading.value = true
       try {
+        // If it's the first load (type is empty), fetch settings first
         const response = await api.get('/leaderboard', {
-          params: { type: selectedType.value }
+          params: { type: selectedType.value || 'alltime' } // fallback for first hit
         })
+        
         if (response.data?.status === 'success') {
           const payload = response.data.data || {}
+          
+          if (payload.settings) {
+            settings.value = payload.settings
+            
+            // If we are on first load (selectedType is empty)
+            if (!selectedType.value) {
+              const order = ['today', 'weekly', 'monthly', 'alltime']
+              const fallback = order.find(t => {
+                const k = (t === 'alltime' ? 'show_all_time' : `show_${t}`)
+                return settings.value[k] === true || settings.value[k] === 1
+              })
+              selectedType.value = fallback || 'alltime'
+              
+              // If the fallback is different from what we just fetched ('alltime'), re-fetch
+              if (selectedType.value !== 'alltime') {
+                fetchLeaderboard()
+                return
+              }
+            }
+          }
+
           leaderboard.value = payload.rows || []
           currentUser.value = payload.current_user || null
           currencySymbol.value = payload.currency_symbol ?? response.data.currency_symbol ?? '₹'
+          
         } else {
           leaderboard.value = []
         }
@@ -175,6 +216,7 @@ export default {
       selectedType,
       currencySymbol,
       loading,
+      settings,
       formatAmount,
       changeType
     }

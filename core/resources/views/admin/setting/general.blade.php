@@ -78,6 +78,30 @@
                                     <span class="input-group-text">%</span>
                                 </div>
                             </div>
+                            
+                            <div class="form-group col-xl-4 col-sm-6">
+                                <label class="required"> @lang('KYC Verification Fee')</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" step="any" class="form-control" name="kyc_fee" value="{{ getAmount(gs('kyc_fee')) }}">
+                                </div>
+                            </div>
+
+                            <div class="form-group col-xl-4 col-sm-6">
+                                <label class="required"> @lang('KYC Fast Track Fee')</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" step="any" class="form-control" name="kyc_fast_track_fee" value="{{ getAmount(gs('kyc_fast_track_fee')) }}">
+                                </div>
+                            </div>
+
+                            <div class="form-group col-xl-4 col-sm-6">
+                                <label class="required"> @lang('Instant Payout Fee')</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" step="any" class="form-control" name="instant_payout_fee" value="{{ getAmount(gs('instant_payout_fee')) }}">
+                                </div>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn--primary w-100 h-45">@lang('Submit')</button>
                     </form>

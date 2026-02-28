@@ -5,7 +5,11 @@
         <div class="col-lg-4 col-md-4">
             <div class="card overflow-hidden box--shadow1">
                 <div class="card-body">
-                    <h5 class="mb-20 text-muted">@lang('Withdraw Via') {{ __($withdrawal?->method?->name) }}</h5>
+                    <h5 class="mb-20 text-muted">@lang('Withdraw Via') {{ __($withdrawal?->method?->name) }}
+                        @if($withdrawal->is_priority == 1)
+                            <span class="badge badge--danger ms-2">PRIORITY PAYOUT</span>
+                        @endif
+                    </h5>
                     <ul class="list-group">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             @lang('Date')

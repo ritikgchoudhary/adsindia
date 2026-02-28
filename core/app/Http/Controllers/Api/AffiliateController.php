@@ -57,10 +57,10 @@ class AffiliateController extends Controller
 
         // Get all affiliate earnings
         $income = [
-            'today' => Transaction::where('user_id', $user->id)->whereIn('remark', $remarks)->where('wallet', 'affiliate')->where('trx_type', '+')->where('created_at', '>=', $today)->sum('amount'),
-            'this_week' => Transaction::where('user_id', $user->id)->whereIn('remark', $remarks)->where('wallet', 'affiliate')->where('trx_type', '+')->where('created_at', '>=', $thisWeek)->sum('amount'),
-            'this_month' => Transaction::where('user_id', $user->id)->whereIn('remark', $remarks)->where('wallet', 'affiliate')->where('trx_type', '+')->where('created_at', '>=', $thisMonth)->sum('amount'),
-            'total' => Transaction::where('user_id', $user->id)->whereIn('remark', $remarks)->where('wallet', 'affiliate')->where('trx_type', '+')->sum('amount'),
+            'today' => (float) Transaction::where('user_id', $user->id)->whereIn('remark', $remarks)->where('wallet', 'affiliate')->where('trx_type', '+')->where('created_at', '>=', $today)->sum('amount') + (float)($user->lead_aff_today ?? 0),
+            'this_week' => (float) Transaction::where('user_id', $user->id)->whereIn('remark', $remarks)->where('wallet', 'affiliate')->where('trx_type', '+')->where('created_at', '>=', $thisWeek)->sum('amount') + (float)($user->lead_aff_weekly ?? 0),
+            'this_month' => (float) Transaction::where('user_id', $user->id)->whereIn('remark', $remarks)->where('wallet', 'affiliate')->where('trx_type', '+')->where('created_at', '>=', $thisMonth)->sum('amount') + (float)($user->lead_aff_monthly ?? 0),
+            'total' => (float) Transaction::where('user_id', $user->id)->whereIn('remark', $remarks)->where('wallet', 'affiliate')->where('trx_type', '+')->sum('amount') + (float)($user->lead_aff_all_time ?? 0),
         ];
 
         // Sum individual categories for breakdown
@@ -149,15 +149,23 @@ class AffiliateController extends Controller
                 $q->where('created_at', '>=', $date);
             }
 
+            // Map keys
+            $manualKey = match($key) {
+                'today' => 'lead_aff_today',
+                'this_week' => 'lead_aff_weekly',
+                'this_month' => 'lead_aff_monthly',
+                'all_time' => 'lead_aff_all_time',
+            };
+
             $breakdowns[$key] = [
-                'direct_registration_income' => (float) (clone $q)->whereIn('remark', ['direct_affiliate_commission', 'agent_registration_commission'])->sum('amount'),
+                'direct_registration_income' => (float) (clone $q)->whereIn('remark', ['direct_affiliate_commission', 'agent_registration_commission'])->sum('amount') + (float)($user->$manualKey ?? 0),
                 'kyc_income' => (float) (clone $q)->where('remark', 'agent_kyc_commission')->sum('amount'),
                 'withdrawal_fee_income' => (float) (clone $q)->where('remark', 'agent_withdraw_fee_commission')->sum('amount'),
                 'upgrade_income' => (float) (clone $q)->whereIn('remark', ['agent_upgrade_commission', 'agent_course_commission'])->sum('amount'),
                 'ad_certificate_income' => (float) (clone $q)->where('remark', 'agent_certificate_commission')->sum('amount'),
                 'ads_plan_income' => (float) (clone $q)->where('remark', 'agent_adplan_commission')->sum('amount'),
                 'partner_program_income' => (float) (clone $q)->whereIn('remark', ['agent_partner_commission', 'agent_partner_override_commission'])->sum('amount'),
-                'total' => (float) (clone $q)->sum('amount'),
+                'total' => (float) (clone $q)->sum('amount') + (float)($user->$manualKey ?? 0),
             ];
         }
 

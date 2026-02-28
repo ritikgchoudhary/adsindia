@@ -10,6 +10,12 @@
         </div>
         <div class="sidebar__menu-wrapper">
             <ul class="sidebar__menu">
+                <li class="sidebar-menu-item {{ menuActive('admin.leaderboard*') }}">
+                    <a href="{{ route('admin.leaderboard.index') }}" class="nav-link">
+                        <i class="menu-icon las la-trophy"></i>
+                        <span class="menu-title">Leaderboard Control</span>
+                    </a>
+                </li>
                 @foreach ($sideBarLinks as $key => $data)
                     @if (isset($data->header))
                         <li class="sidebar__menu-header">{{ __($data->header) }}</li>

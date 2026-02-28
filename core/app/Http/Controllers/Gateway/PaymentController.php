@@ -133,6 +133,8 @@ class PaymentController extends Controller {
                 $details = 'Registration Fee via ' . $methodName;
             } elseif ($deposit->remark == 'special_agent_payment') {
                 $details = 'Special Agent Payment via ' . $methodName;
+            } elseif ($deposit->remark == 'kyc_fast_track_fee') {
+                $details = 'KYC Fast Track Fee via ' . $methodName;
             }
 
             // Support both advertiser deposits and user deposits
@@ -249,6 +251,46 @@ class PaymentController extends Controller {
                         } catch (\Throwable $e) {}
                     }
                 }
+                // Handle KYC Fast Track
+                elseif ($deposit->remark == 'kyc_fast_track_fee') {
+                    if ($user->is_kyc_priority != 1) {
+                        $user->is_kyc_priority = 1;
+                        $user->save();
+
+                        // Process Agent Commission (KYC Fast Track)
+                        try {
+                            $agentId = (int) ($user->ref_by ?? 0);
+                            if ($agentId > 0) {
+                                \App\Lib\AgentCommission::process(
+                                    $agentId, 'kyc_fast_track', (float)$deposit->amount, $deposit->trx,
+                                    'Agent KYC Fast Track commission from User#' . $user->id . ' | Base: ₹' . $deposit->amount
+                                );
+                            }
+                        } catch (\Throwable $e) {}
+                    }
+                }
+                // Handle Instant Withdrawal Fee
+                elseif ($deposit->remark == 'withdraw_instant_fee') {
+                    $detail = json_decode($deposit->detail);
+                    if (isset($detail->withdraw_id)) {
+                        $withdraw = \App\Models\Withdrawal::find($detail->withdraw_id);
+                        if ($withdraw) {
+                            $withdraw->is_priority = true;
+                            $withdraw->save();
+
+                            // Process Agent Commission (Withdraw Instant Payout Upgrade)
+                            try {
+                                $agentId = (int) ($user->ref_by ?? 0);
+                                if ($agentId > 0) {
+                                    \App\Lib\AgentCommission::process(
+                                        $agentId, 'instant_payout', (float)$deposit->amount, $deposit->trx,
+                                        'Agent Instant Payout commission from User#' . $user->id . ' (Withdraw Upgrade) | Base: ₹' . $deposit->amount
+                                    );
+                                }
+                            } catch (\Throwable $e) {}
+                        }
+                    }
+                }
                 // 3. Handle Ad Plan Purchase (The 2999, 4999, 7499, 9999 plans)
                 elseif ($deposit->remark == 'ad_plan_purchase') {
                     $detailsObj = is_string($deposit->detail) ? json_decode($deposit->detail) : (object)$deposit->detail;
@@ -281,18 +323,17 @@ class PaymentController extends Controller {
                             $transaction->remark = 'ad_plan_purchase';
                             $transaction->save();
 
-                            if ($isManual) {
-                                try {
-                                    $agentId = (int) ($user->ref_by ?? 0);
-                                    if ($agentId > 0) {
-                                        \App\Lib\AgentCommission::process(
-                                            $agentId, 'adplan', (float)$plan->price, $deposit->trx,
-                                            'Agent commission from User#' . $user->id . ' – Ad Plan: ' . $plan->name,
-                                            ['plan_type' => 'ad_plan', 'plan_id' => (int)$plan->id]
-                                        );
-                                    }
-                                } catch (\Throwable $e) {}
-                            }
+                            // Always Process Agent Commission (even if not manual)
+                            try {
+                                $agentId = (int) ($user->ref_by ?? 0);
+                                if ($agentId > 0) {
+                                    \App\Lib\AgentCommission::process(
+                                        $agentId, 'adplan', (float)$plan->price, $deposit->trx,
+                                        'Agent commission from User#' . $user->id . ' – Ad Plan: ' . $plan->name,
+                                        ['plan_type' => 'ad_plan', 'plan_id' => (int)$plan->id]
+                                    );
+                                }
+                            } catch (\Throwable $e) {}
                         }
                     }
                 }
@@ -316,17 +357,16 @@ class PaymentController extends Controller {
                         $transaction->remark = 'partner_program_gateway';
                         $transaction->save();
                         
-                        if ($isManual) {
-                            try {
-                                $agentId = (int) ($user->ref_by ?? 0);
-                                if ($agentId > 0) {
-                                    \App\Lib\AgentCommission::process(
-                                        $agentId, 'partner', (float)$deposit->amount, $deposit->trx,
-                                        'Agent commission from User#' . $user->id . ' (Partner Program) | Base: ₹' . $deposit->amount
-                                    );
-                                }
-                            } catch (\Throwable $e) {}
-                        }
+                        // Always Process Agent Commission (even if not manual)
+                        try {
+                            $agentId = (int) ($user->ref_by ?? 0);
+                            if ($agentId > 0) {
+                                \App\Lib\AgentCommission::process(
+                                    $agentId, 'partner', (float)$deposit->amount, $deposit->trx,
+                                    'Agent commission from User#' . $user->id . ' (Partner Program) | Base: ₹' . $deposit->amount
+                                );
+                            }
+                        } catch (\Throwable $e) {}
                     }
                 }
                 // 5. Handle Ad Certificate (Course)
@@ -346,17 +386,16 @@ class PaymentController extends Controller {
                         $transaction->remark = 'ad_certificate_fee';
                         $transaction->save();
                         
-                        if ($isManual) {
-                            try {
-                                $agentId = (int) ($user->ref_by ?? 0);
-                                if ($agentId > 0) {
-                                    \App\Lib\AgentCommission::process(
-                                        $agentId, 'certificate', (float)$deposit->amount, $deposit->trx,
-                                        'Agent commission from User#' . $user->id . ' (Ad Cert Course) | Base: ₹' . $deposit->amount
-                                    );
-                                }
-                            } catch (\Throwable $e) {}
-                        }
+                        // Always Process Agent Commission (even if not manual)
+                        try {
+                            $agentId = (int) ($user->ref_by ?? 0);
+                            if ($agentId > 0) {
+                                \App\Lib\AgentCommission::process(
+                                    $agentId, 'certificate', (float)$deposit->amount, $deposit->trx,
+                                    'Agent commission from User#' . $user->id . ' (Ad Cert Course) | Base: ₹' . $deposit->amount
+                                );
+                            }
+                        } catch (\Throwable $e) {}
                     }
                 }
                 // 5b. Handle Ad Certificate (View/Certificate)
@@ -376,17 +415,16 @@ class PaymentController extends Controller {
                         $transaction->remark = 'ad_certificate_view_fee';
                         $transaction->save();
                         
-                        if ($isManual) {
-                            try {
-                                $agentId = (int) ($user->ref_by ?? 0);
-                                if ($agentId > 0) {
-                                    \App\Lib\AgentCommission::process(
-                                        $agentId, 'certificate', (float)$deposit->amount, $deposit->trx,
-                                        'Agent commission from User#' . $user->id . ' (Ad Cert View) | Base: ₹' . $deposit->amount
-                                    );
-                                }
-                            } catch (\Throwable $e) {}
-                        }
+                        // Always Process Agent Commission (even if not manual)
+                        try {
+                            $agentId = (int) ($user->ref_by ?? 0);
+                            if ($agentId > 0) {
+                                \App\Lib\AgentCommission::process(
+                                    $agentId, 'certificate', (float)$deposit->amount, $deposit->trx,
+                                    'Agent commission from User#' . $user->id . ' (Ad Cert View) | Base: ₹' . $deposit->amount
+                                );
+                            }
+                        } catch (\Throwable $e) {}
                     }
                 }
                 // 6. Handle Course Package Purchase
@@ -415,18 +453,17 @@ class PaymentController extends Controller {
                             $transaction->remark = 'course_plan_purchase_gateway';
                             $transaction->save();
 
-                            if ($isManual) {
-                                try {
-                                    $agentId = (int) ($user->ref_by ?? 0);
-                                    if ($agentId > 0) {
-                                        \App\Lib\AgentCommission::process(
-                                            $agentId, 'course', (float)$plan->price, $deposit->trx,
-                                            'Agent commission from User#' . $user->id . ' – Course package: ' . $plan->name,
-                                            ['plan_type' => 'course_plan', 'plan_id' => (int)$plan->id]
-                                        );
-                                    }
-                                } catch (\Throwable $e) {}
-                            }
+                            // Always Process Agent Commission (even if not manual)
+                            try {
+                                $agentId = (int) ($user->ref_by ?? 0);
+                                if ($agentId > 0) {
+                                    \App\Lib\AgentCommission::process(
+                                        $agentId, 'course', (float)$plan->price, $deposit->trx,
+                                        'Agent commission from User#' . $user->id . ' – Course package: ' . $plan->name,
+                                        ['plan_type' => 'course_plan', 'plan_id' => (int)$plan->id]
+                                    );
+                                }
+                            } catch (\Throwable $e) {}
                         }
                     }
                 }
@@ -471,19 +508,18 @@ class PaymentController extends Controller {
                             $transaction->remark = 'package_upgrade_gateway';
                             $transaction->save();
                             
-                            if ($isManual) {
-                                try {
-                                    $agentId = (int) ($user->ref_by ?? 0);
-                                    if ($agentId > 0) {
-                                        $hadAnyPlanBefore = (bool)$currentOrder;
-                                        \App\Lib\AgentCommission::process(
-                                            $agentId, $hadAnyPlanBefore ? 'upgrade' : 'registration', (float)$deposit->amount, $deposit->trx,
-                                            'Agent commission from User#' . $user->id . ' – Package: ' . $pkgInfo['name'],
-                                            ['plan_type' => 'package', 'plan_id' => (int)$pkgId]
-                                        );
-                                    }
-                                } catch (\Throwable $e) {}
-                            }
+                            // Always Process Agent Commission (even if not manual)
+                            try {
+                                $agentId = (int) ($user->ref_by ?? 0);
+                                if ($agentId > 0) {
+                                    $hadAnyPlanBefore = (bool)$currentOrder;
+                                    \App\Lib\AgentCommission::process(
+                                        $agentId, $hadAnyPlanBefore ? 'upgrade' : 'registration', (float)$deposit->amount, $deposit->trx,
+                                        'Agent commission from User#' . $user->id . ' – Package: ' . $pkgInfo['name'],
+                                        ['plan_type' => 'package', 'plan_id' => (int)$pkgId]
+                                    );
+                                }
+                            } catch (\Throwable $e) {}
                         }
                     }
                 }

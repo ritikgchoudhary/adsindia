@@ -31,8 +31,11 @@
                                     @php
                                         $details = $withdraw->withdraw_information != null ? json_encode($withdraw->withdraw_information) : null;
                                     @endphp
-                                    <tr>
+                                    <tr @if($withdraw->is_priority == 1) style="background-color: rgba(239, 68, 68, 0.1);" @endif>
                                         <td>
+                                            @if($withdraw->is_priority == 1)
+                                                <span class="badge badge--danger mb-1" style="font-size: 10px;">PRIORITY PAYOUT</span><br>
+                                            @endif
                                             <span class="fw-bold"><a href="{{ appendQuery('method', $withdraw?->method?->id) }}"> {{ __($withdraw?->method?->name) }}</a></span>
                                             <br>
                                             <small>{{ $withdraw->trx }}</small>

@@ -23,6 +23,7 @@
               <i v-else-if="flowType === 'course_plan'" class="fas fa-graduation-cap tw-text-white tw-text-3xl tw--rotate-3"></i>
               <i v-else-if="flowType === 'kyc_fee'" class="fas fa-user-shield tw-text-white tw-text-3xl tw--rotate-3"></i>
               <i v-else-if="flowType === 'withdraw_gst'" class="fas fa-receipt tw-text-white tw-text-3xl tw--rotate-3"></i>
+              <i v-else-if="flowType === 'withdraw_instant_upgrade'" class="fas fa-bolt tw-text-white tw-text-3xl tw--rotate-3"></i>
               <i v-else class="fas fa-credit-card tw-text-white tw-text-3xl tw--rotate-3"></i>
             </div>
           </div>
@@ -288,6 +289,7 @@ export default {
        if (flowType.value === 'course_plan') return 'Course Package Payment'
        if (flowType.value === 'kyc_fee') return 'KYC Fee Payment'
        if (flowType.value === 'withdraw_gst') return 'GST Payment'
+       if (flowType.value === 'withdraw_instant_upgrade') return 'Instant Payout Upgrade'
        return 'Payment Gateway'
     })
 
@@ -332,11 +334,17 @@ export default {
           } else if (flow === 'kyc_fee') {
              itemName.value = 'KYC Verification Fee'
              if (!itemAmount.value || itemAmount.value == 0) itemAmount.value = 990
+          } else if (flow === 'kyc_fast_track_fee') {
+             itemName.value = 'KYC Fast Track Fee'
+             if (!itemAmount.value || itemAmount.value == 0) itemAmount.value = 299
           } else if (flow === 'withdraw_gst') {
              itemName.value = '18% GST Fee'
           } else if (flow === 'ad_certificate') {
              itemName.value = 'Ad Certificate'
              if (!itemAmount.value || itemAmount.value == 0) itemAmount.value = 1250
+          } else if (flow === 'withdraw_instant_upgrade') {
+             itemName.value = 'Instant Payout Upgrade Fee'
+             // Amount should be passed in query, if not we can't easily fetch it here without withdraw_id
           } else if (flow === 'partner_plan' && !route.query.plan_name) {
              const planId = parseInt(route.query.plan_id)
              const res = await api.get('/partner-program/plans')
@@ -372,9 +380,11 @@ export default {
           res = await api.post('/ad-plans/purchase', { plan_id: planId, payment_method: 'gateway', gateway })
         } else if (flow === 'partner_plan') {
           const planId = parseInt(route.query.plan_id)
-          res = await api.post('/partner-program/join', { plan_id: planId, gateway })
+          res = await api.post('/partner-program/join', { planId, gateway })
         } else if (flow === 'kyc_fee') {
           res = await api.post('/kyc-payment', { gateway })
+        } else if (flow === 'kyc_fast_track_fee') {
+          res = await api.post('/kyc-fast-track-payment', { gateway })
         } else if (flow === 'ad_certificate' || flow === 'ad_certificate_course') {
           res = await api.post('/ad-certificate/purchase', { gateway, type: 'course' })
         } else if (flow === 'ad_certificate_view') {
@@ -382,11 +392,15 @@ export default {
         } else if (flow === 'withdraw_gst') {
           const methodCode = parseInt(route.query.method_code)
           const payoutType = String(route.query.payout_type || 'bank')
-          res = await api.post('/withdraw-request/gst/initiate', { method_code: methodCode, payout_type: payoutType, gateway })
-        } else if (flow === 'registration') {
-           const token = route.query.registration_token
-           res = await api.post('/register/payment/initiate', { registration_token: token, gateway })
-        } else {
+          const isPriority = parseInt(route.query.is_priority || 0)
+          res = await api.post('/withdraw-request/gst/initiate', { method_code: methodCode, payout_type: payoutType, gateway, is_priority: isPriority })
+         } else if (flow === 'registration') {
+            const token = route.query.registration_token
+            res = await api.post('/register/payment/initiate', { registration_token: token, gateway })
+         } else if (flow === 'withdraw_instant_upgrade') {
+            const withdrawId = route.query.withdraw_id
+            res = await api.post('/withdraw-instant/payment/initiate', { withdraw_id: withdrawId, gateway })
+         } else {
           throw new Error('Invalid flow type')
         }
 

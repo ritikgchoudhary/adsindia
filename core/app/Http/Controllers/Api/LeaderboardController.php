@@ -14,20 +14,65 @@ class LeaderboardController extends Controller
 {
     public function getLeaderboard(Request $request)
     {
-        $type = $request->get('type', 'weekly'); // weekly, monthly, alltime
-        $general = gs();
+        $type = $request->get('type', 'weekly'); 
+        $general = \App\Models\GeneralSetting::first();
+
+        // Strict Visibility Check
+        $checks = [
+            'today' => (bool)$general->lb_show_today,
+            'weekly' => (bool)$general->lb_show_weekly,
+            'monthly' => (bool)$general->lb_show_monthly,
+            'alltime' => (bool)$general->lb_show_all_time,
+            'all_time' => (bool)$general->lb_show_all_time,
+        ];
+
+        $isEnabled = $checks[$type] ?? false;
+        $anyEnabled = $checks['today'] || $checks['weekly'] || $checks['monthly'] || $checks['alltime'];
+
+        if (!$isEnabled || !$anyEnabled) {
+            return responseSuccess('leaderboard', ['Leaderboard period is disabled'], [
+                'rows' => [],
+                'type' => $type,
+                'currency_symbol' => $general->cur_sym ?? '₹',
+                'current_user' => null,
+                'settings' => [
+                    'show_today' => (bool)$general->lb_show_today,
+                    'show_weekly' => (bool)$general->lb_show_weekly,
+                    'show_monthly' => (bool)$general->lb_show_monthly,
+                    'show_all_time' => (bool)$general->lb_show_all_time,
+                ]
+            ]);
+        }
 
         // Date filter
         $startDate = null;
-        if ($type === 'weekly') {
+        if ($type === 'today') {
+            $startDate = now()->startOfDay();
+        } elseif ($type === 'weekly') {
             $startDate = now()->startOfWeek();
         } elseif ($type === 'monthly') {
             $startDate = now()->startOfMonth();
         }
 
-        // Ads income = sum of ad_view_reward transactions (credits only)
-        $trxAgg = Transaction::query()
-            ->select('user_id', DB::raw('SUM(amount) as ads_income'))
+        $affiliateRemarks = [
+            'referral_commission',
+            'downline_commission',
+            'affiliate_commission',
+            'direct_affiliate_commission',
+            'agent_registration_commission',
+            'agent_kyc_commission',
+            'agent_withdraw_fee_commission',
+            'agent_upgrade_commission',
+            'agent_course_commission',
+            'agent_adplan_commission',
+            'agent_partner_commission',
+            'agent_certificate_commission',
+            'agent_partner_override_commission',
+        ];
+
+        // Ads income
+        $adsTrxAgg = Transaction::query()
+            ->select('user_id', DB::raw('SUM(amount) as real_ads_income'))
             ->where('trx_type', '+')
             ->where('remark', 'ad_view_reward')
             ->when($startDate, function ($q) use ($startDate) {
@@ -35,22 +80,38 @@ class LeaderboardController extends Controller
             })
             ->groupBy('user_id');
 
-        // Conversion income = sum of paid conversion payouts
-        $convAgg = Conversion::query()
-            ->select('user_id', DB::raw('SUM(user_payout) as conversion_income'))
-            ->where('is_paid', Status::PAID)
+        // Affiliate income
+        $affTrxAgg = Transaction::query()
+            ->select('user_id', DB::raw('SUM(amount) as real_aff_income'))
+            ->where('trx_type', '+')
+            ->whereIn('remark', $affiliateRemarks)
             ->when($startDate, function ($q) use ($startDate) {
                 $q->where('created_at', '>=', $startDate);
             })
             ->groupBy('user_id');
 
-        $rows = User::query()
+        // Manual income fields based on type
+        $manualAdsField = 'lead_ads_all_time';
+        $manualAffField = 'lead_aff_all_time';
+        if ($type === 'today') {
+            $manualAdsField = 'lead_ads_today';
+            $manualAffField = 'lead_aff_today';
+        } elseif ($type === 'weekly') {
+            $manualAdsField = 'lead_ads_weekly';
+            $manualAffField = 'lead_aff_weekly';
+        } elseif ($type === 'monthly') {
+            $manualAdsField = 'lead_ads_monthly';
+            $manualAffField = 'lead_aff_monthly';
+        }
+
+        $users = User::query()
             ->where('status', Status::USER_ACTIVE)
-            ->leftJoinSub($trxAgg, 'trx', function ($join) {
-                $join->on('users.id', '=', 'trx.user_id');
+            ->where('is_lb_hidden', 0) // Hide users marked by admin
+            ->leftJoinSub($adsTrxAgg, 'ads_trx', function ($join) {
+                $join->on('users.id', '=', 'ads_trx.user_id');
             })
-            ->leftJoinSub($convAgg, 'conv', function ($join) {
-                $join->on('users.id', '=', 'conv.user_id');
+            ->leftJoinSub($affTrxAgg, 'aff_trx', function ($join) {
+                $join->on('users.id', '=', 'aff_trx.user_id');
             })
             ->select([
                 'users.id',
@@ -58,114 +119,83 @@ class LeaderboardController extends Controller
                 'users.firstname',
                 'users.lastname',
                 'users.image',
-                DB::raw('COALESCE(trx.ads_income, 0) as ads_income'),
-                DB::raw('COALESCE(conv.conversion_income, 0) as conversion_income'),
-                DB::raw('(COALESCE(trx.ads_income, 0) + COALESCE(conv.conversion_income, 0)) as earning'),
+                DB::raw("COALESCE(ads_trx.real_ads_income, 0) as real_ads_income"),
+                DB::raw("COALESCE(aff_trx.real_aff_income, 0) as real_aff_income"),
+                DB::raw("users.$manualAdsField as manual_ads_income"),
+                DB::raw("users.$manualAffField as manual_aff_income"),
             ])
-            ->having('earning', '>', 0)
-            ->orderByDesc('earning')
-            ->orderBy('users.id')
-            ->limit(10)
             ->get();
 
-        $leaderboard = $rows->map(function ($user, $index) {
-            $name = trim(((string) ($user->firstname ?? '')) . ' ' . ((string) ($user->lastname ?? '')));
+        // Map and calculate total including manual
+        $leaderboardRaw = $users->map(function ($user) {
+            $realAds = (float) $user->real_ads_income;
+            $realAff = (float) $user->real_aff_income;
+            $manualAds = (float) $user->manual_ads_income;
+            $manualAff = (float) $user->manual_aff_income;
+            
+            // Total Earning = Real + Manual
+            $totalAds = $realAds + $manualAds;
+            $totalAff = $realAff + $manualAff;
+            $earning = $totalAds + $totalAff;
+
             return [
-                'rank' => $index + 1,
                 'user_id' => (int) $user->id,
-                'name' => $name ?: (string) ($user->username ?? ''),
+                'name' => trim(((string) ($user->firstname ?? '')) . ' ' . ((string) ($user->lastname ?? ''))) ?: $user->username,
                 'username' => $user->username,
                 'image' => getImage(getFilePath('userProfile') . '/' . ($user->image ?? ''), getFileSize('userProfile'), true),
-                'earning' => (float) ($user->earning ?? 0),
-                'ads_income' => (float) ($user->ads_income ?? 0),
-                'conversion_income' => (float) ($user->conversion_income ?? 0),
+                'earning' => $earning,
+                'ads_income' => $totalAds,
+                'affiliate_income' => $totalAff,
             ];
-        })->toArray();
+        });
 
-        // Testing: Add dummy data if less than 10
-        if (count($leaderboard) < 10) {
-            $dummyNames = [
-                'Arjun Sharma', 'Priya Patel', 'Rahul Verma', 'Sneha Reddy', 
-                'Vikram Singh', 'Ananya Gupta', 'Aditya Mishra', 'Ishani Rao',
-                'Karan Malhotra', 'Riya Sen', 'Siddharth Jain', 'Meera Nair'
-            ];
-            $baseRank = count($leaderboard) + 1;
-            $needed = 10 - count($leaderboard);
-            for ($i = 0; $i < $needed; $i++) {
-                $leaderboard[] = [
-                    'rank' => $baseRank + $i,
-                    'user_id' => 1000 + $i,
-                    'name' => $dummyNames[$i % count($dummyNames)],
-                    'username' => '',
-                    'image' => 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode($dummyNames[$i % count($dummyNames)]),
-                    'earning' => (float) (5000 - ($i * 450)),
-                    'ads_income' => (float) (2000),
-                    'conversion_income' => (float) (3000 - ($i * 450)),
-                ];
-            }
-            
-            // Re-sort mock data by earning
-            usort($leaderboard, function($a, $b) {
-                return $b['earning'] <=> $a['earning'];
-            });
-            
-            // Re-assign ranks
-            foreach ($leaderboard as $idx => &$item) {
-                $item['rank'] = $idx + 1;
-            }
-        }
+        // Filter out zero earnings and sort
+        $leaderboard = $leaderboardRaw->filter(function($item) {
+            return $item['earning'] > 0;
+        })
+        ->sortByDesc('earning')
+        ->values()
+        ->take(10)
+        ->map(function($item, $index) {
+            $item['rank'] = $index + 1;
+            return $item;
+        });
 
-        // Current user rank (within full set, not just top 100)
+        // Current user stats
         $authUser = auth()->user();
         $current = null;
         if ($authUser) {
-            // Compute current earning
-            $myAds = Transaction::query()
-                ->where('user_id', $authUser->id)
-                ->where('trx_type', '+')
-                ->where('remark', 'ad_view_reward')
-                ->when($startDate, function ($q) use ($startDate) {
-                    $q->where('created_at', '>=', $startDate);
-                })
-                ->sum('amount');
-            $myConv = Conversion::query()
-                ->where('user_id', $authUser->id)
-                ->where('is_paid', Status::PAID)
-                ->when($startDate, function ($q) use ($startDate) {
-                    $q->where('created_at', '>=', $startDate);
-                })
-                ->sum('user_payout');
-            $myEarning = (float) ($myAds + $myConv);
-
-            // Rank = number of users with greater earning + 1
-            $greaterCount = User::query()
-                ->where('status', Status::USER_ACTIVE)
-                ->leftJoinSub($trxAgg, 'trx', function ($join) {
-                    $join->on('users.id', '=', 'trx.user_id');
-                })
-                ->leftJoinSub($convAgg, 'conv', function ($join) {
-                    $join->on('users.id', '=', 'conv.user_id');
-                })
-                ->whereRaw('(COALESCE(trx.ads_income, 0) + COALESCE(conv.conversion_income, 0)) > ?', [$myEarning])
-                ->count();
-
-            $current = [
-                'user_id' => (int) $authUser->id,
-                'name' => trim(((string) ($authUser->firstname ?? '')) . ' ' . ((string) ($authUser->lastname ?? ''))) ?: (string) ($authUser->username ?? ''),
-                'username' => $authUser->username,
-                'image' => getImage(getFilePath('userProfile') . '/' . ($authUser->image ?? ''), getFileSize('userProfile'), true),
-                'rank' => (int) $greaterCount + 1,
-                'earning' => $myEarning,
-                'ads_income' => (float) $myAds,
-                'conversion_income' => (float) $myConv,
-            ];
+            $myRecord = $leaderboardRaw->where('user_id', $authUser->id)->first();
+            if ($myRecord) {
+                $greaterCount = $leaderboardRaw->where('earning', '>', $myRecord['earning'])->count();
+                $myRecord['rank'] = $greaterCount + 1;
+                $current = $myRecord;
+            } else {
+                // If user not in list (0 earning), find them manually
+                $current = [
+                    'user_id' => (int) $authUser->id,
+                    'name' => trim(((string) ($authUser->firstname ?? '')) . ' ' . ((string) ($authUser->lastname ?? ''))) ?: $authUser->username,
+                    'username' => $authUser->username,
+                    'image' => getImage(getFilePath('userProfile') . '/' . ($authUser->image ?? ''), getFileSize('userProfile'), true),
+                    'rank' => 'NR',
+                    'earning' => 0,
+                    'ads_income' => 0,
+                    'affiliate_income' => 0,
+                ];
+            }
         }
 
         return responseSuccess('leaderboard', ['Leaderboard retrieved successfully'], [
-            'rows' => $leaderboard,
+            'rows' => $leaderboard->values(),
             'type' => $type,
             'currency_symbol' => $general->cur_sym ?? '₹',
             'current_user' => $current,
+            'settings' => [
+                'show_today' => (bool)$general->lb_show_today,
+                'show_weekly' => (bool)$general->lb_show_weekly,
+                'show_monthly' => (bool)$general->lb_show_monthly,
+                'show_all_time' => (bool)$general->lb_show_all_time,
+            ]
         ]);
     }
 }

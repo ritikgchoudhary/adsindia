@@ -252,6 +252,9 @@
                   }`">
                     {{ user.status === 'active' ? 'Active' : 'Banned' }}
                   </span>
+                  <div v-if="user.is_kyc_priority" class="tw-mt-2">
+                    <span class="tw-bg-rose-500/20 tw-border tw-border-rose-500/30 tw-text-rose-400 tw-px-2 tw-py-1 tw-rounded-md tw-text-[9px] tw-font-black tw-uppercase tw-tracking-[0.1em] tw-animate-pulse">FAST TRACK</span>
+                  </div>
                 </td>
                 <td class="tw-px-6 tw-py-5">
                    <div class="tw-flex tw-items-center tw-justify-center">

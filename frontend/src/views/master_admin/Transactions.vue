@@ -114,7 +114,7 @@
                     </div>
                     <div>
                       <div class="tw-text-white tw-font-bold tw-text-sm tw-leading-tight">{{ trx.user.firstname }} {{ trx.user.lastname }}</div>
-                      <div class="tw-text-slate-500 tw-text-[11px] tw-font-medium">@{{ trx.user.username }}</div>
+                      <div class="tw-text-slate-500 tw-text-[11px] tw-font-medium">{{ trx.user.ads_id || ('ADS' + trx.user.id) }}</div>
                     </div>
                   </div>
                   <div v-else class="tw-flex tw-items-center tw-gap-2 tw-text-slate-600">

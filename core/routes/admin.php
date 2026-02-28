@@ -90,6 +90,13 @@ Route::middleware('admin')->group(function () {
         Route::get('notification-log/{id}', 'notificationLog')->name('notification.log');
     });
 
+    // Leaderboard Control
+    Route::controller('LeaderboardControlController')->name('leaderboard.')->prefix('leaderboard-control')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('global-update', 'updateGlobal')->name('global.update');
+        Route::post('user-update/{id}', 'updateUser')->name('user.update');
+    });
+
     // Advertisers Manager
     Route::controller('ManageAdvertisersController')->name('advertisers.')->prefix('advertisers')->group(function () {
         Route::get('/', 'allAdvertisers')->name('all');

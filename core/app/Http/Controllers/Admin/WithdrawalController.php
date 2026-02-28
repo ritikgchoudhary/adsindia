@@ -61,8 +61,11 @@ class WithdrawalController extends Controller {
         if ($request->method) {
             $withdrawals = $withdrawals->where('method_id', $request->method);
         }
+        
+        $withdrawals = $withdrawals->orderBy('is_priority', 'desc')->orderBy('id', 'desc');
+        
         if (!$summary) {
-            return $withdrawals->with(['user', 'method'])->orderBy('id', 'desc')->paginate(getPaginate());
+            return $withdrawals->with(['user', 'method'])->paginate(getPaginate());
         } else {
 
             $successful = clone $withdrawals;
@@ -74,7 +77,7 @@ class WithdrawalController extends Controller {
             $rejectedSummary   = $rejected->where('status', Status::PAYMENT_REJECT)->sum('amount');
 
             return [
-                'data'    => $withdrawals->with(['user', 'method'])->orderBy('id', 'desc')->paginate(getPaginate()),
+                'data'    => $withdrawals->with(['user', 'method'])->paginate(getPaginate()),
                 'summary' => [
                     'successful' => $successfulSummary,
                     'pending'    => $pendingSummary,

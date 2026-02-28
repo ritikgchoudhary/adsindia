@@ -363,6 +363,7 @@ const routes = [
   { path: '/master_admin/special-links', name: 'MasterAdminSpecialLinks', component: () => import('../views/master_admin/SpecialLinks.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/kyc', name: 'MasterAdminKYC', component: () => import('../views/master_admin/KYC.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/reports', name: 'MasterAdminReports', component: () => import('../views/master_admin/Reports.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/leaderboard-control', name: 'MasterAdminLeaderboardControl', component: () => import('../views/master_admin/LeaderboardControl.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/admins', name: 'MasterAdminAdmins', component: () => import('../views/master_admin/Admins.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/settings', name: 'MasterAdminSettings', component: () => import('../views/master_admin/Settings.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/courses', name: 'MasterAdminCourses', component: () => import('../views/master_admin/Courses.vue'), meta: { requiresMasterAdminAuth: true } },

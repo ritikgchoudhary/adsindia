@@ -2,6 +2,64 @@
   <MasterAdminLayout page-title="System Settings">
     <div class="ma-settings">
       
+      <!-- General & Growth Fees -->
+      <div class="ma-card mb-4 animate__animated animate__fadeIn">
+        <div class="ma-card__header ma-card__header--gradient">
+          <div class="d-flex align-items-center">
+            <div class="ma-icon-box me-3 icon-blue">
+              <i class="fas fa-cog"></i>
+            </div>
+            <div>
+              <h5 class="ma-card__title">General Fee Configuration</h5>
+              <p class="ma-card__subtitle">Set KYC fees, Fast-Track charges, and Instant Payout costs.</p>
+            </div>
+          </div>
+        </div>
+        <div class="ma-card__body">
+          <div v-if="generalLoadError" class="alert alert-danger mb-4">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ generalLoadError }}
+            <button type="button" class="btn btn-sm btn-outline-danger ms-2" @click="fetchGeneralSettings">Retry</button>
+          </div>
+
+          <form v-else class="ma-form" @submit.prevent="saveGeneralSettings">
+            <div class="row g-4 mb-4">
+              <div class="col-md-4">
+                <div class="ma-form-group">
+                  <label class="ma-form-label">Normal KYC Fee (₹)</label>
+                  <input v-model.number="generalForm.kyc_fee" type="number" class="ma-form-input" required>
+                  <small class="text-muted">Fee for standard 24-48h KYC.</small>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="ma-form-group">
+                  <label class="ma-form-label text-warning">KYC Fast-Track Fee (₹)</label>
+                  <input v-model.number="generalForm.kyc_fast_track_fee" type="number" class="ma-form-input" required>
+                  <small class="text-muted">Extra fee for 1-hour verification.</small>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="ma-form-group">
+                  <label class="ma-form-label text-info">Instant Payout Fee (₹)</label>
+                  <input v-model.number="generalForm.instant_payout_fee" type="number" class="ma-form-input" required>
+                  <small class="text-muted">Extra fee for faster withdrawals.</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="ma-form-actions mt-2 bg-dark p-3 rounded-4 border border-1 border-secondary">
+              <button type="submit" class="ma-btn ma-btn--primary px-5" :disabled="generalSaving">
+                <i v-if="generalSaving" class="fas fa-spinner fa-spin me-2"></i>
+                <i v-else class="fas fa-save me-2"></i>
+                Update General Fees
+              </button>
+              <span v-if="generalSaveMessage" class="ms-3" :class="generalSaveSuccess ? 'text-success' : 'text-danger'">
+                {{ generalSaveMessage }}
+              </span>
+            </div>
+          </form>
+        </div>
+      </div>
       <!-- Ads Rewards Settings -->
       <div class="ma-card mb-4 animate__animated animate__fadeIn">
         <div class="ma-card__header ma-card__header--gradient">
@@ -392,6 +450,50 @@ export default {
       success: false
     })
 
+    // General settings state
+    const generalLoadError = ref('')
+    const generalSaving = ref(false)
+    const generalSaveMessage = ref('')
+    const generalSaveSuccess = ref(false)
+    const generalForm = reactive({
+      kyc_fee: 990,
+      kyc_fast_track_fee: 299,
+      instant_payout_fee: 50,
+      system_affiliate_commission: 10
+    })
+
+    const fetchGeneralSettings = async () => {
+      generalLoadError.value = ''
+      try {
+        const res = await api.get('/admin/general-settings')
+        if (res.data?.status === 'success' && res.data.data) {
+          Object.assign(generalForm, res.data.data)
+        }
+      } catch (e) {
+        generalLoadError.value = 'Failed to load general settings'
+      }
+    }
+
+    const saveGeneralSettings = async () => {
+      generalSaving.value = true
+      generalSaveMessage.value = ''
+      generalSaveSuccess.value = false
+      try {
+        const res = await api.post('/admin/general-settings', generalForm)
+        if (res.data?.status === 'success') {
+          generalSaveSuccess.value = true
+          generalSaveMessage.value = 'General settings updated successfully.'
+          setTimeout(() => { generalSaveMessage.value = '' }, 4000)
+        } else {
+          generalSaveMessage.value = res.data?.message?.[0] || 'Save failed'
+        }
+      } catch (e) {
+        generalSaveMessage.value = e.response?.data?.message?.[0] || e.message || 'Failed to save'
+      } finally {
+        generalSaving.value = false
+      }
+    }
+
     // Ads settings state
     const adsLoadError = ref('')
     const adsSaving = ref(false)
@@ -620,6 +722,7 @@ export default {
     }
 
     onMounted(() => {
+      fetchGeneralSettings()
       fetchAdsSettings()
       fetchWithdrawalSettings()
     })
@@ -628,6 +731,13 @@ export default {
       gatewayTest,
       initiateGatewayTest,
       checkGatewayTestStatus,
+      generalLoadError,
+      generalSaving,
+      generalSaveMessage,
+      generalSaveSuccess,
+      generalForm,
+      fetchGeneralSettings,
+      saveGeneralSettings,
       adsLoadError,
       adsSaving,
       adsSaveMessage,

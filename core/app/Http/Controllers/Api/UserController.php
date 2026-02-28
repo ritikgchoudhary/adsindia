@@ -163,23 +163,32 @@ class UserController extends Controller
         ", [$today, $last7Days, $last30Days])
         ->first();
 
+    // Earnings shows Ads + Conversions (Work income) + Manual Ads Hype
+    $earnings = [
+        'today' => (float) ($trxStats->today ?? 0) + (float) ($convStats->today ?? 0) + (float)($user->lead_ads_today ?? 0),
+        'last7Days' => (float) ($trxStats->last7 ?? 0) + (float) ($convStats->last7 ?? 0) + (float)($user->lead_ads_weekly ?? 0),
+        'last30Days' => (float) ($trxStats->last30 ?? 0) + (float) ($convStats->last30 ?? 0) + (float)($user->lead_ads_monthly ?? 0),
+        'total' => (float) ($trxStats->total ?? 0) + (float) ($convStats->total ?? 0) + (float)($user->lead_ads_all_time ?? 0),
+    ];
+
+    // Affiliate Stats including manual hype
+    $affStatsFormatted = [
+        'today' => (float) ($affiliateStats->today ?? 0) + (float)($user->lead_aff_today ?? 0),
+        'last7Days' => (float) ($affiliateStats->last7 ?? 0) + (float)($user->lead_aff_weekly ?? 0),
+        'last30Days' => (float) ($affiliateStats->last30 ?? 0) + (float)($user->lead_aff_monthly ?? 0),
+        'total' => (float) ($affiliateStats->total ?? 0) + (float)($user->lead_aff_all_time ?? 0),
+    ];
+
     // Calculate widget data
     $widget = [
         'balance' => (float) ($user->balance ?? 0),
         'affiliate_balance' => (float) ($user->affiliate_balance ?? 0),
-        'total_earning' => (float) ($affiliateStats->total ?? 0), // Fetch total affiliate income here
-        'ads_income' => $adsIncome,
+        'total_earning' => $affStatsFormatted['total'], 
+        'ads_income' => $earnings['total'],
         'total_withdraw' => (float) Withdrawal::where('user_id', $user->id)
             ->where('status', Status::PAYMENT_SUCCESS)
             ->sum('amount'),
-    ];
-
-    // Earnings shows ONLY Ads + Conversions (Work income) as per user request
-    $earnings = [
-        'today' => (float) ($trxStats->today ?? 0) + (float) ($convStats->today ?? 0),
-        'last7Days' => (float) ($trxStats->last7 ?? 0) + (float) ($convStats->last7 ?? 0),
-        'last30Days' => (float) ($trxStats->last30 ?? 0) + (float) ($convStats->last30 ?? 0),
-        'total' => (float) ($trxStats->total ?? 0) + (float) ($convStats->total ?? 0),
+        'affiliate_stats' => $affStatsFormatted, // Add this for affiliate dashboard
     ];
 
         // Get general settings for currency
@@ -303,11 +312,13 @@ class UserController extends Controller
                 'upi_id' => $user->upi_id ?? '',
             ],
             'kyc_fee' => $kycFee,
+            'kyc_fast_track_fee' => (float) ($general->kyc_fast_track_fee ?? 299),
             'kyc_status' => $user->kv ?? 0,
             'kyc_rejection_reason' => $user->kyc_rejection_reason ?? '',
             'balance' => $user->balance ?? 0,
             'currency_symbol' => $general->cur_sym ?? '₹',
             'has_paid_kyc_fee' => $hasPaidKYCFee,
+            'is_kyc_priority' => (bool) ($user->is_kyc_priority ?? false),
             'kyc_fee_trx' => $user->kyc_fee_trx ?? null,
             'kyc_fee_paid_at' => ($user->kyc_fee_paid_at instanceof \DateTime) ? $user->kyc_fee_paid_at->format('Y-m-d H:i:s') : $user->kyc_fee_paid_at,
         ];
@@ -367,7 +378,7 @@ class UserController extends Controller
         }
 
         $gateway = $request->input('gateway', 'simplypay');
-        if (!in_array($gateway, ['watchpay', 'simplypay', 'custom_qr'])) {
+        if (!in_array($gateway, ['watchpay', 'simplypay', 'rupeerush', 'custom_qr'])) {
             $gateway = 'simplypay';
         }
 
@@ -412,6 +423,7 @@ class UserController extends Controller
 
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
         if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $cacheKey = $cachePrefix . $trx;
@@ -425,6 +437,7 @@ class UserController extends Controller
 
         $gw_param = 'watchpay_trx=';
         if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
+        if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
         if ($gateway === 'custom_qr') $gw_param = 'custom_qr_trx=';
         
         $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
@@ -457,6 +470,17 @@ class UserController extends Controller
                     'attach' => 'KYC Verification Fee',
                 ]);
                 $paymentUrl = $sp['pay_link'];
+            } elseif ($gateway === 'rupeerush') {
+                $ap = \App\Lib\RupeeRushGateway::createPayment([
+                    'outTradeNo' => $trx,
+                    'totalAmount' => $kycFee,
+                    'notifyUrl' => $notifyUrl,
+                    'payViewUrl' => $pageUrl,
+                    'payName' => $user->fullname ?: $user->username,
+                    'payEmail' => $user->email,
+                    'payPhone' => $user->mobile,
+                ]);
+                $paymentUrl = $ap['pay_link'];
             } else {
                 $wp = \App\Lib\WatchPayGateway::createWebPayment(
                     $trx,
@@ -482,7 +506,7 @@ class UserController extends Controller
             'trx' => $trx,
             'amount' => $kycFee,
             'currency_symbol' => $general->cur_sym ?? '₹',
-            'gateway_name' => ($gateway === 'custom_qr' ? 'Manual QR' : ($gateway === 'simplypay' ? 'SimplyPay' : 'WatchPay')),
+            'gateway_name' => ($gateway === 'custom_qr' ? 'Manual QR' : ($gateway === 'simplypay' ? 'SimplyPay' : ($gateway === 'rupeerush' ? 'RupeeRush' : 'WatchPay'))),
         ]);
     }
 
@@ -490,7 +514,7 @@ class UserController extends Controller
     {
         $request->validate([
             'trx' => 'required|string',
-            'gateway' => 'nullable|string|in:watchpay,simplypay',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush,custom_qr',
         ]);
 
         $user = auth()->user();
@@ -502,11 +526,12 @@ class UserController extends Controller
 
         $trx = (string) $request->trx;
         $gateway = $request->input('gateway', 'simplypay');
-        if (!in_array($gateway, ['watchpay', 'simplypay', 'custom_qr'])) {
+        if (!in_array($gateway, ['watchpay', 'simplypay', 'rupeerush', 'custom_qr'])) {
             $gateway = 'simplypay';
         }
         $cachePrefix = 'watchpay_payment_';
         if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
         if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
         
         $cacheKey = $cachePrefix . $trx;
@@ -547,6 +572,168 @@ class UserController extends Controller
         return responseSuccess('kyc_payment_success', ['KYC payment verified successfully'], [
             'has_paid_kyc_fee' => true,
         ]);
+    }
+
+    public function kycFastTrackPayment(Request $request)
+    {
+        $user = auth()->user();
+        if ($user->kv == 1) {
+            return responseError('already_verified', ['Your account is already verified.']);
+        }
+        $general = gs();
+        
+        $fastTrackFee = (float) ($general->kyc_fast_track_fee ?? 299);
+        
+        $gateway = $request->input('gateway', 'simplypay');
+        if (!in_array($gateway, ['watchpay', 'simplypay', 'rupeerush', 'custom_qr'])) {
+            $gateway = 'simplypay';
+        }
+
+        $trx = getTrx();
+
+        $gate = \App\Models\Gateway::where('alias', $gateway)->first();
+        if (!$gate || $gate->status != 1) {
+            return responseError('gateway_unavailable', ['Selected payment gateway is currently unavailable.']);
+        }
+
+        $deposit = new \App\Models\Deposit();
+        $deposit->user_id = $user->id;
+        $deposit->method_code = $gate->code ?? 0;
+        $deposit->method_currency = 'INR';
+        $deposit->amount = $fastTrackFee;
+        $deposit->charge = 0;
+        $deposit->rate = 1;
+        $deposit->final_amount = $fastTrackFee;
+        $deposit->trx = $trx;
+        $deposit->remark = 'kyc_fast_track_fee';
+        $deposit->status = Status::PAYMENT_INITIATE;
+        $deposit->save();
+
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
+        
+        $cacheKey = $cachePrefix . $trx;
+        cache()->put($cacheKey, [
+            'type' => 'kyc_fast_track_fee',
+            'user_id' => $user->id,
+            'amount' => $fastTrackFee,
+            'status' => 'pending',
+            'created_at' => now()->format('Y-m-d H:i:s'),
+        ], now()->addHours(2));
+
+        $gw_param = 'watchpay_trx=';
+        if ($gateway === 'simplypay') $gw_param = 'simplypay_trx=';
+        if ($gateway === 'rupeerush') $gw_param = 'rupeerush_trx=';
+        if ($gateway === 'custom_qr') $gw_param = 'custom_qr_trx=';
+        
+        $base = $request->getSchemeAndHttpHost() ?: rtrim((string) config('app.url'), '/');
+        $pageUrl = $base . '/user/account-kyc?' . $gw_param . urlencode($trx);
+        $notifyUrl = $base . '/ipn/' . $gateway;
+
+        try {
+            if ($gateway === 'custom_qr') {
+                $qrImages = $gate->extra ?? [];
+                $fullQrImages = array_map(function($img) {
+                    return asset(getFilePath('gateway') . '/' . $img);
+                }, (is_string($qrImages) ? json_decode($qrImages, true) : (array)$qrImages));
+                
+                return responseSuccess('initiated', ['Manual QR tracking initiated'], [
+                    'payment_url' => $pageUrl . '&method=custom_qr',
+                    'is_manual' => true,
+                    'qr_images' => $fullQrImages,
+                    'trx' => $trx,
+                    'amount' => (float) $fastTrackFee,
+                ]);
+            } elseif ($gateway === 'simplypay') {
+                $sp = \App\Lib\SimplyPayGateway::createPayment([
+                    'merOrderNo' => $trx,
+                    'amount' => $fastTrackFee,
+                    'notifyUrl' => $notifyUrl,
+                    'returnUrl' => $pageUrl,
+                    'name' => $user->fullname ?: $user->username,
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'attach' => 'KYC Fast Track Fee',
+                ]);
+                $paymentUrl = $sp['pay_link'];
+            } elseif ($gateway === 'rupeerush') {
+                $ap = \App\Lib\RupeeRushGateway::createPayment([
+                    'outTradeNo' => $trx,
+                    'totalAmount' => $fastTrackFee,
+                    'notifyUrl' => $notifyUrl,
+                    'payViewUrl' => $pageUrl,
+                    'payName' => $user->fullname ?: $user->username,
+                    'payEmail' => $user->email,
+                    'payPhone' => $user->mobile,
+                ]);
+                $paymentUrl = $ap['pay_link'];
+            } else {
+                $wp = \App\Lib\WatchPayGateway::createWebPayment(
+                    $trx,
+                    (float) $fastTrackFee,
+                    'KYC Fast Track Fee',
+                    $pageUrl,
+                    $notifyUrl
+                );
+                $paymentUrl = $wp['pay_link'];
+            }
+        } catch (\Throwable $e) {
+            \Log::error($gateway . ' KYC fast track payment init failed', [
+                'user_id' => $user->id,
+                'amount' => $fastTrackFee,
+                'trx' => $trx,
+                'error' => $e->getMessage(),
+            ]);
+            return responseError('payment_gateway_error', [$e->getMessage() ?: 'Payment gateway init failed.']);
+        }
+
+        return responseSuccess('payment_initiated', ['Payment gateway initialized'], [
+            'payment_url' => $paymentUrl,
+            'trx' => $trx,
+            'amount' => $fastTrackFee,
+            'currency_symbol' => $general->cur_sym ?? '₹',
+            'gateway_name' => ($gateway === 'custom_qr' ? 'Manual QR' : ($gateway === 'simplypay' ? 'SimplyPay' : ($gateway === 'rupeerush' ? 'RupeeRush' : 'WatchPay'))),
+        ]);
+    }
+
+    public function confirmKycFastTrackPayment(Request $request)
+    {
+        $request->validate([
+            'trx' => 'required|string',
+            'gateway' => 'nullable|string|in:watchpay,simplypay,rupeerush,custom_qr',
+        ]);
+
+        $user = auth()->user();
+
+        $trx = (string) $request->trx;
+        $gateway = $request->input('gateway', 'simplypay');
+        if (!in_array($gateway, ['watchpay', 'simplypay', 'rupeerush', 'custom_qr'])) {
+            $gateway = 'simplypay';
+        }
+        $cachePrefix = 'watchpay_payment_';
+        if ($gateway === 'simplypay') $cachePrefix = 'simplypay_payment_';
+        if ($gateway === 'rupeerush') $cachePrefix = 'rupeerush_payment_';
+        if ($gateway === 'custom_qr') $cachePrefix = 'custom_qr_payment_';
+        
+        $cacheKey = $cachePrefix . $trx;
+
+        $session = cache()->get($cacheKey);
+        if (!is_array($session) || ($session['type'] ?? '') !== 'kyc_fast_track_fee' || (int)($session['user_id'] ?? 0) !== (int)$user->id) {
+            return responseError('payment_not_found', ['Payment session not found. Please initiate payment again.']);
+        }
+        if (($session['status'] ?? '') !== 'success') {
+            return responseError('payment_pending', ['Payment not verified yet. Please complete payment and try again.']);
+        }
+
+        // Mark priority on user
+        if ($user->is_kyc_priority != 1) {
+            $user->is_kyc_priority = 1;
+            $user->save();
+        }
+
+        return responseSuccess('kyc_fast_track_success', ['Fast track verified successfully. You will be prioritized.']);
     }
 
     public function userInfo()

@@ -81,6 +81,7 @@ export default {
         items: [
           { title: 'All Users', path: '/master_admin/users', icon: 'fas fa-users', perm: 'view_users' },
           { title: 'KYC Management', path: '/master_admin/kyc', icon: 'fas fa-id-card', perm: 'view_users' },
+          { title: 'Leaderboard Control', path: '/master_admin/leaderboard-control', icon: 'fas fa-trophy', superOnly: true },
           { title: 'Admins', path: '/master_admin/admins', icon: 'fas fa-user-shield', superOnly: true },
         ]
       },
