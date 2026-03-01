@@ -139,7 +139,8 @@ export default {
 
     return {
       showCookieNotice,
-      isDashboardRoute
+      isDashboardRoute,
+      route
     }
   }
 }
