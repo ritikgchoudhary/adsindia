@@ -32,7 +32,7 @@
 
     <div class="body-overlay"></div>
     <div class="sidebar-overlay"></div>
-    <a class="scroll-top"><i class="fas fa-angle-double-up"></i></a>
+    <!-- Scroll Top Removed -->
 
     @yield('app')
 
@@ -131,6 +131,8 @@
 
         })(jQuery);
     </script>
+
+
 </body>
 
 </html>

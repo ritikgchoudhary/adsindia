@@ -108,6 +108,7 @@ export default {
         label: 'System',
         items: [
           { title: 'Settings', path: '/master_admin/settings', icon: 'fas fa-cog', superOnly: true },
+          { title: 'Landing Page Config', path: '/master_admin/landing-page-settings', icon: 'fas fa-magic', superOnly: true },
           { title: 'Email Settings', path: '/master_admin/email-settings', icon: 'fas fa-envelope', superOnly: true },
         ]
       },

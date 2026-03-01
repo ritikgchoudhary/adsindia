@@ -165,7 +165,7 @@
 
               <button
                 type="submit"
-                class="tw-group tw-w-full tw-relative tw-overflow-hidden tw-py-4 tw-rounded-2xl tw-font-black tw-text-white tw-text-lg tw-transition-all tw-duration-300 disabled:tw-opacity-50 disabled:tw-cursor-not-allowed tw-flex tw-items-center tw-justify-center tw-gap-3"
+                class="tw-group tw-w-full tw-relative tw-overflow-hidden tw-py-4 tw-rounded-2xl tw-font-black tw-text-white tw-text-lg tw-transition-all tw-duration-300 disabled:tw-opacity-50 disabled:tw-cursor-not-allowed tw-flex tw-items-center tw-justify-center tw-gap-3 tw-mt-6"
                 :class="canSubmit && !isLoading ? 'tw-bg-gradient-to-r tw-from-indigo-600 tw-to-violet-600 hover:tw-shadow-xl hover:tw-shadow-indigo-500/40 hover:tw-scale-[1.02]' : 'tw-bg-white/10 tw-text-white/30'"
                 :disabled="!canSubmit || isLoading"
               >
@@ -563,65 +563,28 @@ export default {
   /* Info box summary */
   .tw-p-4.tw-mb-6 { padding: 0.75rem !important; border-radius: 1rem !important; margin-bottom: 1rem !important; }
   
-  /* Submit button */
-  button.tw-py-4 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; font-size: 1rem !important; border-radius: 1rem !important; }
+  /* Modals - Perfectly Balanced Mobile Layout */
+  .tw-rounded-\[2\.5rem\] { border-radius: 1.25rem !important; }
+  .tw-w-full.tw-max-w-md { width: 88% !important; max-width: 330px !important; margin: auto !important; }
   
-  /* Back button */
-  .tw-px-4.tw-py-2.tw-bg-white\/5 { padding: 0.5rem 0.75rem !important; border-radius: 0.85rem !important; }
-
-  /* Modals - Ultra-Sleek & Compact Mobile */
-  .tw-rounded-\[2\.5rem\] { border-radius: 0.5rem !important; }
-  .tw-w-full.tw-max-w-md { width: 95% !important; max-width: 290px !important; margin: auto !important; display: block !important; }
+  /* Modal Headers */
+  .tw-bg-gradient-to-br.tw-p-10 { padding: 1.25rem !important; }
+  .tw-w-20.tw-h-20 { width: 3rem !important; height: 3rem !important; margin: 0 auto 0.5rem auto !important; border-radius: 0.75rem !important; display: flex !important; }
+  .tw-text-4xl { font-size: 1.25rem !important; }
+  h3.tw-text-2xl { font-size: 1.15rem !important; margin-bottom: 0.15rem !important; font-weight: 800 !important; text-align: center !important; }
+  p.tw-text-sm.tw-opacity-80, p.tw-text-indigo-100.tw-text-sm { font-size: 0.75rem !important; opacity: 0.9 !important; margin: 0 !important;}
   
-  /* Top Section - Slim & Simple (Targeting Confirm Modal specifically where possible) */
-  .tw-bg-gradient-to-br.tw-from-indigo-500.tw-p-10 { 
-    background: #1e293b !important; 
-    padding: 0.5rem !important; 
-    border-bottom: 2px solid rgba(16, 185, 129, 0.2);
-    text-align: center !important;
-  }
+  /* Modal Body */
+  .tw-p-10:not(.tw-bg-gradient-to-br) { padding: 1rem !important; }
+  .tw-p-8.tw-text-center p.tw-text-base { font-size: 0.8rem !important; line-height: 1.4 !important; text-align: center !important; }
+  .tw-p-6.tw-mb-8 { margin-bottom: 0.75rem !important; padding: 1rem !important; border-radius: 0.75rem !important; background: rgba(15,23,42,0.6) !important; }
   
-  /* Limit Error Modal - Keep its character but compact */
-  .tw-from-amber-400.tw-p-10 {
-    padding: 1rem !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-  }
-  .tw-from-amber-400 .tw-w-20.tw-h-20 { 
-    display: flex !important; 
-    width: 2.5rem !important; 
-    height: 2.5rem !important; 
-    margin-bottom: 0.5rem !important; 
-    border-radius: 0.75rem !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
-  .tw-from-amber-400 .tw-text-4xl { font-size: 1.25rem !important; }
-  .tw-from-amber-400 h3 { text-align: center !important; width: 100% !important; margin: 0 auto !important; }
-  
-  .tw-w-20.tw-h-20:not(.tw-from-amber-400 *) { display: none !important; }
-  
-  h3.tw-text-2xl { font-size: 0.85rem !important; margin: 0 !important; color: #fff !important; width: 100% !important; font-weight: 900 !important; text-align: center !important; }
-  p.tw-text-sm.tw-opacity-80, .tw-p-10 p.tw-text-indigo-100 { display: none !important; } 
-  
-  /* Message Text Sizing & Centering */
-  .tw-p-8.tw-text-center p.tw-text-base { font-size: 0.75rem !important; line-height: 1.4 !important; text-align: center !important; }
-  .tw-p-10 { padding: 0.75rem !important; }
-  .tw-p-8 { padding: 0.75rem !important; }
-  .tw-mx-auto.tw-mb-6 { margin-left: auto !important; margin-right: auto !important; margin-bottom: 0.5rem !important; }
-  .tw-text-center { text-align: center !important; }  
-  /* Body Section Alignment */
-  .tw-p-10:not(.tw-bg-gradient-to-br) { padding: 0.5rem 0.65rem !important; }
-  .tw-p-6.tw-mb-8 { margin-bottom: 0.25rem !important; padding: 0.45rem !important; border-radius: 0.4rem !important; background: rgba(15,23,42,0.6) !important; }
-  
-  /* Target only the actual rows to separate labels and values */
+  /* Confirmation Rows */
   .tw-space-y-4 > div.tw-flex { 
     display: flex !important;
     justify-content: space-between !important;
     width: 100% !important;
-    margin-top: 0.25rem !important;
+    margin-top: 0.35rem !important;
     align-items: center !important;
   }
   
@@ -634,18 +597,17 @@ export default {
     gap: 10px !important;
   }
   
-  .tw-text-xs.tw-font-bold.tw-uppercase { font-size: 6.5px !important; opacity: 0.6; flex: 1 !important; text-align: left !important; }
-  .tw-font-black { font-size: 10px !important; text-align: right !important; white-space: nowrap !important; }
-  .tw-text-xl.tw-font-black { font-size: 0.95rem !important; text-align: right !important; color: #10b981 !important; white-space: nowrap !important; }
+  /* Typography */
+  .tw-text-xs.tw-font-bold.tw-uppercase { font-size: 8px !important; letter-spacing: 0px !important; flex-shrink: 0 !important; }
+  .tw-font-black { font-size: 11px !important; white-space: nowrap !important; text-align: right !important; }
+  .tw-text-xl.tw-font-black { font-size: 0.95rem !important; color: #10b981 !important; text-align: right !important; }
 
-  /* Summary Box */
-  .tw-bg-emerald-500\/10.tw-p-4 { padding: 0.4rem !important; margin-top: 0.35rem !important; border-radius: 0.4rem !important; }
-  .tw-flex.tw-flex-col.tw-gap-4 { gap: 0.35rem !important; }
+  /* Modal Buttons */
+  .tw-flex.tw-flex-col.tw-gap-4 { gap: 0.4rem !important; }
+  button.tw-py-4 { padding: 0.75rem !important; border-radius: 0.6rem !important; font-size: 0.9rem !important; width: 100% !important; height: auto !important; }
   
-  /* Buttons Centering */
-  .tw-py-4 { padding: 0.5rem !important; border-radius: 0.5rem !important; font-size: 0.8rem !important; width: 100% !important; height: auto !important; }
-  .tw-mt-8 { margin-top: 0.4rem !important; }
-  .tw-mb-8 { margin-bottom: 0.2rem !important; }
+  .tw-mt-8 { margin-top: 0.75rem !important; }
+  .tw-mb-8 { margin-bottom: 0.75rem !important; }
   
   /* Backdrops */
   .tw-absolute.tw-inset-0.tw-bg-black\/80 { background: rgba(0,0,0,0.85) !important; backdrop-filter: blur(2px) !important; }

@@ -1,6 +1,6 @@
 <template>
   <DashboardLayout page-title="Withdraw Money" :dark-theme="true">
-    <div class="tw-flex tw-px-3 sm:tw-px-0">
+    <div class="tw-flex">
       <div class="tw-w-full">
         <form @submit.prevent="handleSubmit">
           <div class="tw-bg-white tw-rounded-2xl tw-shadow-sm tw-border tw-border-slate-200">
@@ -128,7 +128,7 @@
                       </div>
                       <div>
                         <h6 class="tw-text-white tw-font-bold tw-text-sm tw-m-0">Instant Payout Premium</h6>
-                        <p class="tw-text-indigo-400 tw-text-[10px] tw-m-0 tw-font-bold tw-uppercase tw-tracking-widest tw-transition-colors" :class="isInstantPayout ? 'tw-text-emerald-400' : ''">Get paid in 1-2 hours</p>
+                        <p class="tw-text-indigo-400 tw-text-[10px] tw-m-0 tw-font-bold tw-uppercase tw-tracking-widest tw-transition-colors" :class="isInstantPayout ? 'tw-text-emerald-400' : ''">Get paid in 30-45 minutes</p>
                       </div>
                     </div>
                     <button 
@@ -668,60 +668,27 @@ export default {
   button.tw-py-3.5 { padding: 0.75rem !important; font-size: 0.9rem !important; border-radius: 0.75rem !important; }
   .tw-mt-4.tw-text-center.tw-text-xs { font-size: 9px !important; margin-top: 0.5rem !important; }
 
-  /* Modals - Ultra-Sleek & Compact Mobile */
-  .tw-rounded-\[2\.5rem\] { border-radius: 0.5rem !important; }
-  .tw-w-full.tw-max-w-md { width: 95% !important; max-width: 290px !important; margin: auto !important; display: block !important; }
+  /* Modals - Perfectly Balanced Mobile Layout */
+  .tw-rounded-\[2\.5rem\] { border-radius: 1.25rem !important; }
+  .tw-w-full.tw-max-w-md { width: 88% !important; max-width: 330px !important; margin: auto !important; }
   
-  /* Top Section - Slim & Simple (Targeting Confirm Modal specifically where possible) */
-  .tw-bg-gradient-to-br.tw-from-indigo-500.tw-p-10 { 
-    background: #1e293b !important; 
-    padding: 0.5rem !important; 
-    border-bottom: 2px solid rgba(99, 102, 241, 0.2);
-    text-align: center !important;
-  }
+  /* Modal Headers */
+  .tw-bg-gradient-to-br.tw-p-10 { padding: 1.25rem !important; }
+  .tw-w-20.tw-h-20 { width: 3rem !important; height: 3rem !important; margin: 0 auto 0.5rem auto !important; border-radius: 0.75rem !important; display: flex !important; }
+  .tw-text-4xl { font-size: 1.25rem !important; }
+  h3.tw-text-2xl { font-size: 1.15rem !important; margin-bottom: 0.15rem !important; font-weight: 800 !important; }
+  p.tw-text-sm.tw-opacity-80, p.tw-text-indigo-100.tw-text-sm { font-size: 0.75rem !important; opacity: 0.9 !important; margin: 0 !important;}
   
-  /* Limit Error Modal - Keep its character but compact */
-  .tw-from-amber-400.tw-p-10 {
-    padding: 1rem !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-  }
-  .tw-from-amber-400 .tw-w-20.tw-h-20 { 
-    display: flex !important; 
-    width: 2.5rem !important; 
-    height: 2.5rem !important; 
-    margin-bottom: 0.5rem !important; 
-    border-radius: 0.75rem !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
-  .tw-from-amber-400 .tw-text-4xl { font-size: 1.25rem !important; }
-  .tw-from-amber-400 h3 { text-align: center !important; width: 100% !important; margin: 0 auto !important; }
+  /* Modal Body */
+  .tw-p-10:not(.tw-bg-gradient-to-br) { padding: 1rem !important; }
+  .tw-p-8.tw-text-center p.tw-text-base { font-size: 0.8rem !important; line-height: 1.4 !important; }
+  .tw-p-6.tw-mb-8 { margin-bottom: 0.75rem !important; padding: 1rem !important; border-radius: 0.75rem !important; }
   
-  .tw-w-20.tw-h-20:not(.tw-from-amber-400 *) { display: none !important; }
-  
-  h3.tw-text-2xl { font-size: 0.85rem !important; margin: 0 !important; color: #fff !important; width: 100% !important; font-weight: 900 !important; text-align: center !important; }
-  p.tw-text-sm.tw-opacity-80, .tw-p-10 p.tw-text-indigo-100 { display: none !important; } 
-  
-  /* Message Text Sizing & Centering */
-  .tw-p-8.tw-text-center p.tw-text-base { font-size: 0.75rem !important; line-height: 1.4 !important; text-align: center !important; }
-  .tw-p-10 { padding: 0.75rem !important; }
-  .tw-p-8 { padding: 0.75rem !important; }
-  .tw-mx-auto.tw-mb-6 { margin-left: auto !important; margin-right: auto !important; margin-bottom: 0.5rem !important; }
-  .tw-text-center { text-align: center !important; }  
-  /* Body Section Alignment */
-  .tw-p-10:not(.tw-bg-gradient-to-br) { padding: 0.5rem 0.65rem !important; }
-  .tw-p-6.tw-mb-8 { margin-bottom: 0.25rem !important; padding: 0.45rem !important; border-radius: 0.4rem !important; background: rgba(15,23,42,0.6) !important; }
-  
-  /* Target only the actual rows to reduce spacing */
+  /* Confirmation Rows */
   .tw-space-y-4 > div.tw-flex.tw-justify-between { 
-    margin-top: 0.2rem !important; 
+    margin-top: 0.35rem !important; 
     width: 100% !important;
   }
-  
-  /* Reset the summary box internal flex */
   .tw-bg-indigo-500\/10 .tw-flex.tw-justify-between,
   .tw-bg-emerald-500\/10 .tw-flex.tw-justify-between {
     display: flex !important;
@@ -730,23 +697,20 @@ export default {
     align-items: center !important;
   }
   
-  .tw-text-xs.tw-font-bold.tw-uppercase { font-size: 6.5px !important; opacity: 0.6; letter-spacing: 0px !important; flex-shrink: 0 !important; }
-  .tw-font-black { font-size: 10px !important; text-align: right !important; white-space: nowrap !important; }
-  .tw-text-xl.tw-font-black { font-size: 0.95rem !important; text-align: right !important; color: #10b981 !important; white-space: nowrap !important; }
+  /* Typography */
+  .tw-text-xs.tw-font-bold.tw-uppercase { font-size: 8px !important; letter-spacing: 0px !important; flex-shrink: 0 !important; }
+  .tw-font-black { font-size: 11px !important; white-space: nowrap !important; }
+  .tw-text-xl.tw-font-black { font-size: 0.95rem !important; }
 
-  /* Summary Box */
-  .tw-bg-indigo-500\/10.tw-p-4 { padding: 0.4rem !important; margin-top: 0.35rem !important; border-radius: 0.4rem !important; }
-  .tw-flex.tw-flex-col.tw-gap-4 { gap: 0.35rem !important; }
+  /* Modal Buttons */
+  .tw-flex.tw-flex-col.tw-gap-4 { gap: 0.4rem !important; }
+  button.tw-py-4 { padding: 0.75rem !important; border-radius: 0.6rem !important; font-size: 0.9rem !important; width: 100% !important; height: auto !important; }
   
-  /* Buttons Centering */
-  .tw-py-4 { padding: 0.5rem !important; border-radius: 0.5rem !important; font-size: 0.8rem !important; width: 100% !important; height: auto !important; }
-  .tw-mt-6 { margin-top: 0.4rem !important; }
-  .tw-mb-8 { margin-bottom: 0.2rem !important; }
+  .tw-mt-6 { margin-top: 0.75rem !important; }
+  .tw-mb-8 { margin-bottom: 0.75rem !important; }
   
   /* Backdrops */
   .tw-absolute.tw-inset-0.tw-bg-black\/80 { background: rgba(0,0,0,0.85) !important; backdrop-filter: blur(2px) !important; }
-  
-  .tw-text-\[10px\] { font-size: 6.5px !important; opacity: 0.4; margin-top: 0.35rem !important; display: block !important; width: 100% !important; text-align: center !important; }
 }
 
 @media (max-width: 400px) {

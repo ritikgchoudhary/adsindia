@@ -2,6 +2,10 @@
   <DashboardLayout page-title="Affiliate Withdraw History" :dark-theme="true">
     <div class="ma-withdraw-wrap tw-animate-fade-in tw-py-6">
       
+
+
+
+
       <!-- Main Log Card -->
       <div class="ma-glass-card">
         <div class="ma-card-header">

@@ -61,6 +61,7 @@
         <p class="tw-text-slate-500 tw-m-0">Buy a package to access courses. Complete courses to learn and get certificates.</p>
       </div>
 
+
       <!-- Terms/Privacy checkbox only when coming from Home initial purchase -->
       <div
         v-if="requiresHomeBuyAgree"

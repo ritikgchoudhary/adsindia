@@ -124,20 +124,39 @@
               <router-link to="/user/referral" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/referral') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Referral Links</router-link>
             </li>
             <li class="tw-mb-1">
-              <router-link to="/user/my-team" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/my-team') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Team members</router-link>
+              <router-link to="/user/my-team" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/my-team') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Team Members</router-link>
             </li>
-            <li v-if="isAgent" class="tw-mb-1">
-              <router-link to="/user/affiliate-income" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/affiliate-income') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Affiliate Income</router-link>
+            <li class="tw-mb-1">
+              <router-link to="/user/link-generator" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/link-generator') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Link Generator <span class="tw-ml-1 tw-text-[10px] tw-bg-indigo-500 tw-text-white tw-px-1.5 tw-rounded tw-font-bold">NEW</span></router-link>
             </li>
-            <li v-if="isAgent" class="tw-mb-1">
-              <router-link to="/user/affiliate-withdraw" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/affiliate-withdraw') && !isActive('/user/affiliate-withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">
-                Affiliate Withdraw
-              </router-link>
+          </ul>
+        </div>
+      </li>
+
+      <!-- Affiliate Income (Dropdown) -->
+      <li v-if="isAgent" class="tw-mb-1">
+        <a 
+          href="#" 
+          class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-rounded-xl tw-font-medium tw-text-[15px] tw-transition-all tw-cursor-pointer tw-no-underline"
+          :class="isDropdownActive(affiliateMenuPaths) ? 'tw-bg-indigo-500/10 tw-text-indigo-400' : 'tw-text-slate-400 hover:tw-bg-slate-800 hover:tw-text-slate-200'"
+          @click.prevent="toggleSubmenu('affiliate')"
+        >
+          <div class="tw-flex tw-items-center tw-gap-3">
+            <span class="tw-w-6 tw-text-center"><i class="fas fa-hand-holding-usd"></i></span>
+            <span>Affiliate Income</span>
+          </div>
+          <i class="fas fa-chevron-down tw-text-xs tw-transition-transform" :class="{ 'tw-rotate-180': openSubmenus.includes('affiliate') }"></i>
+        </a>
+        <div v-show="openSubmenus.includes('affiliate')" class="tw-pl-4 tw-mt-1 tw-ml-4 tw-border-l tw-border-slate-800">
+          <ul class="tw-list-none tw-p-0 tw-m-0">
+            <li class="tw-mb-1">
+              <router-link to="/user/affiliate-income" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/affiliate-income') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Affiliate Dashboard</router-link>
             </li>
-            <li v-if="isAgent" class="tw-mb-1">
-              <router-link to="/user/affiliate-withdraw/history" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/affiliate-withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">
-                Affiliate Withdraw Log
-              </router-link>
+            <li class="tw-mb-1">
+              <router-link to="/user/affiliate-withdraw" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/affiliate-withdraw') && !isActive('/user/affiliate-withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Affiliate Withdraw</router-link>
+            </li>
+            <li class="tw-mb-1">
+              <router-link to="/user/affiliate-withdraw/history" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/affiliate-withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Affiliate Withdraw Log</router-link>
             </li>
           </ul>
         </div>
@@ -187,7 +206,7 @@
               <router-link to="/user/withdraw" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/withdraw') && !isActive('/user/withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Withdraw Money</router-link>
             </li>
             <li class="tw-mb-1">
-              <router-link to="/user/withdraw/history" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Withdraw Log</router-link>
+              <router-link to="/user/withdraw/history" class="tw-block tw-px-4 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-no-underline tw-transition-colors" :class="isActive('/user/withdraw/history') ? 'tw-text-indigo-400 tw-bg-indigo-500/10' : 'tw-text-slate-500 hover:tw-text-slate-300 hover:tw-bg-slate-800/50'">Withdraw History</router-link>
             </li>
 
           </ul>
@@ -330,11 +349,8 @@ export default {
       }
     }
 
-    const teamMenuPaths = computed(() => {
-      return isAgent.value
-        ? ['/user/referral', '/user/my-team', '/user/affiliate-income', '/user/affiliate-withdraw', '/user/affiliate-withdraw/history']
-        : ['/user/referral', '/user/my-team']
-    })
+    const teamMenuPaths = computed(() => ['/user/link-generator', '/user/referral', '/user/my-team'])
+    const affiliateMenuPaths = computed(() => ['/user/affiliate-income', '/user/affiliate-withdraw', '/user/affiliate-withdraw/history'])
 
     const fetchUserInfo = async () => {
       try {
@@ -350,6 +366,9 @@ export default {
         // Ensure submenu visibility if user is already on an agent-only page
         if (isDropdownActive(teamMenuPaths.value) && !openSubmenus.value.includes('team')) {
           openSubmenus.value.push('team')
+        }
+        if (isDropdownActive(affiliateMenuPaths.value) && !openSubmenus.value.includes('affiliate')) {
+          openSubmenus.value.push('affiliate')
         }
       } catch (_) {
         // non-blocking; default false
@@ -377,6 +396,7 @@ export default {
        if (isDropdownActive(['/user/ads-work', '/user/ad-plans'])) toggleSubmenu('ads')
        if (isDropdownActive(['/user/courses', '/user/packages'])) toggleSubmenu('courses')
        if (isDropdownActive(teamMenuPaths.value)) toggleSubmenu('team')
+       if (isAgent.value && isDropdownActive(affiliateMenuPaths.value)) toggleSubmenu('affiliate')
        if (isDropdownActive(['/user/withdraw', '/user/withdraw/history'])) toggleSubmenu('withdraw')
     })
 
@@ -391,7 +411,8 @@ export default {
       isAgent,
       isSpecialAgent,
       hasBetaAccess,
-      teamMenuPaths
+      teamMenuPaths,
+      affiliateMenuPaths
     }
   }
 }

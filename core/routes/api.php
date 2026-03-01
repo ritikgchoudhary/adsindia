@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -56,6 +55,9 @@ Route::namespace('Api')->name('api.')->group(function(){
     // Public Package Routes (for Registration)
     Route::get('packages', 'PackageController@getPackages');
 
+    // Public Landing Page (Dynamic Offer & WA links)
+    Route::get('landing-page', 'LandingPageController@getSettings');
+
     // Public Courses & Course Packages (Homepage)
     Route::get('public/courses', 'CourseController@publicCourses');
     Route::get('public/course-plans', 'CoursePlanController@getPlans');
@@ -74,6 +76,7 @@ Route::namespace('Api')->name('api.')->group(function(){
 		Route::get('register/referrer-info', 'RegisterController@getReferrerInfo');
 		Route::post('register/validate', 'RegisterController@validateRegistration');
 		Route::post('register/payment/initiate', 'RegisterController@initiateRegistrationPayment');
+		Route::post('registration/check-payment-status', 'RegisterController@checkPaymentStatus');
 		Route::get('register/payment/dummy', 'RegisterController@dummyPaymentHandler');
 		Route::post('register', 'RegisterController@register');
 
@@ -137,6 +140,9 @@ Route::namespace('Api')->name('api.')->group(function(){
                     Route::post('twofactor/disable', 'disable2fa');
 
                     Route::post('delete-account', 'deleteAccount');
+                    
+                    // User Landing Links
+                    Route::get('my-landing-links', 'LandingPageController@getMyLinks');
                     Route::post('special-agent/payment/initiate', 'initiateSpecialPayment');
                     Route::post('special-agent/payment/confirm', 'confirmSpecialPayment');
                     Route::get('special-agent/payment/history', 'specialPaymentHistory');
@@ -441,6 +447,9 @@ Route::prefix('admin')->group(function () {
         // General Settings (Master Admin)
         Route::get('general-settings', [\App\Http\Controllers\Admin\AdminController::class, 'getGeneralSettings']);
         Route::post('general-settings', [\App\Http\Controllers\Admin\AdminController::class, 'updateGeneralSettings']);
+
+        // Landing Page Config (Master Admin)
+        Route::post('landing-page/update', [\App\Http\Controllers\Api\LandingPageController::class, 'updateSettings']);
 
         // Beta Features (Master Admin Only)
         Route::prefix('beta')->group(function () {

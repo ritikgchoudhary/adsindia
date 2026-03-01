@@ -265,7 +265,7 @@ class AdminController extends Controller {
                 'is_kyc_priority' => (bool)$user->is_kyc_priority,
                 'has_ad_certificate' => (bool)$user->has_ad_certificate,
                 'has_ad_certificate_view' => (bool)$user->has_ad_certificate_view,
-                'kyc_data'   => @json_decode(json_encode($user->kyc_data)) ?? [],
+                'kyc_data'   => (object) $this->normalizeKycData($user->kyc_data),
                 'kyc_rejection_reason' => $user->kyc_rejection_reason ?? null,
                 'referral_code' => $user->referral_code ?? '',
                 'referred_by'   => $user->ref_by ? (int) $user->ref_by : 0,

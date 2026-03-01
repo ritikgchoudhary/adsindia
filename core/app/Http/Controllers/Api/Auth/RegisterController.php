@@ -23,7 +23,7 @@ class RegisterController extends Controller
      * Central package pricing used in registration/payment.
      * Keep in-sync with PackageController.
      */
-    private static function packagesData(): array
+    public static function packagesData(): array
     {
         return [
             1 => ['name' => 'AdsLite',     'price' => 1499],
@@ -34,13 +34,13 @@ class RegisterController extends Controller
         ];
     }
 
-    private static function packageMeta(int $packageId): array
+    public static function packageMeta(int $packageId): array
     {
         $data = static::packagesData();
         return $data[$packageId] ?? ['name' => 'Package', 'price' => 0];
     }
 
-    private static function hmacKey(): string
+    public static function hmacKey(): string
     {
         $key = (string) config('app.key', '');
         if (str_starts_with($key, 'base64:')) {
@@ -57,19 +57,45 @@ class RegisterController extends Controller
      * - no discount: ref|pkg
      * - with discount: ref|pkg|discount
      */
-    private static function packageSig(string $refCode, int $pkgId, ?int $discount = null): string
+    public static function packageSig(string $refCode, int $pkgId, ?int $discount = null): string
     {
-        $payload = strtolower(trim($refCode)) . '|' . (int) $pkgId;
-        if ($discount !== null) {
-            $payload .= '|' . (int) $discount;
+        $data = $refCode . '|' . $pkgId . ($discount !== null ? '|' . $discount : '');
+        return hash_hmac('sha256', $data, static::hmacKey());
+    }
+
+    /**
+     * Frontend Poll: Check if registration payment is already successful
+     */
+    public function checkPaymentStatus(Request $request)
+    {
+        $request->validate([
+            'payment_trx' => 'required|string',
+        ]);
+
+        $trx = $request->payment_trx;
+        $deposit = \App\Models\Deposit::where('trx', $trx)->first();
+        
+        if (!$deposit) {
+            return responseError('not_found', ['Payment record not found']);
         }
-        return hash_hmac('sha256', $payload, static::hmacKey());
+
+        // If user already attached, registration is complete
+        if ($deposit->user_id > 0) {
+            return responseSuccess('completed', ['Registration completed'], [
+                'status' => 'success',
+                'user_id' => $deposit->user_id
+            ]);
+        }
+
+        return responseSuccess('pending', ['Payment still processing'], [
+            'status' => 'pending'
+        ]);
     }
 
     /**
      * Resolve referrer from ref param: ADS + user_id (e.g. ADS1221) or legacy username
      */
-    private static function findReferrerByRef(string $ref): ?User
+    public static function findReferrerByRef(string $ref): ?User
     {
         $ref = strtoupper(trim($ref));
         if (preg_match('/^ADS(\d+)$/i', $ref, $m)) {
@@ -291,12 +317,14 @@ class RegisterController extends Controller
         $deposit->from_api = 1;
         $deposit->is_web = 1;
         $deposit->remark = 'registration_fee';
-        // Store name and email in detail for admin to see
+        // Store full registration data in detail so background IPN can finalize account creation even after cache expires
         $deposit->detail = [
-            'name' => ($registrationData['firstname'] ?? '') . ' ' . ($registrationData['lastname'] ?? ''),
-            'email' => $registrationData['email'] ?? '',
-            'mobile' => $registrationData['mobile'] ?? '',
-            'package' => $pkgMeta['name'] ?? 'Package'
+            'name'      => ($registrationData['firstname'] ?? '') . ' ' . ($registrationData['lastname'] ?? ''),
+            'email'     => $registrationData['email'] ?? '',
+            'mobile'    => $registrationData['mobile'] ?? '',
+            'package'   => $pkgMeta['name'] ?? 'Package',
+            'pkg_id'    => (int) ($registrationData['pkg'] ?? 0),
+            'full_data' => $registrationData // Important for background IPN processing
         ];
         $deposit->save();
 
@@ -458,18 +486,46 @@ class RegisterController extends Controller
      */
     public static function finalizeRegistration($regToken, $paymentTrx)
     {
-        // Get registration data
-        $registrationData = cache()->get('reg_' . $regToken);
-        if (!$registrationData) {
-            return responseError('invalid_token', ['Registration token expired. Please start again.']);
+        // 1. Get payment data from cache (fast path)
+        $paymentData = cache()->get('reg_payment_' . $paymentTrx);
+        
+        // 2. Fetch deposit record (source of truth)
+        $deposit = \App\Models\Deposit::where('trx', $paymentTrx)->first();
+        if (!$deposit) {
+            return responseError('payment_not_found', ['Payment record for TRX ' . $paymentTrx . ' not found.']);
         }
 
-        // Verify payment
-        $paymentData = cache()->get('reg_payment_' . $paymentTrx);
+        // 3. Get registration data. Prefer cache, fallback to Deposit detail
+        $registrationData = cache()->get('reg_' . $regToken);
+        if (!$registrationData) {
+            // Recover from Deposit record if cache expired
+            $details = $deposit->detail;
+            if (is_array($details) && isset($details['full_data'])) {
+                $registrationData = $details['full_data'];
+            } else if (is_object($details) && isset($details->full_data)) {
+                $registrationData = (array)$details->full_data;
+            }
+        }
+
+        if (!$registrationData) {
+            return responseError('invalid_token', ['Registration data mapping not found. Please try starting registration again.']);
+        }
+
+        // 4. Update memory paymentData if it was missing but we have deposit
         if (!$paymentData) {
-            // If called from Admin or IPN, we might not have the cache if it expired, but we have the Deposit record.
-            // However, we NEED the registrationData from cache.
-            return responseError('payment_not_found', ['Payment data not found in cache.']);
+            $paymentData = [
+                'amount' => $deposit->amount,
+                'registration_token' => $regToken,
+                'status' => $deposit->status == Status::PAYMENT_SUCCESS ? 'success' : 'pending'
+            ];
+        }
+
+        // 🟢 Check if user is already created (idempotency for IPN/Manual Approval)
+        if ($deposit->user_id > 0) {
+            $existingUser = \App\Models\User::find($deposit->user_id);
+            if ($existingUser) {
+                return ['user' => $existingUser, 'status' => 'already_finalized'];
+            }
         }
 
         // Use registration data from cache

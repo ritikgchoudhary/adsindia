@@ -176,22 +176,57 @@
         </div>
         <div class="tw-p-4 sm:tw-p-8">
           
+          <!-- Strict & Fraud Alert -->
+          <div class="tw-mb-6 sm:tw-mb-8 tw-bg-slate-900/80 tw-backdrop-blur-sm tw-border tw-border-amber-500/20 tw-rounded-xl sm:tw-rounded-2xl tw-p-3 sm:tw-p-6 tw-shadow-lg tw-shadow-amber-500/5 tw-relative tw-overflow-hidden tw-text-left">
+            <div class="tw-absolute tw-top-0 tw-left-0 tw-w-1 sm:tw-w-1.5 tw-h-full tw-bg-amber-500 tw-shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+            
+            <div class="tw-mb-4 sm:tw-mb-6 tw-pl-1.5 sm:tw-pl-3">
+              <h4 class="tw-text-amber-400 tw-font-black tw-mb-1.5 sm:tw-mb-3 tw-text-[10px] sm:tw-text-base tw-uppercase tw-tracking-wider tw-flex tw-items-center">
+                <i class="fas fa-exclamation-triangle tw-mr-1.5 sm:tw-mr-2 tw-text-amber-500"></i>🚨 Strict Policy For Sponsors
+              </h4>
+              <p class="tw-text-slate-300 tw-text-[11px] sm:tw-text-sm tw-leading-relaxed tw-m-0">
+                Agar koi bhi agent, sponsor, ya partner kisi new user se direct apne bank account ya UPI mein payment leta hua pakda gaya, toh uski <strong class="tw-text-amber-400 tw-font-bold">ID turant BAN</strong> kar di jayegi aur uska saara <strong class="tw-text-amber-400 tw-font-bold">Payout/Wallet Balance FREEZE</strong> kar diya jayega.
+              </p>
+            </div>
+
+            <div class="tw-bg-[#0f172a]/60 tw-rounded-lg sm:tw-rounded-xl tw-p-2 sm:tw-p-5 tw-border tw-border-amber-500/10 tw-shadow-inner tw-ml-1 sm:tw-ml-3">
+              <h4 class="tw-text-amber-400 tw-font-black tw-mb-2 sm:tw-mb-3 tw-text-[10px] sm:tw-text-sm tw-uppercase tw-tracking-wider tw-flex tw-items-start sm:tw-items-center tw-leading-tight">
+                <i class="fas fa-shield-alt tw-mr-1.5 sm:tw-mr-2 tw-text-amber-500 tw-mt-0.5 sm:tw-mt-0"></i>
+                <span>⚠️ Important Notice To Share</span>
+              </h4>
+              <ul class="tw-m-0 tw-pl-0 tw-text-[10px] sm:tw-text-sm tw-text-slate-300 tw-space-y-2 sm:tw-space-y-3 tw-list-none">
+                <li class="tw-flex tw-items-start tw-gap-2">
+                  <div class="tw-w-1.5 sm:tw-w-2 tw-h-1.5 sm:tw-h-2 tw-rounded-full tw-bg-amber-500/50 tw-mt-1.5 tw-shrink-0"></div>
+                  <span class="tw-leading-relaxed tw-tracking-tight"><strong class="tw-text-white">ADS SKILL INDIA</strong> kabhi bhi aapse personal UPI, bank account, ya kisi agent ke through payment nahi mangta.</span>
+                </li>
+                <li class="tw-flex tw-items-start tw-gap-2">
+                  <div class="tw-w-1.5 sm:tw-w-2 tw-h-1.5 sm:tw-h-2 tw-rounded-full tw-bg-amber-500/50 tw-mt-1.5 tw-shrink-0"></div>
+                  <span class="tw-leading-relaxed">Payments hamesha sirf <strong class="tw-text-white tw-font-bold tracking-wide">ADS SKILL INDIA</strong> ki official website ke payment gateway ke zariye hi karein.</span>
+                </li>
+                <li class="tw-flex tw-items-start tw-gap-2">
+                  <div class="tw-w-1.5 sm:tw-w-2 tw-h-1.5 sm:tw-h-2 tw-rounded-full tw-bg-rose-500/50 tw-mt-1.5 tw-shrink-0"></div>
+                  <span class="tw-leading-relaxed">Website ke bahar kisi agent ya third party ko direct payment karne par company koi <strong class="tw-text-rose-400 tw-font-bold">zimmedari nahi legi</strong>.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
           <!-- Integrated Payment & Terms (Required for Step 2) -->
-          <div v-if="!hasPaidKYCFee && Number(kycFee) > 0" class="tw-mb-10 tw-rounded-2xl tw-border tw-border-indigo-500/20 tw-bg-indigo-500/5 tw-p-6">
-            <div class="tw-flex tw-items-start tw-gap-4">
-              <div class="tw-bg-indigo-500/20 tw-text-indigo-500 tw-p-3 tw-rounded-full">
-                <i class="fas fa-credit-card tw-text-xl"></i>
+          <div v-if="!hasPaidKYCFee && Number(kycFee) > 0" class="tw-mb-6 sm:tw-mb-10 tw-rounded-xl sm:tw-rounded-2xl tw-border tw-border-indigo-500/20 tw-bg-indigo-500/5 tw-p-4 sm:tw-p-6">
+            <div class="tw-flex tw-flex-col sm:tw-flex-row tw-items-center sm:tw-items-start tw-gap-3 sm:tw-gap-4">
+              <div class="tw-bg-indigo-500/20 tw-text-indigo-500 tw-p-2 sm:tw-p-3 tw-rounded-full tw-shrink-0">
+                <i class="fas fa-credit-card tw-text-lg sm:tw-text-xl"></i>
               </div>
-              <div class="tw-flex-1">
-                <div class="tw-text-indigo-400 tw-font-bold tw-text-lg tw-mb-1">Verification Fee Required</div>
-                <div class="tw-text-slate-400 tw-text-sm tw-leading-relaxed tw-mb-6">
+              <div class="tw-flex-1 tw-w-full tw-text-center sm:tw-text-left">
+                <div class="tw-text-indigo-400 tw-font-bold tw-text-sm sm:tw-text-lg tw-mb-1">Verification Fee Required</div>
+                <div class="tw-text-slate-400 tw-text-[11px] sm:tw-text-sm tw-leading-relaxed tw-mb-4 sm:tw-mb-6">
                   A processing fee of <strong class="tw-text-indigo-400">₹{{ formatAmount(kycFee) }}</strong> is required for KYC verification and document processing.
                 </div>
                 
-                <div class="tw-bg-slate-950/50 tw-rounded-xl tw-p-4 tw-mb-6 tw-border tw-border-white/5">
-                  <label class="tw-flex tw-items-start tw-gap-3 tw-cursor-pointer tw-select-none">
-                    <input type="checkbox" v-model="termsAccepted" class="tw-mt-1.5 focus:tw-ring-indigo-500">
-                    <span class="tw-text-slate-300 tw-text-xs tw-leading-relaxed">
+                <div class="tw-bg-slate-950/50 tw-rounded-lg sm:tw-rounded-xl tw-p-3 sm:tw-p-4 tw-mb-4 sm:tw-mb-6 tw-border tw-border-white/5 tw-text-left">
+                  <label class="tw-flex tw-items-start tw-gap-2.5 sm:tw-gap-3 tw-cursor-pointer tw-select-none">
+                    <input type="checkbox" v-model="termsAccepted" class="tw-mt-1 sm:tw-mt-1.5 focus:tw-ring-indigo-500">
+                    <span class="tw-text-slate-300 tw-text-[10px] sm:tw-text-xs tw-leading-relaxed">
                       I agree with the
                       <router-link to="/policy/terms-of-service" class="tw-font-bold tw-text-indigo-400 tw-no-underline hover:tw-underline">Terms of Service</router-link>
                       and
@@ -200,14 +235,16 @@
                   </label>
                 </div>
 
-                <button
-                  type="button"
-                  @click="handleKYCPayment"
-                  :disabled="processingPayment || !termsAccepted"
-                  class="tw-w-full md:tw-w-auto tw-px-8 tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-extrabold tw-rounded-xl tw-shadow-lg tw-shadow-indigo-500/20 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 disabled:tw-opacity-50 disabled:tw-cursor-not-allowed tw-border-0 tw-cursor-pointer tw-uppercase tw-tracking-widest tw-text-xs"
-                >
-                  <i class="fas fa-shield-alt"></i> Pay ₹{{ formatAmount(kycFee) }} & Proceed
-                </button>
+                <div class="tw-flex tw-justify-center sm:tw-justify-start">
+                  <button
+                    type="button"
+                    @click="handleKYCPayment"
+                    :disabled="processingPayment || !termsAccepted"
+                    class="tw-w-full md:tw-w-auto tw-px-6 sm:tw-px-8 tw-py-3.5 sm:tw-py-4 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold sm:tw-font-extrabold tw-rounded-xl tw-shadow-lg tw-shadow-indigo-500/20 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 disabled:tw-opacity-50 disabled:tw-cursor-not-allowed tw-border-0 tw-cursor-pointer tw-uppercase tw-tracking-wider sm:tw-tracking-widest tw-text-[10px] sm:tw-text-xs"
+                  >
+                    <i class="fas fa-shield-alt"></i> Pay ₹{{ formatAmount(kycFee) }} & Proceed
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -220,39 +257,39 @@
 
           <form @submit.prevent="submitKYC" class="tw-max-w-4xl tw-mx-auto" :class="{ 'tw-opacity-50 tw-pointer-events-none': !hasPaidKYCFee && Number(kycFee) > 0 }">
             <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-x-8 tw-gap-y-8">
-              <div class="tw-col-span-full mb-2">
-                <h6 class="tw-text-white tw-font-bold tw-text-sm tw-m-0">Government Issued Documents</h6>
-                <p class="tw-text-slate-500 tw-text-xs tw-mt-1">Provide clear scans or photos of your Aadhaar and PAN documents.</p>
+              <div class="tw-col-span-full mb-3 sm:mb-2 text-center sm:text-left">
+                <h6 class="tw-text-white tw-font-bold tw-text-sm sm:tw-text-base tw-m-0">Government Issued Documents</h6>
+                <p class="tw-text-slate-500 tw-text-[10px] sm:tw-text-xs tw-mt-1">Provide clear scans or photos of your Aadhaar and PAN documents.</p>
               </div>
 
               <div>
-                <label class="tw-block tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-widest tw-mb-3">Aadhaar Number</label>
-                <input type="text" v-model="kycData.aadhaar_number" :disabled="isKycLocked" class="tw-w-full tw-px-5 tw-py-4 tw-bg-slate-950 tw-border tw-border-slate-800 tw-rounded-xl tw-text-white focus:tw-outline-none focus:tw-border-indigo-500 focus:tw-ring-4 focus:tw-ring-indigo-500/10 tw-transition-all" maxlength="12" placeholder="12-digit UID" :required="!isKycLocked">
+                <label class="tw-block tw-text-[10px] sm:tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-widest tw-mb-2 sm:tw-mb-3">Aadhaar Number</label>
+                <input type="text" v-model="kycData.aadhaar_number" :disabled="isKycLocked" class="tw-w-full tw-px-4 sm:tw-px-5 tw-py-3 sm:tw-py-4 tw-bg-slate-950 tw-border tw-border-slate-800 tw-rounded-xl tw-text-white tw-text-sm sm:tw-text-base focus:tw-outline-none focus:tw-border-indigo-500 focus:tw-ring-4 focus:tw-ring-indigo-500/10 tw-transition-all" maxlength="12" placeholder="12-digit UID" :required="!isKycLocked">
               </div>
 
               <div>
-                <label class="tw-block tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-widest tw-mb-3">Aadhaar Document</label>
+                <label class="tw-block tw-text-[10px] sm:tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-widest tw-mb-2 sm:tw-mb-3">Aadhaar Document</label>
                 <div class="tw-relative group">
-                  <input :key="aadhaarInputKey" type="file" :disabled="isKycLocked" @change="handleFileChange('aadhaar', $event)" class="tw-w-full tw-px-5 tw-py-3.5 tw-bg-slate-950 tw-border tw-border-slate-800 tw-rounded-xl tw-text-white focus:tw-outline-none focus:tw-border-indigo-500 tw-transition-all file:tw-mr-4 file:tw-py-1.5 file:tw-px-3 file:tw-rounded-lg file:tw-border-0 file:tw-text-[10px] file:tw-font-black file:tw-bg-indigo-500/10 file:tw-text-indigo-400 hover:file:tw-bg-indigo-500/20" accept="image/*,.pdf" :required="!isKycLocked">
-                  <div v-if="aadhaarFileName" class="tw-mt-3 tw-bg-emerald-500/10 tw-border tw-border-emerald-500/30 tw-rounded-xl tw-p-3 tw-flex tw-items-center tw-gap-3">
-                    <i class="fas fa-check-circle tw-text-emerald-400"></i>
-                    <span class="tw-text-emerald-300 tw-text-xs tw-truncate tw-font-bold">{{ aadhaarFileName }}</span>
+                  <input :key="aadhaarInputKey" type="file" :disabled="isKycLocked" @change="handleFileChange('aadhaar', $event)" class="tw-w-full tw-px-3 sm:tw-px-5 tw-py-2.5 sm:tw-py-3.5 tw-bg-slate-950 tw-border tw-border-slate-800 tw-rounded-xl tw-text-slate-300 tw-text-[10px] sm:tw-text-sm focus:tw-outline-none focus:tw-border-indigo-500 tw-transition-all file:tw-mr-3 sm:file:tw-mr-4 file:tw-py-1.5 file:tw-px-3 file:tw-rounded-lg file:tw-border-0 file:tw-text-[9px] sm:file:tw-text-[10px] file:tw-font-black file:tw-bg-indigo-500/10 file:tw-text-indigo-400 hover:file:tw-bg-indigo-500/20" accept="image/*,.pdf" :required="!isKycLocked">
+                  <div v-if="aadhaarFileName" class="tw-mt-3 tw-bg-emerald-500/10 tw-border tw-border-emerald-500/30 tw-rounded-xl tw-p-2 sm:tw-p-3 tw-flex tw-items-center tw-gap-2 sm:tw-gap-3 w-full tw-overflow-hidden">
+                    <i class="fas fa-check-circle tw-text-emerald-400 tw-shrink-0"></i>
+                    <span class="tw-text-emerald-300 tw-text-[10px] sm:tw-text-xs tw-truncate tw-font-bold tw-flex-1">{{ aadhaarFileName }}</span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label class="tw-block tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-widest tw-mb-3">PAN Card Number</label>
-                <input type="text" v-model="kycData.pan_number" :disabled="isKycLocked" class="tw-w-full tw-px-5 tw-py-4 tw-bg-slate-950 tw-border tw-border-slate-800 tw-rounded-xl tw-text-white focus:tw-outline-none focus:tw-border-indigo-500 focus:tw-ring-4 focus:tw-ring-indigo-500/10 tw-transition-all tw-uppercase" maxlength="10" placeholder="10-character PAN" :required="!isKycLocked">
+                <label class="tw-block tw-text-[10px] sm:tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-widest tw-mb-2 sm:tw-mb-3">PAN Card Number</label>
+                <input type="text" v-model="kycData.pan_number" :disabled="isKycLocked" class="tw-w-full tw-px-4 sm:tw-px-5 tw-py-3 sm:tw-py-4 tw-bg-slate-950 tw-border tw-border-slate-800 tw-rounded-xl tw-text-white tw-text-sm sm:tw-text-base focus:tw-outline-none focus:tw-border-indigo-500 focus:tw-ring-4 focus:tw-ring-indigo-500/10 tw-transition-all tw-uppercase" maxlength="10" placeholder="10-character PAN" :required="!isKycLocked">
               </div>
 
               <div>
-                <label class="tw-block tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-widest tw-mb-3">PAN Card Document</label>
+                <label class="tw-block tw-text-[10px] sm:tw-text-xs tw-font-bold tw-text-slate-400 tw-uppercase tw-tracking-widest tw-mb-2 sm:tw-mb-3">PAN Card Document</label>
                 <div class="tw-relative group">
-                  <input :key="panInputKey" type="file" :disabled="isKycLocked" @change="handleFileChange('pan', $event)" class="tw-w-full tw-px-5 tw-py-3.5 tw-bg-slate-950 tw-border tw-border-slate-800 tw-rounded-xl tw-text-white focus:tw-outline-none focus:tw-border-indigo-500 tw-transition-all file:tw-mr-4 file:tw-py-1.5 file:tw-px-3 file:tw-rounded-lg file:tw-border-0 file:tw-text-[10px] file:tw-font-black file:tw-bg-indigo-500/10 file:tw-text-indigo-400 hover:file:tw-bg-indigo-500/20" accept="image/*,.pdf" :required="!isKycLocked">
-                  <div v-if="panFileName" class="tw-mt-3 tw-bg-emerald-500/10 tw-border tw-border-emerald-500/30 tw-rounded-xl tw-p-3 tw-flex tw-items-center tw-gap-3">
-                    <i class="fas fa-check-circle tw-text-emerald-400"></i>
-                    <span class="tw-text-emerald-300 tw-text-xs tw-truncate tw-font-bold">{{ panFileName }}</span>
+                  <input :key="panInputKey" type="file" :disabled="isKycLocked" @change="handleFileChange('pan', $event)" class="tw-w-full tw-px-3 sm:tw-px-5 tw-py-2.5 sm:tw-py-3.5 tw-bg-slate-950 tw-border tw-border-slate-800 tw-rounded-xl tw-text-slate-300 tw-text-[10px] sm:tw-text-sm focus:tw-outline-none focus:tw-border-indigo-500 tw-transition-all file:tw-mr-3 sm:file:tw-mr-4 file:tw-py-1.5 file:tw-px-3 file:tw-rounded-lg file:tw-border-0 file:tw-text-[9px] sm:file:tw-text-[10px] file:tw-font-black file:tw-bg-indigo-500/10 file:tw-text-indigo-400 hover:file:tw-bg-indigo-500/20" accept="image/*,.pdf" :required="!isKycLocked">
+                  <div v-if="panFileName" class="tw-mt-3 tw-bg-emerald-500/10 tw-border tw-border-emerald-500/30 tw-rounded-xl tw-p-2 sm:tw-p-3 tw-flex tw-items-center tw-gap-2 sm:tw-gap-3 w-full tw-overflow-hidden">
+                    <i class="fas fa-check-circle tw-text-emerald-400 tw-shrink-0"></i>
+                    <span class="tw-text-emerald-300 tw-text-[10px] sm:tw-text-xs tw-truncate tw-font-bold tw-flex-1">{{ panFileName }}</span>
                   </div>
                 </div>
               </div>
@@ -285,20 +322,22 @@
               <i class="fas fa-clock tw-text-5xl tw-text-sky-400"></i>
             </div>
             <h3 class="tw-text-3xl tw-font-extrabold tw-text-white tw-mb-3">KYC Under Review</h3>
-            <p class="tw-text-slate-400 tw-leading-relaxed tw-mb-10">Your KYC has been submitted successfully and is currently under review. Please wait for approval, it will be verified within <strong class="tw-text-white">{{ isKycPriority ? '1 hour' : '24-48 hours' }}</strong>.</p>
+            <p class="tw-text-slate-400 tw-leading-relaxed tw-mb-10">Your KYC has been submitted successfully and is currently under review. Please wait for approval, it will be verified within <strong class="tw-text-white">{{ isKycPriority ? '15-30 minutes' : '24-48 hours' }}</strong>.</p>
             
             <!-- Instant Fast Track Offer -->
-            <div v-if="!isKycPriority" class="tw-bg-indigo-500/10 tw-border tw-border-indigo-500/20 tw-p-5 tw-rounded-2xl tw-mb-10 tw-text-left">
-              <div class="tw-flex tw-gap-4">
-                <div class="tw-text-indigo-400 tw-mt-1">
-                  <i class="fas fa-bolt tw-text-2xl"></i>
+            <div v-if="!isKycPriority" class="tw-bg-indigo-500/10 tw-border tw-border-indigo-500/20 tw-p-5 tw-rounded-2xl tw-mb-10 tw-text-center sm:tw-text-left">
+              <div class="tw-flex tw-flex-col sm:tw-flex-row tw-items-center sm:tw-items-start tw-gap-4">
+                <div class="tw-text-indigo-400 tw-bg-indigo-500/10 tw-w-12 tw-h-12 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-shrink-0 sm:tw-mt-1">
+                  <i class="fas fa-bolt tw-text-xl"></i>
                 </div>
-                <div>
-                   <h6 class="tw-text-indigo-400 tw-font-bold tw-text-sm tw-uppercase tw-tracking-widest tw-mb-1">Get Verified Instantly</h6>
-                   <p class="tw-text-indigo-200/80 tw-text-xs tw-mb-4">Skip the 48-hour queue and get your account fully verified in under 1 hour for a small priority fee.</p>
-                   <button @click="processFastTrackPayment" class="tw-w-full tw-py-3 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-indigo-500/30 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-cursor-pointer tw-text-sm">
-                     <i class="fas fa-rocket"></i> Fast Track KYC (₹{{ kycFastTrackFee }})
-                   </button>
+                <div class="tw-w-full">
+                   <h6 class="tw-text-indigo-400 tw-font-bold tw-text-sm tw-uppercase tw-tracking-widest tw-mb-2">Get Verified Instantly</h6>
+                   <p class="tw-text-indigo-200/80 tw-text-xs tw-mb-5 tw-leading-relaxed">Skip the 48-hour queue and get your account fully verified in 15-30 minutes for a small priority fee.</p>
+                   <div class="tw-flex tw-justify-center sm:tw-justify-start">
+                     <button @click="processFastTrackPayment" class="tw-w-full sm:tw-w-auto tw-px-8 tw-py-3.5 tw-bg-indigo-600 hover:tw-bg-indigo-700 tw-text-white tw-font-bold tw-rounded-xl tw-shadow-lg tw-shadow-indigo-500/30 tw-transition-all tw-flex tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-cursor-pointer tw-text-sm">
+                       <i class="fas fa-rocket"></i> Fast Track KYC (₹{{ kycFastTrackFee }})
+                     </button>
+                   </div>
                 </div>
               </div>
             </div>

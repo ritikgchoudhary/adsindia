@@ -307,6 +307,7 @@ const routes = [
   { path: '/user/verified-badge', name: 'UserVerifiedBadge', component: () => import('../views/user/VerifiedBadge.vue'), meta: { requiresAuth: true } },
   { path: '/user/beta-features', name: 'UserBetaFeatures', component: () => import('../views/user/BetaFeatures.vue'), meta: { requiresAuth: true } },
   { path: '/user/ad-booster', name: 'UserAdBooster', component: () => import('../views/user/AdBooster.vue'), meta: { requiresAuth: true } },
+  { path: '/user/link-generator', name: 'UserLinkGenerator', component: () => import('../views/user/LinkGenerator.vue'), meta: { requiresAuth: true } },
   // Admin Routes
   {
     path: '/admin/login',
@@ -384,7 +385,11 @@ const routes = [
   { path: '/master_admin/beta-features/verified', name: 'MasterAdminBetaVerified', component: () => import('../views/master_admin/BetaVerified.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/beta-features/booster', name: 'MasterAdminBetaBooster', component: () => import('../views/master_admin/BetaBooster.vue'), meta: { requiresMasterAdminAuth: true } },
   { path: '/master_admin/beta-features/instant', name: 'MasterAdminBetaInstant', component: () => import('../views/master_admin/BetaInstant.vue'), meta: { requiresMasterAdminAuth: true } },
-  { path: '/master_admin/beta-features/extra', name: 'MasterAdminBetaExtra', component: () => import('../views/master_admin/BetaExtra.vue'), meta: { requiresMasterAdminAuth: true } }
+  { path: '/master_admin/beta-features/extra', name: 'MasterAdminBetaExtra', component: () => import('../views/master_admin/BetaExtra.vue'), meta: { requiresMasterAdminAuth: true } },
+  { path: '/master_admin/landing-page-settings', name: 'MasterAdminLandingPageSettings', component: () => import('../views/master_admin/LandingPageSettings.vue'), meta: { requiresMasterAdminAuth: true } },
+  // Public Funnels (No Auth required)
+  { path: '/wa/:ref?', name: 'WhatsAppFunnel', component: () => import('../views/funnel/WhatsAppFunnel.vue'), meta: { noHeader: true, noFooter: true } },
+  { path: '/offer/:ref?', name: 'OfferFunnel', component: () => import('../views/funnel/OfferFunnel.vue'), meta: { noHeader: true, noFooter: true } }
 ]
 
 const router = createRouter({

@@ -15,49 +15,89 @@
           </div>
 
           <form v-else @submit.prevent="save" class="ma-form">
-            <div class="ma-form-group">
-              <label class="ma-form-label">Telegram Link</label>
+            <!-- Telegram Link -->
+            <div class="ma-form-group ma-card-variant">
+              <div class="tw-flex tw-items-center tw-justify-between tw-mb-2">
+                <label class="ma-form-label tw-mb-0">Telegram Link</label>
+                <label class="ma-switch">
+                  <input type="checkbox" v-model="form.is_telegram_enabled">
+                  <span class="ma-slider round"></span>
+                </label>
+              </div>
               <input
                 v-model="form.telegram_link"
                 type="url"
                 class="ma-form-input"
                 placeholder="https://t.me/YourGroup"
+                :disabled="!form.is_telegram_enabled"
+                :class="{ 'tw-opacity-50': !form.is_telegram_enabled }"
               >
-              <small class="text-muted">Full URL, e.g. https://t.me/AdsSkillIndia</small>
+              <small class="text-muted tw-block tw-mt-1">Full URL, e.g. https://t.me/AdsSkillIndia</small>
             </div>
-            <div class="ma-form-group">
-              <label class="ma-form-label">Telegram Group Link</label>
+
+            <!-- Telegram Group Link -->
+            <div class="ma-form-group ma-card-variant">
+              <div class="tw-flex tw-items-center tw-justify-between tw-mb-2">
+                <label class="ma-form-label tw-mb-0">Telegram Group Link</label>
+                <label class="ma-switch">
+                  <input type="checkbox" v-model="form.is_telegram_group_enabled">
+                  <span class="ma-slider round"></span>
+                </label>
+              </div>
               <input
                 v-model="form.telegram_group_link"
                 type="url"
                 class="ma-form-input"
                 placeholder="https://t.me/YourTelegramGroup"
+                :disabled="!form.is_telegram_group_enabled"
+                :class="{ 'tw-opacity-50': !form.is_telegram_group_enabled }"
               >
-              <small class="text-muted">This shows as a separate “Telegram Group” option in user panel.</small>
+              <small class="text-muted tw-block tw-mt-1">Shows as a separate “Telegram Group” option.</small>
             </div>
-            <div class="ma-form-group">
-              <label class="ma-form-label">WhatsApp Link</label>
+
+            <!-- WhatsApp Link -->
+            <div class="ma-form-group ma-card-variant">
+              <div class="tw-flex tw-items-center tw-justify-between tw-mb-2">
+                <label class="ma-form-label tw-mb-0">WhatsApp Link</label>
+                <label class="ma-switch">
+                  <input type="checkbox" v-model="form.is_whatsapp_enabled">
+                  <span class="ma-slider round"></span>
+                </label>
+              </div>
               <input
                 v-model="form.whatsapp_link"
                 type="url"
                 class="ma-form-input"
                 placeholder="https://wa.me/919876543210"
+                :disabled="!form.is_whatsapp_enabled"
+                :class="{ 'tw-opacity-50': !form.is_whatsapp_enabled }"
               >
-              <small class="text-muted">Full URL with country code, e.g. https://wa.me/919876543210</small>
+              <small class="text-muted tw-block tw-mt-1">Full URL with country code.</small>
             </div>
-            <div class="ma-form-group">
-              <label class="ma-form-label">Live Chat URL</label>
+
+            <!-- Live Chat URL -->
+            <div class="ma-form-group ma-card-variant">
+              <div class="tw-flex tw-items-center tw-justify-between tw-mb-2">
+                <label class="ma-form-label tw-mb-0">Live Chat URL (e.g. Tawk.to)</label>
+                <label class="ma-switch">
+                  <input type="checkbox" v-model="form.is_live_chat_enabled">
+                  <span class="ma-slider round"></span>
+                </label>
+              </div>
               <input
                 v-model="form.live_chat_url"
                 type="url"
                 class="ma-form-input"
-                placeholder="https://tawk.to/chat/your-widget or leave empty"
+                placeholder="https://tawk.to/chat/your-widget"
+                :disabled="!form.is_live_chat_enabled"
+                :class="{ 'tw-opacity-50': !form.is_live_chat_enabled }"
               >
-              <small class="text-muted">Optional. URL that opens when user clicks "Start Live Chat".</small>
+              <small class="text-muted tw-block tw-mt-1">URL that opens when user clicks "Start Live Chat".</small>
             </div>
+
             <div class="ma-form-actions">
-              <button type="submit" class="ma-btn ma-btn--primary">
-                Save Support Links
+              <button type="submit" class="ma-btn ma-btn--primary tw-w-full sm:tw-w-auto">
+                <i class="fas fa-save tw-mr-2"></i>Save Support Links
               </button>
               <span v-if="saveMessage" class="ms-3" :class="saveSuccess ? 'text-success' : 'text-danger'">{{ saveMessage }}</span>
             </div>
@@ -79,9 +119,13 @@ export default {
   setup() {
     const form = reactive({
       telegram_link: '',
+      is_telegram_enabled: true,
       telegram_group_link: '',
+      is_telegram_group_enabled: true,
       whatsapp_link: '',
-      live_chat_url: ''
+      is_whatsapp_enabled: true,
+      live_chat_url: '',
+      is_live_chat_enabled: true
     })
     const loading = ref(true)
     const saving = ref(false)
@@ -96,9 +140,13 @@ export default {
         const res = await api.get('/admin/support-links')
         if (res.data?.status === 'success' && res.data.data) {
           form.telegram_link = res.data.data.telegram_link || ''
+          form.is_telegram_enabled = res.data.data.is_telegram_enabled !== false
           form.telegram_group_link = res.data.data.telegram_group_link || ''
+          form.is_telegram_group_enabled = res.data.data.is_telegram_group_enabled !== false
           form.whatsapp_link = res.data.data.whatsapp_link || ''
+          form.is_whatsapp_enabled = res.data.data.is_whatsapp_enabled !== false
           form.live_chat_url = res.data.data.live_chat_url || ''
+          form.is_live_chat_enabled = res.data.data.is_live_chat_enabled !== false
         }
       } catch (e) {
         loadError.value = e.response?.data?.message?.[0] || e.message || 'Failed to load support links'
@@ -113,9 +161,13 @@ export default {
       try {
         const res = await api.post('/admin/support-links', {
           telegram_link: form.telegram_link || '',
+          is_telegram_enabled: form.is_telegram_enabled,
           telegram_group_link: form.telegram_group_link || '',
+          is_telegram_group_enabled: form.is_telegram_group_enabled,
           whatsapp_link: form.whatsapp_link || '',
-          live_chat_url: form.live_chat_url || ''
+          is_whatsapp_enabled: form.is_whatsapp_enabled,
+          live_chat_url: form.live_chat_url || '',
+          is_live_chat_enabled: form.is_live_chat_enabled
         })
         if (res.data?.status === 'success') {
           saveSuccess.value = true
@@ -170,4 +222,58 @@ export default {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 .ma-form-actions { margin-top: 1.5rem; display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+
+/* Switch CSS */
+.ma-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.ma-switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.ma-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #475569;
+  transition: .4s;
+}
+.ma-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+input:checked + .ma-slider {
+  background-color: #6366f1;
+}
+input:focus + .ma-slider {
+  box-shadow: 0 0 1px #6366f1;
+}
+input:checked + .ma-slider:before {
+  transform: translateX(20px);
+}
+.ma-slider.round {
+  border-radius: 34px;
+}
+.ma-slider.round:before {
+  border-radius: 50%;
+}
+.ma-card-variant {
+  background: rgba(15, 23, 42, 0.4);
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
 </style>

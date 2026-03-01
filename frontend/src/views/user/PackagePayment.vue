@@ -4,6 +4,9 @@
       <div class="col-lg-6 col-md-8">
         <div class="card custom--card border-0 shadow-sm" style="border-radius: 15px;">
           <div class="card-body p-5 text-center">
+          
+
+
             <!-- Gateway Selection -->
             <div v-if="paymentStatus === 'selecting_gateway'">
               <div class="mb-4 text-center">

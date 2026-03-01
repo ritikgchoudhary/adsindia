@@ -1,19 +1,21 @@
 <template>
   <DashboardLayout page-title="Ad Plans" :dark-theme="true">
     
+
+
     <!-- Terms gate -->
     <div class="tw-mb-4 sm:tw-mb-6">
-      <div class="tw-bg-amber-500/10 tw-border tw-border-amber-500/30 tw-rounded-xl sm:tw-rounded-2xl tw-p-3 sm:tw-p-5">
-        <div class="tw-text-white tw-font-bold tw-mb-1 sm:tw-mb-2 tw-text-sm sm:tw-text-base">
-          <i class="fas fa-check-circle tw-mr-2 tw-text-amber-400"></i>Terms Required
+      <div class="tw-bg-slate-800/80 tw-backdrop-blur-sm tw-border tw-border-slate-700 tw-rounded-xl sm:tw-rounded-2xl tw-p-3 sm:tw-p-5">
+        <div class="tw-text-white tw-font-bold tw-mb-1 sm:tw-mb-2">
+          <i class="fas fa-file-contract tw-mr-2 tw-text-indigo-400"></i>Terms Required
         </div>
         <label class="tw-flex tw-items-start tw-gap-3 tw-cursor-pointer tw-select-none">
           <input type="checkbox" v-model="termsAccepted" class="tw-mt-1">
-          <span class="tw-text-white/90 tw-text-[11px] sm:tw-text-sm tw-leading-relaxed">
+          <span class="tw-text-white/90 tw-text-xs sm:tw-text-sm tw-leading-relaxed">
             I agree with
-            <router-link to="/policy/terms-of-service" class="tw-font-bold tw-text-indigo-200 tw-no-underline hover:tw-underline">Terms</router-link>
+            <router-link to="/policy/terms-of-service" class="tw-font-bold tw-text-indigo-400 tw-no-underline hover:tw-underline">Terms</router-link>
             and
-            <router-link to="/policy/privacy-policy" class="tw-font-bold tw-text-indigo-200 tw-no-underline hover:tw-underline">Privacy Policy</router-link>
+            <router-link to="/policy/privacy-policy" class="tw-font-bold tw-text-indigo-400 tw-no-underline hover:tw-underline">Privacy Policy</router-link>
             before payment.
           </span>
         </label>

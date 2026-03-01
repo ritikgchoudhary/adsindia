@@ -14,22 +14,14 @@
     });
     // =============== Header Hide Click On Body Js End =========
 
-    //============================ Scroll To Top Icon Js Start =========
+    //============================ Fixed Header Js Start =========
     (function () {
-      const btn = $(".scroll-top");
       $(window).on("scroll", function () {
         if ($(window).scrollTop() >= 100) {
           $(".header").addClass("fixed-header");
-          btn.addClass("show");
         } else {
           $(".header").removeClass("fixed-header");
-          btn.removeClass("show");
         }
-      });
-
-      btn.on("click", function (e) {
-        e.preventDefault();
-        $("html, body").animate({ scrollTop: 0 }, "300");
       });
     })();
     // ========================== Header Hide Scroll Bar Js Start =====================

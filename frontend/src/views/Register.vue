@@ -253,11 +253,11 @@
 
               <!-- Step 2: Payment -->
               <div v-if="currentStep === 2" class="payment-step">
-                <div class="payment-info-card mb-4">
+                <div class="payment-info-card mb-4 text-center">
                   <h5 class="payment-title"><i class="fas fa-credit-card me-2"></i>Package Payment</h5>
                   <div class="payment-amount">
-                    <span class="payment-label">Amount to Pay:</span>
-                    <span class="payment-value">{{ currencySymbol }}{{ registrationFee }}</span>
+                    <p class="payment-label mb-1">Amount to Pay:</p>
+                    <p class="payment-value mb-2">{{ currencySymbol }}{{ registrationFee }}</p>
                   </div>
                   <p class="payment-description">Please complete the payment to proceed with registration.</p>
                 </div>
@@ -355,7 +355,7 @@
 
 <script>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { authService } from '../services/authService'
 import { appService } from '../services/appService'
 import api from '../services/api'
@@ -368,6 +368,7 @@ export default {
   },
   setup() {
     const router = useRouter()
+    const route = useRoute()
     const form = ref({
       fullname: '',
       email: '',
@@ -536,6 +537,7 @@ export default {
           registrationFee.value = response.data.data.registration_fee || 0
           currencySymbol.value = response.data.data.currency_symbol || '₹'
           currentStep.value = 2 // Move to payment step
+          window.scrollTo({ top: 0, behavior: 'auto' });
           if (window.notify) {
             window.notify('success', 'Details validated. Please proceed to payment.')
           }
@@ -811,39 +813,26 @@ export default {
         document.body.classList.add('register-route')
       }
 
-      // Returned from Gateway (payment page_url)
-      const urlParamsQuery = new URLSearchParams(window.location.search)
-      const returnedTrx = urlParamsQuery.get('watchpay_trx') || urlParamsQuery.get('simplypay_trx') || urlParamsQuery.get('rupeerush_trx')
+      // 🔄 Handle Redirect from Payment Gateway (Initial Check)
+      const returnedTrx = route.query.watchpay_trx || route.query.simplypay_trx || route.query.rupeerush_trx || route.query.custom_qr_trx || route.query.payment_trx;
       
       if (returnedTrx) {
-        currentStep.value = 3
-        paymentTrx.value = returnedTrx
+        paymentTrx.value = String(returnedTrx);
         try {
-          const savedToken = sessionStorage.getItem('reg_token')
-          if (savedToken) registrationToken.value = savedToken
+          const savedToken = sessionStorage.getItem('reg_token');
+          if (savedToken) registrationToken.value = savedToken;
         } catch (e) {}
-
-        // Verify payment; if verified, complete registration
-        try {
-          const verify = await api.get(`/register/payment/dummy?trx=${encodeURIComponent(paymentTrx.value)}`)
-          if (verify.data.status === 'success') {
-            await completeRegistration()
-          } else {
-            currentStep.value = 2
-            if (window.notify) window.notify('error', 'Payment not verified yet. Please wait and try again.')
-          }
-        } catch (e) {
-          currentStep.value = 2
-          if (window.notify) window.notify('error', 'Payment verification failed. Please try again.')
-        }
+        
+        // Start polling instead of a single shot check
+        currentStep.value = 2;
+        startPolling();
       }
 
       // Get referral and package from URL
-      const urlParams = new URLSearchParams(window.location.search)
-      const refUsername = urlParams.get('ref') || ''
-      const pkgId = urlParams.get('pkg') ? parseInt(urlParams.get('pkg')) : null
-      const sig = urlParams.get('sig') || ''
-      const disc = urlParams.get('disc') ? parseInt(urlParams.get('disc')) : null
+      const refUsername = route.query.ref || ''
+      const pkgId = route.query.pkg ? parseInt(route.query.pkg) : null
+      const sig = route.query.sig || ''
+      const disc = route.query.disc ? parseInt(route.query.disc) : null
 
       const shouldLockPkg = !!(pkgId && sig)
       
@@ -917,15 +906,54 @@ export default {
       } catch (error) {
         console.error('Error loading register page data:', error)
       }
+
+      // 🔄 Handle Redirect from Payment Gateway (e.g. ?watchpay_trx=...)
+      const query = route.query;
+      const trxFromUrl = query.watchpay_trx || query.simplypay_trx || query.rupeerush_trx || query.custom_qr_trx || query.payment_trx;
+      
+      if (trxFromUrl) {
+        paymentTrx.value = String(trxFromUrl);
+        // Recover registration token if possible
+        const storedToken = sessionStorage.getItem('reg_token');
+        if (storedToken) {
+           registrationToken.value = storedToken;
+        }
+        currentStep.value = 2; // Jump to payment step so user sees progress
+        startPolling();
+      }
     })
+
+    const startPolling = () => {
+      if (paymentPollInterval) clearInterval(paymentPollInterval);
+      
+      paymentPollInterval = setInterval(async () => {
+        if (!paymentTrx.value) return;
+        
+        try {
+          const res = await api.post('/registration/check-payment-status', { payment_trx: paymentTrx.value });
+          if (res.data?.status === 'success') {
+            clearInterval(paymentPollInterval);
+            paymentPollInterval = null;
+            if (window.notify) window.notify('success', 'Payment verified! Finalizing registration...');
+            // Move to processing step and finalize
+            currentStep.value = 3;
+            completeRegistration();
+          }
+        } catch (e) {
+          console.error("Polling check failed", e);
+        }
+      }, 5000); // Check every 5 seconds
+    }
 
     onUnmounted(() => {
       try {
-        try { if (paymentPollInterval) clearInterval(paymentPollInterval) } catch (e) {}
-        try { if (paymentPollTimeout) clearTimeout(paymentPollTimeout) } catch (e) {}
+        if (paymentPollInterval) clearInterval(paymentPollInterval);
+        if (paymentPollTimeout) clearTimeout(paymentPollTimeout);
+        
         if (typeof document !== 'undefined') {
           document.body.classList.remove('register-route')
         }
+        
         const $ = window.jQuery
         if ($ && $.fn && $.fn.select2) {
           const $els = $('.register-select2')
@@ -1658,9 +1686,15 @@ export default {
   .have-account__text { font-size: 0.8rem !important; margin-top: 1rem !important; }
 
   /* Payment Step */
-  .payment-info-card { padding: 0.85rem !important; border-radius: 0.85rem !important; }
-  .payment-value { font-size: 1.25rem !important; }
-  .payment-description { font-size: 0.7rem !important; }
+  .payment-info-card { padding: 1rem 1.2rem !important; border-radius: 1rem !important; margin-bottom: 1rem !important; background: linear-gradient(145deg, rgba(37,99,235,0.15), rgba(15,23,42,0.8)); border: 1px solid rgba(59,130,246,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1); }
+  .payment-title { font-size: 1.15rem !important; margin-bottom: 0.8rem !important; font-weight: 700; color: #fff;}
+  .payment-amount { margin-bottom: 0.8rem !important; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+  .payment-label { font-size: 0.8rem !important; color: rgba(255,255,255,0.7); font-weight: 500;}
+  .payment-value { font-size: 2rem !important; font-weight: 800; color: #60a5fa; text-shadow: 0 0 15px rgba(96,165,250,0.5); line-height: 1.1;}
+  .payment-description { font-size: 0.75rem !important; text-align: center; color: rgba(255,255,255,0.6); margin: 0;}
+  
+  .btn.btn--base { font-size: 0.95rem !important; padding: 12px !important; border-radius: 10px !important; font-weight: 600;}
+  .btn.btn--secondary { font-size: 0.9rem !important; padding: 10px !important; border-radius: 10px !important;}
 
   ::deep(.account-form) {
     padding: 1rem !important;

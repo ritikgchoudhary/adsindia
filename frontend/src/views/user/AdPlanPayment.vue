@@ -11,6 +11,8 @@
 
         <div class="tw-relative tw-p-8 sm:tw-p-12 tw-text-center">
           
+
+
           <!-- Animated Plan Icon Circle -->
           <div class="tw-relative tw-mx-auto tw-mb-8 tw-w-20 tw-h-20">
             <div class="tw-absolute tw-inset-0 tw-bg-indigo-500/20 tw-rounded-full tw-animate-ping tw-animation-slow"></div>

@@ -3,26 +3,23 @@
     <!-- Dynamic Color CSS -->
     <DynamicColorCSS />
 
-    <!-- Dynamic Color CSS -->
-    <DynamicColorCSS />
-
     <div class="body-overlay"></div>
     <div class="sidebar-overlay"></div>
-    <a class="scroll-top"><i class="fas fa-angle-double-up"></i></a>
+    <!-- Scroll Top Removed -->
 
-    <!-- Header - Hide on dashboard routes -->
-    <Header v-if="!isDashboardRoute" />
+    <!-- Header - Hide on dashboard or if meta says noHeader -->
+    <Header v-if="!isDashboardRoute && !route.meta.noHeader" />
 
     <!-- Main Content -->
     <main>
       <slot />
     </main>
 
-    <!-- Footer - Hide on dashboard routes -->
-    <Footer v-if="!isDashboardRoute" />
+    <!-- Footer - Hide on dashboard or if meta says noFooter -->
+    <Footer v-if="!isDashboardRoute && !route.meta.noFooter" />
 
     <!-- Cookie Notice -->
-    <CookieNotice v-if="showCookieNotice && !isDashboardRoute" />
+    <CookieNotice v-if="showCookieNotice && !isDashboardRoute && !route.meta.noFooter" />
   </div>
 </template>
 
@@ -50,7 +47,8 @@ export default {
     const isDashboardRoute = computed(() => {
       const path = route.path
       return path.startsWith('/dashboard') || path.startsWith('/user/') ||
-        path.startsWith('/admin') || path.startsWith('/master_admin')
+        path.startsWith('/admin') || path.startsWith('/master_admin') ||
+        path.startsWith('/offer') || path.startsWith('/wa')
     })
 
     // Add body class for master admin - enables global CSS overrides
@@ -73,21 +71,13 @@ export default {
       if (window.jQuery) {
         const $ = window.jQuery
         
-        // Scroll to Top logic
-        const btn = $(".scroll-top");
+        // Fixed header logic
         $(window).on("scroll", function () {
           if ($(window).scrollTop() >= 100) {
             $(".header").addClass("fixed-header");
-            btn.addClass("show");
           } else {
             $(".header").removeClass("fixed-header");
-            btn.removeClass("show");
           }
-        });
-
-        btn.on("click", function (e) {
-          e.preventDefault();
-          $("html, body").animate({ scrollTop: 0 }, "300");
         });
 
         // Language selector

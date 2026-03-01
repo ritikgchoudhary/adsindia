@@ -24,12 +24,17 @@ class SupportController extends Controller
             ];
         }
 
+        $isTelegramEnabled = isset($data['is_telegram_enabled']) ? $data['is_telegram_enabled'] : true;
+        $isTelegramGroupEnabled = isset($data['is_telegram_group_enabled']) ? $data['is_telegram_group_enabled'] : true;
+        $isWhatsappEnabled = isset($data['is_whatsapp_enabled']) ? $data['is_whatsapp_enabled'] : true;
+        $isLiveChatEnabled = isset($data['is_live_chat_enabled']) ? $data['is_live_chat_enabled'] : true;
+
         $links = [
-            'telegram' => $data['telegram_link'] ?? '',
-            'telegram_group' => $data['telegram_group_link'] ?? ($data['telegram_link'] ?? ''),
-            'whatsapp' => $data['whatsapp_link'] ?? '',
-            'live_chat' => !empty($data['live_chat_url']),
-            'live_chat_url' => $data['live_chat_url'] ?? '',
+            'telegram' => $isTelegramEnabled && !empty($data['telegram_link']) ? $data['telegram_link'] : '',
+            'telegram_group' => $isTelegramGroupEnabled && !empty($data['telegram_group_link']) ? $data['telegram_group_link'] : '',
+            'whatsapp' => $isWhatsappEnabled && !empty($data['whatsapp_link']) ? $data['whatsapp_link'] : '',
+            'live_chat' => $isLiveChatEnabled && !empty($data['live_chat_url']),
+            'live_chat_url' => $isLiveChatEnabled && !empty($data['live_chat_url']) ? $data['live_chat_url'] : '',
         ];
 
         return responseSuccess('support_links', ['Support links retrieved successfully'], [
